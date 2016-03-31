@@ -1,9 +1,9 @@
 Package: ValuationTables
 Type: Package
-Title: What the package does (short line)
+Title: A framework for cohort life tables and general life insurance contracts
 Version: 1.0
-Date: 2013-05-03
-Author: Who wrote it
-Maintainer: Who to complain to <yourfault@somewhere.net>
-Description: More about what it does (maybe more than one line)
-License: What license is it under?
+Date: 2016-04-01
+Author: Reinhold Kainhofer <reinhold@kainhofer.com>
+Maintainer: Reinhold Kainhofer <reinhold@kainhofer.com>
+Description: Yet to be written
+License: Not yet finally decided, probably GPL v3+ or LGPL or something similar

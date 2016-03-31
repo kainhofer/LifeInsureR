@@ -1,11 +1,10 @@
 library("lifecontingencies");
-library(ggplot2);
 
 # (virtual) base class for valuation tables, contains only the name / ID
 valuationTable=setClass(
   "valuationTable", 
-  slots=list(name="character", baseYear="numeric"), 
-  prototype=list(name="Actuarial Valuation Table", baseYear=2000), 
+  slots=list(name="character"), 
+  prototype=list(name="Actuarial Valuation Table"), 
   contains="VIRTUAL"
 );
 
@@ -68,13 +67,6 @@ valuationTable.joined=setClass(
     table2="valuationTable", yearRange2="numeric"),
   contains="valuationTable"
 );
-# A cohort life table obtained by mixing two life tables with the given weights
-valuationTable.mixed=setClass(
-  "valuationTable.mixed", 
-  slots=c(table1="valuationTable", table2="valuationTable", weight1="numeric", weight2="numeric"),
-  prototype=list(weight1=1/2, weight2=1/2),
-  contains="valuationTable"
-);
 
 
 
@@ -94,36 +86,27 @@ setMethod("deathProbabilities","valuationTable.ageShift",
             qx=object@deathProbs;
             shift.index=match(YOB, object@shifts, 0);
             if (shift.index) {}
-#             TODO
+ #           shift=
             qx
           })
 setMethod("deathProbabilities","valuationTable.trendProjection",
           function (object,  ..., YOB=1975) {
             qx=object@deathProbs;
-            if (is.null(object@trend2) || length(object@trend2)<=1) {
-              ages=0:(length(qx)-1);
-              damping=sapply(ages, function (age) { object@dampingFunction(YOB+age-object@baseYear) });
-# print(data.frame(age=0:(length(qx)-1), trend=object@trend, exponent=-object@trend*damping, damping=damping, baseqx=qx, qx=exp(-object@trend*damping)*qx)[66:90,]);
-	      exp(-object@trend*damping)*qx;
+            if (length(object@trend2)<=1) {
+              exp(-object@trend*object@dampingFunction(YOB+0:(length(qx)-1)-object@baseYear))*qx
+              #exp(-object@trend*object@dampingFunction(YOB+0:(length(qx)-1)-object@baseYear))
+              #qx
             } else {
               # dampingFunction interpolates between the two trends:
               weights=sapply(YOB+0:(length(qx)-1), object@dampingFunction);
               qx*exp(-(object@trend*(1-weights) + object@trend2*(weights))*(YOB+0:(length(qx)-1)-object@baseYear))
             }
           })
-# data.frame(x=0:121, qx=deathProbabilities(AVOe2005R.unisex, YOB=1948));
 setMethod("deathProbabilities","valuationTable.improvementFactors",
           function (object,  ..., YOB=1975) {
             qx=object@deathProbs;
             (1-object@improvement)^(YOB+0:(length(qx)-1)-object@baseYear)*qx
           })
-setMethod("deathProbabilities","valuationTable.mixed",
-          function (object,  ..., YOB=1975) {
-            qx1=deathProbabilities(object@table1, ..., YOB);
-            qx2=deathProbabilities(object@table2, ..., YOB);
-            (object@weight1*qx1 + object@weight2*qx2)/(object@weight1 + object@weight2)
-          })
-          
 setGeneric("lifeTable", function(object, ...) standardGeneric("lifeTable"));
 setMethod("lifeTable","valuationTable",
           function (object,  ...) {
@@ -133,56 +116,3 @@ setMethod("lifeTable","valuationTable",
           })
 
 
-setGeneric("baseYear", function(object, ...) standardGeneric("baseYear"));
-setMethod("baseYear","valuationTable",
-          function (object,  ...) {
-            object@baseYear
-          })
-setMethod("baseYear","valuationTable.mixed",
-          function (object,  ...) {
-            baseYear(object@table1)
-          })
-
-setGeneric("baseTable", function(object, ...) standardGeneric("baseTable"));
-setMethod("baseTable","valuationTable",
-          function (object,  ...) {
-            c()
-          })
-setMethod("baseTable","valuationTable.period",
-          function (object,  ...) {
-            object@deathProbs
-          })
-
-
-makeQxDataFrame = function(...) {
-  data=list(...);
-  names(data) = lapply(data, function(t) t@name);
-  data = lapply(data, function(t) cbind(x=t@ages, y=t@deathProbs))
-  
-  list.names = names(data)
-  lns <- sapply(data, nrow)
-  data <- as.data.frame(do.call("rbind", data))
-  data$group <- rep(list.names, lns)
-  data
-}
-
-plotValuationTables = function(..., title = "") {
-  data = makeQxDataFrame(...);
-  
-  pl = ggplot(data, aes(x = x, y = y, colour = data$group)) +
-    theme_bw() +
-    theme(
-      plot.title = element_text(size=18, face="bold"),
-      legend.title = element_text(size=14, face="bold.italic")
-    ) +
-    geom_line() +
-    scale_y_log10(#breaks = trans_breaks('log10', function(x) 10^x),
-      #labels = trans_format('log10', math_format(10^.x)),
-      #minor_breaks = log(c(sapply(x, function(x) seq(0, x, x/10))), 10)
-    ) +
-    xlab("Alter") + ylab("q_x") + labs(colour="Sterbetafel");
-  if (title != "") {
-    pl = pl + ggtitle("Österreichische Volkssterbetafeln Männer seit 1870");
-  }
-  pl
-}
