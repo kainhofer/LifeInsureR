@@ -94,46 +94,5 @@ rm(a.vz.dataM, a.vz.dataF, censtable)
 
 ###############################################################################
 
-ggplot(mort.AT.census.ALL.maleA, aes(x = x, y = y, colour = mort.AT.census.ALL.maleA$group)) +
-  theme_bw() +
-  theme(
-    plot.title = element_text(size=18, face="bold"),
-    legend.title = element_text(size=14, face="bold.italic")
-  ) +
-  geom_line() +
-  scale_y_log10(#breaks = trans_breaks('log10', function(x) 10^x),
-                #labels = trans_format('log10', math_format(10^.x)),
-                #minor_breaks = log(c(sapply(x, function(x) seq(0, x, x/10))), 10)
-                ) +
-  ggtitle("Österreichische Volkssterbetafeln Männer seit 1870") + xlab("Alter") + ylab("q_x") + labs(colour="Sterbetafel")
-
-
-plotValuationTables(mort.AT.census.1869.male, mort.AT.census.1869.female, mort.AT.census.2011.male, mort.AT.census.2011.female, title="Vergleich österreichische Sterbetafeln")
-
-plotValuationTables(
-                    #mort.AT.census.1869.male,
-                    ##mort.AT.census.1880.male,
-                    #mort.AT.census.1890.male,
-                    #mort.AT.census.1900.male,
-                    #mort.AT.census.1910.male,
-                    #mort.AT.census.1931.male,
-                    #mort.AT.census.1951.male,
-                    #mort.AT.census.1961.male,
-                    #mort.AT.census.1971.male,
-                    #mort.AT.census.1981.male,
-                    #mort.AT.census.1991.male,
-                    #mort.AT.census.2001.male,
-                    #mort.AT.census.2011.male,
-  mort.AT.census.1869.female,
-  mort.AT.census.1880.female,
-  mort.AT.census.1890.female,
-  mort.AT.census.1900.female,
-  mort.AT.census.1910.female,
-  mort.AT.census.1931.female,
-  mort.AT.census.1951.female,
-  mort.AT.census.1961.female,
-  mort.AT.census.1971.female,
-  mort.AT.census.1981.female,
-  mort.AT.census.1991.female,
-  mort.AT.census.2001.female,
-  mort.AT.census.2011.female, title="Vergleich österreichische Sterbetafeln", legend.position=c(1,0))
+plotValuationTables(mort.AT.census.ALL.male, title="Vergleich österreichische Sterbetafeln, Männer", legend.position=c(1,0))
+plotValuationTables(mort.AT.census.ALL.female, title="Vergleich österreichische Sterbetafeln, Frauen", legend.position=c(1,0))

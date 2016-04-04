@@ -250,8 +250,10 @@ makeQxDataFrame = function(..., YOB=1972, Period=NA) {
   data
 }
 
-plotValuationTables = function(..., title = "", legend.position=c(0.9,0.1), legend.key.width = unit(25, "mm")) {
-  data = makeQxDataFrame(...);
+plotValuationTables = function(data, ..., title = "", legend.position=c(0.9,0.1), legend.key.width = unit(25, "mm")) {
+  if (!is.data.frame(data)) {
+    data = makeQxDataFrame(data, ...);
+  }
   
   pl = ggplot(data, aes(x = x, y = y, colour = data$group)) +
     theme_bw() +
@@ -287,7 +289,7 @@ plotValuationTables = function(..., title = "", legend.position=c(0.9,0.1), lege
   }
   pl# + coord_flip()
 }
-plotValuationTables(mort.AT.census.1869.male, mort.AT.census.1869.female, mort.AT.census.2011.male, mort.AT.census.2011.female, AVOe2005R.male, AVOe2005R.female, YOB=1972,title="Vergleich österreichische Sterbetafeln")
+plotValuationTables(mort.AT.census.1869.male, mort.AT.census.1869.female, mort.AT.census.2011.male, mort.AT.census.2011.female, AVOe2005R.male, AVOe2005R.female, YOB=1972,title="Vergleich österreichische Sterbetafeln, YOB=1972 (bei Generationentafeln)")
 
 plotValuationTables(mort.AT.census.2001.male, AVOe2005R.male, YOB=1972, title="Vergleich österreichische Sterbetafeln")
 plotValuationTables(getCohortTable(AVOe2005R.male, YOB=1972), getCohortTable(AVOe2005R.male, YOB=2016), title="Vergleich österreichische Sterbetafeln")
