@@ -1,62 +1,146 @@
-library("lifecontingencies");
+library(R6);
+library("lifecontingencies")
 
 
-# (virtual) base class for valuation tables, contains only the name / ID
-InsuranceTarif=setRefClass(
-  "InsuranceContract", 
-  slots=c(
-    name="character",
-    tarif="character",
-    desc="character",
-    YOB="numeric",
-    YOB2="numeric",
-    age="numeric",
-    age2="numeric",
-    contractLength="numeric",
-    mortalityTable="valuationTable",
-    mortalityTable2="valuationTable",
+# base class for Insurance Tarifs (holding contrat-independent values and 
+# providing methods to calculate cash flows, premiums, etc.). Objects of this
+# class do NOT contain contract-specific values like age, death probabilities, 
+# premiums, reserves, etc.
+InsuranceTarif = R6Class(
+  "InsuranceTarif", 
+  public  = list(
+    name  = "Insurance Contract Type",
+    tarif = "Generic Tarif",
+    desc  = "Description of the contract",
     
-    interest="numeric",
-    
-    #     cashflows="data.frame",
-    #     deathPayments="list",
-    #     survivalPayments="list",
-    #     costCashflows="data.frame",
-    cashflows="data.frame",
-    
-    probabilities="data.frame",
-    
-    
-    unterjährigkeit="numeric",
-    unterjährigkeitsapproximation="numeric",
-    cache.uj="list"
-    
-    
-  ), 
-  prototype=list(
-    name="Insurance Contract Type",
-    tarif="Tariff",
-    desc="Description of the contract",
-    YOB=1977,
-    #     YOB2=1977,
-    age=35,
-    #     age2=35,
-    contractLength=Inf,
-    mortalityTable=AVOe2005R.unisex,
-    #     mortalityTable2=AVOe2005R.unisex,
-    
+    states = c("Lebend", "Tot"),
+    mortalityTable = NA,
     interest=0,
-    
-    deathPayments=list(),
-    survivalPayments=list(),
-    costCashflows=data.frame(),
-    cashflows=data.frame(),
-    probabilities=data.frame(),
-    
-    unterjährigkeit=1,
-    unterjährigkeitsapproximation=1
+
+    initialize = function (name=NA, mortalityTable=NA, interest=NA,...) {
+      if (!missing(name))           self$name = name;
+      if (!missing(mortalityTable)) self$mortalityTable = mortalityTable;
+      if (!missing(interest))       self$interest = interest;
+      cat(paste0("Initializing Insurance Tarif ", self$name, "...\n"))
+    },
+    getTransitionProbabilities = function (age, ..., YOB=2000) {
+      ages = ages(self$mortalityTable, YOB=YOB);
+      q = deathProbabilities(self$mortalityTable, YOB=YOB);
+      if (age>0) {
+        ages = ages[-age:-1];
+        q    = q[-age:-1];
+      }
+      p = 1-q;
+      len = length(p);
+      df=data.frame(p, q, rep(0,len), rep(1,len), row.names=ages)
+      df
+    },
+    getCashFlowsState = function (age, ..., policyPeriod=inf, deferral=0, maxAge=150) {
+      cf = list()
+      # TODO
+    },
+    getCashFlowsTransition = function (age, ..., policyPeriod=inf, deferral=0, maxAge=150) {
+      # TODO
+    }
   )
 );
+
+TestTarif = InsuranceTarif$new(name="Testtarif", mortalityTable=AVOe2005R.male)
+str(TestTarif)
+TestTarif$getTransitionProbabilities(YOB=1980, age=30)
+
+
+InsuranceContract = R6Class(
+  "InsuranceContract",
+  public = list(
+    tarif = NA,
+    YOB = NA,
+    age = NA,
+    policyPeriod = inf,
+    deferral = 0,
+    
+    transitionProbabilities = NA,
+    cashFlowsState = NA,
+    cashFlowsTransition = NA,
+    #    cashFlowsState = list(c(0), c(0)),
+    #    cashFlowsTransition = list(matrix(c(0,1,0,1), 2, 2, byrow=TRUE)),
+    
+    initialize = function (tarif, age, policyPeriod=inf, ..., deferral=0, YOB=1975) {
+      if (!missing(tarif)) self$tarif = tarif;
+      if (!missing(age)) self$age = age;
+      if (!missing(YOB)) self$YOB = YOB;
+      if (!missing(deferral)) self$deferral = deferral;
+      if (!missing(policyPeriod)) self$policyPeriod = policyPeriod;
+      self$determineTransitionProbabilities();
+      self$determineCashFlows();
+    },
+    
+    determineTransitionProbabilities = function() {
+      self$transitionProbabilities = self$tarif$getTransitionProbabilities(self$age, self$YOB);
+    },
+    
+    determineCashFlows = function() {
+      self$cashFlowsState = self$tarif$getCashFlowsState(age=self$age, YOB=self$YOB, policyPeriod=self$policyPeriod, deferral=self$deferral, maxAge=self$age+length(self$transitionProbabilities));
+      self$cashFlowsTransition = self$tarif$getCashFlowsState(age=self$age, YOB=self$YOB, policyPeriod=self$policyPeriod, deferral=self$deferral, maxAge=self$age+length(self$transitionProbabilities));
+      
+    }
+    
+    
+
+
+  )
+);
+
+setGeneric("setYOB", function(scale, ...) standardGeneric("setYOB"));
+setMethod("setYOB", "InsuranceScale",
+          function (scale, ..., YOB=1975) {
+            scale@YOB=YOB;
+            scale
+          }
+)
+
+setGeneric("getTransitionProbabilities", function(scale, ...) standardGeneric("getTransitionProbabilities"));
+setMethod("getTransitionProbabilities", "InsuranceScale",
+          function (scale, ...) {
+            q = deathProbabilities(scale@mortalityTable, scale@YOB);
+            p = 1-q;
+            len = length(p);
+            df=data.frame(p, q, rep(0,len), rep(1,len), row.names=ages(scale@mortalityTable, scale@YOB))
+          }
+)
+
+
+setGeneric("calculateTransitionProbabilities", function(scale, ...) standardGeneric("calculateTransitionProbabilities"));
+setMethod("calculateTransitionProbabilities", "InsuranceScale",
+          function (scale, ...) {
+            scale@transitionProbabilities = getTransitionProbabilities(scale, ...);
+            scale
+          }
+)
+
+TestTarif = InsuranceScale(name="Testtarif", YOB=1980, age=30)
+#TestTarif = setYOB(TestTarif, YOB=1980)
+
+getTransitionProbabilities(TestTarif)
+
+t=AVOe2005R.unisex
+t@ages
+t@deathProbs
+qqq
+qqq["1",]
+
+mort=deathProbabilities(AVOe2005R.male, YOB=1977); mort
+
+mort=deathProbabilities(AVOe2005R.unisex, YOB=1977); mort
+q=mort
+p=1-mort; p
+len=length(p); len
+qqq=data.frame(q=t@deathProbs, row.names=t@ages); qqq
+
+df=data.frame("A-A"=p, "A-t"=q, "t-A"=rep(0, len), "t-t"=rep(1, len), row.names=t@ages)
+df
+
+
 
 # createCostStructure=function(age=35,contractLength=inf,
 #   alphaVS,

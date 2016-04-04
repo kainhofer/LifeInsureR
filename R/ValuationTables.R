@@ -1,10 +1,11 @@
 library("lifecontingencies");
+library(ggplot2);
 
 # (virtual) base class for valuation tables, contains only the name / ID
 valuationTable=setClass(
   "valuationTable", 
-  slots=list(name="character"), 
-  prototype=list(name="Actuarial Valuation Table"), 
+  slots=list(name="character", baseYear="numeric"), 
+  prototype=list(name="Actuarial Valuation Table", baseYear=2000), 
   contains="VIRTUAL"
 );
 
@@ -67,6 +68,13 @@ valuationTable.joined=setClass(
     table2="valuationTable", yearRange2="numeric"),
   contains="valuationTable"
 );
+# A cohort life table obtained by mixing two life tables with the given weights
+valuationTable.mixed=setClass(
+  "valuationTable.mixed", 
+  slots=c(table1="valuationTable", table2="valuationTable", weight1="numeric", weight2="numeric"),
+  prototype=list(weight1=1/2, weight2=1/2),
+  contains="valuationTable"
+);
 
 
 
@@ -75,6 +83,13 @@ setMethod("getOmega", "valuationTable.period",
           function (object) {
             max(object@ages,na.rm=TRUE);
           })
+
+setGeneric("ages", function(object, ...) standardGeneric("ages"));
+setMethod("ages", "valuationTable.period",
+          function (object, ...) {
+            object@ages;
+          })
+
 
 setGeneric("deathProbabilities", function(object, ..., YOB=1975) standardGeneric("deathProbabilities"));
 setMethod("deathProbabilities", "valuationTable.period",
@@ -86,27 +101,83 @@ setMethod("deathProbabilities","valuationTable.ageShift",
             qx=object@deathProbs;
             shift.index=match(YOB, object@shifts, 0);
             if (shift.index) {}
- #           shift=
+            #             TODO
             qx
           })
 setMethod("deathProbabilities","valuationTable.trendProjection",
           function (object,  ..., YOB=1975) {
+cat("deathProbabilities for valuationTable.trendProjection, YOB=", YOB, "\n")
             qx=object@deathProbs;
-            if (length(object@trend2)<=1) {
-              exp(-object@trend*object@dampingFunction(YOB+0:(length(qx)-1)-object@baseYear))*qx
-              #exp(-object@trend*object@dampingFunction(YOB+0:(length(qx)-1)-object@baseYear))
-              #qx
+            if (is.null(object@trend2) || length(object@trend2)<=1) {
+              ages=0:(length(qx)-1);
+              damping=sapply(ages, function (age) { object@dampingFunction(YOB+age-object@baseYear) });
+              # print(data.frame(age=0:(length(qx)-1), trend=object@trend, exponent=-object@trend*damping, damping=damping, baseqx=qx, qx=exp(-object@trend*damping)*qx)[66:90,]);
+              exp(-object@trend*damping)*qx;
             } else {
               # dampingFunction interpolates between the two trends:
               weights=sapply(YOB+0:(length(qx)-1), object@dampingFunction);
               qx*exp(-(object@trend*(1-weights) + object@trend2*(weights))*(YOB+0:(length(qx)-1)-object@baseYear))
             }
           })
+# data.frame(x=0:121, qx=deathProbabilities(AVOe2005R.unisex, YOB=1948));
 setMethod("deathProbabilities","valuationTable.improvementFactors",
           function (object,  ..., YOB=1975) {
             qx=object@deathProbs;
             (1-object@improvement)^(YOB+0:(length(qx)-1)-object@baseYear)*qx
           })
+setMethod("deathProbabilities","valuationTable.mixed",
+          function (object,  ..., YOB=1975) {
+            qx1=deathProbabilities(object@table1, ..., YOB);
+            qx2=deathProbabilities(object@table2, ..., YOB);
+            (object@weight1*qx1 + object@weight2*qx2)/(object@weight1 + object@weight2)
+          })
+
+
+setGeneric("periodDeathProbabilities", function(object, ...) standardGeneric("periodDeathProbabilities"));
+setMethod("periodDeathProbabilities", "valuationTable.period",
+          function(object, ...) {
+            object@deathProbs;
+          })
+setMethod("periodDeathProbabilities","valuationTable.ageShift",
+          function (object,  ..., Period=1975) {
+            # TODO
+            qx=object@deathProbs;
+            shift.index=match(YOB, object@shifts, 0);
+            if (shift.index) {}
+            #             TODO
+            qx
+          })
+setMethod("periodDeathProbabilities","valuationTable.trendProjection",
+          function (object,  ..., Period=1975) {
+            qx=object@deathProbs;
+            if (is.null(object@trend2) || length(object@trend2)<=1) {
+              ages=0:(length(qx)-1);
+              damping=object@dampingFunction(Period-object@baseYear);
+              # print(data.frame(age=0:(length(qx)-1), trend=object@trend, exponent=-object@trend*damping, damping=damping, baseqx=qx, qx=exp(-object@trend*damping)*qx)[66:90,]);
+              exp(-object@trend*damping)*qx;
+            } else {
+              # TODO
+              # dampingFunction interpolates between the two trends:
+              weights=sapply(YOB+0:(length(qx)-1), object@dampingFunction);
+              qx*exp(-(object@trend*(1-weights) + object@trend2*(weights))*(YOB+0:(length(qx)-1)-object@baseYear))
+            }
+          })
+# data.frame(x=0:121, qx=deathProbabilities(AVOe2005R.unisex, YOB=1948));
+setMethod("periodDeathProbabilities","valuationTable.improvementFactors",
+          function (object, ..., Period=1975) {
+            qx=object@deathProbs;
+            (1-object@improvement)^(Period-object@baseYear)*qx
+          })
+setMethod("periodDeathProbabilities","valuationTable.mixed",
+          function (object,  ..., Period=1975) {
+            qx1=periodDeathProbabilities(object@table1, ..., Period=Period);
+            qx2=periodDeathProbabilities(object@table2, ..., Period=Period);
+            (object@weight1*qx1 + object@weight2*qx2)/(object@weight1 + object@weight2)
+          })
+
+
+
+
 setGeneric("lifeTable", function(object, ...) standardGeneric("lifeTable"));
 setMethod("lifeTable","valuationTable",
           function (object,  ...) {
@@ -116,3 +187,107 @@ setMethod("lifeTable","valuationTable",
           })
 
 
+setGeneric("baseYear", function(object, ...) standardGeneric("baseYear"));
+setMethod("baseYear","valuationTable",
+          function (object,  ...) {
+            object@baseYear
+          })
+setMethod("baseYear","valuationTable.mixed",
+          function (object,  ...) {
+            baseYear(object@table1)
+          })
+
+setGeneric("baseTable", function(object, ...) standardGeneric("baseTable"));
+setMethod("baseTable","valuationTable",
+          function (object,  ...) {
+            c()
+          })
+setMethod("baseTable","valuationTable.period",
+          function (object,  ...) {
+            object@deathProbs
+          })
+
+
+setGeneric("getPeriodTable", function(object, Period, ...) standardGeneric("getPeriodTable"));
+setMethod("getPeriodTable","valuationTable",
+          function (object, Period, ...) {
+            valuationTable.period(
+                name = paste(object@name, ", Period ", Period), 
+                baseYear = Period,
+                ages = ages(object), 
+                deathProbs = periodDeathProbabilities(object, Period=Period)
+            )
+          })
+
+setGeneric("getCohortTable", function(object, Period, ...) standardGeneric("getCohortTable"));
+setMethod("getCohortTable","valuationTable",
+          function (object, YOB, ...) {
+            valuationTable.period(
+                name = paste(object@name, ", YOB ", YOB),
+                baseYear = YOB,
+                ages=ages(object), 
+                deathProbs=deathProbabilities(object, YOB=YOB)
+            );
+          })
+
+
+
+makeQxDataFrame = function(..., YOB=1972, Period=NA) {
+  data=list(...);
+  names(data) = lapply(data, function(t) t@name);
+  if (missing(Period)) {
+    cat("Year of birth: ", YOB, "\n");
+    data = lapply(data, function(t) cbind(x=t@ages, y=deathProbabilities(t, YOB=YOB)))
+  } else {
+    cat("Period: ", Period,"\n");
+    data = lapply(data, function(t) cbind(x=t@ages, y=periodDeathProbabilities(t, Period=Period)))
+  }
+  
+  list.names = names(data)
+  lns <- sapply(data, nrow)
+  data <- as.data.frame(do.call("rbind", data))
+  data$group <- rep(list.names, lns)
+  data
+}
+
+plotValuationTables = function(..., title = "", legend.position=c(0.9,0.1), legend.key.width = unit(25, "mm")) {
+  data = makeQxDataFrame(...);
+  
+  pl = ggplot(data, aes(x = x, y = y, colour = data$group)) +
+    theme_bw() +
+    theme(
+      plot.title = element_text(size=18, face="bold"),
+      legend.title = element_text(size=14, face="bold.italic"),
+      # legend in bottom right corner of the plot
+      legend.justification=c(1,0), legend.position=legend.position,
+      # No box around legend entries
+      legend.key = element_blank(),
+      legend.key.width = legend.key.width,
+      legend.background = element_rect(colour="gray50", linetype="solid")
+    ) +
+    geom_line() +
+    scale_y_log10(
+      name=expression(paste("Sterbewahrscheinlichkeit  ", q[x])),
+      breaks = scales::trans_breaks('log10', function(x) 10^x),
+      labels = scales::trans_format('log10', scales::math_format(10^.x))
+      #minor_breaks = log(c(sapply(x, function(x) seq(0, x, x/10))), 10)
+    ) +
+    scale_x_continuous(
+      name="Alter",
+      #breaks = function (limits) scales::trans_breaks('', function(x) 10^x),
+      breaks = function (limits) seq(max(min(limits),0),max(limits),5),
+      minor_breaks = function (limits) seq(max(round(min(limits)),0),round(max(limits)),1),
+      #labels = scales::trans_format('log10', scales::math_format(10^.x))
+      
+    ) +
+    annotation_logticks(sides="lr") +
+    xlab("Alter") + labs(colour="Sterbetafel");
+  if (title != "") {
+    pl = pl + ggtitle(title);
+  }
+  pl# + coord_flip()
+}
+plotValuationTables(mort.AT.census.1869.male, mort.AT.census.1869.female, mort.AT.census.2011.male, mort.AT.census.2011.female, AVOe2005R.male, AVOe2005R.female, YOB=1972,title="Vergleich österreichische Sterbetafeln")
+
+plotValuationTables(mort.AT.census.2001.male, AVOe2005R.male, YOB=1972, title="Vergleich österreichische Sterbetafeln")
+plotValuationTables(getCohortTable(AVOe2005R.male, YOB=1972), getCohortTable(AVOe2005R.male, YOB=2016), title="Vergleich österreichische Sterbetafeln")

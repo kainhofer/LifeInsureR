@@ -86,6 +86,6 @@ DAV2004R.male=valuationTable.trendProjection(
 DAV2004R.female=valuationTable.trendProjection(
   name="DAV 2004R female",
   ages=DAV2004R.exakt.data$age, baseYear=2000,
-  deathProbs=DAV2004R.exakt.data$qy2000, 
+  deathProbs=DAV2004R.exakt.data  $qy2000, 
   trend=DAV2004R.exakt.data$trendF
 );
