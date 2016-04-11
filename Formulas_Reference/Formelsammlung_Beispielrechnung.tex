@@ -1,0 +1,711 @@
+\documentclass[a4paper,10pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{geometry}
+\usepackage{tabularx, longtable}
+\usepackage{amsmath}
+\usepackage[ngerman]{babel}
+\usepackage[usenames,dvipsnames]{xcolor}
+\usepackage{enumerate}
+\usepackage{enumitem}
+\setlist{nolistsep}
+\usepackage{multirow}
+%\usepackage{itemize}
+% \usepackage{sans}
+\usepackage{array}
+\newcolumntype{C}[1]{>{\centering\arraybackslash$}p{#1}<{$}}
+\usepackage{rotating}
+
+
+%opening
+\title{\textbf{Formelsammlung Tarif Lebensversicherung}}
+\author{Reinhold Kainhofer (reinhold@kainhofer.com)}
+
+\geometry{bottom=2cm,top=2cm,left=1.5cm,right=1.5cm}
+
+\newcommand{\PreserveBackslash}[1]{\let\temp=\\#1\let\\=\temp}
+\newcolumntype{v}[1]{>{\PreserveBackslash\centering\hspace{0pt}}p{#1}}
+
+\newcommand{\markiert}[1]{\colorbox{Goldenrod}{\textcolor{red}{#1}}}
+
+\setlength{\parindent}{0em}
+
+\makeatletter
+\DeclareRobustCommand{\act}[2][]{%
+\def\arraystretch{0}%
+\setlength\arraycolsep{0.5pt}%
+\setlength\arrayrulewidth{0.5pt}%
+\setbox0=\hbox{$\scriptstyle#1\ifx#1\empty{asdf}\else:\fi#2$}%
+\begin{array}[b]{*2{@{}>{\scriptstyle}c}|}
+\cline{2-2}%
+\rule[1.25pt]{0pt}{\ht0}%
+#1\ifx#1\empty\else:\fi & #2%
+\end{array}%
+}
+\makeatother
+
+\renewcommand{\labelitemi}{-)}
+% \renewcommand[\itemsep}{0cm}
+% \renewcommand{\labelitemsep}{0cm}
+\itemsep0em
+
+
+\begin{document}
+
+\maketitle
+
+% \begin{abstract}
+% 
+% \end{abstract}
+
+Bemerkung: Sämtliche Barwerte werden rekursiv bestimmt, daher werden alle Formeln in ihrer rekursiven Form angegeben. Teilweise wird aus informativen Gründen davor die entsprechende Summenformel angegeben, diese wird jedoch nicht zur tatsächlichen Berechnung benutzt. 
+
+
+\section{Vertrags- und Tarifdetails}
+
+\subsection{Tarifdetails (identisch für alle Verträge)}
+\begin{longtable}{p{1cm}p{10cm}}
+ $i$ & Rechnungszins\\[0.5em]
+ $v$ & Diskontierungsfaktor $v=\frac1{1+i}$\\[0.5em]
+ 
+ ${}$ & Leistungszahlungsweise (vorschüssig, nachschüssig)\\
+ $k_{Ausz}$ & unterjährige Auszahlung der Erlebensleistungen\\
+ $O(k)$ & Ordnung der Unterjährigkeitsrechnung (1./2. Ordnung)\\[0.5em]
+ 
+ $RG$ & Prämienrückgewähr bei Ableben während Aufschub\\
+ $PS$ & Prämiensumme \\
+ 
+ $\rho$ & Sicherheitszuschlag auf die Prämie \\
+ $\rho^{RG}$ & Risikosumme (relativ zu DK) im Ablebensfall bei Prämienrückgewähr \\
+ 
+\end{longtable}
+
+
+\subsection{Vertragsdetails (vertragsspezifische Werte)}
+
+\begin{longtable}{p{1cm}p{10cm}}
+ $VS$ & Versicherungssumme\\[0.5em]
+ $Beg$ & Versicherungsbeginn\\
+ 
+ $J$ & Geburtsjahr der 1. versicherten Person\\
+ $x$ & Eintrittsalter der 1. versicherten Person\\
+ $y$ & Eintrittsalter der 2. versicherten Pereon\\[0.5em]
+ 
+ $n$ & Versicherungsdauer\\
+ $l$ & Aufschubdauer des Versicherungsschutzes\\
+ $m$ & Prämienzahlungsdauer\\
+ $k$ & Prämienzahlungsweise ($k$-tel jährlich)\\
+ $f$ & Prämienfreistellungszeitpunkt\\[0.5em]
+ 
+\end{longtable}
+
+
+\section{Rechnungsgrundlagen}
+
+\begin{longtable}{p{0.2\linewidth}p{0.7\linewidth}}
+ $q_x=q_x^{(J)}(t)$ & Sterbewahrscheinlichkeit der 1. versicherten Person (geboren im Jahr $J$) im Beobachtungsjahr $t$\\
+ $p_x=1-q_x$ & 1-jährige Überlebenswahrscheinlichkeit der 1. versicherten Person\\
+ ${}_np_x=\prod_{j=1}^n p_{x+j}$ & $n$-jährige Überlebenswahrscheinlichkeit\\
+ $\omega$ & Höchstalter\\
+ 
+ $q_y=q_y^{(J+x-y)}(t)$ & Sterbewahrscheinlichkeit der 2. versicherten Person (geboren im Jahr $J$) im Beobachtungsjahr $t$\\
+\end{longtable}
+
+\pagebreak
+
+\section{Kosten}
+
+\subsection{Abschlusskosten ($\alpha$-Kosten) / Zillmerkosten (Z-Kosten)}
+\begin{itemize}
+ \item Einmalig (bei Vertragsabschluss)
+ \begin{itemize}
+   \item \markiert{an Versicherungssumme}
+   \item \markiert{an Brutto-Prämiensumme}\footnote{Entspricht Einmalprämie bei Einmalerlag}
+   \item an Barwert der Versicherungsleistungen (z.B. Rentenbarwert) % HYPO PV5F & PV6F
+ \end{itemize}
+ \item Laufend (während Prämienzahlungsdauer)\footnote{Bei Einmalerlag sind einmalige $\alpha$-Kosten und laufende $\alpha$-Kosten auf die Prämie während der Prämienzahlungsdauer ident.}
+ \begin{itemize}
+   \item \markiert{an Bruttoprämie}
+   \item an Brutto-Prämiensumme
+ \end{itemize}
+ \item Laufend (über gesamte Laufzeit des Vertrags)
+ \begin{itemize}
+   \item an Bruttoprämie
+   \item an Brutto-Prämiensumme
+ \end{itemize}
+ 
+\end{itemize}
+
+% TODO: Check the following tariffs:
+%   - GRAWE PV5F & PV6F
+
+\subsection{Inkassokosten ($\beta$-Kosten)}
+
+\begin{itemize}
+ \item Laufend an Bruttoprämie während Prämienzahlungsdauer (einmalig bei Einmalerlag)
+\end{itemize}
+
+
+\subsection{Verwaltungskosten ($\gamma$-Kosten)}
+
+Laufend während der gesamten Laufzeit verrechnet:
+
+\begin{itemize}
+ \item \markiert{an Versicherungssumme (prämienpflichtig)}
+ \item \markiert{an Versicherungssumme (planmäßig/außerplanmäßig prämienfrei)}
+ \item an Leistungsbarwert / Rentenbarwert (=Deckungskapital) (prämienfrei) % GRAWE PS0-9 & PV0-9
+ \item an Prämiensumme (prämienpflichtig) (=am Rentenbarwert zu Vertragsbeginn bei sof.beg.LR mit EE)
+ \item an Prämiensumme (planmäßig/außerplanmäßig prämienfrei)
+ 
+ \item am Ablösekapital während Aufschubzeit % ERGO III B-PZV Single
+ \item \markiert{an jeder Erlebenszahlung/Rente (während Liquiditätsphase)} % ERGO III B-PZV Single
+ \item am Deckungskapital % S-Versicherung  I5U
+\end{itemize}
+
+% TODO: Check the following tariffs:
+%   - GRAWE PS0-9 & PV0-9
+%   - ERGO III B-PZV Single
+
+\subsection{Stückkosten $StkK$}
+
+\begin{itemize}
+ \item Stückkosten (Absolutbetrag) $StkK$ pro Jahr während Prämienzahlungsdauer (bzw. einmalig bei Einmalprämie)
+\end{itemize}
+
+
+\subsection{Übersicht}
+
+Die häufigsten Kostentypen sind \markiert{markiert}.
+
+% % \begin{longtable}{||l|v{3cm}|v{3cm}|v{3cm}|v{3cm}||}\hline\hline
+% %  & an VS & an PS & an JBP\footnote{während der gesamten Prämienzahlungsdauer} & \\ \hline
+% %  
+% % Abschluss $\alpha$ & \markiert{$\alpha^{VS}_{j}$ (einmalig)} & $\alpha^{PS}_{j}$ (LZ)\footnote{evt. mit jährlicher faktorieller Aufwertung (evt. mit Obergrenze)} & $\alpha^{BP}_{j}$ (LZ)\linebreak \markiert{$\alpha_{3a,j}$ (PrD)} & \\ \hline
+% % Zillmer $z$ & \markiert{$z^{VS}_{j}$} & \markiert{$z^{PS}_{j}$} & & \\ \hline
+% % Inkasso $\beta$ & & & \markiert{$\beta_{j}$ (PrD)} & \\ \hline
+% % Verwaltung $\gamma$ & \markiert{$\gamma^{VS}_{j}$ (PrD)}\linebreak \markiert{$\gamma^{VS,fr}_{j}$ (nach PrD)}\linebreak \markiert{$\gamma^{frei}_{j}$ (PrFrei)} & $\gamma^{PS}_{j}$ (LZ/PrD) & & $\gamma^{BP,PrD}_{j}$ (an ErlZ, LZ) \\\hline\hline
+% % % \\[-0.9em]\hline
+% % % 
+% % % Stückkosten $K$ & 
+% % % \\\hline\hline
+% % % 
+% % %  
+% % \end{longtable}
+% % 
+
+\begin{longtable}{||lr|v{2cm}|v{2cm}|v{2cm}|v{3cm}||}\hline\hline
+Typ & Dauer & an VS & an PS & an JBP\footnote{während der gesamten Prämienzahlungsdauer} & \\ \hline
+ 
+
+Abschluss $\alpha$ & einmalig      & \markiert{$\alpha^{VS,once}$} &                                                                                                    &                            & \\ 
+                   & Prämiendauer  &                              &                                                                                                    & \markiert{$\alpha^{BP,PrD}$} & \\ 
+                   & Prämienfrei   &                              &                                                                                                    &                            & \\ 
+                   & Vertragsdauer &                              & $\alpha^{PS,LZ}$\footnote{evt. mit jährlicher faktorieller Aufwertung, evt. mit Obergrenze)} & $\alpha^{BP,LZ}$          & \\ \hline
+Zillmer $z$ & einmalig      & \markiert{$z^{VS,once}$} & \markiert{$z^{PS,once}$} & & \\ 
+            & Prämiendauer  &                         &                         & & \\ 
+            & Prämienfrei   &                         &                         & & \\ 
+            & Vertragsdauer &                         & $z^{PS,LZ}$ & & \\ \hline
+Inkasso $\beta$ & einmalig      & & &                              & \\ 
+                & Prämiendauer  & & & \markiert{$\beta^{BP,PrD}$} & \\ 
+                & Prämienfrei   & & &                              & \\ 
+                & Vertragsdauer & & &                              & \\ \hline
+Verwaltung $\gamma$ & einmalig      &  & & & \\
+                    & Prämiendauer  & \markiert{$\gamma^{VS,PrD}$}    & $\gamma^{PS,PrD}$ & & \\
+                    & Prämienfrei   & \markiert{$\gamma^{VS,fr}$} &                   & & $\gamma^{BP,Erl}$ (an ErlZ) \\
+                    & Vertragsdauer & $\gamma^{VS,LZ}$           & $\gamma^{PS,LZ}$ & &  \\\hline
+
+\multirow{4}{2.5cm}{{Verwaltung $\tilde{\gamma}$ (außerplanm. prämienfrei)}} & einmalig      & & & & \\
+                    & Prämiendauer  & & & & \\
+                    & Prämienfrei   & & & & \\
+                    & Vertragsdauer & \markiert{$\tilde{\gamma}^{VS,LZ}$} & & & \\
+\hline\hline
+\end{longtable}
+
+\subsection{Kosten-Cashflows}
+Jede Kostenart ($\alpha$/Zillmer/$\beta$/$\gamma$/$\tilde{\gamma}$) und Bemessungsgrundlage (VS/{}PS/{}JBP) erzeugt aus den verschiedenen Kostendauern einen Cash-Flow-Vektor in folgender Art, der diskontiert den gesamten Kostenbarwert der jeweiligen Kostenart und Bmgl. liefert:
+\begin{equation*}
+ X_t^{Bmgl} = 
+ \begin{cases}
+ X^{Bmgl,once} + X^{Bmgl,PrD} + X^{Bmgl,LZ} & \text{für $t=0$} \\
+ \hphantom{X^{Bmgl,once} + \;\,} X^{Bmgl,PrD} + X^{Bmgl,LZ} & \text{für $0<t\leq m$} \\
+ \hphantom{X^{Bmgl,once} + \;\,} X^{Bmgl,fr} \;\;\; + X^{Bmgl,LZ} & \text{für $m<t\leq n$}
+ \end{cases}
+\end{equation*}
+
+
+
+% \subsubsection{Stückkosten:}
+% \begin{longtable}{lp{13cm}}
+% $K_1$\dots & Stückkosten einmalig bei Vertragsabschluss\\
+% $K$\dots & Stückkosten jährlich während Prämienzahlungsdauer\\
+% $K_{LZ}$\dots & Stückkosten jährlich während der gesamten Laufzeit\\
+% \end{longtable}
+
+\pagebreak
+
+\section{Cashflows}
+
+\begin{longtable}{lp{6.5cm}v{2.5cm}v{2.5cm}v{2.5cm}}
+& Beschreibung & LR & ALV & ELV \\\hline
+$pr_t$  \dots          & Prämienzahlungen (vorschüssig) zu $t$ & $\delta(t<m)$ & $\delta(t<m)$ & $\delta(t<m)$ \\
+$PS$                   & Prämiensumme, $PS=\sum_{t=0}^n pr_t$\\[1em]
+
+$\ddot{e}_t$  \dots    & Erlebenszahlungen vorschüssig zu $t$ & $\delta(l+g\le t< n)$ & 0 & $\delta(t=n)$\\
+$e_t$  \dots           & Erlebenszahlungen nachschüssig zu $t+1$& $\delta(l+g\le t< n)$ & 0 & $\delta(t=n)$\\
+$\ddot{e}_t^{*}$ \dots & garantierte Zahlungen vorschüssig zu $t$ & $\delta(l\le t< l+g)$ & 0 & 0 \\
+$e_t^{*}$  \dots       & garantierte Zahlungen nachschüssig zu $t+1$ & $\delta(l\le t< l+g)$ & 0 & 0 \\[1em]
+
+$a_t$  \dots           & Ablebenszahlung zu $t+1$ & 0 & $\delta(l\le t < n)$ & 0 \\
+$a_t^{(RG)}$           & Ablebenszahlungen für PRG zu $t+1$ (Ableben im Jahr $t$) & $\min(t+1,m,f)$ & 0 & $\min(t+1,m,f)$ \\
+
+\end{longtable}
+
+Die Cash-Flows können auch in Matrixform dargestellt werden:
+\begin{align*}
+%
+ \overrightarrow{CF}^L_t &= \left(
+ \begin{matrix} % TODO: Add an indication that the first row is in advance, the second in arrears
+pr_t & \ddot{e}_t^{*} & \ddot{e}_t & 0 & 0 \\
+pr^{(nachsch)}_t & e_t^{*} & e_t & a_t & a_t^{(RG)}\\
+\end{matrix}
+ \right)
+% 
+&
+ \overrightarrow{CF}^K_t &= \left(
+ \begin{matrix}
+\alpha^{(VS)}_t & \alpha^{(PS)}_t  & \alpha^{(BP)}_t \\
+z^{(VS)}_t & z^{(PS)}_t  & -\\
+- & - & \beta_t \\
+\gamma^{(VS)}_t & \gamma^{(PS)}_t & -\\
+\tilde{\gamma}^{frei}_t & - & -\\  
+ \end{matrix}
+ \right)
+\end{align*}
+
+
+\pagebreak
+
+\section{Barwerte}
+
+\subsection{Prämienbarwert}
+
+\begin{align*} 
+P_{\act[x]{n}}(t) &= \sum_{j=t}^n pr_{t+j} \cdot v^{j-t}  \cdot {}_{j-t}p_{x+t}\\
+	  &= pr_{t} + v \cdot p_{x+t} \cdot P_{\act[x]{n}}(t+1)
+\end{align*}
+
+\subsection{Barwert garantierter Zahlungen:}
+Garantierte Erlebensleistungen (wenn Aufschubzeit überlebt wurde):
+% TODO!
+\begin{align*} 
+ E^{Gar}_{\act[x]{n}}(t) &= \begin{cases}
+		    {}_{l-t}p_{x+t} \cdot v^{l-t} \cdot \sum_{j=l}^{n} \left\{\ddot{e}^{*}_{j-t}+ v\cdot e^*_{j-t}\right\} v^{j-t} & \text{für $t<l$ (Aufschubzeit)}\\
+		    \sum_{j=t}^{n} \left\{\ddot{e}^{*}_{j-t}+ v\cdot e^*_{j-t}\right\} v^{j-t} & \text{für $t\ge l$ (Liquiditätsphase)}
+                 \end{cases}\\
+   &= \ddot{e}_t^{*} + \left\{E^{*}_{\act[x]{n}}(t+1) + e_t^*\right\}\cdot v \cdot \begin{cases}
+	    1 & \text{für $t<l$ (Aufschubzeit)}\\
+            p_{x+t} & \text{für $t\ge l$ (Liquiditätsphase)}
+       \end{cases}
+\end{align*}
+
+
+\subsection{Erlebensleistungsbarwert:}
+1. Person:
+\begin{align*} 
+E_{\act[x]{n}}(t) &= \sum_{j=t}^n \left(\ddot{e}_{t+j} \cdot v^{j-t}  {}_{j-t}p_{x+t} + e_{t+j} \cdot v^{j+1-t} {}_{j+1-t}p_{x+t} \right)\\
+	  &= \ddot{e}_{t} + v \cdot p_{x+t} \cdot \left\{ e_t + E_{\act[x]{n}}(t+1)\right\}\\
+\intertext{2. Person:}
+E2_{\act[y]{n}}(t) &= \ddot{e}_{t} + v \cdot p_{y+t} \cdot \left\{ e_t + E2_{\act[y]{n}}(t+1)\right\}\\
+\intertext{gemeinsam:}
+E12_{\act[x,y]{n}}(t) &= \ddot{e}_{t} + v \cdot p_{x+t} \cdot p_{y+t} \cdot \left\{ e_t + E12_{\act[x,y]{n}}(n,t+1)\right\}\\
+\end{align*}
+
+% \intertext{Garantierte Erlebensleistungen (wenn Aufschubzeit überlebt wurde):}
+% % \begin{align*} 
+%  E^{*}_{\act[x]{n}}(t) &= \begin{cases}
+% 		    {}_{l-t}p_{x+t} \cdot v^{l-t} \cdot \sum_{j=l}^{n} \left\{\ddot{e}^{*}_{j-t}+ v\cdot e^*_{j-t}\right\} v^{j-t} & \text{für $t<l$ (Aufschubzeit)}\\
+% 		    \sum_{j=t}^{n} \left\{\ddot{e}^{*}_{j-t}+ v\cdot e^*_{j-t}\right\} v^{j-t} & \text{für $t\ge l$ (Liquiditätsphase)}
+%                  \end{cases}\\
+%    &= \ddot{e}_t^{*} + \left\{E^{*}_{\act[x]{n}}(t+1) + e_t^*\right\}\cdot v \cdot \begin{cases}
+% 	    1 & \text{für $t<l$ (Aufschubzeit)}\\
+%             p_{x+t} & \text{für $t\ge l$ (Liquiditätsphase)}
+%        \end{cases}
+% \end{align*}
+\subsection{Unterjährige Auszahlung der Erlebenszahlungen}
+
+Analog zu (bei konstanter Rente)
+\begin{align*}
+ \ddot{a}^{(m)}_{\act[x]{n}} &= \ddot{a}_x^{(m)} - {}_np_x \cdot v^n \cdot \ddot{a}_{x+n}^{(m)}\\
+ \ddot{a}_x^{(m)} &= \alpha(m) \ddot{a}_x - \beta(m)
+\end{align*}
+mit 
+\begin{align*}
+ \alpha(m)&= \frac{d \cdot i}{d^{(m)} \cdot i^{(m)}} & \beta(m) &= \frac{i-i^{(m)}}{d^{(m)} \cdot i^{(m)}}
+\end{align*}
+und $d = \frac{i}{1+i}$, $i^{(m)} = m \cdot \left((1+i)^{1/m} -1\right)$ und $d^{(m)} = i^{(m)} / \left(1+i^{(m)}/m\right)$ bzw. approximativ mit
+\begin{center}
+\begin{tabular}{rccccc}
+& 0.Ord. & 1.Ord. & 1,5-te Ord. & 2.Ord. & \\\hline
+$\alpha(m)$ = & 1 &  & & $+\frac{m^2-1}{12 m^2} i^2$ & ...\\
+$\beta(m)$ = & $\frac{m-1}{2m}$ & $+ \frac{m^2-1}{6 m^2}i$ & $\left[+ \frac{1-m^2}{12\cdot m^2}\cdot i^2\right]$ &$+ \frac{1-m^2}{24 m^2}i^2$ & ...\\[0.3em]\hline 
+\end{tabular}
+\end{center}
+
+ergibt sich auch für allgemeine unterjährige Erlebenszahlungen $\ddot{e}_t$ eine Rekursionsgleichung.
+
+\subsubsection{Vorschüssige $m$-tel jährliche Auszahlung der Erlebensleistungen}
+
+
+\begin{align*}
+A^{(m)}_{\act[x]{n}}(t) &= \ddot{e}_t \cdot \ddot{a}_{\act[x+t]{1}}^{(m)} + v \cdot p_{x+1} \cdot A^{(m)}_{\act[x]{n}}(t+1)\\
+  &= \ddot{e}_t \cdot \left\{\alpha(m)  - \beta(m) \cdot \left(1-p_{x+t} \cdot v\right)\right\} + v\cdot p_{x+t} \cdot A^{(m)}_{\act[x]{n}}(t+1)
+\end{align*}
+
+
+\subsubsection{Nachschüssige $m$-tel jährliche Auszahlung der Erlebensleistungen}
+
+\begin{align*}
+A^{(m)}_{\act[x]{n}}(t) &= e_t \cdot a_{\act[x+t]{1}}^{(m)} + v \cdot p_{x+t} \cdot A^{(m)}_{\act[x]{n}}(t+1)\\
+   &= e_t\cdot\left\{\alpha(m) - \left(\beta(m)+\frac1m\right)\cdot\left(1-p_{x+t} v\right)\right\} + v\cdot p_{x+t} \cdot A^{(m)}_{\act[x]{n}}(t+1)
+\end{align*}
+
+\subsubsection{Allgemeine $m$-tel jährliche Auszahlung der Erlebensleistungen}
+
+
+\begin{align*}
+A^{(m)}_{\act[x]{n}}(t) = &\ddot{e}_t \cdot \left\{\alpha(m)  - \beta(m) \cdot \left(1-p_{x+t} \cdot v\right)\right\} +  \\
+ &e_t\cdot\left\{\alpha(m) - \left(\beta(m)+\frac1m\right)\cdot\left(1-p_{x+t} v\right)\right\} + \\
+ &v\cdot p_{x+t} \cdot A^{(m)}_{\act[x]{n}}(t+1)
+\end{align*}
+
+
+
+
+\subsection{Ablebensbarwert}
+
+\begin{align*} 
+A_{\act[x]{n}}(t) &= \sum_{j=t}^n {}_{j-t}p_{x+t} \cdot q_{x+j} \cdot v^{j-t+1} \cdot a_{j} \\
+         &= q_{x+t} \cdot v \cdot a_t + p_{x+t} \cdot v \cdot A_{\act[x]{n}}(t+1)\\
+%
+\intertext{prämienfreier Ablebensbarwert:}
+A^{(prf)}_{\act[x]{n}}(t) &= q_{x+t} \cdot v \cdot a^{(prf.)}_t + p_{x+t} \cdot v \cdot A^{(prf.)}_{\act[x]{n}}(t+1)\\
+%
+\intertext{Prämienrückgewähr}
+A^{(RG)}_{\act[x]{n}}(t) &= q_{x+t} \cdot v \cdot a^{(RG)}_t + p_{x+t} \cdot v \cdot A^{(RG)}_{\act[x]{n}}(t+1)\\
+%
+\end{align*}
+
+\subsection{Leistungsbarwert}
+
+\begin{align*}
+BW^L_{\act[x]{n}}(t) &= E_{\act[x]{n}}(t) + A_{\act[x]{n}}(t) + (1+\rho^{RG}) \cdot A^{(RG)}_{\act[x]{n}}(t)\cdot BP_{\act[x]{n}}
+\end{align*}
+
+
+
+\subsection{Kostenbarwerte}
+
+\begin{align*}
+\intertext{Abschlusskostenbarwerte:}
+AK^{(VS)}_{\act[x]{n}}(t) &= \alpha^{VS}_{t} + v \cdot p_{x+t} \cdot AK^{(VS)}_{\act[x]{n}}(t+1) \\
+AK^{(PS)}_{\act[x]{n}}(t) &= \alpha^{PS}_{t} + v \cdot p_{x+t} \cdot AK^{(PS)}_{\act[x]{n}}(t+1) \\
+AK^{(BP)}_{\act[x]{n}}(t) &= \alpha^{BP}_{t}+\alpha_{3a,t} + v \cdot p_{x+t} \cdot AK^{(BP)}_{\act[x]{n}}(t+1) \\
+\intertext{Zillmerkostenbarwerte:}
+ZK^{(VS)}_{\act[x]{n}}(t) &= z^{VS}_{t} + v \cdot p_{x+t} \cdot ZK^{(VS)}_{\act[x]{n}}(t+1) \\
+ZK^{(PS)}_{\act[x]{n}}(t) &= z^{PS}_{t} + v \cdot p_{x+t} \cdot ZK^{(PS)}_{\act[x]{n}}(t+1) \\
+\intertext{Inkassokostenbarwerte:}
+IK_{\act[x]{n}}(t) &= \beta^{BP}_{t} + v \cdot p_{x+t} \cdot IK_{\act[x]{n}}(t+1) \\
+\intertext{Verwaltungskostenbarwerte:}
+VK^{(VS)}_{\act[x]{n}}(t) &= \gamma^{VS}_{t} + v \cdot p_{x+t} \cdot VK^{(VS)}_{\act[x]{n}}(t+1) \\
+VK^{(PS)}_{\act[x]{n}}(t) &= \gamma^{PS}_{t} + v \cdot p_{x+t} \cdot VK^{(PS)}_{\act[x]{n}}(t+1) \\
+VK^{frei}_{\act[x]{n}}(t) &= \gamma^{VS,frei}_{t} + v \cdot p_{x+t} \cdot VK^{frei}_{\act[x]{n}}(t+1) \\
+\end{align*}
+
+
+\subsection{Darstellung der Barwerte in Vektor-/Matrixform}
+Die Leistungs- und Kostenbarwerte können (wie auch die Cashflows zu einem Zeitpunkt) 
+in Matrixform dargestellt werden (aus Gründen der Übersichtlichkeit wird hier bei 
+allen Termen der Subscript ${\act[x]{n}}$ unterlassen):
+\begin{align*}
+  \overrightarrow{BW}^L(t) &= \left(
+ \begin{matrix}
+    P(t), & E^{Gar}(t), & E(t), & A(t), & A^{(RG)}(t)
+ \end{matrix}
+ \right)
+% 
+ &
+%  
+ \overrightarrow{BW}^K(t) &= \left(
+ \begin{matrix}
+AK^{(VS)}(t) & AK^{(PS)}(t)  & AK^{(BP)}(t) \\
+% 
+ZK^{(VS)}(t) & ZK^{(PS)}(t)  & -\\
+% 
+- & - & IK(t) \\
+% 
+VK^{(VS)}(t) & VK^{(PS)}(t) & -\\
+VK^{frei}(t) & - & -\\  
+ \end{matrix}
+ \right)
+% 
+\end{align*}
+
+
+
+\pagebreak
+
+\section{Prämien}
+
+Nettoprämie:
+\begin{align*}
+NP_{\act[x]{n}} &= \frac{E_{\act[x]{n}}(0) + A_{\act[x]{n}}(0) + \left(1+\rho^{RG}\right) \cdot A^{(RG)}_{\act[x]{n}}(0) \cdot BP_{\act[x]{n}}}{P_{\act[x]{n}}(0)} \cdot \left(1+\rho\right)\\
+%
+\intertext{Zillmerprämie (gezillmerte Nettoprämie):}
+% TODO: Sind die beta-Kosten proportional zu BP oder zur ZP??? I.e. ist \beta im Nenner mit BP oder im Zähler?
+ZP_{\act[x]{n}} &= 
+\left[%
+  NP_{\act[x]{n}}\cdot P_{\act[x]{n}}(0) + 
+  \left(ZK^{(VS)}_{\act[x]{n}}(0) + IK^{(VS)}_{\act[x]{n}}(0) + VK^{(VS)}_{\act[x]{n}}(0)\right) +  \right.\\
+  &\qquad\left.\left(ZK^{(PS)}_{\act[x]{n}}(0) + IK^{(PS)}_{\act[x]{n}}(0) + VK^{(PS)}_{\act[x]{n}}(0)\right) \cdot BP_{\act[x]{n}} \cdot PS + \right.\\
+  &\qquad\left.\left(ZK^{(BP)}_{\act[x]{n}}(0) + IK^{(BP)}_{\act[x]{n}}(0) + VK^{(BP)}_{\act[x]{n}}(0)\right) \cdot BP_{\act[x]{n}}
+%
+\right] / %
+\left(P_{\act[x]{n}}(0)\right)
+% 
+\intertext{Bruttoprämie:}
+BP_{\act[x]{n}} &= \frac%
+{ 
+   \left(E_{\act[x]{n}}(0) + A_{\act[x]{n}}(0)\right)\cdot\left(1+\rho\right) + 
+   \left( AK^{(VS)}_{\act[x]{n}}(0) + IK^{(VS)}_{\act[x]{n}}(0) + VK^{(VS)}_{\act[x]{n}}(0) \right)
+}%
+{
+   P_{\act[x]{n}}(0) - 
+   A^{(RG)}_{\act[x]{n}} \left(1+\rho^{RG}\right) \left(1+\rho\right) - 
+         AK^{(BP)}_{\act[x]{n}} - IK^{(BP)}_{\act[x]{n}} - VK^{(BP)}_{\act[x]{n}} - 
+   \left(AK^{(PS)}_{\act[x]{n}} + IK^{(PS)}_{\act[x]{n}} + VK^{(PS)}_{\act[x]{n}}\right) PS
+}
+\intertext{Wie man deutlich sehen kann, ist die Kostenursache ($\alpha$, $\beta$ oder $\gamma$) für die Prämienbestimmung irrelevant. Es werden die Barwerte aller drei Kostenarten jeweils bei der entsprechenden Bemessungsgrundlage aufaddiert.}
+% 
+\intertext{Ablebensleistung im Jahr $t$:}
+Abl(t) &= \left\{a_t + a^{(RG)}_t \cdot BP_{\act[x]{n}}\right\} \cdot VS
+\end{align*}
+
+\subsection{Koeffizienten in Vektorschreibweise}
+Für die Berechnung der Prämien können die Koeffizienten der jeweiligen Barwerte auch mittels der Vektor-/Ma\-trix\-schreib\-wei\-se dargestellt werden (siehe Tabelle \ref{PVCoeff}).
+\begin{sidewaystable}
+\centering
+
+\newenvironment{benarray}{\big(\begin{array}{*4{C{3.4em}}C{12em}}}{\end{array}\big)}
+\newenvironment{costarray}{\left(\begin{array}{*3{C{4.7em}}}}{\end{array}\right)}
+% TODO: laufende alpha-Kosten
+\begin{tabular}{||ll|c|c||}\hline\hline
+ & & Leistungen & Kosten \\ \hline\hline
+ Terme & &  
+  $\begin{benarray}P_{\act[x]{n}}(t) & E^{Gar}_{\act[x]{n}}(t) & E_{\act[x]{n}}(t) & A_{\act[x]{n}}(t)  & A_{\act[x]{n}}^{(RG)}(t)\end{benarray}$
+ &
+ $\begin{costarray}
+AK^{(VS)}_{\act[x]{n}}(t) & AK^{(PS)}_{\act[x]{n}}(t)  & AK^{(BP)}_{\act[x]{n}}(t) \\
+ZK^{(VS)}_{\act[x]{n}}(t) & ZK^{(PS)}_{\act[x]{n}}(t)  & -\\
+- & - & IK_{\act[x]{n}}(t) \\
+VK^{(VS)}_{\act[x]{n}}(t) & VK^{(PS)}_{\act[x]{n}}(t) & -\\
+VK^{frei}_{\act[x]{n}}(t) & - & -\\  
+ \end{costarray}$
+\\\hline\hline
+
+
+Nettoprämie & Zähler & 
+  $\begin{benarray}0 & 1+\rho & 1+\rho & 1+\rho & \left(1+\rho^{RG}\right)\cdot BP_{\act[x]{n}} \cdot \left(1+\rho\right)\end{benarray}$
+ & -
+\\
+
+ & Nenner & 
+  $\begin{benarray} 1 & 0 & 0 & 0 & 0\end{benarray}$
+ & - 
+\\\hline
+
+
+Zillmerprämie & Zähler & 
+  $\begin{benarray}0 & 1+\rho & 1+\rho & 1+\rho & \left(1+\rho^{RG}\right)\cdot BP_{\act[x]{n}} \cdot \left(1+\rho\right)\end{benarray}$
+ &
+ $\begin{costarray}
+0 & 0 & 0 \\
+1 & BP_{\act[x]{n}}\cdot PS & BP_{\act[x]{n}}\\
+1 & BP_{\act[x]{n}}\cdot PS & BP_{\act[x]{n}} \\
+1 & BP_{\act[x]{n}}\cdot PS & BP_{\act[x]{n}}\\
+0 & 0 & 0 \\
+ \end{costarray}$
+\\
+
+ & Nenner & 
+  $\begin{benarray} 1 & 0 & 0 & 0 & 0\end{benarray}$
+ &
+-
+\\\hline
+
+Bruttoprämie & Zähler & 
+   $\begin{benarray}0 & 1+\rho & 1+\rho & 1+\rho & 0\end{benarray}$
+ &
+ $\begin{costarray}
+1 & 0 & 0 \\
+0 & 0 & 0\\
+1 & 0 & 0 \\
+1 & 0 & 0\\
+0 & 0 & 0\\
+ \end{costarray}$
+\\
+
+ & Nenner & 
+  $\begin{benarray}1 & 0 & 0 & 0 & -(1+\rho)\cdot(1+\rho^{RG}) \end{benarray}$
+ &
+ $\begin{costarray}
+0 & -PS & -1 \\
+0 & 0   & 0\\
+0 & -PS & -1 \\
+0 & -PS & -1\\
+0 & 0   & 0\\
+ \end{costarray}$
+\\
+
+\hline\hline
+
+\end{tabular}
+\label{PVCoeff}
+\caption{Koeffizienten der einzelnen Barwerte zur Berechnung der Prämien}
+\end{sidewaystable}
+
+
+
+\section{Zuschläge und Abschläge, Vorgeschriebene Prämie}
+
+\begin{longtable}{p{4cm}p{11cm}}
+ $StkK$ \dots & Stückkosten pro Jahr (während Prämienzahlungsdauer, einmalig bei Einmalprämien)\\
+ $oUZu$ \dots & Zuschlag für Vertrag ohne ärztliche Untersuchung\\
+ $SuRa=SuRa(VS)$ \dots & Summenrabatt (von Höhe der VS abhängig)\\
+ $PrRa=PrRa(BP)$ \dots & Prämienrabatt (von Höhe der Bruttoprämie abhängig)\\
+ $VwGew$ \dots & Vorweggewinnbeteiligung in Form eines Rabattes\\
+ $uz(k)$ \dots & Zuschlag für unterjährige Prämienzahlung ($k$ mal pro Jahr)
+ \begin{equation*}
+  uz(k)=
+ \end{equation*}
+
+\end{longtable}
+
+
+\begin{align*}
+\intertext{Vorgeschriebene Prämie:}
+PV_{\act[x]{n}} &= \left\{ (BP_{\act[x]{n}} + oUZu - SuRa) \cdot VS \cdot (1-VwGew) + StkK\right\} \cdot \frac{1+uz(pz)}{pz} \cdot (1+VSt)
+% 
+\end{align*}
+
+
+\pagebreak
+
+\section{Rückstellungen und Reserven}
+
+Reserve prämienpflichtig:
+\begin{align*}
+V_{\act[x]{n}}(t) &= \left\{BW^L_{\act[x]{n}}(t)\cdot(1+\rho) - ZP_{\act[x]{n}}\cdot P_{\act[x]{n}}(t)\right\} \cdot VS \\
+%
+\intertext{Verwaltungskostenreserve:}
+V^{VwK}_{\act[x]{n}}(t) &= \left\{ VK^{(VS)}_{\act[x]{n}}(t) - \left(\frac{VK^{(VS)}_{\act[x]{n}}(0)}{P_{\act[x]{n}}(0)}\right) \cdot P_{\act[x]{n}}(t)\right\} \cdot VS\\
+%
+\intertext{Reserve prämienfrei:}
+V^{frei}_{\act[x]{n}}(t) &= \left\{(E_{\act[x]{n}}(t) + A1_{\act[x]{n}}(t))\cdot\widetilde{VW} + TODO \cdot \min(f,m) \cdot BP_{\act[x]{n}}(x,n)\cdot VS\right\} \cdot (1+\rho) \\
+% 
+\intertext{Verwaltungskostenreserve prämienfrei:}
+V^{WvK,frei}_{\act[x]{n}}(t) &= VK4_{\act[x]{n}}(t) \cdot \widetilde{VS}
+% 
+\end{align*}
+
+\section{Spar- und Risikoprämie}
+
+
+\begin{equation*}
+ P_{\act[x]{n}}(t) = SP_{\act[x]{n}}(t) + RP_{\act[x]{n}}(t)
+\end{equation*}
+
+
+\subsection{Sparprämie}
+
+\begin{align*}
+SP_{\act[x]{n}}(t) &= V_{\act[x]{n}}(t+1) \cdot v - V_{\act[x]{n}}(t) + \left(\ddot{e}_t + v\cdot e_t\right)\cdot VS
+\end{align*}
+
+\subsection{Risikoprämie}
+\begin{align*}
+RP_{\act[x]{n}}(t) &= v\cdot q_{x+t} \cdot \left\{Abl(t) - V_{\act[x]{n}}(t+1)\right\} 
+\end{align*}
+
+
+\section{Bilanzreserve}
+
+\begin{tabular}{lp{14cm}}
+$BegDatum$ \dots & Beginndatum des Vertrags\\
+$BilDatum$ \dots & Bilanzstichtag  des Unternehmens\\
+$baf$ \dots & Bilanzabgrenzungsfaktor (Jahresanteil zwischen Abschlussdatum und Bilanzstichtag)
+\begin{itemize}
+ \item 30/360: $baf=\frac{Monat(BilDatum+1)-Monat(BegDatum)+1}{12} \mod 1$
+ \item Taggenau: $baf=\frac{BilDatum-BegDatum+1}{TageImJahr(BilDatum)} \mod 1$
+ \item etc.
+\end{itemize}
+\\
+\end{tabular}
+
+
+\subsection{prämienpflichtig}
+% Bilanzabgrenzungsfaktor 
+Bilanzreserve für Versicherungsleistungen:
+\begin{align*}
+BilRes^{(L)}_{\act[x]{n}}(t) &= (1-baf)\cdot V_{\act[x]{n}}(t) + baf \cdot V_{\act[x]{n}}(t+1)\\
+\intertext{Verwaltungskosten-Bilanzreserve:}
+BilRes^{(VwK)}_{\act[x]{n}}(t) &= (1-baf)\cdot V^{(VwK)}_{\act[x]{n}}(t) + baf \cdot V^{(VwK)}_{\act[x]{n}}(t+1)\\
+\intertext{Gesamte Bilanzreserve:}
+BilRes_{\act[x]{n}}(t) &= BilRes^{(L)}_{\act[x]{n}}(t) + BilRes^{(VwK)}_{\act[x]{n}}(t)\\
+\intertext{\subsection{prämienfrei}
+Bilanzreserve für Versicherungsleistungen, prämienfrei:}
+BilRes^{(L),frei}_{\act[x]{n}}(t) &= (1-baf)\cdot V^{frei}_{\act[x]{n}}(t) + baf \cdot V^{frei}_{\act[x]{n}}(t+1)\\
+\intertext{Verwaltungskosten-Bilanzreserve, prämienfrei:}
+BilRes^{(VwK),frei}_{\act[x]{n}}(t) &= (1-baf)\cdot V^{VwK,frei}_{\act[x]{n}}(t) + baf \cdot V^{VwK,frei}_{\act[x]{n}}(t+1)\\
+\intertext{Gesamte Bilanzreserve, prämienfrei:}
+BilRes^{frei}_{\act[x]{n}}(t) &= BilRes^{(L),frei}_{\act[x]{n}}(t) + BilRes^{(VwK),frei}_{\act[x]{n}}(t)\\\
+\end{align*}
+
+
+\pagebreak
+
+\section{Rückkaufswerte}
+
+TODO
+
+
+\pagebreak
+
+\section{Prämienfreistellung}
+
+Der Vertrag wird zum Zeitpunkt $f$ prämienfrei gestellt, d.h. ab ZP $f$ wird keine Prämie mehr bezahlt, 
+die Höhe des Versicherungsschutzes bestimmt sich aus dem zu $f$ vorhandenen Deckungskapital und den 
+Kostenreserven. Bei Prämienrückgewähr wird selbstverständlich nur die tatsächlich bezahlte Prämiensumme rückgewährt.
+
+Aus
+\begin{multline*}
+ V_{\act[x]{n}}(f) + V^{VwK}_{\act[x]{n}}(t) + AbskErh(f) \cdot VS \cdot \left(1-VwGew\right) = \\
+ = BW^L_{\act[x]{n}}(f)\cdot\left(1+\rho\right)\cdot \widetilde{VS} + BW^{RG,frei}_{\act[x]{n}}(f)\cdot \left(1+\rho\right) \cdot BP_{\act[x]{n}} \cdot VS + VK^{frei}_{\act[x]{n}}(f) = 
+ V^{frei}_{\act[x]{n}}(f) + V_{\act[x]{n}}^{VwK,frei}(f)
+\end{multline*}
+mit
+\begin{align*}
+% \intertext{Zillmerprämienanteil:}
+Zillm(t) &= z^{(VS)}_t + z^{(BP)}_t \cdot BP_{\act[x]{n}} \cdot \sum_{j=0}^n pr_j &&\text{(Zillmerprämienanteil)}\\
+% \intertext{Abschlusskostenerhöhungsbetrag:}
+AbskErh(t) &= \max\left(\sum_{j=0}^t Zillm(j) - \frac{t}{5} \sum_{j=0}^n Zillm(j), 0\right)&& \text{(Abschlusskostenerhöhungsbetrag)}\\
+% \intertext{Barwert zukünftiger Prämienrückgewähr:}
+BW^{RG,frei}_{\act[x]{n}}(f) &= A^{(RG)}_{\act[x]{n}}(t) \cdot \min\left(f,m\right) && \text{(BW zukünftiger Prämienrückgewähr)}
+\end{align*}
+ergibt sich die neue Versicherungssumme $\widetilde{VS}$ nach Prämienfreistellung:
+\begin{equation*}
+\widetilde{VS} = \frac{V_{\act[x]{n}}(t) + V^{Vwk}_{\act[x]{n}}(t) + AbskErh(t)\cdot VS \cdot \left(1-VwGew\right) - BW^{RG,frei}_{\act[x]{n}}(f)\cdot (1+\rho)\cdot BP_{\act[x]{n}} \cdot VS}{E_{\act[x]{n}}(t)\cdot(1+\rho) + VK^{frei}_{\act[x]{n}}(t)}
+\end{equation*}
+
+
+
+
+\end{document}

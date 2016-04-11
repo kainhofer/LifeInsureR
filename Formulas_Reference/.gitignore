@@ -1,0 +1,6 @@
+*.aux
+*.dvi
+*.log
+*.synctex.gz
+*.backup
+*.kilepr
