@@ -4,8 +4,8 @@ library(ggplot2);
 # (virtual) base class for valuation tables, contains only the name / ID
 valuationTable=setClass(
   "valuationTable",
-  slots=list(name="character", baseYear="numeric"),
-  prototype=list(name="Actuarial Valuation Table", baseYear=2000),
+  slots=list(name="character", baseYear="numeric", loading="numeric"),
+  prototype=list(name="Actuarial Valuation Table", baseYear=2000, loading=0),
   contains="VIRTUAL"
 );
 
@@ -71,8 +71,8 @@ valuationTable.joined=setClass(
 # A cohort life table obtained by mixing two life tables with the given weights
 valuationTable.mixed=setClass(
   "valuationTable.mixed",
-  slots=c(table1="valuationTable", table2="valuationTable", weight1="numeric", weight2="numeric"),
-  prototype=list(weight1=1/2, weight2=1/2),
+  slots=c(table1="valuationTable", table2="valuationTable", weight1="numeric", weight2="numeric", loading="numeric"),
+  prototype=list(weight1=1/2, weight2=1/2, loading=0),
   contains="valuationTable"
 );
 
@@ -83,22 +83,38 @@ setMethod("getOmega", "valuationTable.period",
           function (object) {
             max(object@ages,na.rm=TRUE);
           })
+setMethod("getOmega", "valuationTable.mixed",
+          function (object) {
+            getOmega(object@table1);
+          })
+setMethod("getOmega", "valuationTable.joined",
+          function (object) {
+            getOmega(object@table1);
+          })
 
 setGeneric("ages", function(object, ...) standardGeneric("ages"));
 setMethod("ages", "valuationTable.period",
           function (object, ...) {
             object@ages;
           })
+setMethod("ages", "valuationTable.mixed",
+          function (object, ...) {
+            ages(object@table1);
+          })
+setMethod("ages", "valuationTable.joined",
+          function (object, ...) {
+            ages(object@table1);
+          })
 
 
 setGeneric("deathProbabilities", function(object, ..., YOB=1975) standardGeneric("deathProbabilities"));
 setMethod("deathProbabilities", "valuationTable.period",
           function(object, ..., YOB=1975) {
-            object@deathProbs;
+            object@deathProbs * (1+object@loading);
           })
 setMethod("deathProbabilities","valuationTable.ageShift",
           function (object,  ..., YOB=1975) {
-            qx=object@deathProbs;
+            qx=object@deathProbs * (1+object@loading);
             shift.index=match(YOB, object@shifts, 0);
             if (shift.index) {}
             #             TODO
@@ -107,7 +123,7 @@ setMethod("deathProbabilities","valuationTable.ageShift",
 setMethod("deathProbabilities","valuationTable.trendProjection",
           function (object,  ..., YOB=1975) {
 cat("deathProbabilities for valuationTable.trendProjection, YOB=", YOB, "\n")
-            qx=object@deathProbs;
+            qx=object@deathProbs * (1+object@loading);
             if (is.null(object@trend2) || length(object@trend2)<=1) {
               ages=0:(length(qx)-1);
               damping=sapply(ages, function (age) { object@dampingFunction(YOB+age-object@baseYear) });
@@ -122,13 +138,13 @@ cat("deathProbabilities for valuationTable.trendProjection, YOB=", YOB, "\n")
 # data.frame(x=0:121, qx=deathProbabilities(AVOe2005R.unisex, YOB=1948));
 setMethod("deathProbabilities","valuationTable.improvementFactors",
           function (object,  ..., YOB=1975) {
-            qx=object@deathProbs;
+            qx=object@deathProbs * (1+object@loading);
             (1-object@improvement)^(YOB+0:(length(qx)-1)-object@baseYear)*qx
           })
 setMethod("deathProbabilities","valuationTable.mixed",
           function (object,  ..., YOB=1975) {
-            qx1=deathProbabilities(object@table1, ..., YOB);
-            qx2=deathProbabilities(object@table2, ..., YOB);
+            qx1=deathProbabilities(object@table1, ..., YOB) * (1+object@loading);
+            qx2=deathProbabilities(object@table2, ..., YOB) * (1+object@loading);
             (object@weight1*qx1 + object@weight2*qx2)/(object@weight1 + object@weight2)
           })
 
@@ -136,12 +152,12 @@ setMethod("deathProbabilities","valuationTable.mixed",
 setGeneric("periodDeathProbabilities", function(object, ...) standardGeneric("periodDeathProbabilities"));
 setMethod("periodDeathProbabilities", "valuationTable.period",
           function(object, ...) {
-            object@deathProbs;
+            object@deathProbs * (1+object@loading);
           })
 setMethod("periodDeathProbabilities","valuationTable.ageShift",
           function (object,  ..., Period=1975) {
             # TODO
-            qx=object@deathProbs;
+            qx=object@deathProbs * (1+object@loading);
             shift.index=match(YOB, object@shifts, 0);
             if (shift.index) {}
             #             TODO
@@ -149,7 +165,7 @@ setMethod("periodDeathProbabilities","valuationTable.ageShift",
           })
 setMethod("periodDeathProbabilities","valuationTable.trendProjection",
           function (object,  ..., Period=1975) {
-            qx=object@deathProbs;
+            qx=object@deathProbs * (1+object@loading);
             if (is.null(object@trend2) || length(object@trend2)<=1) {
               ages=0:(length(qx)-1);
               damping=object@dampingFunction(Period-object@baseYear);
@@ -165,13 +181,13 @@ setMethod("periodDeathProbabilities","valuationTable.trendProjection",
 # data.frame(x=0:121, qx=deathProbabilities(AVOe2005R.unisex, YOB=1948));
 setMethod("periodDeathProbabilities","valuationTable.improvementFactors",
           function (object, ..., Period=1975) {
-            qx=object@deathProbs;
+            qx=object@deathProbs * (1+object@loading);
             (1-object@improvement)^(Period-object@baseYear)*qx
           })
 setMethod("periodDeathProbabilities","valuationTable.mixed",
           function (object,  ..., Period=1975) {
-            qx1=periodDeathProbabilities(object@table1, ..., Period=Period);
-            qx2=periodDeathProbabilities(object@table2, ..., Period=Period);
+            qx1=periodDeathProbabilities(object@table1, ..., Period=Period) * (1+object@loading);
+            qx2=periodDeathProbabilities(object@table2, ..., Period=Period) * (1+object@loading);
             (object@weight1*qx1 + object@weight2*qx2)/(object@weight1 + object@weight2)
           })
 

@@ -13,13 +13,13 @@ library("gdata")
 ###############################################################################
 
 a.vz.dataM=read.xls(
-  "Tafeln/A_Volkszaehlungen.xls",
+  "Tables/A_Volkszaehlungen.xls",
   sheet="Austria_M",
   skip=2,
   header=TRUE
 )
 a.vz.dataF=read.xls(
-  "Tafeln/A_Volkszaehlungen.xls",
+  "Tables/A_Volkszaehlungen.xls",
   sheet="Austria_F",
   skip=2,
   header=TRUE
@@ -27,7 +27,7 @@ a.vz.dataF=read.xls(
 censtable = function(data, name, qslot, baseYear=1900) {
   qx=data[names(data)==qslot];
   ix=complete.cases(qx);
-  valuationTable.period(name=name, ages=data$x[ix], deathProbs=qx[ix,], baseYear=baseYear)  
+  valuationTable.period(name=name, ages=data$x[ix], deathProbs=qx[ix,], baseYear=baseYear)
 }
 
 mort.AT.census.1869.male = censtable(a.vz.dataM, name="ÖVSt 1868/71 M", baseYear=1869, qslot="X1868.71");
@@ -94,5 +94,5 @@ rm(a.vz.dataM, a.vz.dataF, censtable)
 
 ###############################################################################
 
-plotValuationTables(mort.AT.census.ALL.male, title="Vergleich österreichische Sterbetafeln, Männer", legend.position=c(1,0))
-plotValuationTables(mort.AT.census.ALL.female, title="Vergleich österreichische Sterbetafeln, Frauen", legend.position=c(1,0))
+plotValuationTables(mort.AT.census.ALL.male, title="Vergleich österreichische SterbeTables, Männer", legend.position=c(1,0))
+plotValuationTables(mort.AT.census.ALL.female, title="Vergleich österreichische SterbeTables, Frauen", legend.position=c(1,0))
