@@ -3,26 +3,26 @@ library(ggplot2);
 
 # (virtual) base class for valuation tables, contains only the name / ID
 valuationTable=setClass(
-  "valuationTable", 
-  slots=list(name="character", baseYear="numeric"), 
-  prototype=list(name="Actuarial Valuation Table", baseYear=2000), 
+  "valuationTable",
+  slots=list(name="character", baseYear="numeric"),
+  prototype=list(name="Actuarial Valuation Table", baseYear=2000),
   contains="VIRTUAL"
 );
 
 
-# A period life table, giving death probabilities for each age, up to 
+# A period life table, giving death probabilities for each age, up to
 # maximum age omega. Optionally apply selection factors to the probabilities
 valuationTable.period=setClass(
-  "valuationTable.period", 
+  "valuationTable.period",
   slots=list(ages="numeric", deathProbs="numeric"),
   prototype=list(ages=eval(0:120), deathProbs=rep(1,120)),
   contains="valuationTable"
 );
 
-# A cohort life table, obtained by age-shifting from a given base table (PODs 
+# A cohort life table, obtained by age-shifting from a given base table (PODs
 # for a base YOB)
 valuationTable.ageShift=setClass(
-  "valuationTable.ageShift", 
+  "valuationTable.ageShift",
   slots=list(ageShifts="data.frame"),
   prototype=list(ageShifts=data.frame(YOB=c(), shifts=c())),
   contains="valuationTable.period"
@@ -34,25 +34,25 @@ valuationTable.ageShift=setClass(
 # The dampingFunction can be used to modify the cumulative years (e.g. G(tau+x) instead of tau+x)
 # If trend2 is given, the G(tau+x) gives the weight of the first trend, 1-G(tau+x) the weight of the second trend
 valuationTable.trendProjection=setClass(
-  "valuationTable.trendProjection", 
+  "valuationTable.trendProjection",
   slots=list(baseYear="numeric", trend="numeric", dampingFunction="function", trend2="numeric"),
   prototype=list(baseYear=1980, trend=rep(0,120), dampingFunction=identity, trend2=0),
   contains="valuationTable.period"
 );
 
-# A cohort life table, obtained by an improvment factor projection 
+# A cohort life table, obtained by an improvment factor projection
 # from a given base table (PODs for a given observation year).
 valuationTable.improvementFactors=setClass(
-  "valuationTable.improvementFactors", 
+  "valuationTable.improvementFactors",
   slots=list(baseYear="numeric", improvement="numeric"),
   prototype=list(baseYear=2012, improvement=rep(0,120)),
   contains="valuationTable.period"
 );
 
-# A cohort life table described by actual observations (data frame of PODs 
+# A cohort life table described by actual observations (data frame of PODs
 # per year and age)
 valuationTable.observed=setClass(
-  "valuationTable.observed", 
+  "valuationTable.observed",
   slots=list(data="data.frame"),
   prototype=list(data=data.frame()),
   contains="valuationTable"
@@ -62,15 +62,15 @@ valuationTable.observed=setClass(
 # applies only to certain observation years (e.g. for the past use the observed
 # PODs, and project them to the future with the trend projection)
 valuationTable.joined=setClass(
-  "valuationTable.joined", 
+  "valuationTable.joined",
   slots=list(
-    table1="valuationTable", yearRange1="numeric", 
+    table1="valuationTable", yearRange1="numeric",
     table2="valuationTable", yearRange2="numeric"),
   contains="valuationTable"
 );
 # A cohort life table obtained by mixing two life tables with the given weights
 valuationTable.mixed=setClass(
-  "valuationTable.mixed", 
+  "valuationTable.mixed",
   slots=c(table1="valuationTable", table2="valuationTable", weight1="numeric", weight2="numeric"),
   prototype=list(weight1=1/2, weight2=1/2),
   contains="valuationTable"
@@ -212,9 +212,9 @@ setGeneric("getPeriodTable", function(object, Period, ...) standardGeneric("getP
 setMethod("getPeriodTable","valuationTable",
           function (object, Period, ...) {
             valuationTable.period(
-                name = paste(object@name, ", Period ", Period), 
+                name = paste(object@name, ", Period ", Period),
                 baseYear = Period,
-                ages = ages(object), 
+                ages = ages(object),
                 deathProbs = periodDeathProbabilities(object, Period=Period)
             )
           })
@@ -225,11 +225,18 @@ setMethod("getCohortTable","valuationTable",
             valuationTable.period(
                 name = paste(object@name, ", YOB ", YOB),
                 baseYear = YOB,
-                ages=ages(object), 
+                ages=ages(object),
                 deathProbs=deathProbabilities(object, YOB=YOB)
             );
           })
 
+
+setGeneric("undampenTrend", function (object) standardGeneric("undampenTrend"));
+setMethod("undampenTrend", "valuationTable.trendProjection",
+          function (object) {
+            object@dampingFunction=identity;
+            object
+            });
 
 
 makeQxDataFrame = function(..., YOB=1972, Period=NA) {
@@ -242,7 +249,7 @@ makeQxDataFrame = function(..., YOB=1972, Period=NA) {
     cat("Period: ", Period,"\n");
     data = lapply(data, function(t) cbind(x=t@ages, y=periodDeathProbabilities(t, Period=Period)))
   }
-  
+
   list.names = names(data)
   lns <- sapply(data, nrow)
   data <- as.data.frame(do.call("rbind", data))
@@ -254,7 +261,7 @@ plotValuationTables = function(data, ..., title = "", legend.position=c(0.9,0.1)
   if (!is.data.frame(data)) {
     data = makeQxDataFrame(data, ...);
   }
-  
+
   pl = ggplot(data, aes(x = x, y = y, colour = data$group)) +
     theme_bw() +
     theme(
@@ -280,7 +287,7 @@ plotValuationTables = function(data, ..., title = "", legend.position=c(0.9,0.1)
       breaks = function (limits) seq(max(min(limits),0),max(limits),5),
       minor_breaks = function (limits) seq(max(round(min(limits)),0),round(max(limits)),1),
       #labels = scales::trans_format('log10', scales::math_format(10^.x))
-      
+
     ) +
     annotation_logticks(sides="lr") +
     xlab("Alter") + labs(colour="Sterbetafel");

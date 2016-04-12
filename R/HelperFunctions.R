@@ -56,11 +56,13 @@ calculatePVDeath = function(q, benefits, ..., v=1) {
 }
 
 
-correctionPaymentsPerYear = function(m = 1, i = self$i, order = 0) {
+correctionPaymentFrequency = function(m = 1, i = self$i, order = 0) {
   # 0th-order approximation
   alpha=1;
-  beta=(m-1)/(2*m);
-
+  beta=0;
+  # negative orders mean that NO correction is done, e.g. because other means of
+  # correction are used like an explicit premium frequency loading on the premium.
+  if (order >=0 ) beta = beta + (m-1)/(2*m);
   # For higher orders, simply add one term after the other!
   if (order >= 1)     beta = beta + (m^2-1)/(6*m^2)*i;
   # order 1.5 has a special term that should NOT be used for higher-order approximations!
@@ -90,3 +92,10 @@ pad0 = function(v, l, value=0) {
   }
 }
 
+valueOrFunction = function(val, ...) {
+  if (is.function(val)) {
+    val(...)
+  } else {
+    val
+  }
+}
