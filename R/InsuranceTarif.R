@@ -53,8 +53,8 @@ InsuranceTarif = R6Class(
     sumRebate = 0,
 
     costs = list(),
-    benefitFrequencyLoading = list("1" = 0.0, "2" = 0.01, "4" = 0.015, "12" = 0.02), # TODO: Properly implement this
-    premiumFrequencyLoading = list("1" = 0.0, "2" = 0.01, "4" = 0.015, "12" = 0.02), # TODO: Implement this
+    benefitFrequencyLoading = list("1" = 0.0, "2" = 0.0, "4" = 0.0, "12" = 0.0), # TODO: Properly implement this
+    premiumFrequencyLoading = list("1" = 0.0, "2" = 0.0, "4" = 0.0, "12" = 0.0), # TODO: Implement this
     loadings = list(    # Loadings can also be function(sumInsured, premiums)    # TODO: Add other possible arguments
         "tax" = 0.04,                      # insurance tax, factor on each premium paid
         "unitcosts" = 0,                   # annual unit cost for each policy (Stückkosten), absolute value
@@ -423,7 +423,12 @@ InsuranceContract = R6Class(
 
     #### The code:
 
-    initialize = function(tarif, age, policyPeriod, premiumPeriod = policyPeriod, sumInsured = 1,  ..., deferral = 0, YOB = 1975) {
+    initialize = function(tarif, age, policyPeriod,
+                          premiumPeriod = policyPeriod, sumInsured = 1,
+                          ...,
+                          premiumPayments = "in advance", benefitPayments = "in advance",
+                          premiumFrequency = 1, benefitFrequency = 1,
+                          deferral = 0, YOB = 1975) {
       self$tarif = tarif;
       self$age = age;
       self$policyPeriod = policyPeriod;
@@ -431,6 +436,10 @@ InsuranceContract = R6Class(
       self$sumInsured = sumInsured;
       if (!missing(deferral))     self$deferral = deferral;
       if (!missing(YOB))          self$YOB = YOB;
+      if (!missing(premiumPayments)) self$premiumPayments = premiumPayments;
+      if (!missing(benefitPayments)) self$benefitPayments = benefitPayments;
+      if (!missing(premiumFrequency)) self$premiumFrequency = premiumFrequency;
+      if (!missing(benefitFrequency)) self$benefitFrequency = benefitFrequency;
 
       self$determineTransitionProbabilities();
       self$determineCashFlows();
@@ -445,14 +454,14 @@ InsuranceContract = R6Class(
 
     determineCashFlows = function() {
       self$cashFlowsBasic = self$tarif$getBasicCashFlows(YOB = self$YOB, age = self$age, policyPeriod = self$policyPeriod, premiumPeriod = self$premiumPeriod);
-      self$cashFlows = self$tarif$getCashFlows(age = self$age, premiumPayments = self$premiumPayments, policyPeriod = self$policyPeriod, premiumPaymentPeriod = self$premiumPeriod, basicCashFlows = self$cashFlowsBasic);
+      self$cashFlows = self$tarif$getCashFlows(age = self$age, premiumPayments = self$premiumPayments, benefitPayments = self$benefitPayments, policyPeriod = self$policyPeriod, premiumPaymentPeriod = self$premiumPeriod, basicCashFlows = self$cashFlowsBasic);
       self$premiumSum = sum(self$cashFlows$premiums_advance + self$cashFlows$premiums_arrears);
       self$cashFlowsCosts = self$tarif$getCashFlowsCosts(YOB = self$YOB, age = self$age, premiumPaymentPeriod = self$premiumPeriod, policyPeriod = self$policyPeriod);
       list("benefits"= self$cashFlows, "costs"=self$cashFlowCosts, "premiumSum" = self$premiumSum)
     },
 
     calculatePresentValues = function() {
-      self$presentValues = self$tarif$presentValueCashFlows(self$cashFlows, age = self$age, YOB = self$YOB);
+      self$presentValues = self$tarif$presentValueCashFlows(self$cashFlows, age = self$age, YOB = self$YOB, premiumFrequency = self$premiumFrequency, benefitFrequency = self$benefitFrequency);
       self$presentValuesCosts = self$tarif$presentValueCashFlowsCosts(self$cashFlowsCosts, age = self$age, YOB = self$YOB);
       list("benefits" = self$presentValues, "costs" = self$presentValuesCosts)
     },

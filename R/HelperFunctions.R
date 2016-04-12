@@ -64,7 +64,7 @@ correctionPaymentFrequency = function(m = 1, i = self$i, order = 0) {
   # correction are used like an explicit premium frequency loading on the premium.
   if (order >=0 ) beta = beta + (m-1)/(2*m);
   # For higher orders, simply add one term after the other!
-  if (order >= 1)     beta = beta + (m^2-1)/(6*m^2)*i;
+  if (order >= 1)     beta = beta + (m^2-1)/(6*m^2)*i; # S-Versicherung: *(1-i/2)
   # order 1.5 has a special term that should NOT be used for higher-order approximations!
   if (order == 1.5)   beta = beta + (1-m^2)/(12*m^2)*i^2;
 
