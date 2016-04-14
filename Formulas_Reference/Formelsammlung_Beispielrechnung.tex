@@ -577,24 +577,30 @@ Bruttoprämie & Zähler &
 \section{Zuschläge und Abschläge, Vorgeschriebene Prämie}
 
 \begin{longtable}{p{4cm}p{11cm}}
- $StkK$ \dots & Stückkosten pro Jahr (während Prämienzahlungsdauer, einmalig bei Einmalprämien)\\
  $oUZu$ \dots & Zuschlag für Vertrag ohne ärztliche Untersuchung\\
  $SuRa=SuRa(VS)$ \dots & Summenrabatt (von Höhe der VS abhängig)\\
+ $VwGew$ \dots & Vorweggewinnbeteiligung in Form eines \%-uellen Rabattes auf die Bruttoprämie\\
+ $StkK$ \dots & Stückkosten pro Jahr (während Prämienzahlungsdauer, einmalig bei Einmalprämien)\\
  $PrRa=PrRa(BP)$ \dots & Prämienrabatt (von Höhe der Bruttoprämie abhängig)\\
- $VwGew$ \dots & Vorweggewinnbeteiligung in Form eines Rabattes\\
+ $VwGew_{StkK}$ \dots & Vorweggewinnbeteiligung in Form eines Rabattes auf die Prämie nach Zu-/Abschlägen (insbesondere nach Stückkosten)\\
+ $PartnerRa$ \dots & Partnerrabatt auf Prämie nach Zu-/Abschlägen (z.B. bei Abschluss mehrerer Verträge), additiv zu $VwGew_{StkK}$\\
+ 
  $uz(k)$ \dots & Zuschlag für unterjährige Prämienzahlung ($k$ mal pro Jahr)
  \begin{equation*}
-  uz(k)=
- \end{equation*}
+  uz(k)=\left.\begin{cases}uk_1 & \text {für jährliche}\\uk_2 & \text {für halbjährliche} \\ uk_4 & \text{für quartalsweise}\\uk_{12} & \text{für monatliche}\end{cases}\right\} \text{Prämienzahlung}
+ \end{equation*}\\
+ 
+ 
+ $VSt$ \dots & Versicherungssteuer (in Österreich 4\% oder 11\%) \\
 
 \end{longtable}
 
 
-\begin{align*}
-\intertext{Vorgeschriebene Prämie:}
-PV_{\act[x]{n}} &= \left\{ (BP_{\act[x]{n}} + oUZu - SuRa) \cdot VS \cdot (1-VwGew) + StkK\right\} \cdot \frac{1+uz(pz)}{pz} \cdot (1+VSt)
+Vorgeschriebene Prämie:
+\begin{multline*}
+PV_{\act[x]{n}} = \left\{ (BP_{\act[x]{n}} + oUZu - SuRa) \cdot VS \cdot (1-VwGew) + StkK\right\} \cdot \\ \left(1-PrRa-VwGew_{StkK}-PartnerRa\right)\cdot \frac{1+uz(k)}{k} \cdot (1+VSt)
 % 
-\end{align*}
+\end{multline*}
 
 
 \pagebreak

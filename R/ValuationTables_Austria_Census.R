@@ -58,9 +58,9 @@ mort.AT.census.1991.female = censtable(a.vz.dataF, name="ÖVSt 1990/92 F", baseY
 mort.AT.census.2001.female = censtable(a.vz.dataF, name="ÖVSt 2000/02 F", baseYear=2001, qslot="X2000.02");
 mort.AT.census.2011.female = censtable(a.vz.dataF, name="ÖVSt 2010/2012 F", baseYear=2011, qslot="X2010.12");
 
-mort.AT.census.2001.unisex = valuationTable.mixed(table1=mort.AT.census.2001.m, table2=mort.AT.census.2001.f)
+mort.AT.census.2001.unisex = valuationTable.mixed(table1=mort.AT.census.2001.male, table2=mort.AT.census.2001.female)
 
-mort.AT.census.ALL.maleA= makeQxDataFrame(
+mort.AT.census.ALL.male = makeQxDataFrame(
               mort.AT.census.1869.male,
               mort.AT.census.1880.male,
               mort.AT.census.1890.male,
@@ -75,7 +75,7 @@ mort.AT.census.ALL.maleA= makeQxDataFrame(
               mort.AT.census.2001.male,
               mort.AT.census.2011.male);
 
-mort.AT.census.ALL.female=makeQxDataFrame(
+mort.AT.census.ALL.female = makeQxDataFrame(
               mort.AT.census.1869.female,
               mort.AT.census.1880.female,
               mort.AT.census.1890.female,
@@ -94,5 +94,5 @@ rm(a.vz.dataM, a.vz.dataF, censtable)
 
 ###############################################################################
 
-plotValuationTables(mort.AT.census.ALL.male, title="Vergleich österreichische SterbeTables, Männer", legend.position=c(1,0))
-plotValuationTables(mort.AT.census.ALL.female, title="Vergleich österreichische SterbeTables, Frauen", legend.position=c(1,0))
+plotValuationTables(mort.AT.census.ALL.male, title="Vergleich österreichische Sterbetafeln, Männer", legend.position=c(1,0))
+plotValuationTables(mort.AT.census.ALL.female, title="Vergleich österreichische Sterbetafeln, Frauen", legend.position=c(1,0))

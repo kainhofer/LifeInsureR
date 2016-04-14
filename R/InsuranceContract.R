@@ -1,154 +1,113 @@
-library("lifecontingencies");
+
+InsuranceContract = R6Class(
+  "InsuranceContract",
+  public = list(
+    tarif = NA,
+
+    #### Contract settings
+    sumInsured = 1,
+    YOB = NA,
+    age = NA,
+    policyPeriod = Inf,
+    premiumPeriod = 1,
+    deferral = 0,
+    guaranteed = 0,
+
+    premiumPayments = PaymentTimeEnum("in advance"),
+    benefitPayments = PaymentTimeEnum("in advance"),
+
+    premiumFrequency = 1,
+    benefitFrequency = 1, # Only for annuities!
+
+    loadings = list(),    # Allow overriding the tariff-defined loadings (see the InsuranceTariff class for all possible names)
+
+    #### Caching values for this contract, initialized/calculated when the object is created
+    transitionProbabilities = NA,
+
+    cashFlowsBasic = NA,
+    cashFlows = NA,
+    cashFlowsCosts = NA,
+    premiumSum = 0,
+
+    presentValues = NA,
+    presentValuesCosts = NA,
+
+    premiums = NA,
+    reserves = NA,
 
 
-# (virtual) base class for valuation tables, contains only the name / ID
-InsuranceContract=setRefClass(
-  "InsuranceContract", 
-  slots=c(
-    name="character",
-    tarif="character",
-    desc="character",
-    YOB="numeric",
-    YOB2="numeric",
-    age="numeric",
-    age2="numeric",
-    contractLength="numeric",
-    mortalityTable="valuationTable",
-    mortalityTable2="valuationTable",
-    
-    interest="numeric",
-    
-#     cashflows="data.frame",
-#     deathPayments="list",
-#     survivalPayments="list",
-#     costCashflows="data.frame",
-    cashflows="data.frame",
-    
-    probabilities="data.frame",
-    
-    
-    unterjährigkeit="numeric",
-    unterjährigkeitsapproximation="numeric",
-    cache.uj="list"
-    
-    
-    ), 
-  prototype=list(
-    name="Insurance Contract Type",
-    tarif="Tariff",
-    desc="Description of the contract",
-    YOB=1977,
-#     YOB2=1977,
-    age=35,
-#     age2=35,
-    contractLength=Inf,
-    mortalityTable=AVOe2005R.unisex,
-#     mortalityTable2=AVOe2005R.unisex,
+    #### The code:
 
-    interest=0,
-    
-    deathPayments=list(),
-    survivalPayments=list(),
-    costCashflows=data.frame(),
-    cashflows=data.frame(),
-    probabilities=data.frame(),
-    
-    unterjährigkeit=1,
-    unterjährigkeitsapproximation=1
+    initialize = function(tarif, age, policyPeriod,
+                          premiumPeriod = policyPeriod, sumInsured = 1,
+                          ...,
+                          loadings = list(),
+                          guaranteed = 0,
+                          premiumPayments = "in advance", benefitPayments = "in advance",
+                          premiumFrequency = 1, benefitFrequency = 1,
+                          deferral = 0, YOB = 1975) {
+      self$tarif = tarif;
+      self$age = age;
+      self$policyPeriod = policyPeriod;
+      self$premiumPeriod = premiumPeriod;
+      self$sumInsured = sumInsured;
+      if (!missing(deferral))     self$deferral = deferral;
+      if (!missing(YOB))          self$YOB = YOB;
+      if (!missing(premiumPayments)) self$premiumPayments = premiumPayments;
+      if (!missing(benefitPayments)) self$benefitPayments = benefitPayments;
+      if (!missing(premiumFrequency)) self$premiumFrequency = premiumFrequency;
+      if (!missing(benefitFrequency)) self$benefitFrequency = benefitFrequency;
+      if (!missing(guaranteed))   self$guaranteed = guaranteed;
+      if (!missing(loadings))     self$loadings = loadings;
+
+      self$recalculate();
+    },
+
+    recalculate = function() {
+      self$determineTransitionProbabilities();
+      self$determineCashFlows();
+      self$calculatePresentValues();
+      self$calculatePremiums();
+      self$calculatePresentValuesAllBenefits();
+      self$calculateReserves();
+
+    },
+
+    determineTransitionProbabilities = function() {
+      self$transitionProbabilities = self$tarif$getTransitionProbabilities(YOB = self$YOB, age = self$age);
+      self$transitionProbabilities
+    },
+
+    determineCashFlows = function() {
+      self$cashFlowsBasic = self$tarif$getBasicCashFlows(YOB = self$YOB, age = self$age, guaranteed = self$guaranteed, deferral = self$deferral, policyPeriod = self$policyPeriod, premiumPeriod = self$premiumPeriod);
+      self$cashFlows = self$tarif$getCashFlows(age = self$age, premiumPayments = self$premiumPayments, benefitPayments = self$benefitPayments, policyPeriod = self$policyPeriod, guaranteed = self$guaranteed, deferral = self$deferral, premiumPaymentPeriod = self$premiumPeriod, basicCashFlows = self$cashFlowsBasic);
+      self$premiumSum = sum(self$cashFlows$premiums_advance + self$cashFlows$premiums_arrears);
+      self$cashFlowsCosts = self$tarif$getCashFlowsCosts(YOB = self$YOB, age = self$age, deferral = self$deferral, guaranteed = self$guaranteed, premiumPaymentPeriod = self$premiumPeriod, policyPeriod = self$policyPeriod);
+      list("benefits"= self$cashFlows, "costs"=self$cashFlowCosts, "premiumSum" = self$premiumSum)
+    },
+
+    calculatePresentValues = function() {
+      self$presentValues = self$tarif$presentValueCashFlows(self$cashFlows, age = self$age, YOB = self$YOB, premiumFrequency = self$premiumFrequency, benefitFrequency = self$benefitFrequency, loadings = self$loadings);
+      self$presentValuesCosts = self$tarif$presentValueCashFlowsCosts(self$cashFlowsCosts, age = self$age, YOB = self$YOB);
+      list("benefits" = self$presentValues, "costs" = self$presentValuesCosts)
+    },
+
+    # Add total benefits present value to the PV array. This can only be done after premium calculation, because e.g. premium refund depends on gross premium!
+    calculatePresentValuesAllBenefits = function() {
+      pvAllBenefits = self$tarif$presentValueBenefits(presentValues = self$presentValues, premiums = self$premiums, sumInsured = self$sumInsured);
+      self$presentValues = cbind(self$presentValues, pvAllBenefits)
+      self$presentValues
+    },
+
+    calculatePremiums = function() {
+      self$premiums = self$tarif$premiumCalculation(self$presentValues, self$presentValuesCosts, premiumSum = self$premiumSum, sumInsured = self$sumInsured, loadings = self$loadings);
+      self$premiums
+    },
+
+    calculateReserves = function() {
+      self$reserves = self$tarif$reserveCalculation(premiums=self$premiums, pvBenefits=self$presentValues, pvCosts=self$presentValuesCosts, sumInsured=self$sumInsured, loadings = self$loadings);
+    },
+
+    dummy=NA
   )
 );
-
-# createCostStructure=function(age=35,contractLength=inf,
-#   alphaVS,
-#   alphaBP,
-#   
-# 
-# CostStructure=setClass(
-#   "CostStructure",
-#   
-# )
-
-
-calcUnterjährigkeit = function(m=1,i=0, order=0) {
-  alpha=1;
-  beta=(m-1)/(2*m);
-  if (order>=1)     { beta = beta + (m^2-1)/(6*m^2)*i;    }
-  if (order == 1.5) { beta = beta + (1-m^2)/(12*m^2)*i^2; }
-  if (order >= 2)   { beta = beta + (1-m^2)/(24*m^2)*i^2;
-                      alpha= alpha+ (m^2-1)/(12*m^2)*i^2; }
-  list(alpha=alpha, beta=beta);
-}
-
-setGeneric("createContractCashflows", function(object) standardGeneric("createContractCashflows"))
-
-setGeneric("calculate", function(object) standardGeneric("calculate"));
-setMethod("calculate", "InsuranceContract",
-  function (object) {
-    # 0) Prepare helper values
-    # 0a: Unterjährigkeit
-    m = object@unterjährigkeit;
-    object@cache.uj=calcUnterjährigkeit(m=m, i=object@interest, order=object@unterjährigkeitsapproximation);
-    
-  
-    # 1) Generate mortality table
-    if (!is.null(object@contractLength) && is.finite(object@contractLength)) {
-      ages = (object@age):(object@contractLength);
-    } else {
-      ages = (object@age):150;
-    }
-    qx = deathProbabilities(object@mortalityTable, YOB=object@YOB)[ages+1];
-    pxn = cumprod(1-qx);
-    object@probabilities = data.frame(ages=ages,qx=qx, pxn=pxn)
-    if (!is.null(object@YOB2)) {
-      ages2 = ages - object@age + object@age2;
-      qx2 = deathProbabilities(object@mortalityTable2, YOB=object@YOB2)[ages2+1];
-      pxn2 = cumprod(1-qx2);
-      pxyn = pxn * pxn2;
-      object@probabilities = data.frame(object@probabilities, ages2=ages2, q2=qx2, pxn2=pxn2, pxyn=pxyn);
-    }
-    
-    
-    # 2) Properly set up the payment and cost cash flow data frames
-    
-    # 3) Calculate all NPVs of the payment and the cost cash flows (recursively)
-    # 3a: life-long annuities for person 2 (and person 1+2), in case the death benefit is a life-long widow's annuity
-    
-    # 4) Set up the coefficients of the NPVs for the premium calculation
-    
-    # 5) Calculate the gross premium
-    # 6) Calculate the net premium and the Zillmer premium
-    
-    # 7) Calculate all reserves (benefits and costs)
-    
-    # 8) Calculate Spar- und Risikoprämie from the net premium and the reserves
-    
-    # 9) Calculate VS after Prämienfreistellung
-    # 9a: Calculate all reserves after Prämienfreistellung
-    
-    # 10) Calculate the Bilanz reserves
-    
-    # 11) Calculate the Rückkaufswert
-#   max(object@ages,na.rm=TRUE);
-    object
-})
-
-
-beispielvertrag = InsuranceContract(
-    name="Beispielvertrag", tarif="Beispieltarif",
-    desc="Beispiel zum Testen des Codes",
-    YOB=1948, YOB2=1948+65-62,
-    age=65,   age2=62,
-#     contractLength=30,
-    mortalityTable=AVOe2005R.unisex, mortalityTable2=AVOe2005R.unisex,
-    interest=0.0125,
-    
-    unterjährigkeit=12, unterjährigkeitsapproximation=1.5,
-    
-#     deathPayments=list(),
-#     survivalPayments=list(),
-#     costCashflows=data.frame(),
-#     cashflows=data.frame()
-);
-beispielvertrag=calculate(beispielvertrag)
-beispielvertrag
-# data.frame(x=0:121, qx=deathProbabilities(AVOe2005R.unisex, YOB=1948))

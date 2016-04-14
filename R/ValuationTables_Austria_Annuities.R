@@ -229,5 +229,6 @@ AVOe2005R.unisex.group.av=AVOe2005R_gen.av("AVÖ 2005R unisex group (age-shifted
 
 ###############################################################################
 
+options("scipen" = 3)
 t=AVOe2005R.male;
 deathProbabilities(t, YOB=2001)
