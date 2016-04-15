@@ -49,7 +49,11 @@ InsuranceContract = R6Class(
       self$tarif = tarif;
       self$age = age;
       self$policyPeriod = policyPeriod;
-      self$premiumPeriod = premiumPeriod;
+      if (missing(premiumPeriod) && !is.na(self$tarif$premiumPeriod)) {
+        self$premiumPeriod = self$tarif$premiumPeriod;
+      } else {
+        self$premiumPeriod = premiumPeriod;
+      }
       self$sumInsured = sumInsured;
       if (!missing(deferral))     self$deferral = deferral;
       if (!missing(YOB))          self$YOB = YOB;

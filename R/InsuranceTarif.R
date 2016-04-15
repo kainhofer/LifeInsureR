@@ -9,9 +9,9 @@ PaymentTimeEnum = setSingleEnum("PaymentTime", levels = c("in advance", "in arre
 
 
 # Initialize a cost matrix with dimensions: [CostType, Basis, Period], with:
-#     CostType: alpha, Zillmer, beta, gamma
+#     CostType: alpha, Zillmer, beta, gamma, gamma_nopremiums
 #     Basis:    SumInsured, SumPremiums, GrossPremium
-#     Period:   once, premiumPeriod, policyPeriod
+#     Period:   once, PremiumPeriod, PremiumFree, PolicyPeriod
 # TODO: gamma an Erlebensleistungen?
 initializeCosts = function() {
   dimnm=list(
@@ -46,6 +46,7 @@ InsuranceTarif = R6Class(
     benefitFrequencyOrder = 0,
     widowFactor = 0,
 
+    premiumPeriod = NA,
     premiumRefund = 0,
     premiumRefundLoading = 0,  # Mindesttodesfallrisiko soll damit erreicht werden, z.B. 105% der einbezahlten Prämien
 
@@ -67,7 +68,7 @@ InsuranceTarif = R6Class(
       ),
 
 
-    initialize = function(name = NA, mortalityTable = NA, i = NA, type = "wholelife", ..., premiumFrequencyOrder = 0, benefitFrequencyOrder = 0, costs) {
+    initialize = function(name = NA, mortalityTable = NA, i = NA, type = "wholelife", ..., premiumPeriod = NA, premiumFrequencyOrder = 0, benefitFrequencyOrder = 0, costs) {
       if (!missing(name))           self$name = name;
       if (!missing(mortalityTable)) self$mortalityTable = mortalityTable;
       if (!missing(i))              self$i = i;
@@ -75,6 +76,8 @@ InsuranceTarif = R6Class(
       self$costs = if (!missing(costs)) costs else initializeCosts();
       if (!missing(benefitFrequencyOrder)) self$benefitFrequencyOrder = benefitFrequencyOrder;
       if (!missing(premiumFrequencyOrder)) self$premiumFrequencyOrder = premiumFrequencyOrder;
+      # Set default premiumPeriod, e.g. single premium, to be used when the contract has no explicit premium period
+      if (!missing(premiumPeriod))  self$premiumPeriod = premiumPeriod;
 
       self$v = 1/(1+self$i);
 
