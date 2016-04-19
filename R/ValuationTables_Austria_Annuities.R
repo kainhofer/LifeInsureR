@@ -5,7 +5,7 @@
 # setwd(dirname(PATH))
 
 setwd("R")
-library("gdata")
+library("openxlsx")
 
 
 
@@ -13,13 +13,12 @@ library("gdata")
 ### RR67 Rententafel für Männer, 3%
 ###############################################################################
 
-rr67.data=read.xls(
-  "Tables/AVOe_R.xls",
-  sheet="OeVM59-61 RR67", skip=1, #row.names=1,
-  col.names=c("age","qx"));
+rr67.data=read.xlsx(
+  "Tables/AVOe_R.xlsx",
+    sheet="OeVM59-61 RR67", startRow = 3, colNames = TRUE);
 
 rr67=valuationTable.period(
-  name="ÖVM 59/61 RR67", ages=rr67.data$age, deathProbs=rr67.data$qx
+  name="ÖVM 59/61 RR67", ages=rr67.data$Alter, deathProbs=rr67.data$qx
 );
 # rm(rr67.data);
 
@@ -28,51 +27,42 @@ rr67=valuationTable.period(
 ### EROM/EROF 85 and G 1985 (period and age-shifted generation)
 ###############################################################################
 
-eromf.data=read.xls(
-  "Tables/AVOe_R.xls",
-  sheet="EROM-F Basistafeln", skip=2, #row.names=1,
-  col.names=c("age", "EROM85", "EROF85", "EROMG1950", "EROFG1950","","","")
-);
-
+eromf.data=read.xlsx("Tables/AVOe_R.xlsx", sheet="EROM-F Basistafeln", startRow = 3)
 
 erom85.male=valuationTable.period(
-  name="EROM 85, male", ages=eromf.data$age, deathProbs=eromf.data$EROM85
+  name="EROM 85, male", ages=eromf.data$Alter, deathProbs=eromf.data$EROM.85
 );
 erom85.female=valuationTable.period(
-  name="EROF 85, female", ages=eromf.data$age, deathProbs=eromf.data$EROF85
+  name="EROF 85, female", ages=eromf.data$Alter, deathProbs=eromf.data$EROF.85
 );
 
 EROM.G1950.male=valuationTable.period(
   name="EROM G 1950 Basistafel, male",
-  ages=eromf.data$age,
-  deathProbs=eromf.data$EROMG1950,
+  ages=eromf.data$Alter,
+  deathProbs=eromf.data$EROM.G1950,
   baseYear=1950
 );
 EROF.G1950.female=valuationTable.period(
   name="EROF G 1950 Basistafel, female",
-  ages=eromf.data$age,
-  deathProbs=eromf.data$EROFG1950,
+  ages=eromf.data$Alter,
+  deathProbs=eromf.data$EROF.G1950,
   baseYear=1950
 );
 
-eromf.data.av=read.xls(
-  "Tables/AVOe_R.xls",
-  sheet="EROM-F G AV", skip=1, row.names=1,
- col.names=c("YOB", "shiftM", "shiftF")
-);
+eromf.data.av=read.xlsx("Tables/AVOe_R.xlsx", sheet="EROM-F G AV", startRow = 3, rowNames = TRUE, colNames = TRUE)
 
 EROM.G1950.male.av=valuationTable.ageShift(
   name="EROM G 1950 mit Altersverschiebung, male",
-  ages=eromf.data$age,
-  deathProbs=eromf.data$EROMG1950,
-  ageShifts=eromf.data.av[1],
+  ages=eromf.data$Alter,
+  deathProbs=eromf.data$EROM.G1950,
+  ageShifts=eromf.data.av["Shift.M"],
   baseYear=1950
 );
 EROF.G1950.female.av=valuationTable.ageShift(
   name="EROF G 1950 mit Altersverschiebung, female",
-  ages=eromf.data$age,
-  deathProbs=eromf.data$EROFG1950,
-  ageShifts=eromf.data.av[2],
+  ages=eromf.data$Alter,
+  deathProbs=eromf.data$EROF.G1950,
+  ageShifts=eromf.data.av["Shift.F"],
   baseYear=1950
 );
 
@@ -81,15 +71,10 @@ EROF.G1950.female.av=valuationTable.ageShift(
 # AVÖ 1996R exact (Male, Female), 1st-order only
 ###############################################################################
 
-AVOe1996R.exakt.data=read.xls(
-  "Tables/AVOe_R.xls",
-  sheet="AVOe 1996R exakt", skip=2, #row.names=1,
-  col.names=c("age",
-              "q1991M", "trendM.long", "trendM.short", "factorMG", "factorM",
-              "",
-              "q1991F", "trendF.long", "trendF.short", "factorFG", "factorF",
-              rep("",16))
-);
+AVOe1996R.exakt.data=read.xlsx("Tables/AVOe_R.xlsx",
+  sheet="AVOe 1996R exakt", startRow = 3, cols=c(1:6, 8:12));
+
+AVOe1996R.exakt.data
 AVOe1996R.trend.switching=function(year) {
   if (year<=1971) {
     15/(1991-year)
@@ -107,7 +92,7 @@ AVOe1996R.trend.switching=function(year) {
 AVÖ1996R.male=valuationTable.trendProjection(
   name="AVÖ 1996R male",
   ages=AVOe1996R.exakt.data$age, baseYear=1991,
-  deathProbs=AVOe1996R.exakt.data$q1991M*AVOe1996R.exakt.data$factorM,
+  deathProbs=AVOe1996R.exakt.data$qx1991 * AVOe1996R.exakt.data$factorM,
   trend=AVOe1996R.exakt.data$trendM.long,
   trend2=AVOe1996R.exakt.data$trendM.short,
   dampingFunction=AVOe1996R.trend.switching
@@ -115,7 +100,7 @@ AVÖ1996R.male=valuationTable.trendProjection(
 AVÖ1996R.female=valuationTable.trendProjection(
   name="AVÖ 1996R female",
   ages=AVOe1996R.exakt.data$age, baseYear=1991,
-  deathProbs=AVOe1996R.exakt.data$q1991F*AVOe1996R.exakt.data$factorF,
+  deathProbs=AVOe1996R.exakt.data$qy1991 * AVOe1996R.exakt.data$factorF,
   trend=AVOe1996R.exakt.data$trendF.long,
   trend2=AVOe1996R.exakt.data$trendF.short,
   dampingFunction=AVOe1996R.trend.switching
@@ -123,7 +108,7 @@ AVÖ1996R.female=valuationTable.trendProjection(
 AVÖ1996R.male.group=valuationTable.trendProjection(
   name="AVÖ 1996R male, group",
   ages=AVOe1996R.exakt.data$age, baseYear=1991,
-  deathProbs=AVOe1996R.exakt.data$q1991M*AVOe1996R.exakt.data$factorMG,
+  deathProbs=AVOe1996R.exakt.data$qx1991 * AVOe1996R.exakt.data$factorMG,
   trend=AVOe1996R.exakt.data$trendM.long,
   trend2=AVOe1996R.exakt.data$trendM.short,
   dampingFunction=AVOe1996R.trend.switching
@@ -131,7 +116,7 @@ AVÖ1996R.male.group=valuationTable.trendProjection(
 AVÖ1996R.female.group=valuationTable.trendProjection(
   name="AVÖ 1996R female, group",
   ages=AVOe1996R.exakt.data$age, baseYear=1991,
-  deathProbs=AVOe1996R.exakt.data$q1991F*AVOe1996R.exakt.data$factorFG,
+  deathProbs=AVOe1996R.exakt.data$qy1991 * AVOe1996R.exakt.data$factorFG,
   trend=AVOe1996R.exakt.data$trendF.long,
   trend2=AVOe1996R.exakt.data$trendF.short,
   dampingFunction=AVOe1996R.trend.switching
@@ -144,20 +129,7 @@ AVÖ1996R.female.group=valuationTable.trendProjection(
 # gender-specific tables also have 2nd-order tables, unisex only 1st-order table
 ###############################################################################
 
-AVOe2005R.exakt.data=read.xls(
-  "Tables/AVOe_R.xls",
-  sheet="AVOe 2005R", skip=3, #row.names=1,
-  header=FALSE,
-  col.names=c("age",
-              "q2001M","q2001MG", "trendM",
-              "q2001F", "q2001FG", "trendF",
-              "",
-              "q2001M.2Ord", "2001MG.2Ord", "trendM.2Ord",
-              "q2001F.2Ord", "q2001FG.2Ord", "trendF.2Ord",
-              "",
-              "q2001U", "q2001UG", "trendU",
-              rep("", 10))
-);
+AVOe2005R.exakt.data=read.xlsx("Tables/AVOe_R.xlsx", sheet="AVOe 2005R", startRow = 3, cols=c(1:7, 9:14, 16:18));
 
 AVOe2005R.trend.damping=function(t) {
   100*atan(t/100)
@@ -174,14 +146,14 @@ AVOe2005R_gen=function(nm, probs, trend) {
   )
 }
 
-AVOe2005R.male  =AVOe2005R_gen("AVÖ 2005R male (exact), loaded",   "q2001M", "trendM");
-AVOe2005R.female=AVOe2005R_gen("AVÖ 2005R female (exact), loaded", "q2001F", "trendF");
-AVOe2005R.unisex=AVOe2005R_gen("AVÖ 2005R unisex (exact), loaded", "q2001U", "trendU");
-AVOe2005R.male.unloaded  =AVOe2005R_gen("AVÖ 2005R male (exact), unloaded",   "q2001M.2Ord", "trendM.2Ord");
-AVOe2005R.female.unloaded=AVOe2005R_gen("AVÖ 2005R female (exact), unloaded", "q2001F.2Ord", "trendF.2Ord");
-AVOe2005R.male.group  =AVOe2005R_gen("AVÖ 2005R male group (exact), loaded",   "q2001MG", "trendM");
-AVOe2005R.female.group=AVOe2005R_gen("AVÖ 2005R female group (exact), loaded", "q2001FG", "trendF");
-AVOe2005R.unisex.group=AVOe2005R_gen("AVÖ 2005R unisex group (exact), loaded", "q2001UG", "trendU");
+AVOe2005R.male  =AVOe2005R_gen("AVÖ 2005R male (exact), loaded",   "qx2001", "trendM");
+AVOe2005R.female=AVOe2005R_gen("AVÖ 2005R female (exact), loaded", "qy2001", "trendF");
+AVOe2005R.unisex=AVOe2005R_gen("AVÖ 2005R unisex (exact), loaded", "qu2001", "trendU");
+AVOe2005R.male.unloaded  =AVOe2005R_gen("AVÖ 2005R male (exact), unloaded",   "qx2001.2Ord", "trendM.2Ord");
+AVOe2005R.female.unloaded=AVOe2005R_gen("AVÖ 2005R female (exact), unloaded", "qy2001.2Ord", "trendF.2Ord");
+AVOe2005R.male.group  =AVOe2005R_gen("AVÖ 2005R male group (exact), loaded",   "qx2001G", "trendM");
+AVOe2005R.female.group=AVOe2005R_gen("AVÖ 2005R female group (exact), loaded", "qy2001G", "trendF");
+AVOe2005R.unisex.group=AVOe2005R_gen("AVÖ 2005R unisex group (exact), loaded", "qu2001G", "trendU");
 
 AVOe2005R.male.nodamping            = undampenTrend(AVOe2005R.male);
 AVOe2005R.female.nodamping          = undampenTrend(AVOe2005R.female);
@@ -197,17 +169,8 @@ AVOe2005R.unisex.nodamping.group    = undampenTrend(AVOe2005R.unisex.group);
 #AVÖ 2005R with age-shifting (Male, Female, unisex), 1st-order only
 ###############################################################################
 
-AVOe2005R.av.base=read.xls(
-  "Tables/AVOe_R.xls",
-  sheet="AVOe 2005R AV Basistafel", skip=1, # row.names=1,
-  col.names=c("age", "q1965M", "q1965MG", "q1965F", "q1965FG", "q1972U", "q1972UG")
-);
-
-AVOe2005R.av.verschiebung=read.xls(
-  "Tables/AVOe_R.xls",
-  sheet="AVOe 2005R AV Verschiebung",skip=2,row.names=1,
-  col.names=c("YOB", "shiftM", "shiftMG", "shiftF", "shiftFG", "shiftU", "shiftUG")
-)
+AVOe2005R.av.base = read.xlsx("Tables/AVOe_R.xlsx", sheet="AVOe 2005R AV Basistafel", startRow = 3, rowNames = FALSE);
+AVOe2005R.av.verschiebung = read.xlsx("Tables/AVOe_R.xlsx", sheet="AVOe 2005R AV Verschiebung", startRow = 3, rowNames = TRUE);
 
 AVOe2005R_gen.av=function(nm, probs, shft) {
   valuationTable.ageShift(
@@ -218,17 +181,17 @@ AVOe2005R_gen.av=function(nm, probs, shft) {
   )
 }
 
-AVOe2005R.male.av  =AVOe2005R_gen.av("AVÖ 2005R male (age-shifted), loaded",   "q1965M", "shiftM");
-AVOe2005R.female.av=AVOe2005R_gen.av("AVÖ 2005R female (age-shifted), loaded", "q1965F", "shiftF");
-AVOe2005R.unisex.av=AVOe2005R_gen.av("AVÖ 2005R unisex (age-shifted), loaded", "q1972U", "shiftU");
-AVOe2005R.male.group.av  =AVOe2005R_gen.av("AVÖ 2005R male group (age-shifted), loaded",   "q1965MG", "shiftMG");
-AVOe2005R.female.group.av=AVOe2005R_gen.av("AVÖ 2005R female group (age-shifted), loaded", "q1965FG", "shiftFG");
-AVOe2005R.unisex.group.av=AVOe2005R_gen.av("AVÖ 2005R unisex group (age-shifted), loaded", "q1972UG", "shiftUG");
+AVOe2005R.male.av  =AVOe2005R_gen.av("AVÖ 2005R male (age-shifted), loaded",   "qx1965", "shiftM");
+AVOe2005R.female.av=AVOe2005R_gen.av("AVÖ 2005R female (age-shifted), loaded", "qy1965", "shiftF");
+AVOe2005R.unisex.av=AVOe2005R_gen.av("AVÖ 2005R unisex (age-shifted), loaded", "qu1972", "shiftU");
+AVOe2005R.male.group.av  =AVOe2005R_gen.av("AVÖ 2005R male group (age-shifted), loaded",   "qx1965G", "shiftMG");
+AVOe2005R.female.group.av=AVOe2005R_gen.av("AVÖ 2005R female group (age-shifted), loaded", "qy1965G", "shiftFG");
+AVOe2005R.unisex.group.av=AVOe2005R_gen.av("AVÖ 2005R unisex group (age-shifted), loaded", "qu1972G", "shiftUG");
 
 
 
 ###############################################################################
 
-options("scipen" = 3)
-t=AVOe2005R.male;
-deathProbabilities(t, YOB=2001)
+# options("scipen" = 3, "digits"=10)
+# t=AVOe2005R.unisex;
+# deathProbabilities(t, YOB=1981)

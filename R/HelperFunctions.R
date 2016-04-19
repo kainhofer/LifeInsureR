@@ -55,6 +55,9 @@ calculatePVDeath = function(q, benefits, ..., v=1) {
   res[1:l]
 }
 
+getSavingsPremium = function(reserves, v=1) {
+  pad0(reserves[-1], length(reserves))*v - reserves
+}
 
 correctionPaymentFrequency = function(m = 1, i = self$i, order = 0) {
   # 0th-order approximation
