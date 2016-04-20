@@ -67,8 +67,12 @@ InsuranceTarif = R6Class(
         "partnerRebate" = 0                # Partnerrabatt auf Prämie mit Zu-/Abschlägen, wenn mehr als 1 Vertrag gleichzeitig abgeschlossen wird, additiv mit advanceBonusInclUnitCost and premiumRebate
       ),
 
+    features = list(  #Special cases for the calculations
+        "betaGammaInZillmer" = FALSE      # Whether beta and gamma-costs should be included in the Zillmer premium calculation
+      ),
 
-    initialize = function(name = NA, mortalityTable = NA, i = NA, type = "wholelife", ..., premiumPeriod = NA, premiumFrequencyOrder = 0, benefitFrequencyOrder = 0, costs) {
+
+    initialize = function(name = NA, mortalityTable = NA, i = NA, type = "wholelife", ..., features = list(), premiumPeriod = NA, premiumFrequencyOrder = 0, benefitFrequencyOrder = 0, costs) {
       if (!missing(name))           self$name = name;
       if (!missing(mortalityTable)) self$mortalityTable = mortalityTable;
       if (!missing(i))              self$i = i;
@@ -78,6 +82,7 @@ InsuranceTarif = R6Class(
       if (!missing(premiumFrequencyOrder)) self$premiumFrequencyOrder = premiumFrequencyOrder;
       # Set default premiumPeriod, e.g. single premium, to be used when the contract has no explicit premium period
       if (!missing(premiumPeriod))  self$defaultPremiumPeriod = premiumPeriod;
+      if (!missing(features))       self$features = c(features, self$features);
 
       self$v = 1/(1+self$i);
 
@@ -292,16 +297,16 @@ InsuranceTarif = R6Class(
 
       } else if (type=="Zillmer") {
         coefficients[["SumInsured"]][["costs"]]["Zillmer","SumInsured"] = 1;
-        # coefficients[["SumInsured"]][["costs"]]["beta",   "SumInsured"] = 1;
-        # coefficients[["SumInsured"]][["costs"]]["gamma",  "SumInsured"] = 1;
-
         coefficients[["SumInsured"]][["costs"]]["Zillmer","SumPremiums"] = premiumSum * premiums[["unit.gross"]];
-        # coefficients[["SumInsured"]][["costs"]]["beta",   "SumPremiums"] = premiumSum * premiums[["unit.gross"]];
-        # coefficients[["SumInsured"]][["costs"]]["gamma",  "SumPremiums"] = premiumSum * premiums[["unit.gross"]];
-
         coefficients[["SumInsured"]][["costs"]]["Zillmer","GrossPremium"] = premiums[["unit.gross"]];
-        # coefficients[["SumInsured"]][["costs"]]["beta",   "GrossPremium"] = premiums[["unit.gross"]];
-        # coefficients[["SumInsured"]][["costs"]]["gamma",  "GrossPremium"] = premiums[["unit.gross"]];
+        if (self$features$betaGammaInZillmer) {
+          coefficients[["SumInsured"]][["costs"]]["beta",   "SumInsured"] = 1;
+          coefficients[["SumInsured"]][["costs"]]["gamma",  "SumInsured"] = 1;
+          coefficients[["SumInsured"]][["costs"]]["beta",   "SumPremiums"] = premiumSum * premiums[["unit.gross"]];
+          coefficients[["SumInsured"]][["costs"]]["gamma",  "SumPremiums"] = premiumSum * premiums[["unit.gross"]];
+          coefficients[["SumInsured"]][["costs"]]["beta",   "GrossPremium"] = premiums[["unit.gross"]];
+          coefficients[["SumInsured"]][["costs"]]["gamma",  "GrossPremium"] = premiums[["unit.gross"]];
+        }
       }
 
       coefficients
@@ -310,8 +315,8 @@ InsuranceTarif = R6Class(
     premiumCalculation = function(pvBenefits, pvCosts, costs=self$costs, premiumSum=0, sumInsured=1, premiumFrequency = 1, loadings=list(), ...) {
       # The loadings passed to this function override the tariff settings!
       loadings = c(loadings, self$loadings);
-str(loadings);
       premiums = c("unit.net" = 0, "unit.Zillmer" = 0, "unit.gross"= 0, "net" = 0, "Zillmer" = 0, "gross" = 0, "written" = 0);
+      coefficients = list("gross"=c(), "Zillmer"=c(), "net"=c());
 
       # net, gross and Zillmer premiums are calculated from the present values using the coefficients on each present value as described in the formulas document
       coeff=self$getPremiumCoefficients("gross", pvBenefits["0",]*0, pvCosts["0",,]*0, premiums=premiums, premiumSum=premiumSum, loadings=loadings)
@@ -320,18 +325,21 @@ str(loadings);
       ongoingAlphaGrossPremium = self$loadings$ongoingAlphaGrossPremium;
       premiums[["unit.gross"]] = enumerator/denominator * (1 + ongoingAlphaGrossPremium);
       premiums[["gross"]] = premiums[["unit.gross"]] * sumInsured;
+      coefficients[["gross"]] = coeff;
 
       coeff=self$getPremiumCoefficients("net", pvBenefits["0",]*0, pvCosts["0",,]*0, premiums=premiums, premiumSum=premiumSum)
       enumerator  = sum(coeff[["SumInsured"]][["benefits"]] * pvBenefits["0",]) + sum(coeff[["SumInsured"]][["costs"]] * pvCosts["0",,]);
       denominator = sum(coeff[["Premium"   ]][["benefits"]] * pvBenefits["0",]) + sum(coeff[["Premium"   ]][["costs"]] * pvCosts["0",,]);
       premiums[["unit.net"]] = enumerator/denominator; premiums
       premiums[["net"]] = premiums[["unit.net"]] * sumInsured;
+      coefficients[["net"]] = coeff;
 
       coeff=self$getPremiumCoefficients("Zillmer", pvBenefits["0",]*0, pvCosts["0",,]*0, premiums=premiums, premiumSum=premiumSum)
       enumerator  = sum(coeff[["SumInsured"]][["benefits"]] * pvBenefits["0",]) + sum(coeff[["SumInsured"]][["costs"]] * pvCosts["0",,]);
       denominator = sum(coeff[["Premium"   ]][["benefits"]] * pvBenefits["0",]) + sum(coeff[["Premium"   ]][["costs"]] * pvCosts["0",,]);
       premiums[["unit.Zillmer"]] = enumerator/denominator;
       premiums[["Zillmer"]] = premiums[["unit.Zillmer"]] * sumInsured;
+      coefficients[["Zillmer"]] = coeff;
 
 
       # The written premium is the gross premium with additional loadings, rebates, unit costs and taxes
@@ -347,22 +355,14 @@ str(loadings);
 
       frequencyLoading = valueOrFunction(self$premiumFrequencyLoading, sumInsured=sumInsured, premiums=premiums);
 
-str(premiums[["unit.gross"]]*(1+noMedicalExam.relative) + noMedicalExam - sumRebate);
-str(sumInsured);
-str(1-advanceProfitParticipation);
-str(unitCosts);
-
       premiumBeforeTax = (premiums[["unit.gross"]]*(1+noMedicalExam.relative) + noMedicalExam - sumRebate)*sumInsured * (1-advanceProfitParticipation) + unitCosts;
-str(premiumBeforeTax);
       premiumBeforeTax = premiumBeforeTax * (1-premiumRebate-advanceProfitParticipationUnitCosts-partnerRebate);
-str(premiumBeforeTax);
       premiumBeforeTax = premiumBeforeTax * (1+frequencyLoading[[toString(premiumFrequency)]]) / premiumFrequency;
-str(premiumBeforeTax);
       premiums[["written_beforetax"]] = premiumBeforeTax;
       premiums[["tax"]] = premiumBeforeTax * tax;
       premiums[["written"]] = premiumBeforeTax * (1 + tax);
 
-      premiums
+      list("premiums"=premiums, "coefficients"=coefficients)
     },
 
     reserveCalculation = function (premiums, pvBenefits, pvCosts, sumInsured=1, ...) {

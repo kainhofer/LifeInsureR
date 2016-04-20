@@ -36,6 +36,7 @@ InsuranceContract = R6Class(
     presentValuesCosts = NA,
 
     premiums = NA,
+    premiumCoefficients = NA,
     reserves = NA,
 
     premiumComposition = NA,
@@ -83,10 +84,97 @@ InsuranceContract = R6Class(
 
     },
 
-    exportExcel.new = function(filename) {
-      crow=1;
+    exportExcel = function(filename) {
+      ###
       nrrows = dim(self$cashFlows)[[1]]; # Some vectors are longer (e.g. qx), so determine the max nr or rows
 
+      ################################################
+      # Style information
+      ################################################
+      headerStyle = createStyle(border="TopLeftRight", borderColour="#DA9694", borderStyle="medium", bgFill="#C0504D", fontColour="#FFFFFF", halign="center", valign="center", textDecoration="bold");
+      tableHeaderStyle = createStyle(halign="center", valign="center", textDecoration="bold");
+      hide0Style = createStyle(numFmt="General; General; \"\"");
+      cost0Style = createStyle(numFmt="0.000%; 0.000%; \"\"");
+      wrapStyle = createStyle(wrapText=TRUE);
+      centerStyle = createStyle(halign="center", valign="center");
+
+      ################################################
+      # Helper Functions
+      ################################################
+      writeAgeQTable = function (sheet, crow=1, ccol=1) {
+        writeData(wb, sheet, "Sterblichkeiten", startCol = ccol+2, startRow = crow);
+        addStyle(wb, sheet, style=headerStyle, rows=crow, cols = ccol+2, stack=TRUE);
+        mergeCells(wb, sheet, rows=crow, cols=(ccol+2):(ccol+3))
+        writeDataTable(wb, sheet, self$transitionProbabilities[1:nrrows,],
+                     startRow=crow+1, startCol = ccol, colNames = TRUE, rowNames = TRUE,
+                     tableStyle = "TableStyleMedium3", withFilter = FALSE, headerStyle = tableHeaderStyle);
+        freezePane(wb, sheet, firstActiveRow=crow+2, firstActiveCol = ccol+2)
+        addStyle(wb, sheet, style=centerStyle, rows=(crow+2):(crow+1+nrrows), cols=ccol:(ccol+1), gridExpand = TRUE, stack=TRUE);
+        dim(self$transitionProbabilities)[[2]] + 2;
+      };
+      writeValuesTable = function (sheet, values, caption=NULL, crow=1, ccol=1, rowNames=FALSE, tableStyle="TableStyleMedium3", tableName=NULL, withFilter=FALSE, headerStyle=tableHeaderStyle, valueStyle=NULL) {
+        nrrow = dim(values)[[1]];
+        nrcol = dim(values)[[2]];
+        addcol = if (rowNames) 1 else 0;
+        ecol = ccol + addcol + nrcol - 1;
+        if (!missing(caption)) {
+          writeData(wb, sheet, caption, startCol = ccol+addcol, startRow = crow);
+          addStyle(wb, sheet, style=headerStyle, rows=crow, cols = ccol+addcol, stack=TRUE);
+          mergeCells(wb, sheet, rows=crow, cols=(ccol+addcol):ecol);
+        }
+        writeDataTable(wb, sheet, values, startRow=crow+1, startCol=ccol, colNames=TRUE,
+                       rowNames=rowNames, tableStyle=tableStyle,
+                       tableName=tableName, withFilter = withFilter, headerStyle = headerStyle)
+        if (!missing(valueStyle)) {
+          addStyle(wb, sheet, style=valueStyle, rows=(crow+2):(crow+nrrow+1), cols=(ccol+addcol):ecol, gridExpand = TRUE, stack = TRUE);
+        }
+        # width of table is the return value
+        nrcol + addcol
+      };
+
+      writePremiumCoefficients = function(sheet, values, type="benefits", crow=crow, ccol=ccol) {
+        writeData(wb, sheet, matrix(c(
+                    "Nettoprämie", "", "Zillmerprämie", "", "Bruttoprämie", "",
+                    "rel. zu VS", "rel. zu Prämie", "rel. zu VS", "rel. zu Prämie", "rel. zu VS", "rel. zu Prämie"), 6, 2
+                  ), startCol = ccol, startRow = crow, colNames = FALSE, borders = "rows", borderColour = "gray5", borderStyle = "thin");
+        mergeCells(wb, sheet, cols = ccol, rows = crow:(crow+1));
+        mergeCells(wb, sheet, cols = ccol, rows = (crow+2):(crow+3));
+        mergeCells(wb, sheet, cols = ccol, rows = (crow+4):(crow+5));
+        addStyle(wb, sheet, style=createStyle(valign = "center", borderColour = "gray5", border = "LeftBottomTop", borderStyle = "thin"), rows = crow:(crow+5), cols = ccol);
+        mod = function(a) { as.data.frame(t(a)) };
+        if (type=="costs") {
+          mod = function(vals) {
+            newvals=vals;
+            dim(newvals) = c(1, dim(vals));
+            dimnames(newvals) = c(list("Coeff"), dimnames(vals));
+            as.data.frame(self$tarif$costValuesAsMatrix(newvals))
+          };
+        }
+
+        writeData(wb, sheet, mod(values[["net"]][["SumInsured"]][[type]]),     startCol = ccol+2, startRow = crow, colNames=FALSE, borders="surrounding", borderColour="gray5", borderStyle="thin");
+        writeData(wb, sheet, mod(values[["net"]][["Premium"]][[type]]),        startCol = ccol+2, startRow = crow+1, colNames=FALSE, borders="surrounding", borderColour="gray5", borderStyle="thin");
+        writeData(wb, sheet, mod(values[["Zillmer"]][["SumInsured"]][[type]]), startCol = ccol+2, startRow = crow+2, colNames=FALSE, borders="surrounding", borderColour="gray5", borderStyle="thin");
+        writeData(wb, sheet, mod(values[["Zillmer"]][["Premium"]][[type]]),    startCol = ccol+2, startRow = crow+3, colNames=FALSE, borders="surrounding", borderColour="gray5", borderStyle="thin");
+        writeData(wb, sheet, mod(values[["gross"]][["SumInsured"]][[type]]),   startCol = ccol+2, startRow = crow+4, colNames=FALSE, borders="surrounding", borderColour="gray5", borderStyle="thin");
+        writeData(wb, sheet, mod(values[["gross"]][["Premium"]][[type]]),      startCol = ccol+2, startRow = crow+5, colNames=FALSE, borders="surrounding", borderColour="gray5", borderStyle="thin");
+      }
+      # costPV = as.data.frame(self$tarif$costValuesAsMatrix(self$presentValuesCosts));
+      # ccol = 1;
+      # crow = 4;
+      # # We add six lines before the present values to show the coefficients for the premium calculation
+      # ccol = ccol + writeAgeQTable("Barwerte", crow=crow+6, ccol=1);
+      #
+      # ccol = ccol + writeValuesTable("Barwerte", as.data.frame(self$presentValues),
+      #                                crow=crow+6, ccol=ccol, tableName="PresentValues_Benefits",
+      #                                caption = "Leistungsbarwerte", valueStyle=hide0Style) + 1;
+      #
+      # writePremiumCoefficients("Barwerte", self$premiumCoefficients, type="costs", crow=crow, ccol=ccol-1);
+      # ccol = ccol + writeValuesTable("Barwerte", as.data.frame(costPV),
+
+
+      ################################################
+      # General Workbook setup
+      ################################################
       wb = openxlsx::createWorkbook();
       addWorksheet(wb, "Tarifinformationen");
       addWorksheet(wb, "Reserven");
@@ -99,15 +187,18 @@ InsuranceContract = R6Class(
           "Tarif:", self$tarif$tarif,
           "Tarifname:", self$tarif$name,
           "Description:", self$tarif$desc
-        ), 3, 2, byrow = TRUE), startCol=1, startRow=1, colNames=FALSE, rowNames=FALSE,
-        borders = "all");
+        ), 3, 2, byrow = TRUE), startCol=1, startRow=1, colNames=FALSE, rowNames=FALSE);
       mergeCells(wb, "Tarifinformationen", cols=2:10, rows=1);
       mergeCells(wb, "Tarifinformationen", cols=2:10, rows=2);
       mergeCells(wb, "Tarifinformationen", cols=2:10, rows=3);
+      addStyle(wb, "Tarifinformationen", style=wrapStyle, rows=3, cols=2:10, stack=TRUE);
+      addStyle(wb, "Tarifinformationen", style=createStyle(valign="top"), rows=1:3, cols=1:10, gridExpand=TRUE, stack=TRUE);
 
       crow = crow+4;
 
+      ################################################
       # Basic parameters
+      ################################################
       values=c(
           "Sum insured"=self$sumInsured,
           "Mortality table"=self$tarif$mortalityTable@name,
@@ -123,7 +214,7 @@ InsuranceContract = R6Class(
       mergeCells(wb, "Tarifinformationen", cols=1:length(values), rows=crow:crow);
       writeDataTable(wb, "Tarifinformationen", as.data.frame(t(values)),
                      startCol=1, startRow=crow+1, colNames=TRUE, rowNames=FALSE,
-                     tableStyle="TableStyleMedium3", withFilter = FALSE);
+                     tableStyle="TableStyleMedium3", withFilter = FALSE, headerStyle = tableHeaderStyle);
       crow = crow + 4;
 
       # Premiums
@@ -131,7 +222,7 @@ InsuranceContract = R6Class(
       mergeCells(wb, "Tarifinformationen", cols=1:length(self$premiums), rows=crow:crow);
       writeDataTable(wb, "Tarifinformationen", as.data.frame(t(self$premiums)),
                      startCol=1, startRow=crow+1, colNames=TRUE, rowNames=FALSE,
-                     tableStyle="TableStyleMedium3", withFilter = FALSE);
+                     tableStyle="TableStyleMedium3", withFilter = FALSE, headerStyle = tableHeaderStyle);
       crow = crow + 4;
 
 
@@ -141,21 +232,14 @@ InsuranceContract = R6Class(
 
       # Age, death and survival probabilities
       ccol = 1;
-      writeDataTable(wb, "Reserven", self$transitionProbabilities[1:nrrows,],
-                     startRow=3, startCol = ccol, colNames = TRUE, rowNames = TRUE,
-                     tableStyle = "TableStyleMedium3", withFilter = FALSE);
-      ccol = ccol + dim(self$transitionProbabilities)[[2]] + 2;
-
-      writeDataTable(wb, "Reserven", as.data.frame(self$reserves), startRow=3,
-                     startCol=ccol, colNames=TRUE, rowNames=FALSE, tableStyle="TableStyleMedium3",
-                     tableName="Reserves", withFilter = FALSE)
-      ccol = ccol + dim(self$reserves)[[2]] + 1;
-
-      writeDataTable(wb, "Reserven", as.data.frame(self$premiumComposition), startRow=3,
-                     startCol=ccol, colNames=TRUE, rowNames=FALSE, tableStyle="TableStyleMedium3",
-                     tableName="Premium_Decomposition", withFilter = FALSE)
-      ccol = ccol + dim(self$premiumComposition)[[2]] + 1;
-
+      crow = 4;
+      ccol = ccol + writeAgeQTable("Reserven", crow=crow, ccol=1);
+      ccol = ccol + writeValuesTable("Reserven", as.data.frame(self$reserves),
+                                     crow=crow, ccol=ccol, tableName="Reserves",
+                                     caption="Reserven", valueStyle=hide0Style) + 1;
+      ccol = ccol + writeValuesTable("Reserven", as.data.frame(self$premiumComposition),
+                                     crow=crow, ccol=ccol, tableName="Premium_Decomposition",
+                                     caption = "Prämienzerlegung", valueStyle=hide0Style) + 1;
 
 
       ################################################
@@ -163,23 +247,21 @@ InsuranceContract = R6Class(
       ################################################
 
       # Age, death and survival probabilities
-      ccol = 1;
-      writeDataTable(wb, "Barwerte", self$transitionProbabilities[1:nrrows,],
-                     startRow=3, startCol = ccol, colNames = TRUE, rowNames = TRUE,
-                     tableStyle = "TableStyleMedium3", withFilter = FALSE);
-      ccol = ccol + dim(self$transitionProbabilities)[[2]] + 2;
-
-      writeDataTable(wb, "Barwerte", as.data.frame(self$presentValues), startRow=3,
-                     startCol=ccol, colNames=TRUE, rowNames=FALSE, tableStyle="TableStyleMedium3",
-                     tableName="PresentValues_Benefits", withFilter = FALSE)
-      ccol = ccol + dim(self$presentValues)[[2]] + 1;
-
       costPV = as.data.frame(self$tarif$costValuesAsMatrix(self$presentValuesCosts));
-      writeDataTable(wb, "Barwerte", as.data.frame(costPV), startRow=3, startCol=ccol,
-                     colNames=TRUE, rowNames=FALSE, tableStyle="TableStyleMedium3",
-                     tableName="PresentValues_Costs", withFilter = FALSE)
-      ccol = ccol + dim(costPV)[[2]] + 1;
+      ccol = 1;
+      crow = 4;
+      # We add six lines before the present values to show the coefficients for the premium calculation
+      ccol = ccol + writeAgeQTable("Barwerte", crow=crow+6, ccol=1);
 
+      writePremiumCoefficients("Barwerte", self$premiumCoefficients, type="benefits", crow=crow, ccol=ccol-1);
+      ccol = ccol + writeValuesTable("Barwerte", as.data.frame(self$presentValues),
+                                     crow=crow+6, ccol=ccol, tableName="PresentValues_Benefits",
+                                     caption = "Leistungsbarwerte", valueStyle=hide0Style) + 1;
+
+      writePremiumCoefficients("Barwerte", self$premiumCoefficients, type="costs", crow=crow, ccol=ccol-2);
+      ccol = ccol + writeValuesTable("Barwerte", as.data.frame(costPV),
+                                     crow=crow+6, ccol=ccol, tableName="PresentValues_Costs",
+                                     caption = "Kostenbarwerte", valueStyle=cost0Style) + 1;
 
 
       ################################################
@@ -187,26 +269,16 @@ InsuranceContract = R6Class(
       ################################################
 
       # Age, death and survival probabilities
-      ccol = 1;
-      writeDataTable(wb, "Cash-Flows", self$transitionProbabilities[1:nrrows,],
-                     startRow=3, startCol = ccol, colNames = TRUE, rowNames = TRUE,
-                     tableStyle = "TableStyleMedium3", withFilter = FALSE);
-      ccol = ccol + dim(self$transitionProbabilities)[[2]] + 2;
-
-      # Benefit Cash Flows
-      writeDataTable(wb, "Cash-Flows", self$cashFlows, startRow=3, startCol=ccol,
-                     colNames=TRUE, rowNames=FALSE, tableStyle="TableStyleMedium3",
-                     tableName="CashFlows_CBenefots", withFilter = TRUE)
-      ccol = ccol + dim(self$cashFlows)[[2]] + 1;
-
-      # Costs Cash Flows
-      # Age, death and survival probabilities
       costCF = as.data.frame(self$tarif$costValuesAsMatrix(self$cashFlowsCosts));
-      writeDataTable(wb, "Cash-Flows", costCF, startRow=3, startCol=ccol, colNames=TRUE,
-                     rowNames=FALSE, tableStyle="TableStyleMedium3",
-                     tableName="CashFlows_Costs", withFilter = TRUE)
-      ccol = ccol + dim(costCF)[[2]] + 1;
-
+      ccol = 1;
+      crow = 4;
+      ccol = ccol + writeAgeQTable("Cash-Flows", crow=crow, ccol=1);
+      ccol = ccol + writeValuesTable("Cash-Flows", self$cashFlows,
+                                     crow=crow, ccol=ccol, tableName="CashFlows_Benefits",
+                                     caption="Leistungscashflows", withFilter=TRUE, valueStyle=hide0Style) + 1;
+      ccol = ccol + writeValuesTable("Cash-Flows", costCF,
+                                     crow=crow, ccol=ccol, tableName="CashFlows_Costs",
+                                     caption="Kostencashflows", withFilter=TRUE, valueStyle=cost0Style) + 1;
 
 
       openxlsx::saveWorkbook(wb, filename, overwrite = TRUE)
@@ -274,7 +346,10 @@ InsuranceContract = R6Class(
     },
 
     calculatePremiums = function() {
-      self$premiums = self$tarif$premiumCalculation(self$presentValues, self$presentValuesCosts, premiumSum = self$premiumSum, sumInsured = self$sumInsured, loadings = self$loadings);
+      # the premiumCalculation function returns the premiums AND the cofficients, so we have to extract the coefficients and store them in a separate variable
+      res = self$tarif$premiumCalculation(self$presentValues, self$presentValuesCosts, premiumSum = self$premiumSum, sumInsured = self$sumInsured, loadings = self$loadings);
+      self$premiumCoefficients = res$coefficients;
+      self$premiums = res$premiums
       self$premiums
     },
 
