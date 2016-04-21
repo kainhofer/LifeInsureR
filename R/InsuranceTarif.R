@@ -381,17 +381,16 @@ InsuranceTarif = R6Class(
       resNet = pvBenefits[,"allBenefits"]*(1+self$loadings$security) - premiums[["net"]] * pvBenefits[,"premiums"];
       BWLminBWP = pvBenefits[,"allBenefits"]*(1+self$loadings$security) - premiums[["net"]] * pvBenefits[,"premiums"];
       BWZcorr = pvBenefits["0","Zillmer"]/pvBenefits["0", "premiums"]*pvBenefits[,"premiums"];
-      # resZ = pvBenefits[,"allBenefits"]*(1+self$loadings$security) - premiums[["net"]] * pvBenefits[,"premiums"] - pvCosts["0", "Zillmer", "SumInsured"]*premiumSum/pvBenefits["0", "premiums"]*pvBenefits[,"premiums"];
       resZ=BWLminBWP - BWZcorr;
 
         #premiums[["Zillmer"]] * pvBenefits[,"premiums"];
-      res.gamma    = (pvCosts[,"gamma", "SumInsured"] - pvCosts["0", "gamma", "SumInsured"]/pvBenefits["0", "premiums"]*pvBenefits[,"premiums"])*sumInsured;
-      res.gamma.alt = pvBenefits[,"gamma"] - pvBenefits["0", "gamma"]/pvBenefits["0", "premiums"]*pvBenefits[,"premiums"]
+      res.gamma = pvBenefits[,"gamma"] - pvBenefits["0", "gamma"]/pvBenefits["0", "premiums"]*pvBenefits[,"premiums"]
 
       # res.premiumfree =
       # res.gamma.premiumfree =
 
-      res = cbind("net"=resNet, "BWLminBWP"=BWLminBWP, "BWZcorr"= BWZcorr, "Zillmer"=resZ, "gamma"=res.gamma, "gamma.alt"=res.gamma.alt#, "Reserve.premiumfree"=res.premiumfree, "Reserve.gamma.premiumfree"=res.gamma.premiumfree);
+      res = cbind("net"=resNet, "Zillmer"=resZ, "gamma"=res.gamma
+                  #, "Reserve.premiumfree"=res.premiumfree, "Reserve.gamma.premiumfree"=res.gamma.premiumfree);
       );
       rownames(res) <- rownames(pvBenefits);
       res
