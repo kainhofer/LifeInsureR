@@ -340,7 +340,7 @@ InsuranceContract = R6Class(
 
     # Add total benefits present value to the PV array. This can only be done after premium calculation, because e.g. premium refund depends on gross premium!
     calculatePresentValuesAllBenefits = function() {
-      pvAllBenefits = self$tarif$presentValueBenefits(presentValues = self$presentValues, premiums = self$premiums, sumInsured = self$sumInsured );
+      pvAllBenefits = self$tarif$presentValueBenefits(presentValues = self$presentValues, presentValuesCosts = self$presentValuesCosts, premiums = self$premiums, sumInsured = self$sumInsured, premiumSum = self$premiumSum );
       self$presentValues = cbind(self$presentValues, pvAllBenefits)
       self$presentValues
     },
@@ -354,7 +354,7 @@ InsuranceContract = R6Class(
     },
 
     calculateReserves = function() {
-      self$reserves = self$tarif$reserveCalculation(premiums=self$premiums, pvBenefits=self$presentValues, pvCosts=self$presentValuesCosts, sumInsured=self$sumInsured, loadings = self$loadings);
+      self$reserves = self$tarif$reserveCalculation(premiums=self$premiums, pvBenefits=self$presentValues, pvCosts=self$presentValuesCosts, sumInsured=self$sumInsured, premiumSum = self$premiumSum, loadings = self$loadings);
     },
 
     premiumAnalysis = function() {

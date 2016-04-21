@@ -248,12 +248,24 @@ InsuranceTarif = R6Class(
       dimnames(res) = list(nm[[1]], colnames)
       res
     },
-    presentValueBenefits = function(presentValues, premiums, sumInsured=1) {
+    presentValueBenefits = function(presentValues, presentValuesCosts, premiums, sumInsured=1, premiumSum=0) {
+      refundAddon = self$premiumRefundLoading;
+      # TODO: Here we don't use the securityLoading parameter => Shall it be used or are these values to be understood without additional security loading?
       benefits.unit    = presentValues[,"survival"] + presentValues[,"death_SumInsured"];
       benefits         = benefits.unit * sumInsured;
-      allBenefits.unit = presentValues[,"survival"] + presentValues[,"death_SumInsured"] + presentValues[,"death_GrossPremium"] * premiums[["unit.gross"]];
+      allBenefits.unit = presentValues[,"survival"] + presentValues[,"death_SumInsured"] + presentValues[,"death_GrossPremium"] * premiums[["unit.gross"]] * (1+refundAddon);
       allBenefits      = allBenefits.unit * sumInsured;
-      cbind(benefits.unit=benefits.unit, benefits=benefits, allBenefits.unit=allBenefits.unit, allBenefits=allBenefits)
+
+      benefitsCosts = presentValuesCosts[,,"SumInsured"]*sumInsured +
+        presentValuesCosts[,,"SumPremiums"] * premiumSum * premiums[["gross"]] +
+        presentValuesCosts[,,"GrossPremium"] * premiums[["gross"]];
+
+      cbind(
+        benefits.unit=benefits.unit,
+        benefits=benefits,
+        allBenefits.unit=allBenefits.unit,
+        allBenefits=allBenefits,
+        benefitsCosts)
     },
 
     getPremiumCoefficients = function(type="gross", coeffBenefits, coeffCosts, ...,
@@ -365,15 +377,21 @@ InsuranceTarif = R6Class(
       list("premiums"=premiums, "coefficients"=coefficients)
     },
 
-    reserveCalculation = function (premiums, pvBenefits, pvCosts, sumInsured=1, ...) {
+    reserveCalculation = function (premiums, pvBenefits, pvCosts, sumInsured=1, premiumSum=0, ...) {
       resNet = pvBenefits[,"allBenefits"]*(1+self$loadings$security) - premiums[["net"]] * pvBenefits[,"premiums"];
-      resZ = pvBenefits[,"allBenefits"]*(1+self$loadings$security) - premiums[["Zillmer"]] * pvBenefits[,"premiums"];
+      BWLminBWP = pvBenefits[,"allBenefits"]*(1+self$loadings$security) - premiums[["net"]] * pvBenefits[,"premiums"];
+      BWZcorr = pvBenefits["0","Zillmer"]/pvBenefits["0", "premiums"]*pvBenefits[,"premiums"];
+      # resZ = pvBenefits[,"allBenefits"]*(1+self$loadings$security) - premiums[["net"]] * pvBenefits[,"premiums"] - pvCosts["0", "Zillmer", "SumInsured"]*premiumSum/pvBenefits["0", "premiums"]*pvBenefits[,"premiums"];
+      resZ=BWLminBWP - BWZcorr;
+
+        #premiums[["Zillmer"]] * pvBenefits[,"premiums"];
       res.gamma    = (pvCosts[,"gamma", "SumInsured"] - pvCosts["0", "gamma", "SumInsured"]/pvBenefits["0", "premiums"]*pvBenefits[,"premiums"])*sumInsured;
+      res.gamma.alt = pvBenefits[,"gamma"] - pvBenefits["0", "gamma"]/pvBenefits["0", "premiums"]*pvBenefits[,"premiums"]
 
       # res.premiumfree =
       # res.gamma.premiumfree =
 
-      res = cbind("net"=resNet, "Zillmer"=resZ, "gamma"=res.gamma#, "Reserve.premiumfree"=res.premiumfree, "Reserve.gamma.premiumfree"=res.gamma.premiumfree);
+      res = cbind("net"=resNet, "BWLminBWP"=BWLminBWP, "BWZcorr"= BWZcorr, "Zillmer"=resZ, "gamma"=res.gamma, "gamma.alt"=res.gamma.alt#, "Reserve.premiumfree"=res.premiumfree, "Reserve.gamma.premiumfree"=res.gamma.premiumfree);
       );
       rownames(res) <- rownames(pvBenefits);
       res
