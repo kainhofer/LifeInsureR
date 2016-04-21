@@ -4,7 +4,7 @@
 # rm(frame_files)
 # setwd(dirname(PATH))
 
-setwd("R")
+# setwd("R")
 library("openxlsx")
 
 
@@ -13,8 +13,7 @@ library("openxlsx")
 ### RR67 Rententafel für Männer, 3%
 ###############################################################################
 
-rr67.data=read.xlsx(
-  "Tables/AVOe_R.xlsx",
+rr67.data=openxlsx::read.xlsx("Tables/AVOe_R.xlsx",
     sheet="OeVM59-61 RR67", startRow = 3, colNames = TRUE);
 
 rr67=valuationTable.period(
@@ -27,7 +26,7 @@ rr67=valuationTable.period(
 ### EROM/EROF 85 and G 1985 (period and age-shifted generation)
 ###############################################################################
 
-eromf.data=read.xlsx("Tables/AVOe_R.xlsx", sheet="EROM-F Basistafeln", startRow = 3)
+eromf.data=openxlsx::read.xlsx("Tables/AVOe_R.xlsx", sheet="EROM-F Basistafeln", startRow = 3)
 
 erom85.male=valuationTable.period(
   name="EROM 85, male", ages=eromf.data$Alter, deathProbs=eromf.data$EROM.85
@@ -49,7 +48,7 @@ EROF.G1950.female=valuationTable.period(
   baseYear=1950
 );
 
-eromf.data.av=read.xlsx("Tables/AVOe_R.xlsx", sheet="EROM-F G AV", startRow = 3, rowNames = TRUE, colNames = TRUE)
+eromf.data.av=openxlsx::read.xlsx("Tables/AVOe_R.xlsx", sheet="EROM-F G AV", startRow = 3, rowNames = TRUE, colNames = TRUE)
 
 EROM.G1950.male.av=valuationTable.ageShift(
   name="EROM G 1950 mit Altersverschiebung, male",
@@ -71,7 +70,7 @@ EROF.G1950.female.av=valuationTable.ageShift(
 # AVÖ 1996R exact (Male, Female), 1st-order only
 ###############################################################################
 
-AVOe1996R.exakt.data=read.xlsx("Tables/AVOe_R.xlsx",
+AVOe1996R.exakt.data=openxlsx::read.xlsx("Tables/AVOe_R.xlsx",
   sheet="AVOe 1996R exakt", startRow = 3, cols=c(1:6, 8:12));
 
 AVOe1996R.exakt.data
@@ -129,7 +128,7 @@ AVÖ1996R.female.group=valuationTable.trendProjection(
 # gender-specific tables also have 2nd-order tables, unisex only 1st-order table
 ###############################################################################
 
-AVOe2005R.exakt.data=read.xlsx("Tables/AVOe_R.xlsx", sheet="AVOe 2005R", startRow = 3, cols=c(1:7, 9:14, 16:18));
+AVOe2005R.exakt.data=openxlsx::read.xlsx("Tables/AVOe_R.xlsx", sheet="AVOe 2005R", startRow = 3, cols=c(1:7, 9:14, 16:18));
 
 AVOe2005R.trend.damping=function(t) {
   100*atan(t/100)
@@ -169,8 +168,8 @@ AVOe2005R.unisex.nodamping.group    = undampenTrend(AVOe2005R.unisex.group);
 #AVÖ 2005R with age-shifting (Male, Female, unisex), 1st-order only
 ###############################################################################
 
-AVOe2005R.av.base = read.xlsx("Tables/AVOe_R.xlsx", sheet="AVOe 2005R AV Basistafel", startRow = 3, rowNames = FALSE);
-AVOe2005R.av.verschiebung = read.xlsx("Tables/AVOe_R.xlsx", sheet="AVOe 2005R AV Verschiebung", startRow = 3, rowNames = TRUE);
+AVOe2005R.av.base = openxlsx::read.xlsx("Tables/AVOe_R.xlsx", sheet="AVOe 2005R AV Basistafel", startRow = 3, rowNames = FALSE);
+AVOe2005R.av.verschiebung = openxlsx::read.xlsx("Tables/AVOe_R.xlsx", sheet="AVOe 2005R AV Verschiebung", startRow = 3, rowNames = TRUE);
 
 AVOe2005R_gen.av=function(nm, probs, shft) {
   valuationTable.ageShift(
@@ -195,3 +194,8 @@ AVOe2005R.unisex.group.av=AVOe2005R_gen.av("AVÖ 2005R unisex group (age-shifted
 # options("scipen" = 3, "digits"=10)
 # t=AVOe2005R.unisex;
 # deathProbabilities(t, YOB=1981)
+
+# plotValuationTables(mort.AT.census.1869.male, mort.AT.census.1869.female, mort.AT.census.2011.male, mort.AT.census.2011.female, AVOe2005R.male, AVOe2005R.female, YOB=1972,title="Vergleich österreichische Sterbetafeln, YOB=1972 (bei Generationentafeln)")
+#
+# plotValuationTables(mort.AT.census.2001.male, AVOe2005R.male, YOB=1972, title="Vergleich österreichische Sterbetafeln")
+plotValuationTables(getCohortTable(AVOe2005R.male, YOB=1972), getCohortTable(AVOe2005R.male, YOB=2016), title="Vergleich österreichische Sterbetafeln")
