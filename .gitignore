@@ -2,3 +2,5 @@
 .Rhistory
 .RData
 .~lock.*#
+R/Companies/
+Formulas_Reference/2013*.xls*
