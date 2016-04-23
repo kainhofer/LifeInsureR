@@ -1,4 +1,4 @@
-calculatePVSurvival = function(q, advance, arrears, ..., m=1, mCorrection = list(alpha=1, beta=0), v=1) {
+calculatePVSurvival = function(q, advance, arrears=c(0), ..., m=1, mCorrection = list(alpha=1, beta=0), v=1) {
   # assuming advance and arrears have the same dimensions...
   init = advance[1]*0;
   l = max(length(q), length(advance), length(arrears));
