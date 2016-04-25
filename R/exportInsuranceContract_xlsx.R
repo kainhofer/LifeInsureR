@@ -17,20 +17,20 @@ writeAgeQTable = function (wb, sheet, probs, crow=1, ccol=1, styles=list()) {
   dim(probs)[[2]] + 2;
 };
 
-writeValuesTable = function (wb, sheet, values, caption=NULL, crow=1, ccol=1, rowNames=FALSE, tableStyle="TableStyleMedium3", tableName=NULL, withFilter=FALSE, headerStyle=styles$tableHeader, valueStyle=NULL) {
+writeValuesTable = function (wb, sheet, values, caption=NULL, crow=1, ccol=1, rowNames=FALSE, tableStyle="TableStyleMedium3", tableName=NULL, withFilter=FALSE, styles=list(), valueStyle=NULL) {
   nrrow = dim(values)[[1]];
   nrcol = dim(values)[[2]];
   addcol = if (rowNames) 1 else 0;
   ecol = ccol + addcol + nrcol - 1;
   if (!missing(caption)) {
     writeData(wb, sheet, caption, startCol = ccol+addcol, startRow = crow);
-    addStyle(wb, sheet, style=headerStyle, rows=crow, cols = ccol+addcol, stack=TRUE);
+    addStyle(wb, sheet, style=styles$header, rows=crow, cols = ccol+addcol, stack=TRUE);
     mergeCells(wb, sheet, rows=crow, cols=(ccol+addcol):ecol);
   }
 
   writeDataTable(wb, sheet, values, startRow=crow+1, startCol=ccol, colNames=TRUE,
                  rowNames=rowNames, tableStyle=tableStyle,
-                 tableName=tableName, withFilter = withFilter, headerStyle = headerStyle)
+                 tableName=tableName, withFilter = withFilter, headerStyle = styles$tableHeader)
   if (!missing(valueStyle)) {
     addStyle(wb, sheet, style=valueStyle, rows=(crow+2):(crow+nrrow+1), cols=(ccol+addcol):ecol, gridExpand = TRUE, stack = TRUE);
   }
@@ -133,10 +133,12 @@ exportInsuranceContract.xlsx = function(contract, filename) {
   # Style information
   ################################################
   styles = list(
-    header = createStyle(border="TopLeftRight", borderColour="#DA9694", borderStyle="medium",
-                         bgFill="#C0504D", fontColour="#FFFFFF",
+    header = createStyle(border="TopBottomLeftRight", borderColour="#DA9694", borderStyle="medium",
+                         fgFill="#C0504D", fontColour="#FFFFFF",
                          halign="center", valign="center", textDecoration="bold"),
-    tableHeader = createStyle(halign="center", valign="center", textDecoration="bold"),
+    tableHeader = createStyle(#border="TopLeftRight", borderColour="#DA9694", borderStyle="medium",
+                              #bgFill="#C0504D", fontColour="#FFFFFF",
+                              halign="center", valign="center", textDecoration="bold"),
     hide0 = createStyle(numFmt="General; General; \"\""),
     currency0 = createStyle(numFmt="[$€-C07] #,##0.00;[red]-[$€-C07] #,##0.00;\"\""),
     cost0 = createStyle(numFmt="0.000%; 0.000%; \"\""),
@@ -222,10 +224,10 @@ exportInsuranceContract.xlsx = function(contract, filename) {
 
   ccol = ccol + writeAgeQTable(wb, sheet, probs=qp, crow=crow, ccol=1, styles=styles);
   ccol = ccol + writeValuesTable(wb, sheet, as.data.frame(setInsuranceValuesLabels(contract$reserves)),
-                                 crow=crow, ccol=ccol, tableName="Reserves",
+                                 crow=crow, ccol=ccol, tableName="Reserves", styles=styles,
                                  caption="Reserven", valueStyle=styles$currency0) + 1;
   ccol = ccol + writeValuesTable(wb, sheet, as.data.frame(setInsuranceValuesLabels(contract$premiumComposition)),
-                                 crow=crow, ccol=ccol, tableName="Premium_Decomposition",
+                                 crow=crow, ccol=ccol, tableName="Premium_Decomposition", styles=styles,
                                  caption = "Prämienzerlegung", valueStyle=styles$currency0) + 1;
   setColWidths(wb, sheet, cols = 1:50, widths = "auto", ignoreMergedCells = TRUE)
 
@@ -241,7 +243,7 @@ exportInsuranceContract.xlsx = function(contract, filename) {
   ccol = ccol + writeAgeQTable(wb, sheet, probs=qp, crow=crow, ccol=1, styles=styles);
 
   ccol = ccol + writeValuesTable(wb, sheet, as.data.frame(setInsuranceValuesLabels(contract$absPresentValues)),
-                                 crow=crow, ccol=ccol, tableName="PresentValues_absolute",
+                                 crow=crow, ccol=ccol, tableName="PresentValues_absolute", styles=styles,
                                  caption = "abs. Leistungs- und Kostenbarwerte", valueStyle=styles$currency0) + 1;
   setColWidths(wb, sheet, cols = 1:50, widths = "auto", ignoreMergedCells = TRUE)
 
@@ -256,7 +258,7 @@ exportInsuranceContract.xlsx = function(contract, filename) {
   sheet = "abs.Cash-Flows";
   ccol = ccol + writeAgeQTable(wb, sheet, probs=qp, crow=crow, ccol=1, styles=styles);
   ccol = ccol + writeValuesTable(wb, sheet, as.data.frame(setInsuranceValuesLabels(contract$absCashFlows)),
-                                 crow=crow, ccol=ccol, tableName="CashFlows_absolute",
+                                 crow=crow, ccol=ccol, tableName="CashFlows_absolute", styles=styles,
                                  caption="abs. Leistungs- und Kostencashflows", withFilter=TRUE, valueStyle=styles$currency0) + 1;
   setColWidths(wb, sheet, cols = 1:50, widths = "auto", ignoreMergedCells = TRUE)
 
@@ -278,14 +280,14 @@ exportInsuranceContract.xlsx = function(contract, filename) {
   area.premiumcoeff = paste0(int2col(ccol), "%d:", int2col(ccol+w1-1), "%d");
   area.premiumvals  = paste0("$", int2col(ccol), "$", crow+6+2, ":$", int2col(ccol+w1-1), "$", crow+6+2);
   ccol = ccol + writeValuesTable(wb, sheet, as.data.frame(setInsuranceValuesLabels(contract$presentValues)),
-                                 crow=crow+6, ccol=ccol, tableName="PresentValues_Benefits",
+                                 crow=crow+6, ccol=ccol, tableName="PresentValues_Benefits", styles=styles,
                                  caption = "Leistungsbarwerte", valueStyle=styles$pv0) + 1;
 
   w2 = writePremiumCoefficients(wb, sheet, contract$premiumCoefficients, type="costs", crow=crow, ccol=ccol-2, tarif=contract$tarif);
   area.costcoeff = paste0(int2col(ccol), "%d:", int2col(ccol+w2-1), "%d");
   area.costvals  = paste0("$", int2col(ccol), "$", crow+6+2, ":$", int2col(ccol+w2-1), "$", crow+6+2);
   ccol = ccol + writeValuesTable(wb, sheet, as.data.frame(costPV),
-                                 crow=crow+6, ccol=ccol, tableName="PresentValues_Costs",
+                                 crow=crow+6, ccol=ccol, tableName="PresentValues_Costs", styles=styles,
                                  caption = "Kostenbarwerte", valueStyle=styles$cost0) + 1;
 
   # Now print out the formulas for premium calculation into the columns 2 and 3:
@@ -316,10 +318,10 @@ exportInsuranceContract.xlsx = function(contract, filename) {
   sheet = "Cash-Flows";
   ccol = ccol + writeAgeQTable(wb, sheet, probs=qp, crow=crow, ccol=1, styles=styles);
   ccol = ccol + writeValuesTable(wb, sheet, setInsuranceValuesLabels(contract$cashFlows),
-                                 crow=crow, ccol=ccol, tableName="CashFlows_Benefits",
+                                 crow=crow, ccol=ccol, tableName="CashFlows_Benefits", styles=styles,
                                  caption="Leistungscashflows", withFilter=TRUE, valueStyle=styles$hide0) + 1;
   ccol = ccol + writeValuesTable(wb, sheet, costCF,
-                                 crow=crow, ccol=ccol, tableName="CashFlows_Costs",
+                                 crow=crow, ccol=ccol, tableName="CashFlows_Costs", styles=styles,
                                  caption="Kostencashflows", withFilter=TRUE, valueStyle=styles$cost0) + 1;
   setColWidths(wb, sheet, cols = 1:50, widths = "auto", ignoreMergedCells = TRUE)
 
