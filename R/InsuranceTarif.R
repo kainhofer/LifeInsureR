@@ -217,7 +217,7 @@ InsuranceTarif = R6Class(
       premiumFrequencyCorrection = correctionPaymentFrequency(m = premiumFrequency, i = self$i, order = self$premiumFrequencyOrder);
 
       pvRefund = calculatePVDeath (q, cashflows$death_GrossPremium, v=self$v);
-      pvRefundPast = calculatePVDeath (q, cashflows$death_Refund_past, v=self$v) * cashflows[,"death_GrossPremium"];
+      pvRefundPast = calculatePVDeath (q, cashflows$death_Refund_past, v=self$v) * (cashflows[,"death_GrossPremium"]-cashflows[,"premiums_advance"]);
 
       pv = cbind(
         premiums = calculatePVSurvival (q, cashflows$premiums_advance, cashflows$premiums_arrears, m=premiumFrequency, mCorrection=premiumFrequencyCorrection, v=self$v),
@@ -479,33 +479,13 @@ InsuranceTarif = R6Class(
 
       # Calculate new sum insured after premium waiver
       Storno = 0; # TODO: Implement storno costs
-      newSI = (resReduction - presentValues[,"death_Refund_past"] * (1+self$loadings$security) - c(Storno)) / (presentValues[, "benefits"] * (1+self$loadings$security) + presentValues[, "gamma_nopremiums"]) * sumInsured;
-# str(newSI);
-
-      zaehler=(resReduction - presentValues[,"death_Refund_past"] * (1+self$loadings$security) - c(Storno));
-      nenner=(presentValues[, "benefits"] * (1+self$loadings$security) + presentValues[, "gamma_nopremiums"]) / sumInsured;
-
-      # str(resReduction);
-      # str(presentValues[,"death_Refund_past"] * cashflows$death_GrossPremium * (1+self$loadings$security) * premiums[["gross"]]);
-      # str(presentValues[,"death_Refund_past"]);
-      # str(cashflows$death_GrossPremium * (1+self$loadings$security) * premiums[["gross"]]);
-      str(cashflows$death_GrossPremium);
-      str(cashflows);
-      str((1+self$loadings$security));
-      str(premiums[["gross"]]);
-      # str(presentValues[, "benefits"] * (1+self$loadings$security) + presentValues[, "gamma_nopremiums"]);
-
-
-
-            # res.premiumfree =
-      # res.gamma.premiumfree =
+      newSI = (surrenderValue - presentValues[,"death_Refund_past"] * (1+self$loadings$security) - c(Storno)) /
+        (presentValues[, "benefits"] * (1+self$loadings$security) + presentValues[, "gamma_nopremiums"]) * sumInsured;
 
       cbind(res,
             "PremiumsPaid"=Reduce("+", cashflows$premiums_advance, accumulate = TRUE),
             "Surrender"=surrenderValue,
-            "PremiumFreeSumInsured" = newSI,
-            "RedWert_Zaehler" = zaehler,
-            "RedWert_Nenner" = nenner
+            "PremiumFreeSumInsured" = newSI
       )
     },
 
