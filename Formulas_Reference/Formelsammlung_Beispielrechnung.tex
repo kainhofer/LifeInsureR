@@ -208,14 +208,14 @@ TODO
 \subsection{Rückstellungen}
 
 \begin{deftab}
- $_{t}V_\xn$ & Nettodeckungskapital zum Zeitpunkt $t$ \\
- $_{t}V^a_\xn$ & Brutto-Deckungskapital (``adequate'' bzw. ``expense-loaded reserve'') \\
- $_{t}V^Z_\xn$ & Zillmerreserve bei Zillmerung \\
- $_{t}V^\alpha_xn$ & Abschlusskostenreserve \\
- $_{t}V^\beta_xn$ & Inkassokostenreserve (typischerweise $=0$)\\
- $_{t}V^\gamma_xn$ & Verwaltungskostenreserve \\
- $_{t}V^{Umr}_\xn$ & Umrechnungsreserve (Basis für Vertragskonvertierungen und Prämienfreistellung), inkl. anteiliger Abschlusskostenrückerstattung bei Beendigung innerhalb von fünf Jahren\\
- $AbskErh(t)$ & Anteilsmäßige Rückerstattung der Abschlusskosten bei Kündigung innerhalb von fünf Jahren\\[1em]
+ $_{t}V_\xn$ & Nettodeckungskapital zum Zeitpunkt $t$  & \texttt{contract\$reserves[,"net"]}\\
+ $_{t}V^a_\xn$ & Brutto-Deckungskapital (``adequate'' bzw. ``expense-loaded reserve'') & \texttt{contract\$reserves[,"adequate"]}\\
+ $_{t}V^Z_\xn$ & Zillmerreserve bei Zillmerung & \texttt{contract\$reserves[,"Zillmer"]}\\
+ $_{t}V^\alpha_xn$ & Abschlusskostenreserve & \texttt{contract\$reserves[,"TODO"]}\\
+ $_{t}V^\beta_xn$ & Inkassokostenreserve (typischerweise $=0$)& \texttt{contract\$reserves[,"TODO"]}\\
+ $_{t}V^\gamma_xn$ & Verwaltungskostenreserve & \texttt{contract\$reserves[,"gamma"]}\\
+ $_{t}V^{Umr}_\xn$ & Umrechnungsreserve (Basis für Vertragskonvertierungen und Prämienfreistellung), inkl. anteiliger Abschlusskostenrückerstattung bei Beendigung innerhalb von fünf Jahren& \texttt{contract\$reserves[,"reduction"]}\\
+ $AbskErh(t)$ & Anteilsmäßige Rückerstattung der Abschlusskosten bei Kündigung innerhalb von fünf Jahren& \texttt{contract\$reserves[,"alphaRefund"]}\\[1em]
  
  $BilRes_{t+u}$  & Bilanzreserve (Interpolation aus  $_{t}V^{x}_\xn$ und $_{t+1}V^{x}_\xn$)
 \end{deftab}
@@ -395,7 +395,7 @@ pr^{(nachsch)}_t & e_t^{*} & e_t & a_t & a_t^{(RG)}\\
 z^{(VS)}_t & z^{(PS)}_t  & -\\
 - & - & \beta_t \\
 \gamma^{(VS)}_t & \gamma^{(PS)}_t & -\\
-\tilde{\gamma}^{frei}_t & - & -\\  
+\widetilde{\gamma}^{(VS)}_t & - & -\\  
  \end{matrix}
  \right)
 \end{align*}
@@ -416,7 +416,7 @@ P_\xn(t) &= \sum_{j=t}^n pr_{t+j} \cdot v^{j-t}  \cdot {}_{j-t}p_{x+t}\\
 Garantierte Erlebensleistungen (wenn Aufschubzeit überlebt wurde):
 % TODO!
 \begin{align*} 
- E^{Gar}_\xn(t) &= \begin{cases}
+ E^{*}_\xn(t) &= \begin{cases}
 		    {}_{l-t}p_{x+t} \cdot v^{l-t} \cdot \sum_{j=l}^{n} \left\{\ddot{e}^{*}_{j-t}+ v\cdot e^*_{j-t}\right\} v^{j-t} & \text{für $t<l$ (Aufschubzeit)}\\
 		    \sum_{j=t}^{n} \left\{\ddot{e}^{*}_{j-t}+ v\cdot e^*_{j-t}\right\} v^{j-t} & \text{für $t\ge l$ (Liquiditätsphase)}
                  \end{cases}\\
@@ -428,14 +428,14 @@ Garantierte Erlebensleistungen (wenn Aufschubzeit überlebt wurde):
 
 
 \subsection{Erlebensleistungsbarwert:}
-1. Person:
+% 1. Person:
 \begin{align*} 
 E_\xn(t) &= \sum_{j=t}^n \left(\ddot{e}_{t+j} \cdot v^{j-t}  {}_{j-t}p_{x+t} + e_{t+j} \cdot v^{j+1-t} {}_{j+1-t}p_{x+t} \right)\\
 	  &= \ddot{e}_{t} + v \cdot p_{x+t} \cdot \left\{ e_t + E_\xn(t+1)\right\}\\
-\intertext{2. Person:}
-E2_{\act[y]{n}}(t) &= \ddot{e}_{t} + v \cdot p_{y+t} \cdot \left\{ e_t + E2_{\act[y]{n}}(t+1)\right\}\\
-\intertext{gemeinsam:}
-E12_{\act[x,y]{n}}(t) &= \ddot{e}_{t} + v \cdot p_{x+t} \cdot p_{y+t} \cdot \left\{ e_t + E12_{\act[x,y]{n}}(n,t+1)\right\}\\
+% \intertext{2. Person:}
+% E2_{\act[y]{n}}(t) &= \ddot{e}_{t} + v \cdot p_{y+t} \cdot \left\{ e_t + E2_{\act[y]{n}}(t+1)\right\}\\
+% \intertext{gemeinsam:}
+% E12_{\act[x,y]{n}}(t) &= \ddot{e}_{t} + v \cdot p_{x+t} \cdot p_{y+t} \cdot \left\{ e_t + E12_{\act[x,y]{n}}(n,t+1)\right\}\\
 \end{align*}
 
 % \intertext{Garantierte Erlebensleistungen (wenn Aufschubzeit überlebt wurde):}
@@ -475,25 +475,25 @@ ergibt sich auch für allgemeine unterjährige Erlebenszahlungen $\ddot{e}_t$ ei
 
 
 \begin{align*}
-A^{(m)}_\xn(t) &= \ddot{e}_t \cdot \ddot{a}_{\act[x+t]{1}}^{(m)} + v \cdot p_{x+1} \cdot A^{(m)}_\xn(t+1)\\
-  &= \ddot{e}_t \cdot \left\{\alpha(m)  - \beta(m) \cdot \left(1-p_{x+t} \cdot v\right)\right\} + v\cdot p_{x+t} \cdot A^{(m)}_\xn(t+1)
+E^{(m)}_\xn(t) &= \ddot{e}_t \cdot \ddot{a}_{\act[x+t]{1}}^{(m)} + v \cdot p_{x+1} \cdot E^{(m)}_\xn(t+1)\\
+  &= \ddot{e}_t \cdot \left\{\alpha(m)  - \beta(m) \cdot \left(1-p_{x+t} \cdot v\right)\right\} + v\cdot p_{x+t} \cdot E^{(m)}_\xn(t+1)
 \end{align*}
 
 
 \subsubsection{Nachschüssige \textit{m}-tel jährliche Auszahlung der Erlebensleistungen}
 
 \begin{align*}
-A^{(m)}_\xn(t) &= e_t \cdot a_{\act[x+t]{1}}^{(m)} + v \cdot p_{x+t} \cdot A^{(m)}_\xn(t+1)\\
-   &= e_t\cdot\left\{\alpha(m) - \left(\beta(m)+\frac1m\right)\cdot\left(1-p_{x+t} v\right)\right\} + v\cdot p_{x+t} \cdot A^{(m)}_\xn(t+1)
+E^{(m)}_\xn(t) &= e_t \cdot a_{\act[x+t]{1}}^{(m)} + v \cdot p_{x+t} \cdot E^{(m)}_\xn(t+1)\\
+   &= e_t\cdot\left\{\alpha(m) - \left(\beta(m)+\frac1m\right)\cdot\left(1-p_{x+t} v\right)\right\} + v\cdot p_{x+t} \cdot E^{(m)}_\xn(t+1)
 \end{align*}
 
 \subsubsection{Allgemeine \textit{m}-tel jährliche Auszahlung der Erlebensleistungen}
 
 
 \begin{align*}
-A^{(m)}_\xn(t) = &\ddot{e}_t \cdot \left\{\alpha(m)  - \beta(m) \cdot \left(1-p_{x+t} \cdot v\right)\right\} +  \\
+E^{(m)}_\xn(t) = &\ddot{e}_t \cdot \left\{\alpha(m)  - \beta(m) \cdot \left(1-p_{x+t} \cdot v\right)\right\} +  \\
  &e_t\cdot\left\{\alpha(m) - \left(\beta(m)+\frac1m\right)\cdot\left(1-p_{x+t} v\right)\right\} + \\
- &v\cdot p_{x+t} \cdot A^{(m)}_\xn(t+1)
+ &v\cdot p_{x+t} \cdot E^{(m)}_\xn(t+1)
 \end{align*}
 
 
@@ -501,16 +501,25 @@ A^{(m)}_\xn(t) = &\ddot{e}_t \cdot \left\{\alpha(m)  - \beta(m) \cdot \left(1-p_
 
 \subsection{Ablebensbarwert}
 
+
 \begin{align*} 
+\intertext{\subsubsection*{Prämienpflichtiger Ablebensbarwert}}
 A_\xn(t) &= \sum_{j=t}^n {}_{j-t}p_{x+t} \cdot q_{x+j} \cdot v^{j-t+1} \cdot a_{j} \\
          &= q_{x+t} \cdot v \cdot a_t + p_{x+t} \cdot v \cdot A_\xn(t+1)\\
 %
-\intertext{prämienfreier Ablebensbarwert:}
+\intertext{\subsubsection*{Prämienfreier Ablebensbarwert}}
 A^{(prf)}_\xn(t) &= q_{x+t} \cdot v \cdot a^{(prf.)}_t + p_{x+t} \cdot v \cdot A^{(prf.)}_\xn(t+1)\\
 %
-\intertext{Prämienrückgewähr}
+\intertext{\subsubsection*{Barwert der gesamten Prämienrückgewähr (an BP)}}
 A^{(RG)}_\xn(t) &= q_{x+t} \cdot v \cdot a^{(RG)}_t + p_{x+t} \cdot v \cdot A^{(RG)}_\xn(t+1)\\
 %
+\intertext{\subsubsection*{Barwert der bisher bereits erworbenen Prämienrückgewähr (an BP)}}
+A^{(RG-)}_\xn(t) &= a^{(RG)}_t \cdot A^{(RG-,1)}_\xn(t)\\
+A^{(RG-,1)}_\xn(t) &= q_{x+t} \cdot v \cdot 1 + p_{x+t} \cdot v \cdot A^{(RG-,1)}_\xn(t+1)\\
+%
+\intertext{\subsubsection{Barwert der künftig noch zu erwerbenden Prämienrückgewähr (an BP)}}
+A^{(RG+)}_\xn(t) &= A^{(RG)}_\xn(t) - A^{(RG-)}_\xn(t)
+\intertext{Dieser Wert ist rekursiv nicht darstellbar.}
 \end{align*}
 
 \subsection{Leistungsbarwert}
@@ -527,16 +536,16 @@ BW^L_\xn(t) &= E_\xn(t) + A_\xn(t) + (1+\rho^{RG}) \cdot A^{(RG)}_\xn(t)\cdot BP
 \intertext{Abschlusskostenbarwerte:}
 AK^{(VS)}_\xn(t) &= \alpha^{VS}_{t} + v \cdot p_{x+t} \cdot AK^{(VS)}_\xn(t+1) \\
 AK^{(PS)}_\xn(t) &= \alpha^{PS}_{t} + v \cdot p_{x+t} \cdot AK^{(PS)}_\xn(t+1) \\
-AK^{(BP)}_\xn(t) &= \alpha^{BP}_{t}+\alpha_{3a,t} + v \cdot p_{x+t} \cdot AK^{(BP)}_\xn(t+1) \\
+AK^{(BP)}_\xn(t) &= \alpha^{BP}_{t} + + v \cdot p_{x+t} \cdot AK^{(BP)}_\xn(t+1) \\
 \intertext{Zillmerkostenbarwerte:}
 ZK^{(VS)}_\xn(t) &= z^{VS}_{t} + v \cdot p_{x+t} \cdot ZK^{(VS)}_\xn(t+1) \\
 ZK^{(PS)}_\xn(t) &= z^{PS}_{t} + v \cdot p_{x+t} \cdot ZK^{(PS)}_\xn(t+1) \\
 \intertext{Inkassokostenbarwerte:}
-IK_\xn(t) &= \beta^{BP}_{t} + v \cdot p_{x+t} \cdot IK_\xn(t+1) \\
+IK^{(BP)}_\xn(t) &= \beta^{BP}_{t} + v \cdot p_{x+t} \cdot IK^{(BP)}_\xn(t+1) \\
 \intertext{Verwaltungskostenbarwerte:}
 VK^{(VS)}_\xn(t) &= \gamma^{VS}_{t} + v \cdot p_{x+t} \cdot VK^{(VS)}_\xn(t+1) \\
 VK^{(PS)}_\xn(t) &= \gamma^{PS}_{t} + v \cdot p_{x+t} \cdot VK^{(PS)}_\xn(t+1) \\
-VK^{frei}_\xn(t) &= \gamma^{VS,frei}_{t} + v \cdot p_{x+t} \cdot VK^{frei}_\xn(t+1) \\
+\widetilde{VK}^{(VS)}_\xn(t) &= \widetilde{\gamma}^{VS}_{t} + v \cdot p_{x+t} \cdot \widetilde{VK}^{(VS)}_\xn(t+1) \\
 \end{align*}
 
 
@@ -559,10 +568,10 @@ AK^{(VS)}(t) & AK^{(PS)}(t)  & AK^{(BP)}(t) \\
 % 
 ZK^{(VS)}(t) & ZK^{(PS)}(t)  & -\\
 % 
-- & - & IK(t) \\
+- & - & IK^{(BP)}(t) \\
 % 
 VK^{(VS)}(t) & VK^{(PS)}(t) & -\\
-VK^{frei}(t) & - & -\\  
+\widetilde{VK}^{(VS)}(t) & - & -\\  
  \end{matrix}
  \right)
 % 
