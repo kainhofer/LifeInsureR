@@ -126,8 +126,8 @@ exportInsuranceContract.xlsx = function(contract, filename) {
   # TODO: argument checking for contract and filename
 
   ###
-  nrrows = dim(contract$cashFlows)[[1]]; # Some vectors are longer (e.g. qx), so determine the max nr or rows
-  qp = contract$transitionProbabilities[1:nrrows,]; # extract the probabilities once, will be needed in every sheet
+  nrrows = dim(contract$values$cashFlows)[[1]]; # Some vectors are longer (e.g. qx), so determine the max nr or rows
+  qp = contract$values$transitionProbabilities[1:nrrows,]; # extract the probabilities once, will be needed in every sheet
 
   ################################################
   # Style information
@@ -200,8 +200,8 @@ exportInsuranceContract.xlsx = function(contract, filename) {
 
   # Premiums
   writeData(wb, sheet, "Prämien", startCol=1, startRow=crow);
-  mergeCells(wb, sheet, cols=1:length(contract$premiums), rows=crow:crow);
-  writeDataTable(wb, sheet, setInsuranceValuesLabels(as.data.frame(t(contract$premiums))),
+  mergeCells(wb, sheet, cols=1:length(contract$values$premiums), rows=crow:crow);
+  writeDataTable(wb, sheet, setInsuranceValuesLabels(as.data.frame(t(contract$values$premiums))),
                  startCol=1, startRow=crow+1, colNames=TRUE, rowNames=FALSE,
                  tableStyle="TableStyleMedium3", withFilter = FALSE, headerStyle = styles$tableHeader);
   crow = crow + 4;
@@ -223,10 +223,10 @@ exportInsuranceContract.xlsx = function(contract, filename) {
   sheet = "Reserven";
 
   ccol = ccol + writeAgeQTable(wb, sheet, probs=qp, crow=crow, ccol=1, styles=styles);
-  ccol = ccol + writeValuesTable(wb, sheet, as.data.frame(setInsuranceValuesLabels(contract$reserves)),
+  ccol = ccol + writeValuesTable(wb, sheet, as.data.frame(setInsuranceValuesLabels(contract$values$reserves)),
                                  crow=crow, ccol=ccol, tableName="Reserves", styles=styles,
                                  caption="Reserven", valueStyle=styles$currency0) + 1;
-  ccol = ccol + writeValuesTable(wb, sheet, as.data.frame(setInsuranceValuesLabels(contract$premiumComposition)),
+  ccol = ccol + writeValuesTable(wb, sheet, as.data.frame(setInsuranceValuesLabels(contract$values$premiumComposition)),
                                  crow=crow, ccol=ccol, tableName="Premium_Decomposition", styles=styles,
                                  caption = "Prämienzerlegung", valueStyle=styles$currency0) + 1;
   setColWidths(wb, sheet, cols = 1:50, widths = "auto", ignoreMergedCells = TRUE)
@@ -242,7 +242,7 @@ exportInsuranceContract.xlsx = function(contract, filename) {
   sheet = "abs.Barwerte";
   ccol = ccol + writeAgeQTable(wb, sheet, probs=qp, crow=crow, ccol=1, styles=styles);
 
-  ccol = ccol + writeValuesTable(wb, sheet, as.data.frame(setInsuranceValuesLabels(contract$absPresentValues)),
+  ccol = ccol + writeValuesTable(wb, sheet, as.data.frame(setInsuranceValuesLabels(contract$values$absPresentValues)),
                                  crow=crow, ccol=ccol, tableName="PresentValues_absolute", styles=styles,
                                  caption = "abs. Leistungs- und Kostenbarwerte", valueStyle=styles$currency0) + 1;
   setColWidths(wb, sheet, cols = 1:50, widths = "auto", ignoreMergedCells = TRUE)
@@ -257,7 +257,7 @@ exportInsuranceContract.xlsx = function(contract, filename) {
   crow = 4;
   sheet = "abs.Cash-Flows";
   ccol = ccol + writeAgeQTable(wb, sheet, probs=qp, crow=crow, ccol=1, styles=styles);
-  ccol = ccol + writeValuesTable(wb, sheet, as.data.frame(setInsuranceValuesLabels(contract$absCashFlows)),
+  ccol = ccol + writeValuesTable(wb, sheet, as.data.frame(setInsuranceValuesLabels(contract$values$absCashFlows)),
                                  crow=crow, ccol=ccol, tableName="CashFlows_absolute", styles=styles,
                                  caption="abs. Leistungs- und Kostencashflows", withFilter=TRUE, valueStyle=styles$currency0) + 1;
   setColWidths(wb, sheet, cols = 1:50, widths = "auto", ignoreMergedCells = TRUE)
@@ -268,7 +268,7 @@ exportInsuranceContract.xlsx = function(contract, filename) {
   ################################################
 
   # Age, death and survival probabilities
-  costPV = as.data.frame(contract$tarif$costValuesAsMatrix(setInsuranceValuesLabels(contract$presentValuesCosts)));
+  costPV = as.data.frame(contract$tarif$costValuesAsMatrix(setInsuranceValuesLabels(contract$values$presentValuesCosts)));
   ccol = 1;
   crow = 4;
   sheet = "Barwerte";
@@ -276,14 +276,14 @@ exportInsuranceContract.xlsx = function(contract, filename) {
   ccol = ccol + writeAgeQTable(wb, sheet, probs=qp, crow=crow+6, ccol=1, styles=styles);
 
   # Store the start/end columns of the coefficients, since we need them later in the formula for the premiums!
-  w1 = writePremiumCoefficients(wb, sheet, contract$premiumCoefficients, type="benefits", crow=crow, ccol=ccol-2, tarif=contract$tarif);
+  w1 = writePremiumCoefficients(wb, sheet, contract$values$premiumCoefficients, type="benefits", crow=crow, ccol=ccol-2, tarif=contract$tarif);
   area.premiumcoeff = paste0(int2col(ccol), "%d:", int2col(ccol+w1-1), "%d");
   area.premiumvals  = paste0("$", int2col(ccol), "$", crow+6+2, ":$", int2col(ccol+w1-1), "$", crow+6+2);
-  ccol = ccol + writeValuesTable(wb, sheet, as.data.frame(setInsuranceValuesLabels(contract$presentValues)),
+  ccol = ccol + writeValuesTable(wb, sheet, as.data.frame(setInsuranceValuesLabels(contract$values$presentValues)),
                                  crow=crow+6, ccol=ccol, tableName="PresentValues_Benefits", styles=styles,
                                  caption = "Leistungsbarwerte", valueStyle=styles$pv0) + 1;
 
-  w2 = writePremiumCoefficients(wb, sheet, contract$premiumCoefficients, type="costs", crow=crow, ccol=ccol-2, tarif=contract$tarif);
+  w2 = writePremiumCoefficients(wb, sheet, contract$values$premiumCoefficients, type="costs", crow=crow, ccol=ccol-2, tarif=contract$tarif);
   area.costcoeff = paste0(int2col(ccol), "%d:", int2col(ccol+w2-1), "%d");
   area.costvals  = paste0("$", int2col(ccol), "$", crow+6+2, ":$", int2col(ccol+w2-1), "$", crow+6+2);
   ccol = ccol + writeValuesTable(wb, sheet, as.data.frame(costPV),
@@ -291,7 +291,7 @@ exportInsuranceContract.xlsx = function(contract, filename) {
                                  caption = "Kostenbarwerte", valueStyle=styles$cost0) + 1;
 
   # Now print out the formulas for premium calculation into the columns 2 and 3:
-  writeData(wb, sheet, as.data.frame(c("Nettoprämie", contract$premiums[["net"]],"Zillmerprämie", contract$premiums[["Zillmer"]], "Bruttoprämie", contract$premiums[["gross"]])), startCol = 1, startRow=crow, colNames = FALSE, borders = "rows");
+  writeData(wb, sheet, as.data.frame(c("Nettoprämie", contract$values$premiums[["net"]],"Zillmerprämie", contract$values$premiums[["Zillmer"]], "Bruttoprämie", contract$values$premiums[["gross"]])), startCol = 1, startRow=crow, colNames = FALSE, borders = "rows");
   for (i in 0:5) {
     writeFormula(wb, sheet, paste0("SUMPRODUCT(", sprintf(area.premiumcoeff, crow+i, crow+i), ", ", area.premiumvals, ") + SUMPRODUCT(", sprintf(area.costcoeff, crow+i, crow+i), ", ", area.costvals, ")"), startCol = 3, startRow = crow+i);
     addStyle(wb, sheet, style=styles$pv0, rows = crow+i, cols = 3, stack = TRUE);
@@ -312,12 +312,12 @@ exportInsuranceContract.xlsx = function(contract, filename) {
   ################################################
 
   # Age, death and survival probabilities
-  costCF = as.data.frame(contract$tarif$costValuesAsMatrix(setInsuranceValuesLabels(contract$cashFlowsCosts)));
+  costCF = as.data.frame(contract$tarif$costValuesAsMatrix(setInsuranceValuesLabels(contract$values$cashFlowsCosts)));
   ccol = 1;
   crow = 4;
   sheet = "Cash-Flows";
   ccol = ccol + writeAgeQTable(wb, sheet, probs=qp, crow=crow, ccol=1, styles=styles);
-  ccol = ccol + writeValuesTable(wb, sheet, setInsuranceValuesLabels(contract$cashFlows),
+  ccol = ccol + writeValuesTable(wb, sheet, setInsuranceValuesLabels(contract$values$cashFlows),
                                  crow=crow, ccol=ccol, tableName="CashFlows_Benefits", styles=styles,
                                  caption="Leistungscashflows", withFilter=TRUE, valueStyle=styles$hide0) + 1;
   ccol = ccol + writeValuesTable(wb, sheet, costCF,

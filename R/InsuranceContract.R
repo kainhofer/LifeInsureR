@@ -27,24 +27,26 @@ InsuranceContract = R6Class(
     ),
 
     #### Caching values for this contract, initialized/calculated when the object is created
-    transitionProbabilities = NA,
+    values = list(
+      transitionProbabilities = NA,
 
-    cashFlowsBasic = NA,
-    cashFlows = NA,
-    cashFlowsCosts = NA,
-    premiumSum = 0,
+      cashFlowsBasic = NA,
+      cashFlows = NA,
+      cashFlowsCosts = NA,
+      premiumSum = 0,
 
-    presentValues = NA,
-    presentValuesCosts = NA,
+      presentValues = NA,
+      presentValuesCosts = NA,
 
-    premiumCoefficients = NA,
-    premiums = NA,
-    absCashFlows = NA,
-    absPresentValues = NA,
+      premiumCoefficients = NA,
+      premiums = NA,
+      absCashFlows = NA,
+      absPresentValues = NA,
 
-    reserves = NA,
+      reserves = NA,
 
-    premiumComposition = NA,
+      premiumComposition = NA
+    ),
 
 
     #### The code:
@@ -93,91 +95,91 @@ InsuranceContract = R6Class(
 
 
     determineTransitionProbabilities = function() {
-      self$transitionProbabilities = do.call(self$tarif$getTransitionProbabilities, self$params);
-      self$transitionProbabilities
+      self$values$transitionProbabilities = do.call(self$tarif$getTransitionProbabilities, self$params);
+      self$values$transitionProbabilities
     },
 
     determineCashFlows = function() {
-      self$cashFlowsBasic = do.call(self$tarif$getBasicCashFlows, self$params);
-      self$cashFlows = do.call(self$tarif$getCashFlows, c(self$params, "basicCashFlows" = self$cashFlowsBasic));
-      self$premiumSum = sum(self$cashFlows$premiums_advance + self$cashFlows$premiums_arrears);
-      self$cashFlowsCosts = do.call(self$tarif$getCashFlowsCosts, self$params);
-      list("benefits"= self$cashFlows, "costs"=self$cashFlowCosts, "premiumSum" = self$premiumSum)
+      self$values$cashFlowsBasic = do.call(self$tarif$getBasicCashFlows, self$params);
+      self$values$cashFlows = do.call(self$tarif$getCashFlows, c(self$params, "basicCashFlows" = self$values$cashFlowsBasic));
+      self$values$premiumSum = sum(self$values$cashFlows$premiums_advance + self$values$cashFlows$premiums_arrears);
+      self$values$cashFlowsCosts = do.call(self$tarif$getCashFlowsCosts, self$params);
+      list("benefits"= self$values$cashFlows, "costs"=self$values$cashFlowCosts, "premiumSum" = self$values$premiumSum)
     },
 
     calculatePresentValues = function() {
-      self$presentValues = do.call(self$tarif$presentValueCashFlows,
-                                   c(list("cashflows"=self$cashFlows), self$params));
-      self$presentValuesCosts = do.call(self$tarif$presentValueCashFlowsCosts,
-                                        c(list("cashflows"=self$cashFlowsCosts), self$params));
-      list("benefits" = self$presentValues, "costs" = self$presentValuesCosts)
+      self$values$presentValues = do.call(self$tarif$presentValueCashFlows,
+                                   c(list("cashflows"=self$values$cashFlows), self$params));
+      self$values$presentValuesCosts = do.call(self$tarif$presentValueCashFlowsCosts,
+                                        c(list("cashflows"=self$values$cashFlowsCosts), self$params));
+      list("benefits" = self$values$presentValues, "costs" = self$values$presentValuesCosts)
     },
 
     calculatePremiums = function() {
       # the premiumCalculation function returns the premiums AND the cofficients,
       # so we have to extract the coefficients and store them in a separate variable
       res = do.call(self$tarif$premiumCalculation,
-                    c(list(pvBenefits=self$presentValues,
-                      pvCosts=self$presentValuesCosts,
-                      premiumSum = self$premiumSum),
+                    c(list(pvBenefits=self$values$presentValues,
+                      pvCosts=self$values$presentValuesCosts,
+                      premiumSum = self$values$premiumSum),
                       self$params));
-      self$premiumCoefficients = res[["coefficients"]];
-      self$premiums = res[["premiums"]]
-      self$premiums
+      self$values$premiumCoefficients = res[["coefficients"]];
+      self$values$premiums = res[["premiums"]]
+      self$values$premiums
     },
 
     updatePresentValues = function() {
       pvAllBenefits = do.call(self$tarif$presentValueBenefits,
-                              c(list(presentValues = self$presentValues,
-                                     presentValuesCosts = self$presentValuesCosts,
-                                     premiums = self$premiums,
-                                     premiumSum = self$premiumSum),
+                              c(list(presentValues = self$values$presentValues,
+                                     presentValuesCosts = self$values$presentValuesCosts,
+                                     premiums = self$values$premiums,
+                                     premiumSum = self$values$premiumSum),
                                 self$params));
-      self$presentValues = cbind(self$presentValues, pvAllBenefits)
-      self$presentValue
+      self$values$presentValues = cbind(self$values$presentValues, pvAllBenefits)
+      self$values$presentValue
     },
 
     calculateAbsCashFlows = function() {
       absCashFlows = do.call(self$tarif$getAbsCashFlows,
-                             c(list(premiums = self$premiums,
-                                    premiumSum = self$premiumSum,
-                                    cashflows = self$cashFlows,
-                                    cashflowsCosts = self$cashFlowsCosts),
+                             c(list(premiums = self$values$premiums,
+                                    premiumSum = self$values$premiumSum,
+                                    cashflows = self$values$cashFlows,
+                                    cashflowsCosts = self$values$cashFlowsCosts),
                                self$params));
-      self$absCashFlows = absCashFlows
-      self$absCashFlows
+      self$values$absCashFlows = absCashFlows
+      self$values$absCashFlows
     },
 
     calculateAbsPresentValues = function() {
       absPresentValues = do.call(self$tarif$getAbsPresentValues,
-                                 c(list(premiums = self$premiums,
-                                        premiumSum = self$premiumSum,
-                                        presentValues = self$presentValues,
-                                        presentValuesCosts = self$presentValuesCosts),
+                                 c(list(premiums = self$values$premiums,
+                                        premiumSum = self$values$premiumSum,
+                                        presentValues = self$values$presentValues,
+                                        presentValuesCosts = self$values$presentValuesCosts),
                                    self$params));
-      self$absPresentValues = absPresentValues
-      self$absPresentValues
+      self$values$absPresentValues = absPresentValues
+      self$values$absPresentValues
     },
 
     calculateReserves = function() {
-      self$reserves = do.call(self$tarif$reserveCalculation,
-                              c(list(premiums=self$premiums,
-                                presentValues=self$absPresentValues,
-                                cashflows = self$absCashFlows,
-                                premiumSum = self$premiumSum),
+      self$values$reserves = do.call(self$tarif$reserveCalculation,
+                              c(list(premiums=self$values$premiums,
+                                presentValues=self$values$absPresentValues,
+                                cashflows = self$values$absCashFlows,
+                                premiumSum = self$values$premiumSum),
                                 self$params));
-      self$reserves
+      self$values$reserves
     },
 
     premiumAnalysis = function() {
-      self$premiumComposition = do.call(self$tarif$premiumDecomposition,
-                                        c(list(premiums=self$premiums,
-                                               reserves=self$reserves,
-                                               cashflows=self$absCashFlows,
-                                               presentValues=self$absPresentValues,
-                                               q=self$transitionProbabilities),
+      self$values$premiumComposition = do.call(self$tarif$premiumDecomposition,
+                                        c(list(premiums=self$values$premiums,
+                                               reserves=self$values$reserves,
+                                               cashflows=self$values$absCashFlows,
+                                               presentValues=self$values$absPresentValues,
+                                               q=self$values$transitionProbabilities),
                                           self$params));
-      self$premiumComposition
+      self$values$premiumComposition
     },
 
     dummy=NULL
