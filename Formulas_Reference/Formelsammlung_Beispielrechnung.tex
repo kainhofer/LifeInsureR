@@ -92,7 +92,8 @@ Bemerkung: Sämtliche Barwerte werden rekursiv bestimmt, daher werden alle Forme
  $Beg$ & Versicherungsbeginn (Datum, TODO)\\[0.5em]
 
  $q_{x+t}$ & einjährige Sterbewahrscheinlichkeit der versicherten Person (aus $YOB$ und $x$ bestimmt) & \texttt{contract\$params\$transitionProbabilities\$q}\\
- $p_{x+t}$ & einjährige Überlebenswahrscheinlichkeit, $p_{x+t} = 1-q_{x+t}$ & \texttt{contract\$params\$transitionProbabilities\$p} \\
+ $i_{x+t}$ & einjährige Erkrankungswahrscheinlichkeit (z.B. Dread Disease, Krebs, etc.) & \texttt{contract\$params\$transitionProbabilities\$i} \\
+ $p_{x+t}$ & einjährige Überlebenswahrscheinlichkeit als Aktiver, $p_{x+t} = 1-q_{x+t}-i_{x+1}$ & \texttt{contract\$params\$transitionProbabilities\$p} \\
  $\omega$  & Höchstalter gemäß der benutzten Sterbetafel  & \texttt{getOmega(tarif\$mortalityTable)} \\[0.5em]
  
 
@@ -361,30 +362,39 @@ Jede Kostenart ($\alpha$/Zillmer/$\beta$/$\gamma$/$\tilde{\gamma}$) und Bemessun
 
 \pagebreak
 
-\section{Cashflows}
+\section{Normierte Cashflows (auf Einheitswerte)}
 
-\begin{longtable}{lp{6.5cm}v{2.5cm}v{2.5cm}v{2.5cm}}
-& Beschreibung & LR & ALV & ELV \\\hline
-$pr_t$  \dots          & Prämienzahlungen (vorschüssig) zu $t$ & $\delta(t<m)$ & $\delta(t<m)$ & $\delta(t<m)$ \\
-$PS$                   & Prämiensumme, $PS=\sum_{t=0}^n pr_t$\\[1em]
+% \begin{sidewaystable}
+\begin{center}
+ 
 
-$\ddot{e}_t$  \dots    & Erlebenszahlungen vorschüssig zu $t$ & $\delta(l+g\le t< n)$ & 0 & $\delta(t=n)$\\
-$e_t$  \dots           & Erlebenszahlungen nachschüssig zu $t+1$& $\delta(l+g\le t< n)$ & 0 & $\delta(t=n)$\\
-$\ddot{e}_t^{*}$ \dots & garantierte Zahlungen vorschüssig zu $t$ & $\delta(l\le t< l+g)$ & 0 & 0 \\
-$e_t^{*}$  \dots       & garant. Zahlungen nachschüssig zu $t+1$ & $\delta(l\le t< l+g)$ & 0 & 0 \\[1em]
+% \rotatebox{90}{
+\begin{tabular}{lp{6.5cm}v{1.6cm}v{1.5cm}v{1.5cm}v{1cm}v{1cm}}
+& Beschreibung & LR & ALV & ELV & T-F & DD\\\hline\\[0.01em]
+$pr_t$  \dots          & Prämienzahlungen (vorschüssig) zu $t$ & $t<m$ & $t<m$ & $t<m$ & $t<m$ & $t<m$ \\
+$PS$                   & Prämiensumme, $PS=\sum_{t=0}^n pr_t$\\[0.5em]\hline\\[0em]
 
-$a_t$  \dots           & Ablebenszahlung zu $t+1$ & 0 & $\delta(l\le t < n)$ & 0 \\
-$a_t^{(RG)}$           & Ablebenszahlungen für PRG zu $t+1$ (Ableben im Jahr $t$) & $\min(t+1,m,f)$ & 0 & $\min(t+1,m,f)$ \\
+$\ddot{e}_t$  \dots    & Erlebenszahlungen vorschüssig zu $t$ & $(l+g)...n$ & 0 & $t=n$ & 0 & 0 \\
+$e_t$  \dots           & Erlebenszahlungen nachschüssig zu $t+1$& $(l+g)...n$ & 0 & $t=n$ & 0 & 0 \\
+$\ddot{e}_t^{*}$ \dots & garantierte Zahlungen vorschüssig zu $t$ & $(l+g)...n$ & 0 & 0  & $t=n$ & 0 \\
+$e_t^{*}$  \dots       & garant. Zahlungen nachschüssig zu $t+1$ & $(l+g)...n$ & 0 & 0  & 0 & 0 \\[0.5em]\hline\\[0em]
 
-\end{longtable}
+$a_t$  \dots           & Ablebenszahlung zu $t+1$ & 0 & $l...n$ & 0 & 0 & 0 \\
+$d_t$  \dots           & Zahlung zu $t+1$ bei Eintritt der Erkrankung zwischen $t$ und $t+1$ & 0 & 0 & 0 & 0& $l...n$ \\[0.5em]\hline\\[0em]
+$a_t^{(RG)}$           & Ablebenszahlungen für PRG zu $t+1$ (Ableben im Jahr $t$) & $\min(t+1, m, f)$ & 0 & $\min(t+1,m,f)$ & 0 & 0 \\[0.5em]\hline
+
+\end{tabular}
+% }
+\end{center}
+% \end{sidewaystable}
 
 Die Cash-Flows können auch in Matrixform dargestellt werden:
 \begin{align*}
 %
  \overrightarrow{CF}^L_t &= \left(
  \begin{matrix} % TODO: Add an indication that the first row is in advance, the second in arrears
-pr_t & \ddot{e}_t^{*} & \ddot{e}_t & 0 & 0 \\
-pr^{(nachsch)}_t & e_t^{*} & e_t & a_t & a_t^{(RG)}\\
+pr_t & \ddot{e}_t^{*} & \ddot{e}_t & 0 & 0 & 0 \\
+pr^{(nachsch)}_t & e_t^{*} & e_t & a_t & d_t & a_t^{(RG)}\\
 \end{matrix}
  \right)
 % 
@@ -522,10 +532,16 @@ A^{(RG+)}_\xn(t) &= A^{(RG)}_\xn(t) - A^{(RG-)}_\xn(t)
 \intertext{Dieser Wert ist rekursiv nicht darstellbar.}
 \end{align*}
 
+\subsection{Disease-Barwert}
+\begin{align*} 
+A^d_\xn(t) &= i_{x+t} \cdot v \cdot d_t + p_{x+t} \cdot v \cdot A^d_\xn(t+1)\\
+\end{align*}
+
 \subsection{Leistungsbarwert}
 
 \begin{align*}
-BW^L_\xn(t) &= E_\xn(t) + A_\xn(t) + (1+\rho^{RG}) \cdot A^{(RG)}_\xn(t)\cdot BP_\xn
+BW^L_\xn(t) &= E_\xn(t) + A_\xn(t) + A^d_\xn(t) &\text{ohne Prämienrückgewähr}\\
+BW^{L,RG}_\xn(t) &= BW^L_\xn(t) + (1+\rho^{RG}) \cdot A^{(RG)}_\xn(t)\cdot BP_\xn &\text{inkl. Prämienrückgewähr}
 \end{align*}
 
 
@@ -556,7 +572,8 @@ allen Termen der Subscript $\xn$ unterlassen):
 \begin{align*}
   \overrightarrow{BW}^L(t) &= \left(
  \begin{matrix}
-    P(t), & E^{Gar}(t), & E(t), & A(t), & A^{(RG)}(t)
+    P(t), & %E^{Gar}(t), & E(t), & A(t), 
+    BW^L(t), & A^{(RG)}(t)
  \end{matrix}
  \right)
 % 
@@ -585,7 +602,9 @@ VK^{(VS)}(t) & VK^{(PS)}(t) & -\\
 
 \subsection{Nettoprämie:}
 \begin{align*}
-NP_\xn &= \frac{E_\xn(0) + A_\xn(0) + \left(1+\rho^{RG}\right) \cdot A^{(RG)}_\xn(0) \cdot BP_\xn}{P_\xn(0)} \cdot \left(1+\rho\right)
+NP_\xn &= \frac{%E_\xn(0) + A_\xn(0) + \left(1+\rho^{RG}\right) \cdot A^{(RG)}_\xn(0) \cdot BP_\xn}
+BW^{L}_\xn(0) + \left(1+\rho^{RG}\right) \cdot A^{(RG)}_\xn(0) \cdot BP_\xn}
+{P_\xn(0)} \cdot \left(1+\rho\right)
 \end{align*}
 
 
@@ -594,7 +613,8 @@ NP_\xn &= \frac{E_\xn(0) + A_\xn(0) + \left(1+\rho^{RG}\right) \cdot A^{(RG)}_\x
 \begin{align*}
 ZP_\xn &= 
 \frac{%
-  NP_\xn\cdot P_\xn(0) + 
+%   NP_\xn\cdot P_\xn(0) +
+  \overbrace{\left(BW^{L}_\xn(0) + \left(1+\rho^{RG}\right) \cdot A^{(RG)}_\xn(0) \cdot BP_\xn\right) \cdot (1+\rho)}^{=NP_\xn\cdot P_\xn(0)} +
   ZK^{(VS)}_\xn(0) + 
   ZK^{(PS)}_\xn(0) \cdot BP_\xn \cdot PS + 
   ZK^{(BP)}_\xn(0)\cdot BP_\xn
@@ -609,7 +629,8 @@ Varianten:
 \begin{align*}
 ZP_\xn &= 
 \left[%
-  NP_\xn\cdot P_\xn(0) + 
+%   NP_\xn\cdot P_\xn(0) + 
+  BW^{L,RG}_\xn(0) \cdot (1+\rho) +
   \left(ZK^{(VS)}_\xn(0) + IK^{(VS)}_\xn(0) + VK^{(VS)}_\xn(0)\right) +  \right.\\
   &\qquad\left.\left(ZK^{(PS)}_\xn(0) + IK^{(PS)}_\xn(0) + VK^{(PS)}_\xn(0)\right) \cdot BP_\xn \cdot PS + \right.\\
   &\qquad\left.\left(ZK^{(BP)}_\xn(0) + IK^{(BP)}_\xn(0) + VK^{(BP)}_\xn(0)\right) \cdot BP_\xn
@@ -621,8 +642,8 @@ ZP_\xn &=
  \item % REFERENCE: ME
     Prämienrückgewähr proportional zu Zillmerprämie (für Berechnung der Zillmerprämie):
 \begin{align*}
-ZP_\xn &= \frac{E_\xn(0) + A_\xn(0) + \left(1+\rho^{RG}\right) \cdot A^{(RG)}_\xn(0) \cdot ZP_\xn}{P_\xn(0)} \cdot \left(1+\rho\right)\\
-ZP_\xn &= \frac{E_\xn(0) + A_\xn(0) +  \cdot ZP_\xn}{P_\xn(0) - \left(1+\rho^{RG}\right)\cdot A^{(RG)}_\xn(0)\cdot \left(1+\rho\right)} \cdot \left(1+\rho\right)
+ZP_\xn &= \frac{BW^L_\xn(0) + \left(1+\rho^{RG}\right) \cdot A^{(RG)}_\xn(0) \cdot ZP_\xn}{P_\xn(0)} \cdot \left(1+\rho\right)\\
+ZP_\xn &= \frac{BW^L_\xn(0)}{P_\xn(0) - \left(1+\rho^{RG}\right)\cdot A^{(RG)}_\xn(0)\cdot \left(1+\rho\right)} \cdot \left(1+\rho\right)
 \end{align*}
  
 \end{itemize}
@@ -632,7 +653,7 @@ ZP_\xn &= \frac{E_\xn(0) + A_\xn(0) +  \cdot ZP_\xn}{P_\xn(0) - \left(1+\rho^{RG
 \begin{align*}
 BP_\xn &= \frac%
 { 
-   \left(E_\xn(0) + A_\xn(0)\right)\cdot\left(1+\rho\right) + 
+   BW^L_\xn(0)\cdot\left(1+\rho\right) + 
    \left( AK^{(VS)}_\xn(0) + IK^{(VS)}_\xn(0) + VK^{(VS)}_\xn(0) \right)
 }%
 {
@@ -654,13 +675,15 @@ Für die Berechnung der Prämien können die Koeffizienten der jeweiligen Barwer
 \begin{sidewaystable}
 \centering
 
-\newenvironment{benarray}{\big(\begin{array}{*4{C{3.4em}}C{12em}}}{\end{array}\big)}
+% \newenvironment{benarray}{\big(\begin{array}{*4{C{3.4em}}C{12em}}}{\end{array}\big)}
+\newenvironment{benarray}{\big(\begin{array}{C{4em}C{5em}C{12em}}}{\end{array}\big)}
 \newenvironment{costarray}{\left(\begin{array}{*3{C{4.7em}}}}{\end{array}\right)}
 % TODO: laufende alpha-Kosten
 \begin{tabular}{||ll|c|c||}\hline\hline
  & & Leistungen & Kosten \\ \hline\hline
  Terme & &  
-  $\begin{benarray}P_\xn(t) & E^{Gar}_\xn(t) & E_\xn(t) & A_\xn(t)  & A_\xn^{(RG)}(t)\end{benarray}$
+%   $\begin{benarray}P_\xn(t) & E^{Gar}_\xn(t) & E_\xn(t) & A_\xn(t)  & A_\xn^{(RG)}(t)\end{benarray}$
+  $\begin{benarray}P_\xn(t) & BW^L_\xn(t)  & A_\xn^{(RG)}(t)\end{benarray}$
  &
  $\begin{costarray}
 AK^{(VS)}_\xn(t) & AK^{(PS)}_\xn(t)  & AK^{(BP)}_\xn(t) \\
@@ -673,18 +696,18 @@ VK^{frei}_\xn(t) & - & -\\
 
 
 Nettoprämie & Zähler & 
-  $\begin{benarray}0 & 1+\rho & 1+\rho & 1+\rho & \left(1+\rho^{RG}\right)\cdot BP_\xn \cdot \left(1+\rho\right)\end{benarray}$
+  $\begin{benarray}0 & 1+\rho & \left(1+\rho^{RG}\right)\cdot BP_\xn \cdot \left(1+\rho\right)\end{benarray}$
  & -
 \\
 
  & Nenner & 
-  $\begin{benarray} 1 & 0 & 0 & 0 & 0\end{benarray}$
+  $\begin{benarray} 1 & 0 & 0 \end{benarray}$
  & - 
 \\\hline
 
 
 Zillmerprämie & Zähler & 
-  $\begin{benarray}0 & 1+\rho & 1+\rho & 1+\rho & \left(1+\rho^{RG}\right)\cdot BP_\xn \cdot \left(1+\rho\right)\end{benarray}$
+  $\begin{benarray}0 & 1+\rho & \left(1+\rho^{RG}\right)\cdot BP_\xn \cdot \left(1+\rho\right)\end{benarray}$
  &
  $\begin{costarray}
 0 & 0 & 0 \\
@@ -696,13 +719,13 @@ Zillmerprämie & Zähler &
 \\
 
  & Nenner & 
-  $\begin{benarray} 1 & 0 & 0 & 0 & 0\end{benarray}$
+  $\begin{benarray} 1 & 0 & 0\end{benarray}$
  &
 -
 \\\hline
 
 Bruttoprämie & Zähler & 
-   $\begin{benarray}0 & 1+\rho & 1+\rho & 1+\rho & 0\end{benarray}$
+   $\begin{benarray}0 & 1+\rho & 0\end{benarray}$
  &
  $\begin{costarray}
 1 & 0 & 0 \\
@@ -714,7 +737,7 @@ Bruttoprämie & Zähler &
 \\
 
  & Nenner & 
-  $\begin{benarray}1 & 0 & 0 & 0 & -(1+\rho)\cdot(1+\rho^{RG}) \end{benarray}$
+  $\begin{benarray}1 & 0 & -(1+\rho)\cdot(1+\rho^{RG}) \end{benarray}$
  &
  $\begin{costarray}
 0 & -PS & -1 \\
