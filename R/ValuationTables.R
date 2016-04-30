@@ -191,7 +191,7 @@ setMethod("periodDeathProbabilities","valuationTable.trendProjection",
           function (object,  ..., Period=1975) {
             qx=object@deathProbs * (1+object@loading);
             if (is.null(object@trend2) || length(object@trend2)<=1) {
-              ages=0:(length(qx)-1);
+              # ages=0:(length(qx)-1);
               damping=object@dampingFunction(Period-object@baseYear);
               # print(data.frame(age=0:(length(qx)-1), trend=object@trend, exponent=-object@trend*damping, damping=damping, baseqx=qx, qx=exp(-object@trend*damping)*qx)[66:90,]);
               finalqx=exp(-object@trend*damping)*qx;
