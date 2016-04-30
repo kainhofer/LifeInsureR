@@ -315,8 +315,9 @@ InsuranceTarif = R6Class(
     },
 
     getPremiumCoefficients = function(type="gross", coeffBenefits, coeffCosts, ...,
-                                      loadings = self$loadings, premiumSum = 0,
-                                      premiums = c("unit.gross"=0)) {
+                                      premiumSum = 0,premiums = c("unit.gross"=0), loadings=list()) {
+      # Merge a possibly passed loadings override with the defaults of this class:
+      loadings = self$getLoadings(loadings=loadings);
       securityLoading = loadings$security;
       refundAddon = self$premiumRefundLoading;
 
@@ -371,8 +372,8 @@ InsuranceTarif = R6Class(
     },
 
     premiumCalculation = function(pvBenefits, pvCosts, costs=self$costs, premiumSum=0, sumInsured=1, premiumFrequency = 1, loadings=list(), ...) {
-      # The loadings passed to this function override the tariff settings!
-      loadings = c(loadings, self$loadings);
+      # Merge a possibly passed loadings override with the defaults of this class:
+      loadings = self$getLoadings(loadings=loadings);
       premiums = c("unit.net" = 0, "unit.Zillmer" = 0, "unit.gross"= 0, "net" = 0, "Zillmer" = 0, "gross" = 0, "written" = 0);
       coefficients = list("gross"=c(), "Zillmer"=c(), "net"=c());
 
@@ -380,7 +381,7 @@ InsuranceTarif = R6Class(
       coeff=self$getPremiumCoefficients("gross", pvBenefits["0",]*0, pvCosts["0",,]*0, premiums=premiums, premiumSum=premiumSum, loadings=loadings)
       enumerator  = sum(coeff[["SumInsured"]][["benefits"]] * pvBenefits["0",]) + sum(coeff[["SumInsured"]][["costs"]] * pvCosts["0",,]);
       denominator = sum(coeff[["Premium"   ]][["benefits"]] * pvBenefits["0",]) + sum(coeff[["Premium"   ]][["costs"]] * pvCosts["0",,]);
-      ongoingAlphaGrossPremium = self$loadings$ongoingAlphaGrossPremium;
+      ongoingAlphaGrossPremium = loadings$ongoingAlphaGrossPremium;
       premiums[["unit.gross"]] = enumerator/denominator * (1 + ongoingAlphaGrossPremium);
       premiums[["gross"]] = premiums[["unit.gross"]] * sumInsured;
       coefficients[["gross"]] = coeff;
@@ -423,13 +424,15 @@ InsuranceTarif = R6Class(
       list("premiums"=premiums, "coefficients"=coefficients)
     },
 
-    reserveCalculation = function (premiums, presentValues, cashflows, sumInsured=1, premiumSum=0, policyPeriod = 1, age = 0, ...) {
+    reserveCalculation = function (premiums, presentValues, cashflows, sumInsured=1, premiumSum=0, policyPeriod = 1, age = 0, ..., loadings=list()) {
+      # Merge a possibly passed loadings override with the defaults of this class:
+      loadings = self$getLoadings(loadings=loadings);
       # Net, Zillmer and Gross reserves
-      resNet = presentValues[,"benefitsAndRefund"] * (1+self$loadings$security) - premiums[["net"]] * presentValues[,"premiums.unit"];
+      resNet = presentValues[,"benefitsAndRefund"] * (1+loadings$security) - premiums[["net"]] * presentValues[,"premiums.unit"];
       BWZcorr = presentValues["0", "Zillmer"] / presentValues["0", "premiums"] * presentValues[,"premiums"];
       resZ = resNet - BWZcorr;
 
-      resAdeq = presentValues[,"benefitsAndRefund"] * (1+self$loadings$security) +
+      resAdeq = presentValues[,"benefitsAndRefund"] * (1+loadings$security) +
         presentValues[,"alpha"] + presentValues[,"beta"] + presentValues["gamma"] -
         premiums[["gross"]] * presentValues[,"premiums.unit"];
 
@@ -437,7 +440,7 @@ InsuranceTarif = R6Class(
       resGamma = presentValues[,"gamma"] - presentValues["0", "gamma"] / presentValues["0", "premiums"] * presentValues[,"premiums"]
 
 
-      resConversion = (resZ + resGamma) * (1-self$loadings$advanceProfitParticipation);
+      resConversion = (resZ + resGamma) * (1-loadings$advanceProfitParticipation);
 
       # Alpha refund: Distribute alpha-costs to 5 year (or if shorter, the policy period):
       r = min(policyPeriod, 5);
@@ -471,7 +474,7 @@ InsuranceTarif = R6Class(
         surrenderValue = self$surrenderValueCalculation(
           resReduction, reserves=res, premiums=premiums, presentValues=presentValues,
           cashflows=cashflows, sumInsured=sumInsured, premiumSum=premiumSum,
-          policyPeriod = policyPeriod, age = age, ...);
+          policyPeriod = policyPeriod, age = age, loadings=loadings, ...);
       } else {
         surrenderValue = resReduction;
       }
@@ -479,8 +482,8 @@ InsuranceTarif = R6Class(
 
       # Calculate new sum insured after premium waiver
       Storno = 0; # TODO: Implement storno costs
-      newSI = (surrenderValue - presentValues[,"death_Refund_past"] * (1+self$loadings$security) - c(Storno)) /
-        (presentValues[, "benefits"] * (1+self$loadings$security) + presentValues[, "gamma_nopremiums"]) * sumInsured;
+      newSI = (surrenderValue - presentValues[,"death_Refund_past"] * (1+loadings$security) - c(Storno)) /
+        (presentValues[, "benefits"] * (1+loadings$security) + presentValues[, "gamma_nopremiums"]) * sumInsured;
 
       cbind(res,
             "PremiumsPaid"=Reduce("+", cashflows$premiums_advance, accumulate = TRUE),
