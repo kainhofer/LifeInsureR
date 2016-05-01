@@ -48,6 +48,11 @@ InsuranceContract = R6Class(
       premiumComposition = NA
     ),
 
+    #### Keeping the history of all contract changes during its lifetime
+    history = list(
+
+    ),
+
 
     #### The code:
 
@@ -78,6 +83,11 @@ InsuranceContract = R6Class(
       if (!missing(loadings))         self$params$loadings = loadings;
 
       self$recalculate();
+    },
+
+    addHistorySnapshot = function(time=0, comment="Initial contract values", type="Contract", params=self$params, values = self$values) {
+      self$history = c(self$history,
+                       list("time"=time, "comment"=comment, "type"=type, "params"=params, "values"=values));
     },
 
     recalculate = function() {
