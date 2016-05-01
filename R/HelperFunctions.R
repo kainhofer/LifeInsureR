@@ -12,7 +12,7 @@ calculatePVSurvival = function(px=1-qx, qx=1-px, advance, arrears=c(0), ..., m=1
   # TODO: Replace loop by better way (using Reduce?)
   res = rep(0, l+1);
   for (i in l:1) {
-    # coefficients for the payemtns(including corrections for payments during the year (using the alpha(m) and beta(m)):
+    # coefficients for the payments (including corrections for payments during the year (using the alpha(m) and beta(m)):
     advcoeff = mCorrection$alpha - mCorrection$beta*(1-p[i]*v);
     arrcoeff = mCorrection$alpha - (mCorrection$beta + 1/m)*(1-p[i]*v);
     # The actual recursion:
@@ -21,6 +21,26 @@ calculatePVSurvival = function(px=1-qx, qx=1-px, advance, arrears=c(0), ..., m=1
   res[1:l]
 }
 
+
+calculatePVGuaranteed = function(advance, arrears=c(0), ..., m=1, mCorrection = list(alpha=1, beta=0), v=1) {
+  # assuming advance and arrears have the same dimensions...
+  init = advance[1]*0;
+  l = max(length(advance), length(arrears));
+  advance = pad0(advance, l, value=init);
+  arrears = pad0(arrears, l, value=init);
+
+  # TODO: Make this work for matrices (i.e. currently advance and arrears are assumed to be one-dimensional vectors)
+  # TODO: Replace loop by better way (using Reduce?)
+  res = rep(0, l+1);
+  for (i in l:1) {
+    # coefficients for the payments (including corrections for payments during the year (using the alpha(m) and beta(m)):
+    advcoeff = mCorrection$alpha - mCorrection$beta*(1-v);
+    arrcoeff = mCorrection$alpha - (mCorrection$beta + 1/m)*(1-v);
+    # The actual recursion:
+    res[i] = advance[i]*advcoeff + arrears[i]*arrcoeff + v*res[i+1];
+  }
+  res[1:l]
+}
 
 
 # TODO: So far, we are assuming, the costs array has sufficient time steps and does not need to be padded!

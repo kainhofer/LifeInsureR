@@ -75,7 +75,7 @@ InsuranceTarif = R6Class(
       ),
 
 
-    initialize = function(name = NULL, mortalityTable = NULL, i = NULL, type = "wholelife", ..., invalidityTable=NULL, features = list(), premiumPeriod = NULL, premiumFrequencyOrder = 0, benefitFrequencyOrder = 0, costs, surrenderValueCalculation) {
+    initialize = function(name = NULL, mortalityTable = NULL, i = NULL, type = "wholelife", ..., loadings=list(), invalidityTable=NULL, features = list(), premiumPeriod = NULL, premiumFrequencyOrder = 0, benefitFrequencyOrder = 0, costs, surrenderValueCalculation) {
       if (!missing(name))           self$name = name;
       if (!missing(mortalityTable)) self$mortalityTable = mortalityTable;
       if (!missing(i))              self$i = i;
@@ -88,6 +88,7 @@ InsuranceTarif = R6Class(
       if (!missing(features))       self$features = c(features, self$features);
       if (!missing(surrenderValueCalculation)) self$surrenderValueCalculation = surrenderValueCalculation;
       if (!missing(invalidityTable)) self$invalidityTable = invalidityTable;
+      if (!missing(loadings))       self$loadings = self$getLoadings(loadings=loadings);
 
       self$v = 1/(1+self$i);
 
@@ -95,7 +96,7 @@ InsuranceTarif = R6Class(
     },
 
     # Merge a possibly passed loadings override with this tariff's default loadings:
-    getLoadings = function(..., loadings=list()) {
+    getLoadings = function(loadings=list(), ...) {
       c(loadings, self$loadings)
     },
 
@@ -106,6 +107,7 @@ InsuranceTarif = R6Class(
       }
       ages
     },
+
     getTransitionProbabilities = function(age, ..., YOB = 2000) {
       ages = self$getAges(age, YOB = YOB);
       q = deathProbabilities(self$mortalityTable, YOB = YOB);
