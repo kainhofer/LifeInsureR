@@ -10,6 +10,7 @@ InsuranceContract = R6Class(
     #### Contract settings
     params = list(
       sumInsured = 1,
+      premiumWaiver= 0,
       YOB = NA,
       age = NA,
       policyPeriod = Inf,
@@ -101,6 +102,7 @@ InsuranceContract = R6Class(
       self$calculateAbsPresentValues();
       self$calculateReserves();
       self$premiumAnalysis();
+      self$addHistorySnapshot(0, "Initial contract values", type="Contract", params=self$params, values = self$values);
     },
 
 
@@ -111,85 +113,69 @@ InsuranceContract = R6Class(
 
     determineCashFlows = function() {
       self$values$cashFlowsBasic = do.call(self$tarif$getBasicCashFlows, self$params);
-      self$values$cashFlows = do.call(self$tarif$getCashFlows, c(self$params, "basicCashFlows" = self$values$cashFlowsBasic));
+      self$values$cashFlows = do.call(self$tarif$getCashFlows, c(self$params, self$values));
       self$values$premiumSum = sum(self$values$cashFlows$premiums_advance + self$values$cashFlows$premiums_arrears);
-      self$values$cashFlowsCosts = do.call(self$tarif$getCashFlowsCosts, self$params);
+      self$values$cashFlowsCosts = do.call(self$tarif$getCashFlowsCosts, c(self$params, self$values));
       list("benefits"= self$values$cashFlows, "costs"=self$values$cashFlowCosts, "premiumSum" = self$values$premiumSum)
     },
 
     calculatePresentValues = function() {
+str(self$values);
       self$values$presentValues = do.call(self$tarif$presentValueCashFlows,
-                                   c(list("cashflows"=self$values$cashFlows), self$params));
+                                   c(self$params, self$values));
       self$values$presentValuesCosts = do.call(self$tarif$presentValueCashFlowsCosts,
-                                        c(list("cashflows"=self$values$cashFlowsCosts), self$params));
+                                        c(self$params, self$values));
       list("benefits" = self$values$presentValues, "costs" = self$values$presentValuesCosts)
     },
 
     calculatePremiums = function() {
       # the premiumCalculation function returns the premiums AND the cofficients,
       # so we have to extract the coefficients and store them in a separate variable
-      res = do.call(self$tarif$premiumCalculation,
-                    c(list(pvBenefits=self$values$presentValues,
-                      pvCosts=self$values$presentValuesCosts,
-                      premiumSum = self$values$premiumSum),
-                      self$params));
+      res = do.call(self$tarif$premiumCalculation, c(self$params, self$values));
       self$values$premiumCoefficients = res[["coefficients"]];
       self$values$premiums = res[["premiums"]]
       self$values$premiums
     },
 
     updatePresentValues = function() {
-      pvAllBenefits = do.call(self$tarif$presentValueBenefits,
-                              c(list(presentValues = self$values$presentValues,
-                                     presentValuesCosts = self$values$presentValuesCosts,
-                                     premiums = self$values$premiums,
-                                     premiumSum = self$values$premiumSum),
-                                self$params));
+      pvAllBenefits = do.call(self$tarif$presentValueBenefits, c(self$params, self$values));
       self$values$presentValues = cbind(self$values$presentValues, pvAllBenefits)
       self$values$presentValue
     },
 
     calculateAbsCashFlows = function() {
-      absCashFlows = do.call(self$tarif$getAbsCashFlows,
-                             c(list(premiums = self$values$premiums,
-                                    premiumSum = self$values$premiumSum,
-                                    cashflows = self$values$cashFlows,
-                                    cashflowsCosts = self$values$cashFlowsCosts),
-                               self$params));
-      self$values$absCashFlows = absCashFlows
+      self$values$absCashFlows = do.call(self$tarif$getAbsCashFlows, c(self$params, self$values));
       self$values$absCashFlows
     },
 
     calculateAbsPresentValues = function() {
-      absPresentValues = do.call(self$tarif$getAbsPresentValues,
-                                 c(list(premiums = self$values$premiums,
-                                        premiumSum = self$values$premiumSum,
-                                        presentValues = self$values$presentValues,
-                                        presentValuesCosts = self$values$presentValuesCosts),
-                                   self$params));
-      self$values$absPresentValues = absPresentValues
+      self$values$absPresentValues = do.call(self$tarif$getAbsPresentValues, c(self$params, self$values));
       self$values$absPresentValues
     },
 
     calculateReserves = function() {
-      self$values$reserves = do.call(self$tarif$reserveCalculation,
-                              c(list(premiums=self$values$premiums,
-                                presentValues=self$values$absPresentValues,
-                                cashflows = self$values$absCashFlows,
-                                premiumSum = self$values$premiumSum),
-                                self$params));
+      self$values$reserves = do.call(self$tarif$reserveCalculation, c(self$params, self$values));
       self$values$reserves
     },
 
     premiumAnalysis = function() {
-      self$values$premiumComposition = do.call(self$tarif$premiumDecomposition,
-                                        c(list(premiums=self$values$premiums,
-                                               reserves=self$values$reserves,
-                                               cashflows=self$values$absCashFlows,
-                                               presentValues=self$values$absPresentValues,
-                                               q=self$values$transitionProbabilities),
-                                          self$params));
+      self$values$premiumComposition = do.call(self$tarif$premiumDecomposition, c(self$params, self$values));
       self$values$premiumComposition
+    },
+
+    # Premium Waiver: Stop all premium payments at time t
+    # the SumInsured is determined from the available
+    premiumWaiver = function (t) {
+      newSumInsured = self$values$reserves[[toString(t), "PremiumFreeSumInsured"]];
+      self$premiumWaiver = TRUE;
+      self$recalculatePremiumFreeSumInsured(t=t, SumInsured=newSumInsured)
+
+      # TODO: Update cashflows from t onwards
+      # TODO: Update present values from t onwards
+      # TODO: Update reserves from t onwards
+
+
+      self$addHistorySnapshot(t=t, comment=sprintf("Premium waiver at time %d", t), type="PremiumWaiver", params=self$params, values=self$values);
     },
 
     dummy=NULL
