@@ -1,3 +1,11 @@
+library(abind);
+
+mergeValues = function(starting, ending, t) {
+  rbind(starting[1:t,], ending[-1:-t,])
+}
+mergeValues3D = function(starting, ending, t) {
+  abind(starting[1:t,,], ending[-1:-t,,], along=1)
+}
 # Caution: px is not neccessarily 1-qx, because we might also have dread diseases so that px=1-qx-ix! However, the ix is not used for the survival present value
 calculatePVSurvival = function(px=1-qx, qx=1-px, advance, arrears=c(0), ..., m=1, mCorrection = list(alpha=1, beta=0), v=1) {
   # assuming advance and arrears have the same dimensions...
