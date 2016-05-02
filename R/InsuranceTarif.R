@@ -1,7 +1,6 @@
 library(R6)
-library(lifecontingencies)
+# library(lifecontingencies)
 library(objectProperties)
-library(foreach)
 
 TariffTypeEnum = setSingleEnum("TariffType", levels = c("annuity", "wholelife", "endowment", "pureendowment", "terme-fix", "dread-disease"))
 PaymentTimeEnum = setSingleEnum("PaymentTime", levels = c("in advance", "in arrears"))
@@ -128,7 +127,7 @@ InsuranceTarif = R6Class(
     },
     getBasicCashFlows = function(age, ..., guaranteed = 0, policyPeriod = inf, deferral = 0, maxAge = getOmega(self$mortalityTable)) {
       maxlen = min(maxAge - age, policyPeriod);
-      cf = list(
+      cf = data.frame(
         guaranteed = rep(0, maxlen+1),
         survival = rep(0, maxlen+1),
         death = rep(0, maxlen+1),
@@ -153,7 +152,7 @@ InsuranceTarif = R6Class(
       cf
     },
 
-    getCashFlows = function(age, ..., premiumPayments = "in advance", benefitPayments = "in advance", guaranteed = 0, policyPeriod=Inf, premiumPeriod = policyPeriod, deferral=0, maxAge = getOmega(self$mortalityTable), cashFlowsBasic = NULL) {
+    getCashFlows = function(age, ..., premiumPayments = "in advance", benefitPayments = "in advance", guaranteed = 0, policyPeriod=Inf, premiumPeriod = policyPeriod, deferral=0, maxAge = getOmega(self$mortalityTable), cashFlowsBasic = NULL, premiumWaiver = FALSE) {
       if (missing(cashFlowsBasic)) {
         cashFlowsBasic = self$getBasicCashFlows(age = age, ..., guaranteed = guaranteed,
               policyPeriod = policyPeriod, deferral = deferral, maxAge = maxAge);
@@ -177,11 +176,13 @@ InsuranceTarif = R6Class(
       );
 
       # Premiums:
-      premiums = pad0(rep(1, min(premiumPeriod, policyPeriod)), cflen);
-      if (premiumPayments == "in advance") {
-        cf$premiums_advance = premiums;
-      } else {
-        cf$premiums_arrears = premiums;
+      if (!premiumWaiver) {
+        premiums = pad0(rep(1, min(premiumPeriod, policyPeriod)), cflen);
+        if (premiumPayments == "in advance") {
+          cf$premiums_advance = premiums;
+        } else {
+          cf$premiums_arrears = premiums;
+        }
       }
 
       # Survival Benefits
@@ -210,7 +211,7 @@ InsuranceTarif = R6Class(
       cf
     },
 
-    getCashFlowsCosts = function(age, ..., policyPeriod=Inf, premiumPeriod = policyPeriod, maxAge = getOmega(self$mortalityTable)) {
+    getCashFlowsCosts = function(age, ..., policyPeriod=Inf, premiumPeriod = policyPeriod, premiumWaiver = FALSE, maxAge = getOmega(self$mortalityTable)) {
       maxlen = min(maxAge - age, policyPeriod)+1;
       policyPeriod = min(maxAge - age, policyPeriod);
       premiumPeriod = min(policyPeriod, premiumPeriod);
@@ -230,6 +231,11 @@ InsuranceTarif = R6Class(
       for (i in 1:policyPeriod) {
         cf[i,,] = cf[i,,] + self$costs[,,"PolicyPeriod"];
       }
+
+      # After premiums are waived, use the gamma_nopremiums instead of gamma:
+      if (premiumWaiver) {
+        cf[,"gamma",] = cf[,"gamma_nopremiums",];
+      }
       cf
     },
 
@@ -245,8 +251,6 @@ InsuranceTarif = R6Class(
       pvRefund = calculatePVDeath (px, qx, cashFlows$death_GrossPremium, v=self$v);
       pvRefundPast = calculatePVDeath (px, qx, cashFlows$death_Refund_past, v=self$v) * (cashFlows[,"death_GrossPremium"]-cashFlows[,"premiums_advance"]);
 
-str(px/px);
-str(qx*0);
       pv = cbind(
         premiums = calculatePVSurvival (px, qx, cashFlows$premiums_advance, cashFlows$premiums_arrears, m=premiumFrequency, mCorrection=premiumFrequencyCorrection, v=self$v),
         guaranteed = calculatePVGuaranteed (cashFlows$guaranteed_advance, cashFlows$guaranteed_arrears, m=benefitFrequency, mCorrection=benefitFrequencyCorrection, v=self$v),
@@ -269,7 +273,6 @@ str(qx*0);
       qx = pad0(q$q, len);
       px = pad0(q$p, len);
 
-# str(cashFlowsCosts);
       pvc = calculatePVCosts(px, qx, cashFlowsCosts, v=self$v);
       pvc
     },
@@ -459,7 +462,7 @@ str(qx*0);
       list("premiums"=premiums, "coefficients"=coefficients)
     },
 
-    reserveCalculation = function (premiums, absPresentValues, absCashFlows, sumInsured=1, premiumSum=0, policyPeriod = 1, age = 0, ..., loadings=list()) {
+    reserveCalculation = function (premiums, absPresentValues, absCashFlows, sumInsured=1, premiumSum=0, policyPeriod = 1, age = 0, ..., reserves = c(), loadings=list(), surrenderPenalty = TRUE) {
       # Merge a possibly passed loadings override with the defaults of this class:
       loadings = self$getLoadings(loadings=loadings);
       # Net, Zillmer and Gross reserves
@@ -505,7 +508,10 @@ str(qx*0);
       # The surrender value functions can have arbitrary form, so we store a function
       # here in the tarif and call that, passing the reduction reserve as
       # starting point, but also all reserves, cash flows, premiums and present values
-      if (!is.null(self$surrenderValueCalculation)) {
+      if (!surrenderPenalty) {
+        # No surrender penalty any more (has already been applied to the first contract change!)
+        surrenderValue = resReduction;
+      } else if (!is.null(self$surrenderValueCalculation)) {
         surrenderValue = self$surrenderValueCalculation(
           resReduction, reserves=res, premiums=premiums, absPresentValues=absPresentValues,
           absCashFlows=absCashFlows, sumInsured=sumInsured, premiumSum=premiumSum,
@@ -530,14 +536,14 @@ str(qx*0);
 
     getBasicDataTimeseries = function(premiums, reserves, absCashFlows, absPresentValues, sumInsured=1, policyPeriod, premiumPeriod, ...) {
       res=cbind(
-        "PremiumPayment" = c(rep(1, premiumPeriod), rep(0, policyPeriod-premiumPeriod)),
-        "SumInsured" = rep(sumInsured, policyPeriod),
+        "PremiumPayment" = c(rep(1, premiumPeriod), rep(0, policyPeriod-premiumPeriod+1)),
+        "SumInsured" = c(rep(sumInsured, policyPeriod), 0),
         "Premiums" = absCashFlows$premiums_advance + absCashFlows$premiums_arrears,
-        "InterestRate" = rep(self$i, policyPeriod),
-        "PolicyDuration" = rep(policyPeriod, policyPeriod),
-        "PremiumPeriod" = rep(premiumPeriod, policyPeriod)
+        "InterestRate" = rep(self$i, policyPeriod+1),
+        "PolicyDuration" = rep(policyPeriod, policyPeriod+1),
+        "PremiumPeriod" = rep(premiumPeriod, policyPeriod+1)
       );
-      rownames(res) = 0:(policyPeriod-1);
+      rownames(res) = 0:policyPeriod;
       res
     },
 

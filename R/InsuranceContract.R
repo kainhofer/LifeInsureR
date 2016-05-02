@@ -1,16 +1,15 @@
 library(R6)
 library(openxlsx);
-# require(xlsx)
 
-InsuranceContract = R6Class(
-  "InsuranceContract",
+InsuranceContract = R6Class("InsuranceContract",
+
   public = list(
     tarif = NA,
 
     #### Contract settings
     params = list(
       sumInsured = 1,
-      premiumWaiver= 0,
+      premiumWaiver = 0,
       YOB = NA,
       age = NA,
       policyPeriod = Inf,
@@ -24,11 +23,14 @@ InsuranceContract = R6Class(
       premiumFrequency = 1,
       benefitFrequency = 1, # Only for annuities!
 
-      loadings = list()     # Allow overriding the tariff-defined loadings (see the InsuranceTariff class for all possible names)
+      loadings = list(),     # Allow overriding the tariff-defined loadings (see the InsuranceTariff class for all possible names)
+      surrenderPenalty = TRUE,  # Set to FALSE after the surrender penalty has been applied once, e.g. on a premium waiver
+      alphaRefunded = FALSE     # Alpha costs not yet refunded (in case of contract changes)
     ),
 
     #### Caching values for this contract, initialized/calculated when the object is created
     values = list(
+      basicData = NA,
       transitionProbabilities = NA,
 
       cashFlowsBasic = NA,
@@ -50,18 +52,15 @@ InsuranceContract = R6Class(
     ),
 
     #### Keeping the history of all contract changes during its lifetime
-    history = list(
-
-    ),
+    history = list(),
 
 
     #### The code:
 
-    initialize = function(tarif, age, policyPeriod,
-                          premiumPeriod = policyPeriod, sumInsured = 1,
+    initialize = function(tarif, age, sumInsured = 1,
+                          policyPeriod, premiumPeriod = policyPeriod, guaranteed = 0,
                           ...,
                           loadings = list(),
-                          guaranteed = 0,
                           premiumPayments = "in advance", benefitPayments = "in advance",
                           premiumFrequency = 1, benefitFrequency = 1,
                           deferral = 0, YOB = 1975) {
@@ -83,102 +82,128 @@ InsuranceContract = R6Class(
       if (!missing(guaranteed))       self$params$guaranteed = guaranteed;
       if (!missing(loadings))         self$params$loadings = loadings;
 
-      self$recalculate();
+      self$calculateContract();
     },
 
     addHistorySnapshot = function(time=0, comment="Initial contract values", type="Contract", params=self$params, values = self$values) {
-      self$history = c(self$history,
-                       list("time"=time, "comment"=comment, "type"=type, "params"=params, "values"=values));
+      self$history = rbind(self$history,
+                       list(time=list("time"=time, "comment"=comment, "type"=type, "params"=params, "values"=values)));
     },
 
-    recalculate = function() {
-      self$determineTransitionProbabilities();
-      self$determineCashFlows();
-      self$calculatePresentValues();
-      self$calculatePremiums();
-      self$updatePresentValues(); # Update the cash flows and present values with the values of the premium
+    calculateContract = function() {
+      self$values$transitionProbabilities = self$determineTransitionProbabilities();
 
-      self$calculateAbsCashFlows();
-      self$calculateAbsPresentValues();
-      self$calculateReserves();
-      self$premiumAnalysis();
+      self$values$cashFlowsBasic = self$determineCashFlowsBasic();
+      self$values$cashFlows = self$determineCashFlows();
+      self$values$premiumSum = self$determinePremiumSum();
+      self$values$cashFlowsCosts = self$determineCashFlowsCosts();
+
+      self$values$presentValues = self$calculatePresentValues();
+      self$values$presentValuesCosts = self$calculatePresentValuesCosts();
+
+      # the premiumCalculation function returns the premiums AND the cofficients,
+      # so we have to extract the coefficients and store them in a separate variable
+      res = self$calculatePremiums();
+      self$values$premiumCoefficients = res[["coefficients"]];
+      self$values$premiums = res[["premiums"]]
+
+      # Update the cash flows and present values with the values of the premium
+      pvAllBenefits = self$calculatePresentValuesBenefits()
+      self$values$presentValues = cbind(self$values$presentValues, pvAllBenefits)
+
+      self$values$absCashFlows = self$calculateAbsCashFlows();
+      self$values$absPresentValues = self$calculateAbsPresentValues();
+      self$values$reserves = self$calculateReserves();
+      self$values$basicData = self$getBasicDataTimeseries()
+      self$values$premiumComposition = self$premiumAnalysis();
+
       self$addHistorySnapshot(0, "Initial contract values", type="Contract", params=self$params, values = self$values);
     },
 
-
-    determineTransitionProbabilities = function() {
-      self$values$transitionProbabilities = do.call(self$tarif$getTransitionProbabilities, self$params);
-      self$values$transitionProbabilities
+    determineTransitionProbabilities = function(contractModification=NULL) {
+      do.call(self$tarif$getTransitionProbabilities, c(self$params, self$values, list(contractModification=contractModification)));
     },
-
-    determineCashFlows = function() {
-      self$values$cashFlowsBasic = do.call(self$tarif$getBasicCashFlows, self$params);
-      self$values$cashFlows = do.call(self$tarif$getCashFlows, c(self$params, self$values));
-      self$values$premiumSum = sum(self$values$cashFlows$premiums_advance + self$values$cashFlows$premiums_arrears);
-      self$values$cashFlowsCosts = do.call(self$tarif$getCashFlowsCosts, c(self$params, self$values));
-      list("benefits"= self$values$cashFlows, "costs"=self$values$cashFlowCosts, "premiumSum" = self$values$premiumSum)
+    determineCashFlowsBasic = function(contractModification=NULL) {
+      do.call(self$tarif$getBasicCashFlows, self$params);
     },
-
-    calculatePresentValues = function() {
-str(self$values);
-      self$values$presentValues = do.call(self$tarif$presentValueCashFlows,
-                                   c(self$params, self$values));
-      self$values$presentValuesCosts = do.call(self$tarif$presentValueCashFlowsCosts,
-                                        c(self$params, self$values));
-      list("benefits" = self$values$presentValues, "costs" = self$values$presentValuesCosts)
+    determineCashFlows = function(contractModification=NULL) {
+      do.call(self$tarif$getCashFlows, c(self$params, self$values, list(contractModification=contractModification)));
     },
-
-    calculatePremiums = function() {
-      # the premiumCalculation function returns the premiums AND the cofficients,
-      # so we have to extract the coefficients and store them in a separate variable
-      res = do.call(self$tarif$premiumCalculation, c(self$params, self$values));
-      self$values$premiumCoefficients = res[["coefficients"]];
-      self$values$premiums = res[["premiums"]]
-      self$values$premiums
+    determinePremiumSum = function(contractModification=NULL) {
+      sum(self$values$cashFlows$premiums_advance + self$values$cashFlows$premiums_arrears);
     },
-
-    updatePresentValues = function() {
-      pvAllBenefits = do.call(self$tarif$presentValueBenefits, c(self$params, self$values));
-      self$values$presentValues = cbind(self$values$presentValues, pvAllBenefits)
-      self$values$presentValue
+    determineCashFlowsCosts = function(contractModification=NULL) {
+      do.call(self$tarif$getCashFlowsCosts, c(self$params, self$values, list(contractModification=contractModification)));
     },
-
-    calculateAbsCashFlows = function() {
-      self$values$absCashFlows = do.call(self$tarif$getAbsCashFlows, c(self$params, self$values));
-      self$values$absCashFlows
+    calculatePresentValues = function(contractModification=NULL) {
+      do.call(self$tarif$presentValueCashFlows, c(self$params, self$values, list(contractModification=contractModification)));
     },
-
-    calculateAbsPresentValues = function() {
-      self$values$absPresentValues = do.call(self$tarif$getAbsPresentValues, c(self$params, self$values));
-      self$values$absPresentValues
+    calculatePresentValuesCosts = function(contractModification=NULL) {
+      do.call(self$tarif$presentValueCashFlowsCosts, c(self$params, self$values, list(contractModification=contractModification)));
     },
-
-    calculateReserves = function() {
-      self$values$reserves = do.call(self$tarif$reserveCalculation, c(self$params, self$values));
-      self$values$reserves
+    calculatePremiums = function(contractModification=NULL) {
+      do.call(self$tarif$premiumCalculation, c(self$params, self$values, list(contractModification=contractModification)));
     },
-
-    premiumAnalysis = function() {
-      self$values$premiumComposition = do.call(self$tarif$premiumDecomposition, c(self$params, self$values));
-      self$values$premiumComposition
+    calculatePresentValuesBenefits = function(contractModification=NULL) {
+      do.call(self$tarif$presentValueBenefits, c(self$params, self$values, list(contractModification=contractModification)));
+    },
+    calculateAbsCashFlows = function(contractModification=NULL) {
+      do.call(self$tarif$getAbsCashFlows, c(self$params, self$values, list(contractModification=contractModification)));
+    },
+    calculateAbsPresentValues = function(contractModification=NULL) {
+      do.call(self$tarif$getAbsPresentValues, c(self$params, self$values, list(contractModification=contractModification)));
+    },
+    calculateReserves = function(contractModification=NULL) {
+      do.call(self$tarif$reserveCalculation, c(self$params, self$values, list(contractModification=contractModification)));
+    },
+    premiumAnalysis = function(contractModification=NULL) {
+      do.call(self$tarif$premiumDecomposition, c(self$params, self$values, list(contractModification=contractModification)));
+    },
+    getBasicDataTimeseries = function(contractModification=NULL) {
+      do.call(self$tarif$getBasicDataTimeseries, c(self$params, self$values, list(contractModification=contractModification)));
     },
 
     # Premium Waiver: Stop all premium payments at time t
     # the SumInsured is determined from the available
     premiumWaiver = function (t) {
       newSumInsured = self$values$reserves[[toString(t), "PremiumFreeSumInsured"]];
-      self$premiumWaiver = TRUE;
-      self$recalculatePremiumFreeSumInsured(t=t, SumInsured=newSumInsured)
+      self$params$premiumWaiver = TRUE;
+      self$params$surrenderPenalty = FALSE; # Surrencer penalty has already been applied, don't apply a second time
+      self$params$alphaRefunded = TRUE;     # Alpha cost (if applicable) have already been refunded partially, don't refund again
 
-      # TODO: Update cashflows from t onwards
-      # TODO: Update present values from t onwards
-      # TODO: Update reserves from t onwards
+      self$params$sumInsured = newSumInsured;
 
+      self$values$cashFlowsBasic = mergeValues(starting=self$values$cashFlowsBasic, ending=self$determineCashFlowsBasic(t), t=t);
+      self$values$cashFlows = mergeValues(starting=self$values$cashFlows, ending=self$determineCashFlows(t), t=t);
+      # Premium sum is not affected by premium waivers, i.e. everything depending on the premium sum uses the original premium sum!
+      # self$values$premiumSum = self$determinePremiumSum();
+      self$values$cashFlowsCosts = mergeValues3D(starting=self$values$cashFlowsCosts, ending=self$determineCashFlowsCosts(t), t=t);
 
-      self$addHistorySnapshot(t=t, comment=sprintf("Premium waiver at time %d", t), type="PremiumWaiver", params=self$params, values=self$values);
+      pv = self$calculatePresentValues(t);
+      pvc = self$calculatePresentValuesCosts(t);
+      self$values$presentValuesCosts = mergeValues3D(starting=self$values$presentValuesCosts, ending=pvc, t=t);
+
+      # TODO:
+      # the premiumCalculation function returns the premiums AND the cofficients,
+      # so we have to extract the coefficients and store them in a separate variable
+      # res = self$calculatePremiums(t);
+      # self$values$premiumCoefficients = mergeValues(starting=self$values$premiumCoefficients, ending=res[["coefficients"]], t=t);
+      # self$values$premiums = mergeValues(starting= = res[["premiums"]]
+
+      # Update the cash flows and present values with the values of the premium
+      pvAllBenefits = self$calculatePresentValuesBenefits()
+      self$values$presentValues = mergeValues(starting=self$values$presentValues, ending=cbind(pv, pvAllBenefits), t=t);
+
+      self$values$absCashFlows = mergeValues(starting=self$values$absCashFlows, ending=self$calculateAbsCashFlows(t), t=t);
+      self$values$absPresentValues = mergeValues(starting=self$values$absPresentValues, ending=self$calculateAbsPresentValues(t), t=t);
+      self$values$reserves = mergeValues(starting=self$values$reserves, ending=self$calculateReserves(t), t=t);
+      self$values$basicData = mergeValues(starting=self$values$basicData, ending=self$getBasicDataTimeseries(t), t=t);
+      self$values$premiumComposition = mergeValues(starting=self$values$premiumComposition, ending=self$premiumAnalysis(t), t=t);
+
+      self$addHistorySnapshot(time=t, comment=sprintf("Premium waiver at time %d", t), type="PremiumWaiver", params=self$params, values=self$values);
     },
 
     dummy=NULL
   )
 );
-
+# InsuranceContract$debug("premiumWaiver")
