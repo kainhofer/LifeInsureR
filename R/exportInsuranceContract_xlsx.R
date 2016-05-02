@@ -153,6 +153,7 @@ exportInsuranceContract.xlsx = function(contract, filename) {
   ################################################
   wb = openxlsx::createWorkbook();
   addWorksheet(wb, "Tarifinformationen");
+  addWorksheet(wb, "Basisdaten");
   addWorksheet(wb, "Reserven");
   addWorksheet(wb, "abs.Barwerte");
   addWorksheet(wb, "abs.Cash-Flows");
@@ -209,9 +210,48 @@ exportInsuranceContract.xlsx = function(contract, filename) {
   # Cost structure:
   costtable = as.data.frame.table(setInsuranceValuesLabels(contract$tarif$costs), responseName = "Kostensatz", dnn = c("Kostenart", "Basis", "Periode"), exclude=c(0))
   costtable = costtable[costtable[,"Kostensatz"]!=0.0000,]
-  writeData(wb, sheet, costtable, startCol=1, startRow=crow+1, colNames=FALSE, rowNames=FALSE,borders = "surrounding", borderColour = "red", borderStyle = "medium")
-
+  writeDataTable(wb, sheet, costtable, startCol=1, startRow=crow+1, colNames=TRUE, rowNames=FALSE,
+                 tableStyle = "TableStyleMedium3", headerStyle = styles$tableHeader);
   setColWidths(wb, sheet, cols = 1:50, widths = "auto", ignoreMergedCells = TRUE)
+  crow = crow + dim(costtable)[[1]] + 3;
+
+  # Contract history
+  # time=t, comment=sprintf("Premium waiver at time %d", t), type="PremiumWaiver"
+  histtime = unlist(lapply(contract$history, function(xl) xl$time));
+  histcomment = unlist(lapply(contract$history, function(xl) xl$comment));
+  histtype = unlist(lapply(contract$history, function(xl) xl$type));
+  writeValuesTable(wb, sheet, data.frame(time=histtime, Comment=histcomment, Type=histtype),
+                   crow=crow, ccol=1, tableName="Vertragshistorie", styles=styles,
+                   caption="Vertragshistorie");
+  crow = crow + dim(histtime)[[1]] + 3;
+
+
+
+  ################################################
+  # Print out Basic contract data as time series
+  ################################################
+
+  # Age, death and survival probabilities
+  ccol = 1;
+  crow = 4;
+  sheet = "Basisdaten";
+  tbl = qp[,"age", drop=FALSE];
+  writeDataTable(wb, sheet, tbl,
+                 startRow=crow+1, startCol = ccol, colNames = TRUE, rowNames = TRUE,
+                 tableStyle = "TableStyleMedium3", withFilter = FALSE, headerStyle = styles$tableHeader);
+  freezePane(wb, sheet, firstActiveRow=crow+2, firstActiveCol = ccol+2)
+  addStyle(wb, sheet, style=styles$center, rows=(crow+2):(crow+1+dim(tbl)[[1]]), cols=ccol:(ccol+1), gridExpand = TRUE, stack=TRUE);
+  ccol = ccol + dim(tbl)[[2]] + 2;
+
+  ccol = ccol + writeValuesTable(wb, sheet, as.data.frame(setInsuranceValuesLabels(contract$values$basicData)),
+                                 crow=crow, ccol=ccol, tableName="Grunddaten", styles=styles,
+                                 caption="Vertragsgrunddaten im Zeitverlauf", valueStyle=styles$currency0) + 1;
+  setColWidths(wb, sheet, cols = 1:50, widths = "auto", ignoreMergedCells = TRUE)
+
+  # TODO: Change PremiumPayment column to 0=prf. / 1=prpfl. / -1=außerplanm.prf.
+  # TODO: Change InterestRate column to percent format
+
+
 
   ################################################
   # Print out Reserves and premium decomposition
