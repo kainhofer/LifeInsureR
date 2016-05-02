@@ -208,10 +208,13 @@ exportInsuranceContract.xlsx = function(contract, filename) {
   crow = crow + 4;
 
   # Cost structure:
-  costtable = as.data.frame.table(setInsuranceValuesLabels(contract$tarif$costs), responseName = "Kostensatz", dnn = c("Kostenart", "Basis", "Periode"), exclude=c(0))
+  costtable = as.data.frame.table(setInsuranceValuesLabels(contract$tarif$costs) )
+  colnames(costtable) = c("Kostenart", "Basis", "Periode", "Kostensatz");
   costtable = costtable[costtable[,"Kostensatz"]!=0.0000,]
-  writeDataTable(wb, sheet, costtable, startCol=1, startRow=crow+1, colNames=TRUE, rowNames=FALSE,
-                 tableStyle = "TableStyleMedium3", headerStyle = styles$tableHeader);
+  writeValuesTable(wb, sheet, costtable, crow=crow, ccol=1, tableName="Kosten", styles=styles, caption="Kosten");
+  # writeDataTable(wb, sheet, costtable, startCol=1, startRow=crow+1, colNames=TRUE, rowNames=FALSE,
+                 # tableStyle = "TableStyleMedium3", headerStyle = styles$tableHeader);
+  addStyle(wb, sheet, style=styles$cost0, rows=(crow+2):(crow+dim(costtable)[[1]]+1), cols=4, stack=TRUE);
   setColWidths(wb, sheet, cols = 1:50, widths = "auto", ignoreMergedCells = TRUE)
   crow = crow + dim(costtable)[[1]] + 3;
 
