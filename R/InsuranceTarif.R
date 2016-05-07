@@ -1,6 +1,7 @@
 library(R6)
 # library(lifecontingencies)
 library(objectProperties)
+library(lubridate)
 
 TariffTypeEnum = setSingleEnum("TariffType", levels = c("annuity", "wholelife", "endowment", "pureendowment", "terme-fix", "dread-disease"))
 PaymentTimeEnum = setSingleEnum("PaymentTime", levels = c("in advance", "in arrears"))
@@ -50,6 +51,10 @@ InsuranceTarif = R6Class(
     premiumRefund = 0,
     premiumRefundLoading = 0,  # Mindesttodesfallrisiko soll damit erreicht werden, z.B. 105% der einbezahlten Prämien
     surrenderValueCalculation = NULL, # By default, not surrender penalties
+
+    balanceSheetDate = as.Date("1900-12-31"),  # Balance sheet date (for the calculation of the balance sheet reserves)
+    balanceSheetMethod = "30/360",
+
 
     costs = list(),
     benefitFrequencyLoading = list("1" = 0.0, "2" = 0.0, "4" = 0.0, "12" = 0.0), # TODO: Properly implement this
@@ -462,7 +467,7 @@ InsuranceTarif = R6Class(
       list("premiums"=premiums, "coefficients"=coefficients)
     },
 
-    reserveCalculation = function (premiums, absPresentValues, absCashFlows, sumInsured=1, premiumSum=0, policyPeriod = 1, age = 0, ..., reserves = c(), loadings=list(), surrenderPenalty = TRUE) {
+    reserveCalculation = function (premiums, absPresentValues, absCashFlows, sumInsured=1, premiumSum=0, policyPeriod = 1, age = 0, ..., contractClosing = Sys.Date(), reserves = c(), loadings=list(), surrenderPenalty = TRUE) {
       # Merge a possibly passed loadings override with the defaults of this class:
       loadings = self$getLoadings(loadings=loadings);
       # Net, Zillmer and Gross reserves
@@ -498,7 +503,7 @@ InsuranceTarif = R6Class(
       # Reduction Reserve: Reserve used for contract modifications:
       resReduction = pmax(0, resZ+resGamma+alphaRefund) # V_{x,n}^{Rkf}
 
-      # Collect all reserved to one large matrix
+      # Collect all reserves to one large matrix
       res = cbind("net"=resNet, "Zillmer"=resZ, "adequate"= resAdeq, "gamma"=resGamma,
                   "contractual"=resZ+resGamma, "conversion"=resConversion, "alphaRefund"=alphaRefund, "reduction"=resReduction
                   #, "Reserve.premiumfree"=res.premiumfree, "Reserve.gamma.premiumfree"=res.gamma.premiumfree);
@@ -532,6 +537,45 @@ InsuranceTarif = R6Class(
             "Surrender"=surrenderValue,
             "PremiumFreeSumInsured" = newSI
       )
+    },
+
+    getBalanceSheetReserveFactor = function(contractClosing = Sys.Date(), balanceDate = self$balanceSheetDate, years=1) {
+      year(balanceDate) = year(contractClosing);
+      if (balanceDate < contractClosing) {
+        balanceDate = balanceDate + years(1);
+      }
+
+      contractDates = contractClosing + years(1:years);
+      balanceDates = balanceDate + years(1:years);
+
+      if (self$balanceSheetMethod == "30/360") {
+        baf = ((month(balanceDates + days(1)) - month(contractDates) - 1)%%12 + 1) / 12
+      } else if (self$balanceSheetMethod == "act/act") {
+        baf = as.numeric((balanceDates + days(1)) - contractDates, units="days" ) / as.numeric(balanceDates - (balanceDates - years(1)), units="days")
+      } else if (self$balanceSheetMethod == "act/360") {
+        baf = pmin(as.numeric((balanceDates + days(1)) - contractDates, units="days" ) / 360, 1)
+      } else if (self$balanceSheetMethod == "act/365") {
+        baf = pmin(as.numeric((balanceDates + days(1)) - contractDates, units="days" ) / 365, 1)
+      }
+      baf
+    },
+
+    reserveCalculationBalanceSheet = function (reserves, ..., contractClosing = Sys.Date()) {
+      years = length(reserves[,"Zillmer"]);
+      # Balance sheet reserves:
+      baf = self$getBalanceSheetReserveFactor(contractClosing=contractClosing, balanceDate = self$balanceSheetDate, years = years);
+      resZ_BS = (1-baf)*reserves[,"Zillmer"] + baf*c(reserves[-1,"Zillmer"], 0);
+      resGamma_BS = (1-baf)*reserves[,"gamma"] + baf*c(reserves[-1,"gamma"], 0);
+      res_BS = resZ_BS + resGamma_BS;
+
+      # Collect all reserves to one large matrix
+      res = cbind("time" = baf + (1:years) - 1,
+                  "Zillmer"               = resZ_BS,
+                  "gamma"                 = resGamma_BS,
+                  "Balance Sheet Reserve" = res_BS
+      );
+      rownames(res) <- rownames(reserves);
+      res
     },
 
     getBasicDataTimeseries = function(premiums, reserves, absCashFlows, absPresentValues, sumInsured=1, policyPeriod, premiumPeriod, ...) {

@@ -25,7 +25,9 @@ InsuranceContract = R6Class("InsuranceContract",
 
       loadings = list(),     # Allow overriding the tariff-defined loadings (see the InsuranceTariff class for all possible names)
       surrenderPenalty = TRUE,  # Set to FALSE after the surrender penalty has been applied once, e.g. on a premium waiver
-      alphaRefunded = FALSE     # Alpha costs not yet refunded (in case of contract changes)
+      alphaRefunded = FALSE,    # Alpha costs not yet refunded (in case of contract changes)
+
+      contractClosing = Sys.Date()             # Contract closing date (day/month is relevant for balance sheet reserves)
     ),
 
     #### Caching values for this contract, initialized/calculated when the object is created
@@ -47,6 +49,7 @@ InsuranceContract = R6Class("InsuranceContract",
       absPresentValues = NA,
 
       reserves = NA,
+      reservesBalanceSheet = NA,
 
       premiumComposition = NA
     ),
@@ -60,6 +63,7 @@ InsuranceContract = R6Class("InsuranceContract",
     initialize = function(tarif, age, sumInsured = 1,
                           policyPeriod, premiumPeriod = policyPeriod, guaranteed = 0,
                           ...,
+                          contractClosing = Sys.Date(),
                           loadings = list(),
                           premiumPayments = "in advance", benefitPayments = "in advance",
                           premiumFrequency = 1, benefitFrequency = 1,
@@ -81,6 +85,7 @@ InsuranceContract = R6Class("InsuranceContract",
       if (!missing(benefitFrequency)) self$params$benefitFrequency = benefitFrequency;
       if (!missing(guaranteed))       self$params$guaranteed = guaranteed;
       if (!missing(loadings))         self$params$loadings = loadings;
+      if (!missing(contractClosing))  self$params$contractClosing = contractClosing;
 
       self$calculateContract();
     },
@@ -114,6 +119,7 @@ InsuranceContract = R6Class("InsuranceContract",
       self$values$absCashFlows = self$calculateAbsCashFlows();
       self$values$absPresentValues = self$calculateAbsPresentValues();
       self$values$reserves = self$calculateReserves();
+      self$values$reservesBalanceSheet = self$calculateReservesBalanceSheet();
       self$values$basicData = self$getBasicDataTimeseries()
       self$values$premiumComposition = self$premiumAnalysis();
 
@@ -155,6 +161,9 @@ InsuranceContract = R6Class("InsuranceContract",
     },
     calculateReserves = function(contractModification=NULL) {
       do.call(self$tarif$reserveCalculation, c(self$params, self$values, list(contractModification=contractModification)));
+    },
+    calculateReservesBalanceSheet = function(contractModification=NULL) {
+      do.call(self$tarif$reserveCalculationBalanceSheet, c(self$params, self$values, list(contractModification=contractModification)));
     },
     premiumAnalysis = function(contractModification=NULL) {
       do.call(self$tarif$premiumDecomposition, c(self$params, self$values, list(contractModification=contractModification)));

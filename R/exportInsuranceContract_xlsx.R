@@ -102,6 +102,7 @@ labelsReplace = function(labels) {
   labels[labels=="PremiumPeriod"] = "PD"
   labels[labels=="PremiumFree"] = "Pr.Fr."
   labels[labels=="PolicyPeriod"] = "LZ"
+  labels[labels=="Balance Sheet Reserve"] = "Bilanzreserve"
 
 
   labels
@@ -269,6 +270,16 @@ exportInsuranceContract.xlsx = function(contract, filename) {
   ccol = ccol + writeValuesTable(wb, sheet, as.data.frame(setInsuranceValuesLabels(contract$values$reserves)),
                                  crow=crow, ccol=ccol, tableName="Reserves", styles=styles,
                                  caption="Reserven", valueStyle=styles$currency0) + 1;
+
+  oldccol = ccol
+  ccol = ccol + writeValuesTable(wb, sheet, as.data.frame(setInsuranceValuesLabels(contract$values$reservesBalanceSheet)),
+                                 crow=crow, ccol=ccol, tableName="Bilanzreserve", styles=styles,
+                                 caption="Bilanzreserve", valueStyle=styles$currency0) + 1;
+  addStyle(wb, sheet, style = createStyle(numFmt="0.0##"), cols = oldccol, rows = (crow+2):(crow+1+dim(contract$values$reservesBalanceSheet)[[1]]), gridExpand = TRUE, stack = TRUE);
+str("Style applied to cold and rows:")
+str(oldccol)
+str((crow+2):(crow+1+dim(contract$values$reservesBalanceSheet)[[1]]))
+
   ccol = ccol + writeValuesTable(wb, sheet, as.data.frame(setInsuranceValuesLabels(contract$values$premiumComposition)),
                                  crow=crow, ccol=ccol, tableName="Premium_Decomposition", styles=styles,
                                  caption = "Prämienzerlegung", valueStyle=styles$currency0) + 1;
