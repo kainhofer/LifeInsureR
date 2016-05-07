@@ -1,9 +1,12 @@
-Package: ValuationTables
+Package: LifeInsuranceContracts
 Type: Package
-Title: A framework for cohort life tables and general life insurance contracts
-Version: 1.0
-Date: 2016-04-01
-Author: Reinhold Kainhofer <reinhold@kainhofer.com>
+Version: 0.1
+Date: 2016-05-07
+Title: A framework for general life insurance contracts, including profit participation, contract changes etc.
+Authors@R: c(person("Reinhold", "Kainhofer", role=c("aut", "cre"), email="reinhold@kainhofer.com"))
+Author: Reinhold Kainhofer [aut, cre]
 Maintainer: Reinhold Kainhofer <reinhold@kainhofer.com>
-Description: Yet to be written
-License: Not yet finally decided, probably GPL v3+ or LGPL or something similar
+Depends: R6, ValuationTables, objectProperties
+Description: TODO
+License: GPL (>= 2)
+
