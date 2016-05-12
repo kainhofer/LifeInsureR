@@ -1,5 +1,6 @@
 library(R6)
 library(openxlsx);
+library(ValuationTables);
 
 InsuranceContract = R6Class("InsuranceContract",
 

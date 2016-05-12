@@ -6,7 +6,7 @@ Title: A framework for general life insurance contracts, including profit partic
 Authors@R: c(person("Reinhold", "Kainhofer", role=c("aut", "cre"), email="reinhold@kainhofer.com"))
 Author: Reinhold Kainhofer [aut, cre]
 Maintainer: Reinhold Kainhofer <reinhold@kainhofer.com>
-Depends: R6, ValuationTables, objectProperties
+Depends: R6, ValuationTables, objectProperties, lubridate
 Description: TODO
 License: GPL (>= 2)
 
