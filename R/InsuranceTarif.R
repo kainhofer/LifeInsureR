@@ -570,9 +570,9 @@ InsuranceTarif = R6Class(
 
       # Collect all reserves to one large matrix
       res = cbind("time" = baf + (1:years) - 1,
-                  "Zillmer"               = resZ_BS,
-                  "gamma"                 = resGamma_BS,
-                  "Balance Sheet Reserve" = res_BS
+                  "Zillmer"               = pmax(resZ_BS,0),
+                  "gamma"                 = pmax(resGamma_BS,0),
+                  "Balance Sheet Reserve" = pmax(res_BS,0)
       );
       rownames(res) <- rownames(reserves);
       res
