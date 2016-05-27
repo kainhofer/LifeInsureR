@@ -33,7 +33,7 @@ ProfitParticipation = R6Class(
 
       # TODO
 
-    }
+    },
 
 
 
