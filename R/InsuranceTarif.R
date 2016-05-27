@@ -591,21 +591,125 @@ InsuranceTarif = R6Class(
       res
     },
 
-    premiumDecomposition = function(premiums, reserves, absCashFlows, absPresentValues, transitionProbabilities, sumInsured=1, ...) {
+    premiumDecomposition = function(premiums, reserves, absCashFlows, absPresentValues, transitionProbabilities, sumInsured=1, premiumFrequency = 1, loadings=list(), ...) {
+      loadings = self$getLoadings(loadings=loadings);
       l = dim(reserves)[[1]];
-      premium.savings = getSavingsPremium(reserves[,"Zillmer"], self$v) + getSavingsPremium(reserves[,"gamma"], self$v);
+
+      premium.gross = absCashFlows[,"premiums_advance"];
+
+      # First get the charges and rebates that are added to the gross premium to obtain the charged premium:
+
+      # charge for no medical exam:
+      noMedExam     = valueOrFunction(loadings$noMedicalExam,sumInsured=sumInsured, premiums=premiums);
+      noMedExam.rel = valueOrFunction(loadings$noMedicalExamRelative,sumInsured=sumInsured, premiums=premiums);
+      withMedExam = premium.gross * (1+noMedExam.rel) + noMedExam*sumInsured;
+      charge.noMedicalExam = withMedExam - premium.gross;
+
+      # sum rebate:
+      sumRebate      = valueOrFunction(loadings$sumRebate,    sumInsured=sumInsured, premiums=premiums);
+      afterSumRebate = withMedExam - sumRebate * sumInsured; # calculate the charge as the difference, because we want a vector!
+      rebate.sum     = afterSumRebate - withMedExam;
+
+      # advance profit participation has two parts, one before and one after unit costs. Part 1:
+      advanceProfitParticipation = valueOrFunction(loadings$advanceProfitParticipation,sumInsured=sumInsured, premiums=premiums);
+      afterProfit     = afterSumRebate * (1+advanceProfitParticipation);
+      profits.advance = afterProfit - afterSumRebate;
+
+      # unit costs
+      unitCosts      = valueOrFunction(loadings$unitcosts,    sumInsured=sumInsured, premiums=premiums);
+      # unit costs are only charged if a premium is paid, so exclude all times with premium==0!
+      afterUnitCosts = afterProfit + (afterProfit!=0)*unitCosts;
+      # browser()
+      # afterUnitCosts[afterUnitCosts!=0] = afterUnitCosts[afterUnitCosts!=0] + unitCosts;
+      unitcosts      = afterUnitCosts - afterProfit;
+
+      # advance profit participation, Part 2:
+      advanceProfitParticipationUnitCosts = valueOrFunction(loadings$advanceProfitParticipationInclUnitCost, sumInsured=sumInsured, premiums=premiums);
+      afterProfit     = afterUnitCosts * (1-advanceProfitParticipationUnitCosts);
+      profits.advance = profits.advance + afterProfit - afterUnitCosts;
+
+      # premium rebate
+      premiumRebate = valueOrFunction(loadings$premiumRebate,sumInsured=sumInsured, premiums=premiums);
+      afterPremiumRebate = afterUnitCosts * (1-premiumRebate);
+      rebate.premium = afterPremiumRebate - afterUnitCosts;
+
+      # partner rebate
+      partnerRebate = valueOrFunction(loadings$partnerRebate,sumInsured=sumInsured, premiums=premiums);
+      afterPartnerRebate = afterUnitCosts * (1-partnerRebate);
+      rebate.partner = afterPartnerRebate - afterUnitCosts;
+
+      # value after all rebates
+      afterRebates = afterProfit + rebate.premium + rebate.partner;
+
+      # premium frequency loading
+      frequencyLoading = valueOrFunction(self$premiumFrequencyLoading, sumInsured=sumInsured, premiums=premiums);
+      afterFrequency = afterRebates * (1 + frequencyLoading[[toString(premiumFrequency)]]);
+      charge.frequency = afterFrequency - afterRebates;
+
+      # insurance tax
+      taxRate         = valueOrFunction(loadings$tax,          sumInsured=sumInsured, premiums=premiums);
+      premium.charged = afterFrequency * (1+taxRate);
+      tax             = premium.charged - afterFrequency;
+
+# TODO
+
+
+
+
+
+
+      premium.savings.Zillmer = getSavingsPremium(reserves[,"Zillmer"], self$v) + getSavingsPremium(reserves[,"gamma"], self$v);
       # TODO: Switch to use the Ziller or net or adequate reserve!
-      premium.risk    = self$v * (absCashFlows[,"death"] - c(reserves[,"Zillmer"][-1], 0)) * pad0(transitionProbabilities$q, l) +
+      premium.risk.Zillmer    = self$v * (absCashFlows[,"death"] - c(reserves[,"Zillmer"][-1], 0)) * pad0(transitionProbabilities$q, l) +
         self$v * (absCashFlows[,"disease_SumInsured"] - c(reserves[,"Zillmer"][-1], 0)) * pad0(transitionProbabilities$i, l);
       # premium.risk    = self$v * (absCashFlows[,"death"] - c(reserves[,"Zillmer"][-1], 0)) * transitionProbabilities$q;
 
 
-      res = cbind("savings"=premium.savings, "risk"=premium.risk, "savings+risk"= premium.savings+premium.risk, "gamma"=absCashFlows[,"gamma"]);
+      # res = cbind("savings"=premium.savings, "risk"=premium.risk, "savings+risk"= premium.savings+premium.risk, "gamma"=absCashFlows[,"gamma"]);
+
+
+      res = cbind(
+        "charged"         = premium.charged,
+        "tax"             = tax,
+        "loading.frequency" = charge.frequency,
+        "rebate.premium"  = rebate.premium,
+        "rebate.partner"  = rebate.partner,
+        "unitcosts"       = unitcosts,
+        "profit.advance"  = profits.advance,
+        "rebate.sum"      = rebate.sum,
+        "charge.noMedicalExam" = charge.noMedicalExam,
+        "gross"           = premium.gross,
+
+        # "Zillmer.alpha"   = premium.alpha.Zillmer,
+        # "Zillmer.beta"    = premium.beta.Zillmer,
+        # "Zillmer.gamma"   = premium.gamma.Zillmer,
+        # "Zillmer"         = premium.Zillmer,
+        "Zillmer.risk"    = premium.risk.Zillmer,
+        "Zillmer.savings" = premium.savings.Zillmer#,
+        # "Zillmer.amortization" = premium.Zillmer.amortization,
+        # "Zillmer.savings.real" = premium.savings.Zillmer,
+
+        # "alpha"   = premium.alpha,
+        # "beta"    = premium.beta,
+        # "gamma"   = premium.gamma,
+        # "net"     = premium.net,
+        # "risk"    = premium.risk,
+        # "savings" = premium.savings
+      )
       rownames(res) <- rownames(premiums);
       res
     },
 
-
+    calculateFutureSums = function(values, ...) {
+      rcumsum = function(vec) rev(cumsum(rev(vec)));
+      apply(values, 2, rcumsum)
+    },
+    calculatePresentValues = function(values, age, ...) {
+      len = dim(values)[1];
+      q = self$getTransitionProbabilities (age, ...);
+      pv = function(vec) calculatePVSurvival(px=pad0(q$p, len), advance=vec, v=self$v);
+      apply(values, 2, pv)
+    },
 
 
 

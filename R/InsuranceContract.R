@@ -123,6 +123,8 @@ InsuranceContract = R6Class("InsuranceContract",
       self$values$reservesBalanceSheet = self$calculateReservesBalanceSheet();
       self$values$basicData = self$getBasicDataTimeseries()
       self$values$premiumComposition = self$premiumAnalysis();
+      self$values$premiumCompositionSums = self$premiumCompositionSums();
+      self$values$premiumCompositionPV = self$premiumCompositionPV();
 
       self$addHistorySnapshot(0, "Initial contract values", type="Contract", params=self$params, values = self$values);
     },
@@ -169,6 +171,12 @@ InsuranceContract = R6Class("InsuranceContract",
     premiumAnalysis = function(contractModification=NULL) {
       do.call(self$tarif$premiumDecomposition, c(self$params, self$values, list(contractModification=contractModification)));
     },
+    premiumCompositionSums = function(contractModification=NULL) {
+      do.call(self$tarif$calculateFutureSums, c(list(self$values$premiumComposition), self$params, self$values, list(contractModification=contractModification)));
+    },
+    premiumCompositionPV = function(contractModification=NULL) {
+      do.call(self$tarif$calculatePresentValues, c(list(self$values$premiumComposition), self$params, self$values, list(contractModification=contractModification)));
+    },
     getBasicDataTimeseries = function(contractModification=NULL) {
       do.call(self$tarif$getBasicDataTimeseries, c(self$params, self$values, list(contractModification=contractModification)));
     },
@@ -178,7 +186,7 @@ InsuranceContract = R6Class("InsuranceContract",
     premiumWaiver = function (t) {
       newSumInsured = self$values$reserves[[toString(t), "PremiumFreeSumInsured"]];
       self$params$premiumWaiver = TRUE;
-      self$params$surrenderPenalty = FALSE; # Surrencer penalty has already been applied, don't apply a second time
+      self$params$surrenderPenalty = FALSE; # Surrender penalty has already been applied, don't apply a second time
       self$params$alphaRefunded = TRUE;     # Alpha cost (if applicable) have already been refunded partially, don't refund again
 
       self$params$sumInsured = newSumInsured;

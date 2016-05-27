@@ -779,12 +779,71 @@ Bruttoprämie & Zähler &
 \end{longtable}
 
 
-Vorgeschriebene Prämie:
+Vorgeschriebene Prämie (jährlich):
 \begin{multline*}
-PV_\xn = \left\{ (BP_\xn + oUZu - SuRa) \cdot VS \cdot (1-VwGew) + StkK\right\} \cdot \\ \left(1-PrRa-VwGew_{StkK}-PartnerRa\right)\cdot \frac{1+uz(k)}{k} \cdot (1+VSt)
+PV_\xn = \left\{ (BP_\xn + oUZu - SuRa) \cdot VS \cdot (1-VwGew) + StkK\right\} \cdot \\ \left(1-PrRa-VwGew_{StkK}-PartnerRa\right)\cdot \left(1+uz(k)\right) \cdot (1+VSt)
 % 
 \end{multline*}
 
+Vorgeschriebene Prämie (pro Zahlungsperiode):
+\begin{equation*}
+ PV^{(k)}_\xn = \frac{PV_\xn}{k}
+\end{equation*}
+
+\section{Prämienzerlegung}
+\renewlist{itemize}{itemize}{10}
+\setlist[itemize]{label=\textbullet}
+
+\setlistdepth{9}
+\begin{itemize}
+  \item verrechnete Prämie (jährlich)
+  \begin{itemize}
+    \item[+] Versicherungssteuer
+    \item[+] Unterjährigkeitszuschlag
+    \item[$-$] Prämienrabatt
+    \item[$-$] Vorweggewinnbeteiligung (inkl. Stückkosten)
+    \item[$-$] Partnerrabatt
+    \item[+] Stückkosten
+    \item[$-$] Vorweggewinnbeteiligung (vor Stückkosten)
+    \item[$-$] Summenrabatt
+    \item[+] Zuschlag ohne ärztliche Untersuchung
+    \item[+] Bruttoprämie (2 Sichtweisen: Zillmerung und Netto-Betrachtung)
+    \begin{itemize}
+      \item Zillmerung:
+      \begin{itemize}
+        \item[+] gezillmerte $\gamma$-Prämie
+        \item[+] gezillmerte $\beta$-Prämie
+        \item[+] gezillmerte $\alpha$-Prämie (ungezillmerter Teil)
+        \item[+] Zillmerprämie
+        \begin{itemize}
+          \item[+] gezillmerte Risikoprämie
+          \item[+] gezillmerte Sparprämie
+          \begin{itemize}
+            \item[+] $\alpha$-Tilgung (Tilgung der Zillmerkosten)
+            \item[+] echte Sparprämie (zum Aufbau des nicht-negativen Deckungskapitals)
+          \end{itemize}
+        \end{itemize}
+      \end{itemize}
+    
+      \item Netto-Betrachtung:
+      \begin{itemize}
+        \item[+] $\alpha$-Prämie
+        \item[+] $\beta$-Prämie
+        \item[+] $\gamma$-Prämie
+        \item[+] Nettoprämie
+        \begin{itemize}
+          \item[+] Risikoprämie (netto)
+          \item[+] Sparprämie (netto)
+        \end{itemize}
+      \end{itemize}
+      
+    \end{itemize}
+  \end{itemize}
+\end{itemize}
+
+
+
+\pagebreak
 \section{Absolute Cash-Flows und Barwerte}
 
 TODO

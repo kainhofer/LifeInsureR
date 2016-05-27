@@ -157,6 +157,7 @@ exportInsuranceContract.xlsx = function(contract, filename) {
   addWorksheet(wb, "Tarifinformationen");
   addWorksheet(wb, "Basisdaten");
   addWorksheet(wb, "Reserven");
+  addWorksheet(wb, "Prämienzerlegung");
   addWorksheet(wb, "abs.Barwerte");
   addWorksheet(wb, "abs.Cash-Flows");
   addWorksheet(wb, "Barwerte");
@@ -259,7 +260,7 @@ exportInsuranceContract.xlsx = function(contract, filename) {
 
 
   ################################################
-  # Print out Reserves and premium decomposition
+  # Print out Reserves
   ################################################
 
   # Age, death and survival probabilities
@@ -277,15 +278,38 @@ exportInsuranceContract.xlsx = function(contract, filename) {
                                  crow=crow, ccol=ccol, tableName="Bilanzreserve", styles=styles,
                                  caption="Bilanzreserve", valueStyle=styles$currency0) + 1;
   addStyle(wb, sheet, style = createStyle(numFmt="0.0##"), cols = oldccol, rows = (crow+2):(crow+1+dim(contract$values$reservesBalanceSheet)[[1]]), gridExpand = TRUE, stack = TRUE);
-str("Style applied to cold and rows:")
-str(oldccol)
-str((crow+2):(crow+1+dim(contract$values$reservesBalanceSheet)[[1]]))
 
+  setColWidths(wb, sheet, cols = 1:50, widths = "auto", ignoreMergedCells = TRUE)
+
+
+  ################################################
+  # Print out premium decomposition
+  ################################################
+
+  # Age, death and survival probabilities
+  crow = 4;
+  sheet = "Prämienzerlegung";
+
+  crow = crow + dim(qp)[[1]] + 4;
+  ccol = 1 + writeAgeQTable(wb, sheet, probs=qp, crow=crow, ccol=1, styles=styles);
+  ccol = ccol + writeValuesTable(wb, sheet, as.data.frame(setInsuranceValuesLabels(contract$values$premiumCompositionSums)),
+                                 crow=crow, ccol=ccol, tableName="Premium_DecompositionSums", styles=styles,
+                                 caption = "Prämienzerlegung (Summe zukünftiger Prämien)", valueStyle=styles$currency0) + 1;
+
+  crow = crow + dim(qp)[[1]] + 4;
+  ccol = 1 + writeAgeQTable(wb, sheet, probs=qp, crow=crow, ccol=1, styles=styles);
+  ccol = ccol + writeValuesTable(wb, sheet, as.data.frame(setInsuranceValuesLabels(contract$values$premiumCompositionPV)),
+                                 crow=crow, ccol=ccol, tableName="Premium_DecompositionPV", styles=styles,
+                                 caption = "Prämienzerlegung (Barwerte zukünftiger Prämien)", valueStyle=styles$currency0) + 1;
+
+  # Write out the absolute premium decomposition last, because that one freezes the pane
+  crow = 4;
+  ccol = 1 + writeAgeQTable(wb, sheet, probs=qp, crow=crow, ccol=1, styles=styles);
   ccol = ccol + writeValuesTable(wb, sheet, as.data.frame(setInsuranceValuesLabels(contract$values$premiumComposition)),
                                  crow=crow, ccol=ccol, tableName="Premium_Decomposition", styles=styles,
                                  caption = "Prämienzerlegung", valueStyle=styles$currency0) + 1;
-  setColWidths(wb, sheet, cols = 1:50, widths = "auto", ignoreMergedCells = TRUE)
 
+  setColWidths(wb, sheet, cols = 1:50, widths = "auto", ignoreMergedCells = TRUE)
 
   ################################################
   # Print out absolute values of present values
