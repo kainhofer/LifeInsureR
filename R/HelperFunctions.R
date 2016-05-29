@@ -105,8 +105,8 @@ calculatePVDisease = function(px=1-qx-ix, qx=1-ix-px, ix=1-px-qx, benefits, ...,
 
 
 
-getSavingsPremium = function(reserves, v=1) {
-  pad0(reserves[-1], length(reserves))*v - reserves
+getSavingsPremium = function(reserves, v=1, survival_advance=c(0), survival_arrears=c(0)) {
+  pad0(reserves[-1], length(reserves))*v - reserves + survival_advance + survival_arrears*v
 }
 
 correctionPaymentFrequency = function(m = 1, i = self$i, order = 0) {

@@ -105,6 +105,26 @@ labelsReplace = function(labels) {
   labels[labels=="PolicyPeriod"] = "LZ"
   labels[labels=="Balance Sheet Reserve"] = "Bilanzreserve"
 
+  labels[labels=="charged"] = "verrechnet"
+  labels[labels=="tax"] = "VSt."
+  labels[labels=="loading.frequency"] = "UJZ"
+  labels[labels=="rebate.premium"] = "Präm.Rab."
+  labels[labels=="rebate.partner"] = "Partn.Rab."
+  labels[labels=="unitcosts"] = "StkK"
+  labels[labels=="profit.advance"] = "Vw.GB"
+  labels[labels=="rebate.sum"] = "Summenrab."
+  labels[labels=="charge.noMedicalExam"] = "o.ärztl.U."
+  labels[labels=="gross"] = "Brutto"
+  labels[labels=="alpha.noZillmer"] = "α (ungez.)";
+  labels[labels=="alpha.Zillmer"] = "α (gezill.)";
+  labels[labels=="net"] = "Netto";
+  labels[labels=="risk"] = "Risikopr.";
+  labels[labels=="savings"] = "Sparpr.";
+  labels[labels=="Zillmer.risk"] = "gez.Risikopr.";
+  labels[labels=="Zillmer.savings"] = "gez.Sparpr.";
+  labels[labels=="Zillmer.amortization"] = "gez.AK-Tilgung";
+  labels[labels=="Zillmer.savings.real"] = "Sparpr.für DK";
+
 
   labels
 }

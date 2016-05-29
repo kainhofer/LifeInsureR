@@ -212,9 +212,9 @@ TODO
  $_{t}V_\xn$ & Nettodeckungskapital zum Zeitpunkt $t$  & \texttt{contract\$reserves[,"net"]}\\
  $_{t}V^a_\xn$ & Brutto-Deckungskapital (``adequate'' bzw. ``expense-loaded reserve'') & \texttt{contract\$reserves[,"adequate"]}\\
  $_{t}V^Z_\xn$ & Zillmerreserve bei Zillmerung & \texttt{contract\$reserves[,"Zillmer"]}\\
- $_{t}V^\alpha_xn$ & Abschlusskostenreserve & \texttt{contract\$reserves[,"TODO"]}\\
- $_{t}V^\beta_xn$ & Inkassokostenreserve (typischerweise $=0$)& \texttt{contract\$reserves[,"TODO"]}\\
- $_{t}V^\gamma_xn$ & Verwaltungskostenreserve & \texttt{contract\$reserves[,"gamma"]}\\
+ $_{t}V^\alpha_\xn$ & Abschlusskostenreserve & \texttt{contract\$reserves[,"TODO"]}\\
+ $_{t}V^\beta_\xn$ & Inkassokostenreserve (typischerweise $=0$)& \texttt{contract\$reserves[,"TODO"]}\\
+ $_{t}V^\gamma_\xn$ & Verwaltungskostenreserve & \texttt{contract\$reserves[,"gamma"]}\\
  $_{t}V^{Umr}_\xn$ & Umrechnungsreserve (Basis für Vertragskonvertierungen und Prämienfreistellung), inkl. anteiliger Abschlusskostenrückerstattung bei Beendigung innerhalb von fünf Jahren& \texttt{contract\$reserves[,"reduction"]}\\
  $AbskErh(t)$ & Anteilsmäßige Rückerstattung der Abschlusskosten bei Kündigung innerhalb von fünf Jahren& \texttt{contract\$reserves[,"alphaRefund"]}\\[1em]
  
@@ -600,6 +600,8 @@ VK^{(VS)}(t) & VK^{(PS)}(t) & -\\
 
 \section{Prämien}
 
+Da die Prämienrückgewähr auf die Bruttoprämie gewährt wird, wird für die Bestimmung der Netto- und Zillmerprämie die Bruttoprämie benötigt. Es wird daher die Formel für unabhängige Bestimmung der Bruttoprämie hergeleitet, aus der dann die Netto- und Zillmerprämie berechnet werden können.
+
 \subsection{Nettoprämie:}
 \begin{align*}
 NP_\xn &= \frac{%E_\xn(0) + A_\xn(0) + \left(1+\rho^{RG}\right) \cdot A^{(RG)}_\xn(0) \cdot BP_\xn}
@@ -615,12 +617,18 @@ ZP_\xn &=
 \frac{%
 %   NP_\xn\cdot P_\xn(0) +
   \overbrace{\left(BW^{L}_\xn(0) + \left(1+\rho^{RG}\right) \cdot A^{(RG)}_\xn(0) \cdot BP_\xn\right) \cdot (1+\rho)}^{=NP_\xn\cdot P_\xn(0)} +
-  ZK^{(VS)}_\xn(0) + 
-  ZK^{(PS)}_\xn(0) \cdot BP_\xn \cdot PS + 
-  ZK^{(BP)}_\xn(0)\cdot BP_\xn
+  ZK_\xn(0)
 %
-}{P_\xn(0)}
+}{P_\xn(0)}\\
+&= NP_\xn + \frac{ZK_\xn(0)}{P_\xn(0)}
 \end{align*}
+mit dem gesamten Barwert der Zillmerkosten:
+\begin{align*}
+ ZK_\xn(t) &=  ZK^{(VS)}_\xn(t) + 
+  ZK^{(PS)}_\xn(t) \cdot BP_\xn \cdot PS + 
+  ZK^{(BP)}_\xn(t) \cdot BP_\xn\,.
+\end{align*}
+
 
 Varianten:
 \begin{itemize}
@@ -664,6 +672,7 @@ BP_\xn &= \frac%
 }
 \end{align*}
 Wie man deutlich sehen kann, ist die Kostenursache ($\alpha$, $\beta$ oder $\gamma$) für die Prämienbestimmung irrelevant. Es werden die Barwerte aller drei Kostenarten jeweils bei der entsprechenden Bemessungsgrundlage aufaddiert.
+
 % 
 \subsection{Ablebensleistung im Jahr \textit{t}:}
 \begin{align*}
@@ -791,14 +800,27 @@ Vorgeschriebene Prämie (pro Zahlungsperiode):
 \end{equation*}
 
 \section{Prämienzerlegung}
+Für die Prämienzerlegung (nach Bestimmung der Höhe der Bruttoprämie) kann man die Formel zur Bruttoprämie auch umformen zu
+\begin{align*}
+ BP_\xn &= \frac{BW^L_\xn(0)\cdot\left(1+\rho\right) + BP_\xn \cdot A^{(RG)}_\xn \left(1+\rho^{RG}\right) \left(1+\rho\right)}{P_\xn(0)} \\
+  &\quad + \frac{AK^{(VS)}_\xn(0) + BP_\xn \cdot AK^{(BP)}_\xn + BP_\xn \cdot PS \cdot AK^{(PS)}_\xn}{P_\xn(0)}\\
+  &\quad + \frac{IK^{(VS)}_\xn(0) + BP_\xn \cdot IK^{(BP)}_\xn + BP_\xn \cdot PS \cdot IK^{(PS)}_\xn}{P_\xn(0)}\\
+  &\quad + \frac{VK^{(VS)}_\xn(0) + BP_\xn \cdot VK^{(BP)}_\xn + BP_\xn \cdot PS \cdot VK^{(PS)}_\xn}{P_\xn(0)}\\
+  &= NP_\xn + \underbrace{\frac{AK_\xn(0)}{P_\xn(0)}}_{=\Pi_\xn^\alpha} + \underbrace{\frac{IK_\xn(0)}{P_\xn(0)}}_{=\Pi_\xn^\beta} + \underbrace{=\frac{VK_\xn(0)}{P_\xn(0)}}_{\Pi_\xn^\gamma} \\
+  &= \underbrace{NP_\xn + \underbrace{\frac{ZK_\xn(0)}{P_\xn(0)}}_{=\Pi_\xn^{\alpha,Z}}}_{=\Pi_\xn^Z} +  \underbrace{\frac{AK_\xn(0)-ZK_\xn(0)}{P_\xn(0)}}_{=\Pi_\xn^{\alpha,noZ}} + \Pi_\xn^\beta + \Pi_\xn^\gamma 
+\end{align*}
+und damit die Bruttoprämie in die einzelnen Kostenprämien zerlegen.\vspace{1em}
+
+Es ergibt sich somit folgende Zerlegung der verrechneten Prämie:
+
 \renewlist{itemize}{itemize}{10}
 \setlist[itemize]{label=\textbullet}
 
 \setlistdepth{9}
 \begin{itemize}
-  \item verrechnete Prämie (jährlich)
+  \item verrechnete Prämie (jährlich) $\Pi_\xn^v$
   \begin{itemize}
-    \item[+] Versicherungssteuer
+    \item[+] Versicherungssteuer $\Pi_\xn^{tax}$
     \item[+] Unterjährigkeitszuschlag
     \item[$-$] Prämienrabatt
     \item[$-$] Vorweggewinnbeteiligung (inkl. Stückkosten)
@@ -807,39 +829,35 @@ Vorgeschriebene Prämie (pro Zahlungsperiode):
     \item[$-$] Vorweggewinnbeteiligung (vor Stückkosten)
     \item[$-$] Summenrabatt
     \item[+] Zuschlag ohne ärztliche Untersuchung
-    \item[+] Bruttoprämie (2 Sichtweisen: Zillmerung und Netto-Betrachtung)
+    \item[+] Bruttoprämie $\Pi_\xn^a$
     \begin{itemize}
-      \item Zillmerung:
+      \item[+] Nettoprämie $\Pi_\xn$
       \begin{itemize}
-        \item[+] gezillmerte $\gamma$-Prämie
-        \item[+] gezillmerte $\beta$-Prämie
-        \item[+] gezillmerte $\alpha$-Prämie (ungezillmerter Teil)
-        \item[+] Zillmerprämie
-        \begin{itemize}
-          \item[+] gezillmerte Risikoprämie
-          \item[+] gezillmerte Sparprämie
-          \begin{itemize}
-            \item[+] $\alpha$-Tilgung (Tilgung der Zillmerkosten)
-            \item[+] echte Sparprämie (zum Aufbau des nicht-negativen Deckungskapitals)
-          \end{itemize}
-        \end{itemize}
+        \item[+] Risikoprämie (netto) $\Pi_\xn^r$
+        \item[+] Sparprämie (netto) $\Pi_\xn^s$
       \end{itemize}
-    
-      \item Netto-Betrachtung:
-      \begin{itemize}
-        \item[+] $\alpha$-Prämie
-        \item[+] $\beta$-Prämie
-        \item[+] $\gamma$-Prämie
-        \item[+] Nettoprämie
-        \begin{itemize}
-          \item[+] Risikoprämie (netto)
-          \item[+] Sparprämie (netto)
-        \end{itemize}
-      \end{itemize}
-      
+      \item[+] gezillmerter Teil der $\alpha$-Prämie $\Pi_\xn^{\alpha,Z}$
+      \item[+] ungezillmerter Teil der $\alpha$-Prämie $\Pi_\xn^{\alpha,noZ}$
+      \item[+] $\beta$-Prämie $\Pi_\xn^\beta$
+      \item[+] $\gamma$-Prämie $\Pi_\xn^\gamma$
     \end{itemize}
   \end{itemize}
 \end{itemize}
+\vspace{1em}
+
+Die Zillmerprämie (Nettoprämie $\Pi_\xn$ + gezillmerter Teil der $\alpha$-Prämie $\Pi_\xn^{\alpha,Z}$) kann wie die Nettoprämie in Spar- und Risikoprämie zerlegt werden:
+\begin{itemize}
+  \item Zillmerprämie $\Pi_\xn^Z$
+  \begin{itemize}
+    \item[+] gezillmerte Risikoprämie
+    \item[+] gezillmerte Sparprämie
+    \begin{itemize}
+      \item[+] $\alpha$-Tilgung (Tilgung der Zillmerkosten)
+      \item[+] echte Sparprämie (zum Aufbau des nicht-negativen Deckungskapitals)
+    \end{itemize}
+  \end{itemize}
+\end{itemize}
+
 
 
 
@@ -908,10 +926,21 @@ V^{WvK,frei}_\xn(t) &= VK4_\xn(t) \cdot \widetilde{VS}
 SP_\xn(t) &= V_\xn(t+1) \cdot v - V_\xn(t) + \left(\ddot{e}_t + v\cdot e_t\right)\cdot VS
 \end{align*}
 
+gezillmert: 
+\begin{align*}
+SP^Z_\xn(t) &= V^Z_\xn(t+1) \cdot v - V^Z_\xn(t) + \left(\ddot{e}_t + v\cdot e_t\right)\cdot VS
+\end{align*}
+
 \subsection{Risikoprämie}
 \begin{align*}
 RP_\xn(t) &= v\cdot q_{x+t} \cdot \left\{Abl(t) - V_\xn(t+1)\right\} 
 \end{align*}
+
+gezillmert: 
+\begin{align*}
+RP^Z_\xn(t) &= v\cdot q_{x+t} \cdot \left\{Abl(t) - V^Z_\xn(t+1)\right\} 
+\end{align*}
+
 
 
 \section{Bilanzreserve}

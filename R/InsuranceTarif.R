@@ -595,78 +595,93 @@ InsuranceTarif = R6Class(
       loadings = self$getLoadings(loadings=loadings);
       l = dim(reserves)[[1]];
 
-      premium.gross = absCashFlows[,"premiums_advance"];
+      premium.gross    = absCashFlows[,"premiums_advance"];
 
       # First get the charges and rebates that are added to the gross premium to obtain the charged premium:
 
       # charge for no medical exam:
-      noMedExam     = valueOrFunction(loadings$noMedicalExam,sumInsured=sumInsured, premiums=premiums);
-      noMedExam.rel = valueOrFunction(loadings$noMedicalExamRelative,sumInsured=sumInsured, premiums=premiums);
-      withMedExam = premium.gross * (1+noMedExam.rel) + noMedExam*sumInsured;
+      noMedExam        = valueOrFunction(loadings$noMedicalExam,sumInsured=sumInsured, premiums=premiums);
+      noMedExam.rel    = valueOrFunction(loadings$noMedicalExamRelative,sumInsured=sumInsured, premiums=premiums);
+      withMedExam      = premium.gross * (1+noMedExam.rel) + noMedExam*sumInsured;
       charge.noMedicalExam = withMedExam - premium.gross;
 
       # sum rebate:
-      sumRebate      = valueOrFunction(loadings$sumRebate,    sumInsured=sumInsured, premiums=premiums);
-      afterSumRebate = withMedExam - sumRebate * sumInsured; # calculate the charge as the difference, because we want a vector!
-      rebate.sum     = afterSumRebate - withMedExam;
+      sumRebate        = valueOrFunction(loadings$sumRebate,    sumInsured=sumInsured, premiums=premiums);
+      afterSumRebate   = withMedExam - sumRebate * sumInsured; # calculate the charge as the difference, because we want a vector!
+      rebate.sum       = afterSumRebate - withMedExam;
 
       # advance profit participation has two parts, one before and one after unit costs. Part 1:
       advanceProfitParticipation = valueOrFunction(loadings$advanceProfitParticipation,sumInsured=sumInsured, premiums=premiums);
-      afterProfit     = afterSumRebate * (1+advanceProfitParticipation);
-      profits.advance = afterProfit - afterSumRebate;
+      afterProfit      = afterSumRebate * (1+advanceProfitParticipation);
+      profits.advance  = afterProfit - afterSumRebate;
 
       # unit costs
-      unitCosts      = valueOrFunction(loadings$unitcosts,    sumInsured=sumInsured, premiums=premiums);
+      unitCosts        = valueOrFunction(loadings$unitcosts,    sumInsured=sumInsured, premiums=premiums);
       # unit costs are only charged if a premium is paid, so exclude all times with premium==0!
-      afterUnitCosts = afterProfit + (afterProfit!=0)*unitCosts;
-      # browser()
-      # afterUnitCosts[afterUnitCosts!=0] = afterUnitCosts[afterUnitCosts!=0] + unitCosts;
-      unitcosts      = afterUnitCosts - afterProfit;
+      afterUnitCosts   = afterProfit + (afterProfit!=0)*unitCosts;
+      unitcosts        = afterUnitCosts - afterProfit;
 
       # advance profit participation, Part 2:
       advanceProfitParticipationUnitCosts = valueOrFunction(loadings$advanceProfitParticipationInclUnitCost, sumInsured=sumInsured, premiums=premiums);
-      afterProfit     = afterUnitCosts * (1-advanceProfitParticipationUnitCosts);
-      profits.advance = profits.advance + afterProfit - afterUnitCosts;
+      afterProfit      = afterUnitCosts * (1-advanceProfitParticipationUnitCosts);
+      profits.advance  = profits.advance + afterProfit - afterUnitCosts;
 
       # premium rebate
-      premiumRebate = valueOrFunction(loadings$premiumRebate,sumInsured=sumInsured, premiums=premiums);
+      premiumRebate    = valueOrFunction(loadings$premiumRebate,sumInsured=sumInsured, premiums=premiums);
       afterPremiumRebate = afterUnitCosts * (1-premiumRebate);
-      rebate.premium = afterPremiumRebate - afterUnitCosts;
+      rebate.premium   = afterPremiumRebate - afterUnitCosts;
 
       # partner rebate
-      partnerRebate = valueOrFunction(loadings$partnerRebate,sumInsured=sumInsured, premiums=premiums);
+      partnerRebate    = valueOrFunction(loadings$partnerRebate,sumInsured=sumInsured, premiums=premiums);
       afterPartnerRebate = afterUnitCosts * (1-partnerRebate);
-      rebate.partner = afterPartnerRebate - afterUnitCosts;
+      rebate.partner   = afterPartnerRebate - afterUnitCosts;
 
       # value after all rebates
-      afterRebates = afterProfit + rebate.premium + rebate.partner;
+      afterRebates     = afterProfit + rebate.premium + rebate.partner;
 
       # premium frequency loading
       frequencyLoading = valueOrFunction(self$premiumFrequencyLoading, sumInsured=sumInsured, premiums=premiums);
-      afterFrequency = afterRebates * (1 + frequencyLoading[[toString(premiumFrequency)]]);
+      afterFrequency   = afterRebates * (1 + frequencyLoading[[toString(premiumFrequency)]]);
       charge.frequency = afterFrequency - afterRebates;
 
       # insurance tax
-      taxRate         = valueOrFunction(loadings$tax,          sumInsured=sumInsured, premiums=premiums);
-      premium.charged = afterFrequency * (1+taxRate);
-      tax             = premium.charged - afterFrequency;
-
-# TODO
+      taxRate          = valueOrFunction(loadings$tax,          sumInsured=sumInsured, premiums=premiums);
+      premium.charged  = afterFrequency * (1+taxRate);
+      tax              = premium.charged - afterFrequency;
 
 
+      # Gross premium = net + zillmeredAlpha + unzillmeredAlpha + beta + gamma premium
+      unit.premiumCF   = premium.gross / premiums[["gross"]];
+      premium.gamma    = unit.premiumCF * absPresentValues["0", "gamma"] / absPresentValues["0", "premiums.unit"];
+      premium.beta     = unit.premiumCF * absPresentValues["0", "beta"] / absPresentValues["0", "premiums.unit"];
+      premium.alpha    = unit.premiumCF * absPresentValues["0", "alpha"] / absPresentValues["0", "premiums.unit"];
+      premium.Zillmer  = unit.premiumCF * premiums[["Zillmer"]];
+      premium.alpha.Zillmer = unit.premiumCF * absPresentValues["0", "Zillmer"] / absPresentValues["0", "premiums.unit"];
+      premium.alpha.noZ = premium.alpha - premium.alpha.Zillmer; # ungezillmerter Teil der Abschlusskosten
 
+      premium.net      = unit.premiumCF * premiums[["net"]];
 
+      premium.risk     = self$v * (absCashFlows[,"death"] - c(reserves[,"net"][-1], 0)) * pad0(transitionProbabilities$q, l);
+      premium.savings  = getSavingsPremium(
+              reserves[,"net"], v=self$v,
+              survival_advance=absCashFlows[,"survival_advance"]+absCashFlows[,"guaranteed_advance"],
+              survival_arrears=absCashFlows[,"survival_arrears"]+absCashFlows[,"guaranteed_arrears"]
+      );
 
-
-      premium.savings.Zillmer = getSavingsPremium(reserves[,"Zillmer"], self$v) + getSavingsPremium(reserves[,"gamma"], self$v);
-      # TODO: Switch to use the Ziller or net or adequate reserve!
-      premium.risk.Zillmer    = self$v * (absCashFlows[,"death"] - c(reserves[,"Zillmer"][-1], 0)) * pad0(transitionProbabilities$q, l) +
-        self$v * (absCashFlows[,"disease_SumInsured"] - c(reserves[,"Zillmer"][-1], 0)) * pad0(transitionProbabilities$i, l);
-      # premium.risk    = self$v * (absCashFlows[,"death"] - c(reserves[,"Zillmer"][-1], 0)) * transitionProbabilities$q;
-
-
-      # res = cbind("savings"=premium.savings, "risk"=premium.risk, "savings+risk"= premium.savings+premium.risk, "gamma"=absCashFlows[,"gamma"]);
-
+      premium.Zillmer.risk     = self$v * (absCashFlows[,"death"] - c(reserves[,"Zillmer"][-1], 0)) * pad0(transitionProbabilities$q, l);
+      premium.Zillmer.savings  = getSavingsPremium(
+              reserves[,"Zillmer"], v=self$v,
+              survival_advance=absCashFlows[,"survival_advance"]+absCashFlows[,"guaranteed_advance"],
+              survival_arrears=absCashFlows[,"survival_arrears"]+absCashFlows[,"guaranteed_arrears"]
+      );
+      premium.Zillmer.amortization = getSavingsPremium(
+              pmin(0, reserves[,"Zillmer"]), v=self$v
+      );
+      premium.Zillmer.actsavings = getSavingsPremium(
+              pmax(0, reserves[,"Zillmer"]), v=self$v,
+              survival_advance=absCashFlows[,"survival_advance"]+absCashFlows[,"guaranteed_advance"],
+              survival_arrears=absCashFlows[,"survival_arrears"]+absCashFlows[,"guaranteed_arrears"]
+      );
 
       res = cbind(
         "charged"         = premium.charged,
@@ -680,21 +695,22 @@ InsuranceTarif = R6Class(
         "charge.noMedicalExam" = charge.noMedicalExam,
         "gross"           = premium.gross,
 
-        # "Zillmer.alpha"   = premium.alpha.Zillmer,
-        # "Zillmer.beta"    = premium.beta.Zillmer,
-        # "Zillmer.gamma"   = premium.gamma.Zillmer,
-        # "Zillmer"         = premium.Zillmer,
-        "Zillmer.risk"    = premium.risk.Zillmer,
-        "Zillmer.savings" = premium.savings.Zillmer#,
-        # "Zillmer.amortization" = premium.Zillmer.amortization,
-        # "Zillmer.savings.real" = premium.savings.Zillmer,
+        "gamma"   = premium.gamma,
+        "beta"    = premium.beta,
+        "alpha"   = premium.alpha,
+        "alpha.noZillmer" = premium.alpha.noZ,
+        "alpha.Zillmer" = premium.alpha.Zillmer,
+        "Zillmer" = premium.Zillmer,
 
-        # "alpha"   = premium.alpha,
-        # "beta"    = premium.beta,
-        # "gamma"   = premium.gamma,
-        # "net"     = premium.net,
-        # "risk"    = premium.risk,
-        # "savings" = premium.savings
+        "net"     = premium.net,
+
+        "risk"    = premium.risk,
+        "savings" = premium.savings,
+
+        "Zillmer.risk"    = premium.Zillmer.risk,
+        "Zillmer.savings" = premium.Zillmer.savings,
+        "Zillmer.amortization" = premium.Zillmer.amortization,
+        "Zillmer.savings.real" = premium.Zillmer.actsavings
       )
       rownames(res) <- rownames(premiums);
       res
