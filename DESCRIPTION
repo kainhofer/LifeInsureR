@@ -2,11 +2,24 @@ Package: LifeInsuranceContracts
 Type: Package
 Version: 0.1
 Date: 2016-05-07
-Title: A framework for general life insurance contracts, including profit participation, contract changes etc.
+Title: A framework for general life insurance contracts, including profit
+    participation, contract changes etc.
 Authors@R: c(person("Reinhold", "Kainhofer", role=c("aut", "cre"), email="reinhold@kainhofer.com"))
 Author: Reinhold Kainhofer [aut, cre]
 Maintainer: Reinhold Kainhofer <reinhold@kainhofer.com>
-Depends: R6, ValuationTables, objectProperties, lubridate
+Depends:
+    R6,
+    ValuationTables,
+    objectProperties,
+    lubridate
 Description: TODO
 License: GPL (>= 2)
-
+Collate:
+    'HelperFunctions.R'
+    'InsuranceTarif.R'
+    'InsuranceContract.R'
+    'Planning_Parameter_Structure.R'
+    'ProfitParticipation.R'
+    'dummy.R'
+    'exportInsuranceContract_xlsx.R'
+RoxygenNote: 5.0.1

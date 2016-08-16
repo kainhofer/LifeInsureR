@@ -1,2 +1,5 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
+^Formulas_Reference$
+^Vergleichsrechnung_Excel/$
+^Vergleichsrechnung_Excel$
