@@ -1,3 +1,4 @@
+#' @include HelperFunctions.R
 library(openxlsx)
 
 ################################################
@@ -8,8 +9,8 @@ library(openxlsx)
 writeAgeQTable = function (wb, sheet, probs, crow=1, ccol=1, styles=list()) {
   writeData(wb, sheet, "Sterblichkeiten", startCol = ccol+2, startRow = crow);
   addStyle(wb, sheet, style=styles$header, rows=crow, cols = ccol+2, stack=TRUE);
-  mergeCells(wb, sheet, rows=crow, cols=(ccol+2):(ccol+3))
-  writeDataTable(wb, sheet, probs,
+  mergeCells(wb, sheet, rows=crow, cols=(ccol+2):(ccol+4))
+  writeDataTable(wb, sheet, setInsuranceValuesLabels(probs),
                  startRow=crow+1, startCol = ccol, colNames = TRUE, rowNames = TRUE,
                  tableStyle = "TableStyleMedium3", withFilter = FALSE, headerStyle = styles$tableHeader);
   freezePane(wb, sheet, firstActiveRow=crow+2, firstActiveCol = ccol+2)
@@ -84,17 +85,30 @@ labelsReplace = function(labels) {
   labels[labels=="Zillmer"] = "Zill.";
   labels[labels=="beta"] = "β";
   labels[labels=="gamma"] = "γ";
-  labels[labels=="gamma_nopremiums"] = "γ_prf";
+  labels[labels=="gamma_nopremiums"] = "γ prf.";
   labels[labels=="SumInsured"] = "VS";
   labels[labels=="SumPremiums"] = "PS";
   labels[labels=="GrossPremium"] = "BP";
 
+  # Cash Flows
+  labels[labels=="premiums_advance"] = "Präm. vorsch.";
+  labels[labels=="premiums_arrears"] = "Präm. nachsch.";
+  labels[labels=="guaranteed_advance"] = "Gar. vorsch.";
+  labels[labels=="guaranteed_arrears"] = "Gar. nachsch.";
+  labels[labels=="survival_advance"] = "Erl. vorsch.";
+  labels[labels=="survival_arrears"] = "Erl. nachsch.";
+
+  # Barwerte
   labels[labels=="premiums"] = "Präm.";
   labels[labels=="guaranteed"] = "Gar.";
   labels[labels=="survival"] = "Erl.";
   labels[labels=="death_SumInsured"] = "Abl. VS";
   labels[labels=="death_GrossPremium"] = "Abl. BP";
   labels[labels=="death"] = "Abl.";
+  labels[labels=="disease_SumInsured"] = "Krkh.";
+  labels[labels=="death_Refund_past"] = "PrRG (verg.)";
+  labels[labels=="death_Refund_future"] = "PrRG (zuk.)";
+
   labels[labels=="death_PremiumFree"] = "Abl. prf";
   labels[labels=="benefits"] = "Abl.Lst.";
   labels[labels=="benefitsAndRefund"] = "Abl. + RG";
@@ -103,8 +117,19 @@ labelsReplace = function(labels) {
   labels[labels=="PremiumPeriod"] = "PD"
   labels[labels=="PremiumFree"] = "Pr.Fr."
   labels[labels=="PolicyPeriod"] = "LZ"
+
+  # Rückstellungen
+  labels[labels=="adequate"] = "ausr.";
+  labels[labels=="contractual"] = "vertragl.";
+  labels[labels=="conversion"] = "Umrechn.";
+  labels[labels=="alphaRefund"] = "α-Rücktrag";
+  labels[labels=="reduction"] = "Sparpr.für DK";
+  labels[labels=="PremiumsPaid"] = "Pr.Summe";
+  labels[labels=="Surrender"] = "Rückkauf";
+  labels[labels=="PremiumFreeSumInsured"] = "Prf.VS";
   labels[labels=="Balance Sheet Reserve"] = "Bilanzreserve"
 
+  # Prämienzerlegung
   labels[labels=="charged"] = "verrechnet"
   labels[labels=="tax"] = "VSt."
   labels[labels=="loading.frequency"] = "UJZ"
@@ -124,6 +149,17 @@ labelsReplace = function(labels) {
   labels[labels=="Zillmer.savings"] = "gez.Sparpr.";
   labels[labels=="Zillmer.amortization"] = "gez.AK-Tilgung";
   labels[labels=="Zillmer.savings.real"] = "Sparpr.für DK";
+
+  # Vertragseigenschaften
+  labels[labels=="InterestRate"] = "i";
+  labels[labels=="PolicyDuration"] = "LZ";
+  labels[labels=="PremiumPayment"] = "Prämienzhlg.";
+  labels[labels=="Premiums"] = "Prämien";
+  labels[labels=="age"] = "Alter";
+
+  labels[labels=="time"] = "ZP t";
+  labels[labels=="Comment"] = "Bemerkung";
+  labels[labels=="Type"] = "Art";
 
 
   labels
@@ -216,7 +252,7 @@ exportInsuranceContract.xlsx = function(contract, filename) {
 
   writeData(wb, sheet, "Basisdaten des Vertrags und Tarifs", startCol=1, startRow=crow);
   mergeCells(wb, sheet, cols=1:length(values), rows=crow:crow);
-  writeDataTable(wb, sheet, as.data.frame(t(values)),
+  writeDataTable(wb, sheet, setInsuranceValuesLabels(as.data.frame(t(values))),
                  startCol=1, startRow=crow+1, colNames=TRUE, rowNames=FALSE,
                  tableStyle="TableStyleMedium3", withFilter = FALSE, headerStyle = styles$tableHeader);
 
@@ -246,7 +282,7 @@ exportInsuranceContract.xlsx = function(contract, filename) {
   histtime = unlist(lapply(contract$history, function(xl) xl$time));
   histcomment = unlist(lapply(contract$history, function(xl) xl$comment));
   histtype = unlist(lapply(contract$history, function(xl) xl$type));
-  writeValuesTable(wb, sheet, data.frame(time=histtime, Comment=histcomment, Type=histtype),
+  writeValuesTable(wb, sheet, setInsuranceValuesLabels(data.frame(time=histtime, Comment=histcomment, Type=histtype)),
                    crow=crow, ccol=1, tableName="Vertragshistorie", styles=styles,
                    caption="Vertragshistorie");
   crow = crow + dim(histtime)[[1]] + 3;
@@ -262,7 +298,7 @@ exportInsuranceContract.xlsx = function(contract, filename) {
   crow = 4;
   sheet = "Basisdaten";
   tbl = qp[,"age", drop=FALSE];
-  writeDataTable(wb, sheet, tbl,
+  writeDataTable(wb, sheet, setInsuranceValuesLabels(tbl),
                  startRow=crow+1, startCol = ccol, colNames = TRUE, rowNames = TRUE,
                  tableStyle = "TableStyleMedium3", withFilter = FALSE, headerStyle = styles$tableHeader);
   freezePane(wb, sheet, firstActiveRow=crow+2, firstActiveCol = ccol+2)
@@ -358,7 +394,7 @@ exportInsuranceContract.xlsx = function(contract, filename) {
   ccol = ccol + writeAgeQTable(wb, sheet, probs=qp, crow=crow, ccol=1, styles=styles);
   ccol = ccol + writeValuesTable(wb, sheet, as.data.frame(setInsuranceValuesLabels(contract$values$absCashFlows)),
                                  crow=crow, ccol=ccol, tableName="CashFlows_absolute", styles=styles,
-                                 caption="abs. Leistungs- und Kostencashflows", withFilter=TRUE, valueStyle=styles$currency0) + 1;
+                                 caption="abs. Leistungs- und Kostencashflows", valueStyle=styles$currency0) + 1;
   setColWidths(wb, sheet, cols = 1:50, widths = "auto", ignoreMergedCells = TRUE)
 
 
@@ -418,10 +454,10 @@ exportInsuranceContract.xlsx = function(contract, filename) {
   ccol = ccol + writeAgeQTable(wb, sheet, probs=qp, crow=crow, ccol=1, styles=styles);
   ccol = ccol + writeValuesTable(wb, sheet, setInsuranceValuesLabels(contract$values$cashFlows),
                                  crow=crow, ccol=ccol, tableName="CashFlows_Benefits", styles=styles,
-                                 caption="Leistungscashflows", withFilter=TRUE, valueStyle=styles$hide0) + 1;
+                                 caption="Leistungscashflows", valueStyle=styles$hide0) + 1;
   ccol = ccol + writeValuesTable(wb, sheet, costCF,
                                  crow=crow, ccol=ccol, tableName="CashFlows_Costs", styles=styles,
-                                 caption="Kostencashflows", withFilter=TRUE, valueStyle=styles$cost0) + 1;
+                                 caption="Kostencashflows", valueStyle=styles$cost0) + 1;
   setColWidths(wb, sheet, cols = 1:50, widths = "auto", ignoreMergedCells = TRUE)
 
 
