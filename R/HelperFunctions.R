@@ -1,5 +1,9 @@
 library(abind);
 
+PaymentTimeEnum = setSingleEnum("PaymentTime", levels = c("in advance", "in arrears"))
+#PaymentCountEnum = setSingleEnum(PaymentCount, levels = c(1,2,3))
+
+
 mergeValues = function(starting, ending, t) {
   rbind(starting[1:t,], ending[-1:-t,])
 }
@@ -152,3 +156,32 @@ valueOrFunction = function(val, ...) {
     val
   }
 }
+
+
+
+#' @function fillFields(fields, valuelist)
+#' @description Overwrite all existing fields in the first argument with
+#' values given in valuelist. Members of valuelist that are not yet in
+#' fields are ignored. This allows a huge valuelist to be used to fill
+#' fields in multiple lists with given structure.
+fillFields = function (fields, valuelist) {
+  fieldsToInsert = intersect(names(fields), names(valuelist));
+  fields[fieldsToInsert] = valuelist[fieldsToInsert]
+  fields
+}
+
+#' @function fallbackFields(fields, fallback)
+#' @description Replace all missing values in fields (either missing or NA) with
+#' their corresponding values from fallback. Members in fallback that are missing
+#' in fields are inserted
+fallbackFields = function (fields, valuelist) {
+  keepFields = ! is.na(fields);
+  # We need to set all fields of valuelist, except those that are NOT NA in fields:
+  useFields = setdiff(names(valuelist), names(fields[keepFields]))
+  fields[useFields] = valuelist[useFields]
+  fields
+}
+
+# contract.U16_3 = InsuranceContract$new(Generali.U16_3, age=55, policyPeriod=10, premiumPeriod=10, YOB=1951, sumInsured=100000, contractClosing=as.Date("2016-05-11"));
+
+

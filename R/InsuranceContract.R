@@ -2,37 +2,18 @@ library(R6)
 library(openxlsx);
 library(ValuationTables);
 
+#' @include HelperFunctions.R
+#' @include InsuranceTarif.R
+
 InsuranceContract = R6Class("InsuranceContract",
 
   public = list(
     tarif = NA,
-
-    #### Contract settings
-    params = list(
-      sumInsured = 1,
-      premiumWaiver = 0,
-      YOB = NA,
-      age = NA,
-      policyPeriod = Inf,
-      premiumPeriod = 1,
-      deferral = 0,
-      guaranteed = 0,
-
-      premiumPayments = PaymentTimeEnum("in advance"),
-      benefitPayments = PaymentTimeEnum("in advance"),
-
-      premiumFrequency = 1,
-      benefitFrequency = 1, # Only for annuities!
-
-      loadings = list(),     # Allow overriding the tariff-defined loadings (see the InsuranceTariff class for all possible names)
-      surrenderPenalty = TRUE,  # Set to FALSE after the surrender penalty has been applied once, e.g. on a premium waiver
-      alphaRefunded = FALSE,    # Alpha costs not yet refunded (in case of contract changes)
-
-      contractClosing = Sys.Date()             # Contract closing date (day/month is relevant for balance sheet reserves)
-    ),
+    ContractParameters = InsuranceContract.ParameterStructure, # Only values explicitly given for this contract, not including fallback values from the tariff
+    Parameters = InsuranceContract.ParameterStructure,         # The whole parameter set, including values given by the tariff
 
     #### Caching values for this contract, initialized/calculated when the object is created
-    values = list(
+    Values = list(
       basicData = NA,
       transitionProbabilities = NA,
 
@@ -61,72 +42,65 @@ InsuranceContract = R6Class("InsuranceContract",
 
     #### The code:
 
-    initialize = function(tarif, age, sumInsured = 1,
-                          policyPeriod, premiumPeriod = policyPeriod, guaranteed = 0,
-                          ...,
-                          contractClosing = Sys.Date(),
-                          loadings = list(),
-                          premiumPayments = "in advance", benefitPayments = "in advance",
-                          premiumFrequency = 1, benefitFrequency = 1,
-                          deferral = 0, YOB = 1975) {
+    initialize = function(tarif, age, policyPeriod, sumInsured = 1, ... ) {
+                          # policyPeriod, premiumPeriod = policyPeriod, guaranteed = 0,
+                          # ...,
+                          # contractClosing = Sys.Date(),
+                          # loadings = list(),
+                          # premiumPayments = "in advance", benefitPayments = "in advance",
+                          # premiumFrequency = 1, benefitFrequency = 1,
+                          # deferral = 0, YOB = 1975) {
       self$tarif = tarif;
-      self$params$age = age;
-      self$params$policyPeriod = policyPeriod;
-      if (missing(premiumPeriod) && !is.null(self$tarif$defaultPremiumPeriod)) {
-        self$params$premiumPeriod = self$tarif$defaultPremiumPeriod;
-      } else {
-        self$params$premiumPeriod = premiumPeriod;
-      }
-      self$params$sumInsured = sumInsured;
-      if (!missing(deferral))         self$params$deferral = deferral;
-      if (!missing(YOB))              self$params$YOB = YOB;
-      if (!missing(premiumPayments))  self$params$premiumPayments = premiumPayments;
-      if (!missing(benefitPayments))  self$params$benefitPayments = benefitPayments;
-      if (!missing(premiumFrequency)) self$params$premiumFrequency = premiumFrequency;
-      if (!missing(benefitFrequency)) self$params$benefitFrequency = benefitFrequency;
-      if (!missing(guaranteed))       self$params$guaranteed = guaranteed;
-      if (!missing(loadings))         self$params$loadings = loadings;
-      if (!missing(contractClosing))  self$params$contractClosing = contractClosing;
 
-      self$calculateContract();
+      # TODO: implement required parameters like contractClosing, etc. Fill those with defaults if not given
+      self$ContractParameters = InsuranceContract.ParametersFill(age=age, policyPeriod=policyPeriod, sumInsured=sumInsured, ..., premiumWaiver = 0, surrenderPenalty = 0, alphaRefunded = 0);
+
+      # Set default values for required contract-specific data
+      if (is.na(self$ContractParameters$ContractData$contractClosing))
+        self$ContractParameters$ContractData$contractClosing = sys.Date();
+
+      self$Parameters = InsuranceContract.ParametersFallback(self$ContractParameters, self$tarif$getParameters())
+str(self$Parameters)
+
+      # self$calculateContract();
     },
 
-    addHistorySnapshot = function(time=0, comment="Initial contract values", type="Contract", params=self$params, values = self$values) {
+    addHistorySnapshot = function(time = 0, comment = "Initial contract values", type = "Contract", params = self$Parameters, values = self$Values) {
       self$history = rbind(self$history,
-                       list(time=list("time"=time, "comment"=comment, "type"=type, "params"=params, "values"=values)));
+                       list(time=list("time" = time, "comment" = comment, "type" = type, "params" = params, "values" = values)));
     },
 
     calculateContract = function() {
-      self$values$transitionProbabilities = self$determineTransitionProbabilities();
+      self$Values$transitionProbabilities = self$determineTransitionProbabilities();
 
-      self$values$cashFlowsBasic = self$determineCashFlowsBasic();
-      self$values$cashFlows = self$determineCashFlows();
-      self$values$premiumSum = self$determinePremiumSum();
-      self$values$cashFlowsCosts = self$determineCashFlowsCosts();
+      self$Values$cashFlowsBasic = self$determineCashFlowsBasic();
+      self$Values$cashFlows = self$determineCashFlows();
+      self$Values$premiumSum = self$determinePremiumSum();
+      self$Values$cashFlowsCosts = self$determineCashFlowsCosts();
 
-      self$values$presentValues = self$calculatePresentValues();
-      self$values$presentValuesCosts = self$calculatePresentValuesCosts();
+      self$Values$presentValues = self$calculatePresentValues();
+      self$Values$presentValuesCosts = self$calculatePresentValuesCosts();
 
       # the premiumCalculation function returns the premiums AND the cofficients,
       # so we have to extract the coefficients and store them in a separate variable
       res = self$calculatePremiums();
-      self$values$premiumCoefficients = res[["coefficients"]];
-      self$values$premiums = res[["premiums"]]
+      self$Values$premiumCoefficients = res[["coefficients"]];
+      self$Values$premiums = res[["premiums"]]
 
       # Update the cash flows and present values with the values of the premium
       pvAllBenefits = self$calculatePresentValuesBenefits()
-      self$values$presentValues = cbind(self$values$presentValues, pvAllBenefits)
+      self$Values$presentValues = cbind(self$Values$presentValues, pvAllBenefits)
 
-      self$values$absCashFlows = self$calculateAbsCashFlows();
-      self$values$absPresentValues = self$calculateAbsPresentValues();
-      self$values$reserves = self$calculateReserves();
-      self$values$reservesBalanceSheet = self$calculateReservesBalanceSheet();
-      self$values$basicData = self$getBasicDataTimeseries()
-      self$values$premiumComposition = self$premiumAnalysis();
-      self$values$premiumCompositionSums = self$premiumCompositionSums();
-      self$values$premiumCompositionPV = self$premiumCompositionPV();
+      self$Values$absCashFlows = self$calculateAbsCashFlows();
+      self$Values$absPresentValues = self$calculateAbsPresentValues();
+      self$Values$reserves = self$calculateReserves();
+      self$Values$reservesBalanceSheet = self$calculateReservesBalanceSheet();
+      self$Values$basicData = self$getBasicDataTimeseries()
+      self$Values$premiumComposition = self$premiumAnalysis();
+      self$Values$premiumCompositionSums = self$premiumCompositionSums();
+      self$Values$premiumCompositionPV = self$premiumCompositionPV();
 
-      self$addHistorySnapshot(0, "Initial contract values", type="Contract", params=self$params, values = self$values);
+      self$addHistorySnapshot(0, "Initial contract values", type = "Contract", params = self$Params, values = self$Values);
     },
 
     determineTransitionProbabilities = function(contractModification=NULL) {
@@ -218,7 +192,8 @@ InsuranceContract = R6Class("InsuranceContract",
       self$values$basicData = mergeValues(starting=self$values$basicData, ending=self$getBasicDataTimeseries(t), t=t);
       self$values$premiumComposition = mergeValues(starting=self$values$premiumComposition, ending=self$premiumAnalysis(t), t=t);
 
-      self$addHistorySnapshot(time=t, comment=sprintf("Premium waiver at time %d", t), type="PremiumWaiver", params=self$params, values=self$values);
+      self$addHistorySnapshot(time = t, comment = sprintf("Premium waiver at time %d", t),
+                              type = "PremiumWaiver", params = self$Params, values = self$Values);
     },
 
     dummy=NULL
