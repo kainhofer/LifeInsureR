@@ -175,13 +175,11 @@ fillFields = function (fields, valuelist) {
 #' their corresponding values from fallback. Members in fallback that are missing
 #' in fields are inserted
 fallbackFields = function (fields, valuelist) {
-  keepFields = ! is.na(fields);
+  keepFields = !sapply(fields, is.null);
   # We need to set all fields of valuelist, except those that are NOT NA in fields:
   useFields = setdiff(names(valuelist), names(fields[keepFields]))
   fields[useFields] = valuelist[useFields]
   fields
 }
-
-# contract.U16_3 = InsuranceContract$new(Generali.U16_3, age=55, policyPeriod=10, premiumPeriod=10, YOB=1951, sumInsured=100000, contractClosing=as.Date("2016-05-11"));
 
 

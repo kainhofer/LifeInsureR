@@ -16,71 +16,94 @@ initializeCosts = function() {
 }
 
 
+InsuranceContract.Values = list(
+  basicData = NULL,
+  transitionProbabilities = NULL,
+
+  cashFlowsBasic = NULL,
+  cashFlows = NULL,
+  cashFlowsCosts = NULL,
+  unitPremiumSum = 0,
+
+  presentValues = NULL,
+  presentValuesCosts = NULL,
+
+  premiumCoefficients = NULL,
+  premiums = NULL,
+  absCashFlows = NULL,
+  absPresentValues = NULL,
+
+  reserves = NULL,
+  reservesBalanceSheet = NULL,
+
+  premiumComposition = NULL
+);
+
+
 
 InsuranceContract.ParameterStructure = list(
   ContractData = list (
-    sumInsured = NA,
-    YOB = NA,
-    age = NA,
-    policyPeriod = NA,               # gesamte Vertragslaufzeit
-    premiumPeriod = NA,                # Prämienzahlungsdauer (1 für Einmalprämie)
-    deferralPeriod = NA,               # Aufschubzeit bei Leibrenten
-    guaranteedPeriod = NA,             # Garantiezeit bei Leibrenten
-    contractClosing = NA,     # Contract closing date (day/month is relevant for balance sheet reserves)
+    sumInsured = NULL,
+    YOB = NULL,
+    age = NULL,
+    policyPeriod = NULL,               # gesamte Vertragslaufzeit
+    premiumPeriod = NULL,                # Prämienzahlungsdauer (1 für Einmalprämie)
+    deferralPeriod = NULL,               # Aufschubzeit bei Leibrenten
+    guaranteedPeriod = NULL,             # Garantiezeit bei Leibrenten
+    contractClosing = NULL,     # Contract closing date (day/month is relevant for balance sheet reserves)
 
-    premiumPayments = NA, # Prämienzahlungsweise (vor-/nachschüssig)
-    benefitPayments = NA, # Leistungszahlungsweise (vor-/nachschüssig)
+    premiumPayments = NULL, # Prämienzahlungsweise (vor-/nachschüssig)
+    benefitPayments = NULL, # Leistungszahlungsweise (vor-/nachschüssig)
 
-    premiumFrequency = NA,             # Anzahl der Prämienzahlungen pro Jahr
-    benefitFrequency = NA,             # Anzahl der Leistungszahlungen pro Jahr (bei Renten, bzw. bei ALV Leistung am Ende des k-ten Teil des Jahres)
+    premiumFrequency = NULL,             # Anzahl der Prämienzahlungen pro Jahr
+    benefitFrequency = NULL,             # Anzahl der Leistungszahlungen pro Jahr (bei Renten, bzw. bei ALV Leistung am Ende des k-ten Teil des Jahres)
 
-    widowProportion = NA,              # Witwenübergang (Anteil an VS des VN)
-    deathBenefitProportion = NA,       # For endowments: Proportion of the death benefit relative to the life benefit
-    premiumRefund = NA                 # Proportion of premiums refunded on death (including additional risk, e.g. 1.10 = 110% of paid premiums)
+    widowProportion = NULL,              # Witwenübergang (Anteil an VS des VN)
+    deathBenefitProportion = NULL,       # For endowments: Proportion of the death benefit relative to the life benefit
+    premiumRefund = NULL                 # Proportion of premiums refunded on death (including additional risk, e.g. 1.10 = 110% of paid premiums)
   ),
   ContractState = list(
-    premiumWaiver = NA,        # Vertrag ist prämienfrei gestellt
-    surrenderPenalty = NA,     # Set to FALSE after the surrender penalty has been applied once, e.g. on a premium waiver
-    alphaRefunded = NA         # Alpha costs not yet refunded (in case of contract changes)
+    premiumWaiver = NULL,        # Vertrag ist prämienfrei gestellt
+    surrenderPenalty = NULL,     # Set to FALSE after the surrender penalty has been applied once, e.g. on a premium waiver
+    alphaRefunded = NULL         # Alpha costs not yet refunded (in case of contract changes)
   ),
   ActuarialBases = list(
-    mortalityTable = NA,
-    invalidityTable = NA,
-    i = NA,                             # guaranteed interest rate
-    v = NA,                             # discount factor
-    balanceSheetDate = NA,              # Balance sheet date (for the calculation of the balance sheet reserves)
-    balanceSheetMethod = NA,
-    surrenderValueCalculation = NA,     # By default no surrender penalties
+    mortalityTable = NULL,
+    invalidityTable = NULL,
+    i = NULL,                             # guaranteed interest rate
+    balanceSheetDate = NULL,              # Balance sheet date (for the calculation of the balance sheet reserves)
+    balanceSheetMethod = NULL,
+    surrenderValueCalculation = NULL,     # By default no surrender penalties
 
-    premiumFrequencyOrder = NA,         # Order of the approximation for payments within the year (unless an extra frequency loading is used => then leave this at 0)
-    benefitFrequencyOrder = NA
+    premiumFrequencyOrder = NULL,         # Order of the approximation for payments within the year (unless an extra frequency loading is used => then leave this at 0)
+    benefitFrequencyOrder = NULL
   ),
   Costs = list(),
   Loadings = list( # Loadings can also be function(sumInsured, premiums)    # TODO: Add other possible arguments
-    ongoingAlphaGrossPremium = NA,    # Acquisition cost that increase the gross premium
-    tax = NA,                         # insurance tax, factor on each premium paid
-    unitcosts = NA,                   # annual unit cost for each policy (Stückkosten), absolute value
-    security = NA,                    # Additional security loading on all benefit payments, factor on all benefits
-    noMedicalExam = NA,               # Loading when no medicial exam is done, % of SumInsured
-    noMedicalExamRelative = NA,       # Loading when no medicial exam is done, % of gross premium
-    sumRebate = NA,                   # gross premium reduction for large premiums, % of SumInsured
-    premiumRebate = NA,               # gross premium reduction for large premiums, % of gross premium # TODO
-    advanceProfitParticipation = NA,                # Vorweggewinnbeteiligung (%-Satz der Bruttoprämie)
-    advanceProfitParticipationInclUnitCost = NA,    # Vorweggewinnbeteiligung (%-Satz der Prämie mit Zu-/Abschlägen, insbesondere nach Stückkosten)
-    partnerRebate = NA,                # Partnerrabatt auf Prämie mit Zu-/Abschlägen, wenn mehr als 1 Vertrag gleichzeitig abgeschlossen wird, additiv mit advanceBonusInclUnitCost and premiumRebate
-    benefitFrequencyLoading = NA, # TODO: Properly implement this as a function
-    premiumFrequencyLoading = NA  # TODO: Implement this
+    ongoingAlphaGrossPremium = NULL,    # Acquisition cost that increase the gross premium
+    tax = NULL,                         # insurance tax, factor on each premium paid
+    unitcosts = NULL,                   # annual unit cost for each policy (Stückkosten), absolute value
+    security = NULL,                    # Additional security loading on all benefit payments, factor on all benefits
+    noMedicalExam = NULL,               # Loading when no medicial exam is done, % of SumInsured
+    noMedicalExamRelative = NULL,       # Loading when no medicial exam is done, % of gross premium
+    sumRebate = NULL,                   # gross premium reduction for large premiums, % of SumInsured
+    premiumRebate = NULL,               # gross premium reduction for large premiums, % of gross premium # TODO
+    advanceProfitParticipation = NULL,                # Vorweggewinnbeteiligung (%-Satz der Bruttoprämie)
+    advanceProfitParticipationInclUnitCost = NULL,    # Vorweggewinnbeteiligung (%-Satz der Prämie mit Zu-/Abschlägen, insbesondere nach Stückkosten)
+    partnerRebate = NULL,                # Partnerrabatt auf Prämie mit Zu-/Abschlägen, wenn mehr als 1 Vertrag gleichzeitig abgeschlossen wird, additiv mit advanceBonusInclUnitCost and premiumRebate
+    benefitFrequencyLoading = NULL, # TODO: Properly implement this as a function
+    premiumFrequencyLoading = NULL  # TODO: Implement this
   ),
   Features = list(                   # Special cases for the calculations
-    betaGammaInZillmer = NA,      # Whether beta and gamma-costs should be included in the Zillmer premium calculation
-    alphaRefundLinear  = NA        # Whether the refund of alpha-costs on surrender is linear in t or follows the NPV of an annuity
+    betaGammaInZillmer = NULL,      # Whether beta and gamma-costs should be included in the Zillmer premium calculation
+    alphaRefundLinear  = NULL        # Whether the refund of alpha-costs on surrender is linear in t or follows the NPV of an annuity
   )
 );
 
 #' @function InsuranceContract.ParametersFill
 #' @description Initialize the insurance contract parameters from the passed
-#' arguments. Arguments not given are left unchanged. If no existing parameter structure is given, an empty (i.e. all NA entries) structure is used.
-InsuranceContract.ParametersFill = function(params=InsuranceContract.ParameterStructure, ...) {
+#' arguments. Arguments not given are left unchanged. If no existing parameter structure is given, an empty (i.e. all NULL entries) structure is used.
+InsuranceContract.ParametersFill = function(params=InsuranceContract.ParameterStructure, costs=NULL, ...) {
   # params = InsuranceContract.ParameterStructure;
   params$ContractData = fillFields(params$ContractData, list(...));
   params$ContractState = fillFields(params$ContractState, list(...));
@@ -89,7 +112,8 @@ InsuranceContract.ParametersFill = function(params=InsuranceContract.ParameterSt
   params$Features = fillFields(params$Features, list(...));
 
   # Costs are a special case, because they are an array rather than a list:
-  # params$Costs = match.arg(Costs) # TODO!!!!
+  # TODO: Find a way to partially override
+  if (!missing(costs)) params$Costs = costs;
   params
 }
 
@@ -102,6 +126,16 @@ InsuranceContract.ParametersFallback = function(params, fallback) {
   params$Features = fallbackFields(params$Features, fallback$Features);
 
   # Costs are a special case, because they are an array rather than a list:
-  # params$Costs = match.arg(Costs) # TODO!!!! # FIXME
+  # TODO: Find a way to partially fall back
+  if (is.null(params$Costs)) {
+    # Fallback can either be a full
+    if (!is.null(fallback$costs)) {
+      params$Costs = fallback$costs;
+    } else {
+      params$Costs = fallbackCosts;
+    }
+  }
   params
 }
+
+
