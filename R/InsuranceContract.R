@@ -9,6 +9,7 @@ InsuranceContract = R6Class("InsuranceContract",
 
   public = list(
     tarif = NULL,
+
     ContractParameters = InsuranceContract.ParameterStructure, # Only values explicitly given for this contract, not including fallback values from the tariff
     Parameters = InsuranceContract.ParameterStructure,         # The whole parameter set, including values given by the tariff
 
@@ -32,15 +33,19 @@ InsuranceContract = R6Class("InsuranceContract",
       self$tarif = tarif;
 
       # TODO: implement required parameters like contractClosing, etc. Fill those with defaults if not given
-      self$ContractParameters = InsuranceContract.ParametersFill(age=age, policyPeriod=policyPeriod, sumInsured=sumInsured, ..., premiumWaiver = 0, surrenderPenalty = 0, alphaRefunded = 0);
+      self$ContractParameters = InsuranceContract.ParametersFill(age=age, policyPeriod=policyPeriod, sumInsured=sumInsured, ..., premiumWaiver = FALSE, surrenderPenalty = TRUE, alphaRefunded = FALSE);
 # print("Contract parameters: ");str(self$ContractParameters)
 
       # Set default values for required contract-specific data
       if (is.null(self$ContractParameters$ContractData$contractClosing))
-        self$ContractParameters$ContractData$contractClosing = sys.Date();
+        self$ContractParameters$ContractData$contractClosing = Sys.Date();
 
       self$Parameters = InsuranceContract.ParametersFallback(self$ContractParameters, self$tarif$getParameters())
-# print("Contract parameters after fallback: ");str(self$Parameters)
+      ppScheme = self$Parameters$ProfitParticipation$profitParticipationScheme;
+      if (!is.null(ppScheme))
+          self$Parameters = InsuranceContract.ParametersFallback(self$Parameters, ppScheme$Parameters)
+print("Contract parameters after fallback: ");str(self$Parameters)
+print("Profit Participation parameters: ");str(self$Parameters$ProfitParticipation)
 
       self$calculateContract();
     },
@@ -128,10 +133,10 @@ InsuranceContract = R6Class("InsuranceContract",
       self$tarif$premiumDecomposition(params=self$Parameters, values=self$Values);
     },
     premiumCompositionSums = function() {
-      self$tarif$calculateFutureSums(list(self$Values$premiumComposition));
+      self$tarif$calculateFutureSums(self$Values$premiumComposition);
     },
     premiumCompositionPV = function() {
-      self$tarif$calculatePresentValues(list(self$Values$premiumComposition), params=self$Parameters, values=self$Values);
+      self$tarif$calculatePresentValues(self$Values$premiumComposition, params=self$Parameters);
     },
     getBasicDataTimeseries = function() {
       self$tarif$getBasicDataTimeseries(params=self$Parameters, values=self$Values);
@@ -147,14 +152,14 @@ InsuranceContract = R6Class("InsuranceContract",
 
       self$Parameters$ContractData$sumInsured = newSumInsured;
 
-      self$Values$cashFlowsBasic = mergeValues(starting=self$Values$cashFlowsBasic, ending=self$determineCashFlowsBasic(t), t=t);
-      self$Values$cashFlows = mergeValues(starting=self$Values$cashFlows, ending=self$determineCashFlows(t), t=t);
+      self$Values$cashFlowsBasic = mergeValues(starting=self$Values$cashFlowsBasic, ending=self$determineCashFlowsBasic(), t=t);
+      self$Values$cashFlows = mergeValues(starting=self$Values$cashFlows, ending=self$determineCashFlows(), t=t);
       # Premium sum is not affected by premium waivers, i.e. everything depending on the premium sum uses the original premium sum!
       # self$Values$premiumSum = self$determinePremiumSum();
-      self$Values$cashFlowsCosts = mergeValues3D(starting=self$Values$cashFlowsCosts, ending=self$determineCashFlowsCosts(t), t=t);
+      self$Values$cashFlowsCosts = mergeValues3D(starting=self$Values$cashFlowsCosts, ending=self$determineCashFlowsCosts(), t=t);
 
-      pv = self$calculatePresentValues(t);
-      pvc = self$calculatePresentValuesCosts(t);
+      pv = self$calculatePresentValues();
+      pvc = self$calculatePresentValuesCosts();
       self$Values$presentValuesCosts = mergeValues3D(starting=self$Values$presentValuesCosts, ending=pvc, t=t);
 
       # TODO:
@@ -168,11 +173,11 @@ InsuranceContract = R6Class("InsuranceContract",
       pvAllBenefits = self$calculatePresentValuesBenefits()
       self$Values$presentValues = mergeValues(starting=self$Values$presentValues, ending=cbind(pv, pvAllBenefits), t=t);
 
-      self$Values$absCashFlows       = mergeValues(starting=self$Values$absCashFlows,       ending=self$calculateAbsCashFlows(t), t=t);
-      self$Values$absPresentValues   = mergeValues(starting=self$Values$absPresentValues,   ending=self$calculateAbsPresentValues(t), t=t);
-      self$Values$reserves           = mergeValues(starting=self$Values$reserves,           ending=self$calculateReserves(t), t=t);
-      self$Values$basicData          = mergeValues(starting=self$Values$basicData,          ending=self$getBasicDataTimeseries(t), t=t);
-      self$Values$premiumComposition = mergeValues(starting=self$Values$premiumComposition, ending=self$premiumAnalysis(t), t=t);
+      self$Values$absCashFlows       = mergeValues(starting=self$Values$absCashFlows,       ending=self$calculateAbsCashFlows(), t=t);
+      self$Values$absPresentValues   = mergeValues(starting=self$Values$absPresentValues,   ending=self$calculateAbsPresentValues(), t=t);
+      self$Values$reserves           = mergeValues(starting=self$Values$reserves,           ending=self$calculateReserves(), t=t);
+      self$Values$basicData          = mergeValues(starting=self$Values$basicData,          ending=self$getBasicDataTimeseries(), t=t);
+      self$Values$premiumComposition = mergeValues(starting=self$Values$premiumComposition, ending=self$premiumAnalysis(), t=t);
 
       self$addHistorySnapshot(time = t, comment = sprintf("Premium waiver at time %d", t),
                               type = "PremiumWaiver", params = self$Parameters, values = self$Values);

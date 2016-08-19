@@ -27,9 +27,6 @@ InsuranceTarif = R6Class(
       if (!missing(tarif))          self$tarif = tarif;
       if (!missing(desc))           self$desc = desc;
 
-      # TODO: Handle costs
-      # self$costs = if (!missing(costs)) costs else initializeCosts();
-
       # Initialize the parameter structure with default values
       self$Parameters = InsuranceContract.ParametersFill(
         # TODO: Move those defaults to InsuranceParameters.R
@@ -40,6 +37,9 @@ InsuranceTarif = R6Class(
         benefitPayments = "in advance",
         widowProportion = 0,
         deathBenefitProportion = 0,
+
+        premiumFrequency = 1,
+        benefitFrequency = 1,
 
         i = 0,
         premiumFrequencyOrder = 0,
@@ -62,8 +62,6 @@ InsuranceTarif = R6Class(
         noMedicalExamRelative = 0,       # Loading when no medicial exam is done, % of gross premium
         sumRebate = 0,                   # gross premium reduction for large premiums, % of SumInsured
         premiumRebate = 0,               # gross premium reduction for large premiums, % of gross premium # TODO
-        advanceProfitParticipation = 0,                # Vorweggewinnbeteiligung (%-Satz der Bruttoprämie)
-        advanceProfitParticipationInclUnitCost = 0,    # Vorweggewinnbeteiligung (%-Satz der Prämie mit Zu-/Abschlägen, insbesondere nach Stückkosten)
         partnerRebate = 0,
 
         betaGammaInZillmer = FALSE,      # Whether beta and gamma-costs should be included in the Zillmer premium calculation
@@ -71,6 +69,12 @@ InsuranceTarif = R6Class(
       );
       # Apply the passed arguments to the tariff parameters
       self$Parameters = InsuranceContract.ParametersFill(self$Parameters, ...)
+
+      # Use the profit participation's parameters as fallback, too
+      ppScheme = self$Parameters$ProfitParticipation$profitParticipationScheme;
+      if (!is.null(ppScheme)) {
+          self$Parameters = InsuranceContract.ParametersFallback(self$Parameters, ppScheme$Parameters)
+      }
 
       cat(paste0("Initializing Insurance Tarif ", self$name, "...\n"));
 print("InsuranceTariff Default Parameters:");
@@ -94,8 +98,6 @@ str(self$Parameters);
     },
 
     getAges = function(params) {
-# print("getAges");
-# str(params$ActuarialBases$mortalityTable);
       ages = ages(params$ActuarialBases$mortalityTable, YOB = params$ContractData$YOB);
       age = params$ContractData$age;
       if (age > 0) {
@@ -105,8 +107,6 @@ str(self$Parameters);
     },
 
     getTransitionProbabilities = function(params) {
-# print("getTransitionProbabilities");
-# str(params$ActuarialBases);
       age = params$ContractData$age;
       ages = self$getAges(params);
       q = deathProbabilities(params$ActuarialBases$mortalityTable, YOB = params$ContractData$YOB);
@@ -269,7 +269,7 @@ str(self$Parameters);
       ix = pad0(qq$i, len);
       px = pad0(qq$p, len);
 
-      i = params$ActurialBases$i;
+      i = params$ActuarialBases$i;
       v = 1/(1+i);
       benefitFreqCorr = correctionPaymentFrequency(
             m = params$ContractData$benefitFrequency, i = i,
@@ -383,7 +383,7 @@ str(self$Parameters);
       pv[,"death_SumInsured"] = pv[,"death_SumInsured"] + pv[,"death_GrossPremium"]
       colnames(pv)[colnames(pv)=="death_SumInsured"] = "death";
 
-      cbind("premiums.unit"=presentValues[,"premiums"], pv)
+      cbind("premiums.unit" = values$presentValues[,"premiums"], pv)
     },
 
 
@@ -453,8 +453,8 @@ str(self$Parameters);
           coeff[["SumInsured"]][["costs"]]["gamma", "SumInsured"] = 1;
           coeff[["SumInsured"]][["costs"]]["beta",  "SumPremiums"] = values$unitPremiumSum * premiums[["unit.gross"]];
           coeff[["SumInsured"]][["costs"]]["gamma", "SumPremiums"] = values$unitPremiumSum * premiums[["unit.gross"]];
-          coeff[["SumInsured"]][["costs"]]["beta",  "GrossPremium"] = values$premiums[["unit.gross"]];
-          coeff[["SumInsured"]][["costs"]]["gamma", "GrossPremium"] = values$premiums[["unit.gross"]];
+          coeff[["SumInsured"]][["costs"]]["beta",  "GrossPremium"] = premiums[["unit.gross"]];
+          coeff[["SumInsured"]][["costs"]]["gamma", "GrossPremium"] = premiums[["unit.gross"]];
         }
       }
 
@@ -469,21 +469,21 @@ str(self$Parameters);
       coefficients = list("gross"=c(), "Zillmer"=c(), "net"=c());
 
       # net, gross and Zillmer premiums are calculated from the present values using the coefficients on each present value as described in the formulas document
-      coeff=self$getPremiumCoefficients("gross", values$presentValues["0",]*0, values$presentValuesCosts["0",,]*0, premiums=premiums, params)
+      coeff=self$getPremiumCoefficients("gross", values$presentValues["0",]*0, values$presentValuesCosts["0",,]*0, premiums=premiums, params=params, values=values)
       enumerator  = sum(coeff[["SumInsured"]][["benefits"]] * values$presentValues["0",]) + sum(coeff[["SumInsured"]][["costs"]] * values$presentValuesCosts["0",,]);
       denominator = sum(coeff[["Premium"   ]][["benefits"]] * values$presentValues["0",]) + sum(coeff[["Premium"   ]][["costs"]] * values$presentValuesCosts["0",,]);
       premiums[["unit.gross"]] = enumerator/denominator * (1 + loadings$ongoingAlphaGrossPremium);
       premiums[["gross"]] = premiums[["unit.gross"]] * sumInsured;
       coefficients[["gross"]] = coeff;
 
-      coeff=self$getPremiumCoefficients("net", values$presentValues["0",]*0, values$presentValuesCosts["0",,]*0, premiums=premiums, params)
+      coeff=self$getPremiumCoefficients("net", values$presentValues["0",]*0, values$presentValuesCosts["0",,]*0, premiums=premiums, params=params, values=values)
       enumerator  = sum(coeff[["SumInsured"]][["benefits"]] * values$presentValues["0",]) + sum(coeff[["SumInsured"]][["costs"]] * values$presentValuesCosts["0",,]);
       denominator = sum(coeff[["Premium"   ]][["benefits"]] * values$presentValues["0",]) + sum(coeff[["Premium"   ]][["costs"]] * values$presentValuesCosts["0",,]);
       premiums[["unit.net"]] = enumerator/denominator;
       premiums[["net"]] = premiums[["unit.net"]] * sumInsured;
       coefficients[["net"]] = coeff;
 
-      coeff=self$getPremiumCoefficients("Zillmer", values$presentValues["0",]*0, values$presentValuesCosts["0",,]*0, premiums=premiums, params)
+      coeff=self$getPremiumCoefficients("Zillmer", values$presentValues["0",]*0, values$presentValuesCosts["0",,]*0, premiums=premiums, params=params, values=values);
       enumerator  = sum(coeff[["SumInsured"]][["benefits"]] * values$presentValues["0",]) + sum(coeff[["SumInsured"]][["costs"]] * values$presentValuesCosts["0",,]);
       denominator = sum(coeff[["Premium"   ]][["benefits"]] * values$presentValues["0",]) + sum(coeff[["Premium"   ]][["costs"]] * values$presentValuesCosts["0",,]);
       premiums[["unit.Zillmer"]] = enumerator/denominator;
@@ -492,17 +492,28 @@ str(self$Parameters);
 
 
       # The written premium is the gross premium with additional loadings, rebates, unit costs and taxes
-      tax           = valueOrFunction(loadings$tax,          sumInsured=sumInsured, premiums=premiums);
-      unitCosts     = valueOrFunction(loadings$unitcosts,    sumInsured=sumInsured, premiums=premiums);
-      noMedicalExam = valueOrFunction(loadings$noMedicalExam,sumInsured=sumInsured, premiums=premiums);
-      noMedicalExam.relative = valueOrFunction(loadings$noMedicalExamRelative,sumInsured=sumInsured, premiums=premiums);
-      sumRebate     = valueOrFunction(loadings$sumRebate,    sumInsured=sumInsured, premiums=premiums);
-      premiumRebate = valueOrFunction(loadings$premiumRebate,sumInsured=sumInsured, premiums=premiums);
-      advanceProfitParticipation = valueOrFunction(loadings$advanceProfitParticipation,sumInsured=sumInsured, premiums=premiums);
-      advanceProfitParticipationUnitCosts = valueOrFunction(loadings$advanceProfitParticipationInclUnitCost, sumInsured=sumInsured, premiums=premiums);
-      partnerRebate = valueOrFunction(loadings$partnerRebate,sumInsured=sumInsured, premiums=premiums);
+      tax           = valueOrFunction(loadings$tax,          params=params, values=values);
+      unitCosts     = valueOrFunction(loadings$unitcosts,    params=params, values=values);
+      noMedicalExam = valueOrFunction(loadings$noMedicalExam,params=params, values=values);
+      noMedicalExam.relative = valueOrFunction(loadings$noMedicalExamRelative,params=params, values=values);
+      sumRebate     = valueOrFunction(loadings$sumRebate,    params=params, values=values);
+      premiumRebate = valueOrFunction(loadings$premiumRebate,params=params, values=values);
+      advanceProfitParticipation = 0;
+      advanceProfitParticipationUnitCosts = 0;
+      ppScheme      = params$ProfitParticipation$profitParticipationScheme;
+      if (!is.null(ppScheme)) {
+          advanceProfitParticipation = ppScheme$getAdvanceProfitParticipation(params = params, values=values)
+          advanceProfitParticipationUnitCosts = ppScheme$getAdvanceProfitParticipationAfterUnitCosts(params = params, values=values)
+      }
+      if (is.null(advanceProfitParticipation)) advanceProfitParticipation=0;
+      if (is.null(advanceProfitParticipationUnitCosts)) advanceProfitParticipationUnitCosts=0;
 
-      frequencyLoading = valueOrFunction(loadings$premiumFrequencyLoading, sumInsured=sumInsured, premiums=premiums);
+      partnerRebate = valueOrFunction(loadings$partnerRebate,params=params, values=values);
+print("Profit participation (advance): "); str(advanceProfitParticipation);
+print("Profit participation (advance) after UnitCosts: "); str(advanceProfitParticipationUnitCosts);
+print("Contract params (ProfitParticipation: "); str(params$ProfitParticipation);
+
+      frequencyLoading = valueOrFunction(loadings$premiumFrequencyLoading, params=params, values=values);
 
       premiumBeforeTax = (premiums[["unit.gross"]]*(1+noMedicalExam.relative) + noMedicalExam - sumRebate)*sumInsured * (1-advanceProfitParticipation) + unitCosts;
       premiumBeforeTax = premiumBeforeTax * (1-premiumRebate-advanceProfitParticipationUnitCosts-partnerRebate);
@@ -516,6 +527,7 @@ str(self$Parameters);
 
     reserveCalculation = function (params, values) {
       securityFactor = (1 + params$Loadings$security);
+      ppScheme      = params$ProfitParticipation$profitParticipationScheme;
 
       # Net, Zillmer and Gross reserves
       resNet = values$absPresentValues[,"benefitsAndRefund"] * securityFactor - values$premiums[["net"]] * values$absPresentValues[,"premiums.unit"];
@@ -529,8 +541,11 @@ str(self$Parameters);
       #values$premiums[["Zillmer"]] * values$absPresentValues[,"premiums"];
       resGamma = values$absPresentValues[,"gamma"] - values$absPresentValues["0", "gamma"] / values$absPresentValues["0", "premiums"] * values$absPresentValues[,"premiums"]
 
-
-      resConversion = (resZ + resGamma) * (1 - params$Loadings$advanceProfitParticipation);
+      advanceProfitParticipation = 0;
+      if (!is.null(ppScheme)) {
+          advanceProfitParticipation = ppScheme$getAdvanceProfitParticipation(params = params, values=values)
+      }
+      resConversion = (resZ + resGamma) * (1 - advanceProfitParticipation);
 
       # Alpha refund: Distribute alpha-costs to 5 year (or if shorter, the policy period):
       r = min(params$ContractData$policyPeriod, 5);
@@ -569,13 +584,18 @@ str(self$Parameters);
       # here in the tarif and call that, passing the reduction reserve as
       # starting point, but also all reserves, cash flows, premiums and present values
       if (!params$ContractState$surrenderPenalty) {
-        # No surrender penalty any more (has already been applied to the first contract change!)
-        surrenderValue = resReduction;
+          # No surrender penalty any more (has already been applied to the first contract change!)
+          surrenderValue = resReduction;
       } else if (!is.null(params$ActuarialBases$surrenderValueCalculation)) {
-        surrenderValue = params$ActuarialBases$surrenderValueCalculation(resReduction, params, values);
+          surrenderValue = params$ActuarialBases$surrenderValueCalculation(resReduction, params, values);
       } else {
-        # by default, refund the full reduction reserve, except the advance profit participation, which is also included in the reserve, but not charged on the premium!
-        surrenderValue = resReduction * (1-params$Loadings$advanceProfitParticipationInclUnitCost);
+          # by default, refund the full reduction reserve, except the advance profit participation, which is also included in the reserve, but not charged on the premium!
+          advanceProfitParticipationUnitCosts = 0;
+          ppScheme      = params$ProfitParticipation$profitParticipationScheme;
+          if (!is.null(ppScheme)) {
+              advanceProfitParticipationUnitCosts = ppScheme$getAdvanceProfitParticipationAfterUnitCosts(params = params, values=values)
+          }
+          surrenderValue = resReduction * (1 - advanceProfitParticipationUnitCosts);
       }
 
 
@@ -650,11 +670,12 @@ str(self$Parameters);
     },
 
     premiumDecomposition = function(params, values) {
-      loadings = params$Loadings;
+      loadings   = params$Loadings;
       sumInsured = params$ContractData$sumInsured;
-      premiums = values$premiums;
-      v = 1/(1+params$ActuarialBases$i);
-      l = dim(values$reserves)[[1]];
+      premiums   = values$premiums;
+      v          = 1/(1+params$ActuarialBases$i);
+      l          = dim(values$reserves)[[1]];
+      ppScheme   = params$ProfitParticipation$profitParticipationScheme;
 
       # TODO: This assumes all premiums are paid in advance!
       premium.gross    = values$absCashFlows[,"premiums_advance"];
@@ -662,39 +683,45 @@ str(self$Parameters);
       # First get the charges and rebates that are added to the gross premium to obtain the charged premium:
 
       # charge for no medical exam:
-      noMedExam        = valueOrFunction(loadings$noMedicalExam,sumInsured=sumInsured, premiums=premiums);
-      noMedExam.rel    = valueOrFunction(loadings$noMedicalExamRelative,sumInsured=sumInsured, premiums=premiums);
+      noMedExam        = valueOrFunction(loadings$noMedicalExam,params=params, values=values);
+      noMedExam.rel    = valueOrFunction(loadings$noMedicalExamRelative,params=params, values=values);
       withMedExam      = premium.gross * (1+noMedExam.rel) + noMedExam*sumInsured;
       charge.noMedicalExam = withMedExam - premium.gross;
 
       # sum rebate:
-      sumRebate        = valueOrFunction(loadings$sumRebate,    sumInsured=sumInsured, premiums=premiums);
+      sumRebate        = valueOrFunction(loadings$sumRebate,    params=params, values=values);
       afterSumRebate   = withMedExam - sumRebate * sumInsured; # calculate the charge as the difference, because we want a vector!
       rebate.sum       = afterSumRebate - withMedExam;
 
       # advance profit participation has two parts, one before and one after unit costs. Part 1:
-      advanceProfitParticipation = valueOrFunction(loadings$advanceProfitParticipation,sumInsured=sumInsured, premiums=premiums);
+      advanceProfitParticipation = 0;
+      if (!is.null(ppScheme)) {
+          advanceProfitParticipation = ppScheme$getAdvanceProfitParticipation(params = params, values=values)
+      }
       afterProfit      = afterSumRebate * (1+advanceProfitParticipation);
       profits.advance  = afterProfit - afterSumRebate;
 
       # unit costs
-      unitCosts        = valueOrFunction(loadings$unitcosts,    sumInsured=sumInsured, premiums=premiums);
+      unitCosts        = valueOrFunction(loadings$unitcosts,    params=params, values=values);
       # unit costs are only charged if a premium is paid, so exclude all times with premium==0!
       afterUnitCosts   = afterProfit + (afterProfit!=0)*unitCosts;
       unitcosts        = afterUnitCosts - afterProfit;
 
       # advance profit participation, Part 2:
-      advanceProfitParticipationUnitCosts = valueOrFunction(loadings$advanceProfitParticipationInclUnitCost, sumInsured=sumInsured, premiums=premiums);
-      afterProfit      = afterUnitCosts * (1-advanceProfitParticipationUnitCosts);
+      advanceProfitParticipationUnitCosts = 0;
+      if (!is.null(ppScheme)) {
+          advanceProfitParticipationUnitCosts = ppScheme$getAdvanceProfitParticipationAfterUnitCosts(params = params, values=values)
+      }
+      afterProfit      = afterUnitCosts * (1 - advanceProfitParticipationUnitCosts);
       profits.advance  = profits.advance + afterProfit - afterUnitCosts;
 
       # premium rebate
-      premiumRebate    = valueOrFunction(loadings$premiumRebate,sumInsured=sumInsured, premiums=premiums);
+      premiumRebate    = valueOrFunction(loadings$premiumRebate,params=params, values=values);
       afterPremiumRebate = afterUnitCosts * (1-premiumRebate);
       rebate.premium   = afterPremiumRebate - afterUnitCosts;
 
       # partner rebate
-      partnerRebate    = valueOrFunction(loadings$partnerRebate,sumInsured=sumInsured, premiums=premiums);
+      partnerRebate    = valueOrFunction(loadings$partnerRebate,params=params, values=values);
       afterPartnerRebate = afterUnitCosts * (1-partnerRebate);
       rebate.partner   = afterPartnerRebate - afterUnitCosts;
 
@@ -702,12 +729,12 @@ str(self$Parameters);
       afterRebates     = afterProfit + rebate.premium + rebate.partner;
 
       # premium frequency loading
-      frequencyLoading = valueOrFunction(params$Loadings$premiumFrequencyLoading, sumInsured=sumInsured, premiums=premiums);
+      frequencyLoading = valueOrFunction(params$Loadings$premiumFrequencyLoading, params=params, values=values);
       afterFrequency   = afterRebates * (1 + frequencyLoading[[toString(params$ContractData$premiumFrequency)]]);
       charge.frequency = afterFrequency - afterRebates;
 
       # insurance tax
-      taxRate          = valueOrFunction(loadings$tax,          sumInsured=sumInsured, premiums=premiums);
+      taxRate          = valueOrFunction(loadings$tax,          params=params, values=values);
       premium.charged  = afterFrequency * (1+taxRate);
       tax              = premium.charged - afterFrequency;
 

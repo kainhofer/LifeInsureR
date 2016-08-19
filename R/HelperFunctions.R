@@ -15,7 +15,6 @@ calculatePVSurvival = function(px=1-qx, qx=1-px, advance, arrears=c(0), ..., m=1
   # assuming advance and arrears have the same dimensions...
   init = advance[1]*0;
   l = max(length(qx), length(advance), length(arrears));
-  q = pad0(qx, l, value=1);
   p = pad0(px, l, value=0);
   advance = pad0(advance, l, value=init);
   arrears = pad0(arrears, l, value=init);
