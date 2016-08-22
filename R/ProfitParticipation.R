@@ -53,38 +53,94 @@ ProfitParticipation = R6Class(
         valueOrFunction(params$ProfitParticipation$advanceProfitParticipationInclUnitCost, params, values, ...)
     },
 
+    getInterestProfitBase = function (params, values) {
+        c(0, diff(values$reserves[,"contractual"])/2)
+    },
+    getRiskProfitBase = function (params, values) {
+        values$premiumComposition[,"Zillmer.Risk"]
+    },
+    getCostProfitBase = function (params, values) {
+        params$ContractData$sumInsured
+    },
+    getSumProfitBase = function (params, values) {
+        params$ContractData$sumInsured
+    },
+
+    getInterestProfitRate = function (rates, params, values) {
+        rates$interest
+    },
+    getRiskProfitRate = function (rates, params, values) {
+        rates$risk
+    },
+    getCostProfitRate = function (rates, params, values) {
+        rates$cost
+    },
+    getSumProfitRate = function (rates, params, values) {
+        rates$sum
+    },
+
+
+    getInterestRateProfits = function (rates, params, values) {
+        rates$totalInterest
+    },
+
+
+    calculateTerminalBonus = function(t=1, bonusPrevious, profits) {
+        # TODO
+    },
 
 
 
-#
-#     getProfitParticipation = function(...,
-#       guaranteedInterest = 0,
-#       interestBonusRate = totalInterest - guaranteedInterest,
-#       totalInterest = guaranteedInterest + interestProfitRate,
-#       mortalityBonusRate = c(0),
-#       costBonusRate = c(0),
-#       terminalBonusRate = c(0),
-#       reserves = c(),
-#       premiums = c(),
-#       sumInsured = 0
-#     ) {
-#       if (missing(interestProfitRate) && missing(totalInterest)) {
-#         # If neither total interest nor interest profit rate is given, set interest profit to 0.
-#         # In all other cases, one can be calculated from the other
-#         interestProfitRate = c(0);
-#         totalInterest = c(guaranteedInterest);
-#       }
-#
-#       # TODO
-#
-#       profit=data.frame()
-#     },
-#
-#     InterestOnProfit = function(t, reserve, ..., )
+    getProfitParticipation = function(rates, params, values) {
+
+        intBase  = self$getInterestProfitBase(params=params, values=values);
+        riskBase = self$getRiskProfitBase(params=params, values=values);
+        costBase = self$getCostProfitBase(params=params, values=values);
+        sumBase  = self$getSumProfitBase(params=params, values=values);
+
+        intRate  = self$getInterestRate(rates, params=params, values=values);
+        riskRate = self$getRiskRate(rates, params=params, values=values);
+        costRate = self$getCostRate(rates, params=params, values=values);
+        sumRate  = self$getSumRate(rates, params=params, values=values);
+
+        intProfit  = intBase  * intRate;
+        riskProfit = riskBase * riskRate;
+        costProfit = costBase * costRate;
+        sumProfit  = sumBase  * sumRate;
+
+        interestOnProfitRate = self$getInterestRateProfits(rates, params=params, values=values);
+
+        res = cbind(
+            "previousProfit"   = c(0),
+            "interestProfit"   = intProfit,
+            "riskProfit"       = riskProfit,
+            "costProfit"       = costProfit,
+            "sumProfit"        = sumProfit,
+            "interestOnProfit" = interestOnProfitRate,
+            "totalProfit"      = intProfit + riskProfit + costProfit + sumProfit, # Temp value! Will be overwritten
+            "terminalBonus"    = c(0),
+
+            # All benefits are calculated for the already earned profits
+            # survival benefits represent the value at time n when the contract ends
+            "deathBenefit"     = c(0), # TODO
+            "survivalBenefit"  = c(0), # TODO
+            "surrenderValue"   = c(0)  # TODO
+        );
+        prev=0;
+        for (i in 1:nrow(res)) {
+            res[i,"previousProfit"]   = prev;
+            res[i,"interestOnProfit"] = res[i,"interestOnProfit"] * prev;
+            # The totalProfit is initialized with all profits of the current year!
+            res[i,"totalProfit"]      = prev + res[i,"totalProfit"] + res[i,"interestOnProfit"];
+            res[i,"terminalBonus"]    = self$calculateTerminalBonus(t=i, bonusPrevious=res[i-1,"terminalBonus"], profits=res[i,])
+        }
+
+        res
+    },
 
 
 
-    # Dummy to allow commas
+   # Dummy to allow commas
     dummy = 0
   )
 );

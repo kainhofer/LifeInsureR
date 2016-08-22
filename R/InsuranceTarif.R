@@ -348,10 +348,14 @@ str(self$Parameters);
 
       # TODO: Set up a nice list with coefficients for each type of cashflow, rather than multiplying each item manually (this also mitigates the risk of forgetting a dimension, because then the dimensions would not match, while here it's easy to overlook a multiplication)
       # Multiply each CF column by the corresponding basis
-      values$cashFlows[,c("premiums_advance", "premiums_arrears")] = values$cashFlows[,c("premiums_advance", "premiums_arrears")] * values$premiums[["gross"]];
-      values$cashFlows[,c("guaranteed_advance", "guaranteed_arrears", "survival_advance", "survival_arrears", "death_SumInsured", "death_PremiumFree", "disease_SumInsured")] =
-        values$cashFlows[,c("guaranteed_advance", "guaranteed_arrears", "survival_advance", "survival_arrears", "death_SumInsured", "death_PremiumFree", "disease_SumInsured")] * params$ContractData$sumInsured;
-      values$cashFlows[,c("death_GrossPremium", "death_Refund_past")] = values$cashFlows[,c("death_GrossPremium","death_Refund_past")] * values$premiums[["gross"]] * params$ContractData$premiumRefund;
+        propGP = c("premiums_advance", "premiums_arrears");
+        propSI = c("guaranteed_advance", "guaranteed_arrears",
+                   "survival_advance", "survival_arrears", "death_SumInsured",
+                   "death_PremiumFree", "disease_SumInsured");
+        propPS = c("death_GrossPremium", "death_Refund_past");
+      values$cashFlows[,propGP] = values$cashFlows[,propGP] * values$premiums[["gross"]];
+      values$cashFlows[,propSI] = values$cashFlows[,cpropSI] * params$ContractData$sumInsured;
+      values$cashFlows[,propPS] = values$cashFlows[,propPS] * values$premiums[["gross"]] * params$ContractData$premiumRefund;
 
       # Sum all death-related payments to "death"  and remove the death_GrossPremium column
       values$cashFlows[,"death_SumInsured"] = values$cashFlows[,"death_SumInsured"] + values$cashFlows[,"death_GrossPremium"]
@@ -462,7 +466,6 @@ str(self$Parameters);
     },
 
     premiumCalculation = function(params, values) {
-
       loadings = params$Loadings;
       sumInsured = params$ContractData$sumInsured
       premiums = c("unit.net" = 0, "unit.Zillmer" = 0, "unit.gross"= 0, "net" = 0, "Zillmer" = 0, "gross" = 0, "written" = 0);
@@ -651,6 +654,31 @@ print("Contract params (ProfitParticipation: "); str(params$ProfitParticipation)
       rownames(res) <- rownames(reserves);
       res
     },
+
+    determineProfitRates = function (params, values) {
+        startYear = year(params$ContractData$contractClosing);
+        policyPeriod = params$ContractData$policyPeriod;
+        years = startYear:(startYear+policyPeriod);
+
+
+    },
+
+
+    profitParticipation = function(params, values) {
+        rates = self$determineProfitRates(params, values);
+        self$calculateProfitParticipation(rates, params, values)
+    },
+
+    calculateProfitParticipation = function(rates, params, values) {
+        if (!is.null(params$ProfitParticipation$profitParticipationScheme)) {
+            params$ProfitParticipation$profitParticipationScheme$getProfitParticipation(rates, params=params, values=values)
+        }
+    },
+
+    reservesWithProfit = function(params, values) {
+        # TODO
+    },
+
 
     getBasicDataTimeseries = function(params, values) {
       res=cbind(

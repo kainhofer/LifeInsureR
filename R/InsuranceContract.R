@@ -5,7 +5,8 @@ library(ValuationTables);
 #' @include HelperFunctions.R
 #' @include InsuranceTarif.R
 
-InsuranceContract = R6Class("InsuranceContract",
+InsuranceContract = R6Class(
+    "InsuranceContract",
 
   public = list(
     tarif = NULL,
@@ -85,6 +86,9 @@ print("Profit Participation parameters: ");str(self$Parameters$ProfitParticipati
       self$Values$premiumCompositionSums = self$premiumCompositionSums();
       self$Values$premiumCompositionPV = self$premiumCompositionPV();
 
+      # self$Values$profitParticipation = self$profitParticipation();
+      # self$Values$reservesInclProfit = self$calculateReservesWithProfit();
+
       self$addHistorySnapshot(0, "Initial contract values", type = "Contract", params = self$Parameters, values = self$Values);
     },
 
@@ -138,6 +142,19 @@ print("Profit Participation parameters: ");str(self$Parameters$ProfitParticipati
     premiumCompositionPV = function() {
       self$tarif$calculatePresentValues(self$Values$premiumComposition, params=self$Parameters);
     },
+
+    profitParticipationRates = function() {
+        self$tarif$profitParticipationRates(params=self$Parameters, values=self$Values);
+    },
+
+    profitParticipation = function(rates) {
+        self$tarif$profitParticipation(rates=rates, params=self$Parameters, values=self$Values);
+    },
+    calculateReservesWithProfit = function() {
+        self$tarif$reservesWithProfit(params=self$Parameters, values=self$Values);
+    },
+
+
     getBasicDataTimeseries = function() {
       self$tarif$getBasicDataTimeseries(params=self$Parameters, values=self$Values);
     },
