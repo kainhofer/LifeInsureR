@@ -248,8 +248,10 @@ exportInsuranceContract.xlsx = function(contract, filename) {
     "Premium period"      = contract$Parameters$ContractData$premiumPeriod,
     "Deferral period"     = contract$Parameters$ContractData$deferralPeriod,
     "Guaranteed payments" = contract$Parameters$ContractData$guaranteed,
-    i                     = contract$ActuarialBases$ContractData$i
+    i                     = contract$Parameters$ActuarialBases$i
   );
+  # Some types of tables don't need the birth year -> leave it out rather than throwing an error on opening in Excel!
+  if (is.null(values["YOB"])) values["YOB"] = NULL;
 
   writeData(wb, sheet, "Basisdaten des Vertrags und Tarifs", startCol=1, startRow=crow);
   mergeCells(wb, sheet, cols=1:length(values), rows=crow:crow);
@@ -261,7 +263,7 @@ exportInsuranceContract.xlsx = function(contract, filename) {
 
   # Premiums
   writeData(wb, sheet, "Prämien", startCol=1, startRow=crow);
-  mergeCells(wb, sheet, cols=1:length(contract$values$premiums), rows=crow:crow);
+  mergeCells(wb, sheet, cols=1:length(contract$Values$premiums), rows=crow:crow);
   writeDataTable(wb, sheet, setInsuranceValuesLabels(as.data.frame(t(contract$Values$premiums))),
                  startCol=1, startRow=crow+1, colNames=TRUE, rowNames=FALSE,
                  tableStyle="TableStyleMedium3", withFilter = FALSE, headerStyle = styles$tableHeader);

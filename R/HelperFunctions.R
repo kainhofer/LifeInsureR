@@ -158,21 +158,23 @@ valueOrFunction = function(val, ...) {
 
 
 
-#' @function fillFields(fields, valuelist)
-#' @description Overwrite all existing fields in the first argument with
-#' values given in valuelist. Members of valuelist that are not yet in
-#' fields are ignored. This allows a huge valuelist to be used to fill
-#' fields in multiple lists with given structure.
+# fillFields(fields, valuelist)
+#
+# Overwrite all existing fields in the first argument with
+# values given in valuelist. Members of valuelist that are not yet in
+# fields are ignored. This allows a huge valuelist to be used to fill
+# fields in multiple lists with given structure.
 fillFields = function (fields, valuelist) {
   fieldsToInsert = intersect(names(fields), names(valuelist));
   fields[fieldsToInsert] = valuelist[fieldsToInsert]
   fields
 }
 
-#' @function fallbackFields(fields, fallback)
-#' @description Replace all missing values in fields (either missing or NA) with
-#' their corresponding values from fallback. Members in fallback that are missing
-#' in fields are inserted
+# fallbackFields(fields, fallback)
+#
+# Replace all missing values in fields (either missing or NA) with
+# their corresponding values from fallback. Members in fallback that are missing
+# in fields are inserted
 fallbackFields = function (fields, valuelist) {
   keepFields = !sapply(fields, is.null);
   # We need to set all fields of valuelist, except those that are NOT NA in fields:
@@ -181,4 +183,4 @@ fallbackFields = function (fields, valuelist) {
   fields
 }
 
-
+# extractProfitRates = function(rates, )

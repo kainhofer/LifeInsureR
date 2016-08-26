@@ -1,3 +1,7 @@
+# @include
+
+
+
 # Initialize a cost matrix with dimensions: [CostType, Basis, Period], with:
 #     CostType: alpha, Zillmer, beta, gamma, gamma_nopremiums
 #     Basis:    SumInsured, SumPremiums, GrossPremium
@@ -89,6 +93,7 @@ InsuranceContract.ParameterStructure = list(
     sumRebate = NULL,                   # gross premium reduction for large premiums, % of SumInsured
     premiumRebate = NULL,               # gross premium reduction for large premiums, % of gross premium # TODO
     partnerRebate = NULL,                # Partnerrabatt auf Prämie mit Zu-/Abschlägen, wenn mehr als 1 Vertrag gleichzeitig abgeschlossen wird, additiv mit advanceBonusInclUnitCost and premiumRebate
+    extraChargeGrossPremium = NULL,     # extra charges on gross premium (smoker, leisure activities, BMI too high, etc.)
     benefitFrequencyLoading = NULL, # TODO: Properly implement this as a function
     premiumFrequencyLoading = NULL  # TODO: Implement this
   ),
@@ -113,9 +118,11 @@ InsuranceContract.ParameterStructure = list(
   )
 );
 
-#' @function InsuranceContract.ParametersFill
-#' @description Initialize the insurance contract parameters from the passed
-#' arguments. Arguments not given are left unchanged. If no existing parameter structure is given, an empty (i.e. all NULL entries) structure is used.
+# InsuranceContract.ParametersFill
+# Initialize the insurance contract parameters from the passed
+# arguments. Arguments not given are left unchanged. If no existing parameter
+# structure is given, an empty (i.e. all NULL entries) structure is used.
+#
 InsuranceContract.ParametersFill = function(params=InsuranceContract.ParameterStructure, costs=NULL, ...) {
     # params = InsuranceContract.ParameterStructure;
     params$ContractData = fillFields(params$ContractData, list(...));

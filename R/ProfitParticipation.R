@@ -1,4 +1,9 @@
-library(R6)
+#' @include HelperFunctions.R InsuranceParameters.R
+#'
+#' @import R6
+NULL
+
+# library(R6)
 
 # base class for Profit Participation schemes  (holding contract-independent values and
 # providing methods to calculate the profit participation values from the given
@@ -7,7 +12,7 @@ ProfitParticipation = R6Class(
   "ProfitParticipation",
   public  = list(
     name  = "Name des Gewinnplans",
-    Parameters = ProfitParticipation.ParameterStructure,
+    Parameters = InsuranceContract.ParameterStructure$ProfitParticipation,
 
 
     initialize = function(name = NULL, ...) {

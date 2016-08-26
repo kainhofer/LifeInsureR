@@ -45,8 +45,8 @@ InsuranceContract = R6Class(
       ppScheme = self$Parameters$ProfitParticipation$profitParticipationScheme;
       if (!is.null(ppScheme))
           self$Parameters = InsuranceContract.ParametersFallback(self$Parameters, ppScheme$Parameters)
-print("Contract parameters after fallback: ");str(self$Parameters)
-print("Profit Participation parameters: ");str(self$Parameters$ProfitParticipation)
+
+      self$Parameters$Costs = self$evaluateCosts(self$Parameters$Costs)
 
       self$calculateContract();
     },
@@ -55,6 +55,11 @@ print("Profit Participation parameters: ");str(self$Parameters$ProfitParticipati
       self$history = rbind(self$history,
                        list(time=list("time" = time, "comment" = comment, "type" = type, "params" = params, "values" = values)));
     },
+
+    evaluateCosts = function(costs) {
+        self$tarif$getCostValues(costs, params=self$Parameters);
+    },
+
 
     calculateContract = function() {
       self$Values$transitionProbabilities = self$determineTransitionProbabilities();

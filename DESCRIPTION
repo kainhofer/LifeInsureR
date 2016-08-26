@@ -14,12 +14,11 @@ Depends:
     lubridate
 Description: TODO
 License: GPL (>= 2)
+RoxygenNote: 5.0.1
 Collate:
     'HelperFunctions.R'
+    'InsuranceParameters.R'
     'InsuranceTarif.R'
     'InsuranceContract.R'
-    'Planning_Parameter_Structure.R'
     'ProfitParticipation.R'
-    'dummy.R'
     'exportInsuranceContract_xlsx.R'
-RoxygenNote: 5.0.1

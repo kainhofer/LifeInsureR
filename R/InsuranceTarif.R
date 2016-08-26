@@ -1,8 +1,15 @@
-#' @include HelperFunctions.R
-library(R6)
+#' @include HelperFunctions.R InsuranceParameters.R
+#'
+#' @import ValuationTables
+#' @import R6
+#' @import lubridate
+NULL
+
+# library(R6)
 # library(lifecontingencies)
-library(objectProperties)
-library(lubridate)
+# library(objectProperties)
+# library(lubridate)
+
 
 TariffTypeEnum = setSingleEnum("TariffType", levels = c("annuity", "wholelife", "endowment", "pureendowment", "terme-fix", "dread-disease"))
 
@@ -58,6 +65,7 @@ InsuranceTarif = R6Class(
         tax = 0.04,                      # insurance tax, factor on each premium paid
         unitcosts = 0,                   # annual unit cost for each policy (Stückkosten), absolute value
         security = 0,                    # Additional security loading on all benefit payments, factor on all benefits
+        extraChargeGrossPremium = 0,
         noMedicalExam = 0,               # Loading when no medicial exam is done, % of SumInsured
         noMedicalExamRelative = 0,       # Loading when no medicial exam is done, % of gross premium
         sumRebate = 0,                   # gross premium reduction for large premiums, % of SumInsured
@@ -124,6 +132,10 @@ str(self$Parameters);
       i = pad0(i, length(q));
       df = data.frame(age=ages, q=q, i=i, p=1-q-i, row.names = ages-age)
       df
+    },
+
+    getCostValues = function(costs, params) {
+        valueOrFunction(costs, params=params, values=NULL)
     },
 
     getBasicCashFlows = function(params) {
@@ -277,7 +289,7 @@ str(self$Parameters);
       premiumFreqCorr = correctionPaymentFrequency(
             m = params$ContractData$premiumFrequency, i = i,
             order = params$ActuarialBases$premiumFrequencyOrder);
-
+print("premiumFreqCorr: "); str(premiumFreqCorr);
       pvRefund = calculatePVDeath (
             px, qx,
             values$cashFlows$death_GrossPremium,
@@ -354,7 +366,7 @@ str(self$Parameters);
                    "death_PremiumFree", "disease_SumInsured");
         propPS = c("death_GrossPremium", "death_Refund_past");
       values$cashFlows[,propGP] = values$cashFlows[,propGP] * values$premiums[["gross"]];
-      values$cashFlows[,propSI] = values$cashFlows[,cpropSI] * params$ContractData$sumInsured;
+      values$cashFlows[,propSI] = values$cashFlows[,propSI] * params$ContractData$sumInsured;
       values$cashFlows[,propPS] = values$cashFlows[,propPS] * values$premiums[["gross"]] * params$ContractData$premiumRefund;
 
       # Sum all death-related payments to "death"  and remove the death_GrossPremium column
@@ -501,6 +513,7 @@ str(self$Parameters);
       noMedicalExam.relative = valueOrFunction(loadings$noMedicalExamRelative,params=params, values=values);
       sumRebate     = valueOrFunction(loadings$sumRebate,    params=params, values=values);
       premiumRebate = valueOrFunction(loadings$premiumRebate,params=params, values=values);
+      extraChargeGrossPremium = valueOrFunction(loadings$extraChargeGrossPremium, params=params, values=values);
       advanceProfitParticipation = 0;
       advanceProfitParticipationUnitCosts = 0;
       ppScheme      = params$ProfitParticipation$profitParticipationScheme;
@@ -512,13 +525,10 @@ str(self$Parameters);
       if (is.null(advanceProfitParticipationUnitCosts)) advanceProfitParticipationUnitCosts=0;
 
       partnerRebate = valueOrFunction(loadings$partnerRebate,params=params, values=values);
-print("Profit participation (advance): "); str(advanceProfitParticipation);
-print("Profit participation (advance) after UnitCosts: "); str(advanceProfitParticipationUnitCosts);
-print("Contract params (ProfitParticipation: "); str(params$ProfitParticipation);
 
       frequencyLoading = valueOrFunction(loadings$premiumFrequencyLoading, params=params, values=values);
-
-      premiumBeforeTax = (premiums[["unit.gross"]]*(1+noMedicalExam.relative) + noMedicalExam - sumRebate)*sumInsured * (1-advanceProfitParticipation) + unitCosts;
+print("frequencyLoading: "); str(frequencyLoading);
+      premiumBeforeTax = (premiums[["unit.gross"]]*(1+noMedicalExam.relative+extraChargeGrossPremium) + noMedicalExam - sumRebate)*sumInsured * (1-advanceProfitParticipation) + unitCosts;
       premiumBeforeTax = premiumBeforeTax * (1-premiumRebate-advanceProfitParticipationUnitCosts-partnerRebate);
       premiumBeforeTax = premiumBeforeTax * (1+frequencyLoading[[toString(params$ContractData$premiumFrequency)]]) / params$ContractData$premiumFrequency;
       premiums[["written_beforetax"]] = premiumBeforeTax;
@@ -711,9 +721,10 @@ print("Contract params (ProfitParticipation: "); str(params$ProfitParticipation)
       # First get the charges and rebates that are added to the gross premium to obtain the charged premium:
 
       # charge for no medical exam:
+      extraChargeGrossPremium = valueOrFunction(loadings$extraChargeGrossPremium, params=params, values=values);
       noMedExam        = valueOrFunction(loadings$noMedicalExam,params=params, values=values);
       noMedExam.rel    = valueOrFunction(loadings$noMedicalExamRelative,params=params, values=values);
-      withMedExam      = premium.gross * (1+noMedExam.rel) + noMedExam*sumInsured;
+      withMedExam      = premium.gross * (1+noMedExam.rel+extraChargeGrossPremium) + noMedExam*sumInsured;
       charge.noMedicalExam = withMedExam - premium.gross;
 
       # sum rebate:
@@ -758,6 +769,7 @@ print("Contract params (ProfitParticipation: "); str(params$ProfitParticipation)
 
       # premium frequency loading
       frequencyLoading = valueOrFunction(params$Loadings$premiumFrequencyLoading, params=params, values=values);
+print("FrequencyLoading: "); str(frequencyLoading);
       afterFrequency   = afterRebates * (1 + frequencyLoading[[toString(params$ContractData$premiumFrequency)]]);
       charge.frequency = afterFrequency - afterRebates;
 
