@@ -1,3 +1,4 @@
+#' @include HelperFunctions.R
 #' @import lubridate
 NULL
 

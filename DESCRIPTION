@@ -9,7 +9,7 @@ Author: Reinhold Kainhofer [aut, cre]
 Maintainer: Reinhold Kainhofer <reinhold@kainhofer.com>
 Depends:
     R6,
-    ValuationTables,
+    MortalityTables,
     objectProperties,
     lubridate
 Description: TODO

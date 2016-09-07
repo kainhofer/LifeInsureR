@@ -1,7 +1,7 @@
 #' @include HelperFunctions.R InsuranceContract.R InsuranceParameters.R InsuranceTarif.R ProfitParticipation.R
 #'
 #' @import openxlsx
-#' @import ValuationTables
+#' @import MortalityTables
 #' @import R6
 #' @import lubridate
 NULL

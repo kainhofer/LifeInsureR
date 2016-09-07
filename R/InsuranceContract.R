@@ -1,6 +1,6 @@
 #' @include HelperFunctions.R InsuranceParameters.R InsuranceTarif.R ProfitParticipation.R
 #'
-#' @import ValuationTables
+#' @import MortalityTables
 #' @import R6
 #' @import lubridate
 NULL

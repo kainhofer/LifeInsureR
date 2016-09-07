@@ -1,4 +1,5 @@
-library(abind);
+#' @import abind
+#'
 
 PaymentTimeEnum = setSingleEnum("PaymentTime", levels = c("in advance", "in arrears"))
 #PaymentCountEnum = setSingleEnum(PaymentCount, levels = c(1,2,3))
