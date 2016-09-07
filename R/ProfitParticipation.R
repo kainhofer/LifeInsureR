@@ -50,10 +50,10 @@ ProfitParticipation = R6Class(
     },
 
     getInterestProfitBase = function (params, values) {
-        c(0, diff(values$reserves[,"contractual"])/2)
+        pmax(0, rollingmean(c(0, values$reserves[,"contractual"])))
     },
     getRiskProfitBase = function (params, values) {
-        values$premiumComposition[,"Zillmer.Risk"]
+        values$premiumComposition[,"Zillmer.risk"]
     },
     getCostProfitBase = function (params, values) {
         params$ContractData$sumInsured
@@ -88,16 +88,15 @@ ProfitParticipation = R6Class(
 
 
     getProfitParticipation = function(rates, params, values) {
-
         intBase  = self$getInterestProfitBase(params=params, values=values);
         riskBase = self$getRiskProfitBase(params=params, values=values);
         costBase = self$getCostProfitBase(params=params, values=values);
         sumBase  = self$getSumProfitBase(params=params, values=values);
 
-        intRate  = self$getInterestRate(rates, params=params, values=values);
-        riskRate = self$getRiskRate(rates, params=params, values=values);
-        costRate = self$getCostRate(rates, params=params, values=values);
-        sumRate  = self$getSumRate(rates, params=params, values=values);
+        intRate  = self$getInterestProfitRate(rates, params=params, values=values);
+        riskRate = self$getRiskProfitRate(rates, params=params, values=values);
+        costRate = self$getCostProfitRate(rates, params=params, values=values);
+        sumRate  = self$getSumProfitRate(rates, params=params, values=values);
 
         intProfit  = intBase  * intRate;
         riskProfit = riskBase * riskRate;

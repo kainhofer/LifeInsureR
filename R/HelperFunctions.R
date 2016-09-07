@@ -184,3 +184,5 @@ fallbackFields = function (fields, valuelist) {
 }
 
 # extractProfitRates = function(rates, )
+
+rollingmean = function(x) (tail(x, -1) + head(x, -1))/2
