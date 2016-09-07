@@ -30,21 +30,8 @@ ProfitParticipation = R6Class(
     },
 
     setFallbackParameters = function() {
-        self$Parameters = fallbackFields(self$Parameters, list(
-            advanceProfitParticipation = NULL,                # Vorweggewinnbeteiligung (%-Satz der Bruttoprämie)
-            advanceProfitParticipationInclUnitCost = NULL,    # Vorweggewinnbeteiligung (%-Satz der Prämie mit Zu-/Abschlägen, insbesondere nach Stückkosten)
-
-            guaranteedInterest = NULL,
-            interestBonusRate = NULL,
-            totalInterest = NULL,
-            mortalityBonusRate = NULL,
-            costBonusRate = NULL,
-            terminalBonusRate = NULL,
-
-            terminalBonusQuote = NULL,
-
-            profitParticipationScheme = self
-        ));
+        self$Parameters = fallbackFields(self$Parameters, list(profitParticipationScheme = self));
+        self$Parameters = fallbackFields(self$Parameters, InsuranceContract.ParameterDefaults$ProfitParticipation);
     },
 
 

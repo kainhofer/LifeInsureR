@@ -50,82 +50,103 @@ InsuranceContract.Values = list(
 #' @export
 InsuranceContract.ParameterDefaults = list(
   ContractData = list (
-    sumInsured = NULL,
-    YOB = NULL,
-    age = NULL,
-    policyPeriod = NULL,               # gesamte Vertragslaufzeit
-    premiumPeriod = NULL,                # Prämienzahlungsdauer (1 für Einmalprämie)
-    deferralPeriod = NULL,               # Aufschubzeit bei Leibrenten
-    guaranteedPeriod = NULL,             # Garantiezeit bei Leibrenten
-    contractClosing = NULL,     # Contract closing date (day/month is relevant for balance sheet reserves)
+    sumInsured = 100000,
+    YOB = 1975,
+    age = 40,
+    policyPeriod = 25,                      # gesamte Vertragslaufzeit
+    premiumPeriod = 25,                     # Prämienzahlungsdauer (1 für Einmalprämie)
+    deferralPeriod = 0,                     # Aufschubzeit bei Leibrenten
+    guaranteedPeriod = 0,                   # Garantiezeit bei Leibrenten
+    contractClosing = Sys.Date(),           # Contract closing date (day/month is relevant for balance sheet reserves)
 
-    premiumPayments = NULL, # Prämienzahlungsweise (vor-/nachschüssig)
-    benefitPayments = NULL, # Leistungszahlungsweise (vor-/nachschüssig)
+    premiumPayments = "in advance",         # Prämienzahlungsweise (vor-/nachschüssig)
+    benefitPayments = "in advance",         # Leistungszahlungsweise (vor-/nachschüssig)
 
-    premiumFrequency = NULL,             # Anzahl der Prämienzahlungen pro Jahr
-    benefitFrequency = NULL,             # Anzahl der Leistungszahlungen pro Jahr (bei Renten, bzw. bei ALV Leistung am Ende des k-ten Teil des Jahres)
+    premiumFrequency = 1,                   # Anzahl der Prämienzahlungen pro Jahr
+    benefitFrequency = 1,                   # Anzahl der Leistungszahlungen pro Jahr (bei Renten, bzw. bei ALV Leistung am Ende des k-ten Teil des Jahres)
 
-    widowProportion = NULL,              # Witwenübergang (Anteil an VS des VN)
-    deathBenefitProportion = NULL,       # For endowments: Proportion of the death benefit relative to the life benefit
-    premiumRefund = NULL                 # Proportion of premiums refunded on death (including additional risk, e.g. 1.10 = 110% of paid premiums)
+    widowProportion = 0,                    # Witwenübergang (Anteil an VS des VN)
+    deathBenefitProportion = 1,             # For endowments: Proportion of the death benefit relative to the life benefit
+    premiumRefund = 0                       # Proportion of premiums refunded on death (including additional risk, e.g. 1.10 = 110% of paid premiums)
   ),
   ContractState = list(
-    premiumWaiver = NULL,        # Vertrag ist prämienfrei gestellt
-    surrenderPenalty = NULL,     # Set to FALSE after the surrender penalty has been applied once, e.g. on a premium waiver
-    alphaRefunded = NULL         # Alpha costs not yet refunded (in case of contract changes)
+    premiumWaiver = FALSE,                  # Vertrag ist prämienfrei gestellt
+    surrenderPenalty = TRUE,                # Set to FALSE after the surrender penalty has been applied once, e.g. on a premium waiver
+    alphaRefunded = FALSE                   # Alpha costs not yet refunded (in case of contract changes)
   ),
   ActuarialBases = list(
     mortalityTable = NULL,
     invalidityTable = NULL,
-    i = NULL,                             # guaranteed interest rate
-    balanceSheetDate = NULL,              # Balance sheet date (for the calculation of the balance sheet reserves)
-    balanceSheetMethod = NULL,
-    surrenderValueCalculation = NULL,     # By default no surrender penalties
+    i = 0.00,                               # guaranteed interest rate
+    balanceSheetDate = as.Date("1900-12-31"),  # Balance sheet date (for the calculation of the balance sheet reserves, year is irrelevant)
+    balanceSheetMethod = "30/360",
+    surrenderValueCalculation = NULL,       # By default no surrender penalties
 
-    premiumFrequencyOrder = NULL,         # Order of the approximation for payments within the year (unless an extra frequency loading is used => then leave this at 0)
-    benefitFrequencyOrder = NULL
+    premiumFrequencyOrder = 0,              # Order of the approximation for payments within the year (unless an extra frequency loading is used => then leave this at 0)
+    benefitFrequencyOrder = 0
   ),
-  Costs = NULL,
-  Loadings = list( # Loadings can also be function(sumInsured, premiums)    # TODO: Add other possible arguments
-    ongoingAlphaGrossPremium = NULL,    # Acquisition cost that increase the gross premium
-    tax = NULL,                         # insurance tax, factor on each premium paid
-    unitcosts = NULL,                   # annual unit cost for each policy (Stückkosten), absolute value
-    security = NULL,                    # Additional security loading on all benefit payments, factor on all benefits
-    noMedicalExam = NULL,               # Loading when no medicial exam is done, % of SumInsured
-    noMedicalExamRelative = NULL,       # Loading when no medicial exam is done, % of gross premium
-    sumRebate = NULL,                   # gross premium reduction for large premiums, % of SumInsured
-    premiumRebate = NULL,               # gross premium reduction for large premiums, % of gross premium # TODO
-    partnerRebate = NULL,                # Partnerrabatt auf Prämie mit Zu-/Abschlägen, wenn mehr als 1 Vertrag gleichzeitig abgeschlossen wird, additiv mit advanceBonusInclUnitCost and premiumRebate
-    extraChargeGrossPremium = NULL,     # extra charges on gross premium (smoker, leisure activities, BMI too high, etc.)
-    benefitFrequencyLoading = NULL, # TODO: Properly implement this as a function
-    premiumFrequencyLoading = NULL  # TODO: Implement this
+  Costs = initializeCosts(),
+  Loadings = list( # Loadings can also be function(sumInsured, premiums)
+    ongoingAlphaGrossPremium = 0,           # Acquisition cost that increase the gross premium
+    tax = 0.04,                             # insurance tax, factor on each premium paid
+    unitcosts = 0,                          # annual unit cost for each policy (Stückkosten), absolute value
+    security = 0,                           # Additional security loading on all benefit payments, factor on all benefits
+    noMedicalExam = 0,                      # Loading when no medicial exam is done, % of SumInsured
+    noMedicalExamRelative = 0,              # Loading when no medicial exam is done, % of gross premium
+    sumRebate = 0,                          # gross premium reduction for large premiums, % of SumInsured
+    premiumRebate = 0,                      # gross premium reduction for large premiums, % of gross premium # TODO
+    partnerRebate = 0,                      # Partnerrabatt auf Prämie mit Zu-/Abschlägen, wenn mehr als 1 Vertrag gleichzeitig abgeschlossen wird, additiv mit advanceBonusInclUnitCost and premiumRebate
+    extraChargeGrossPremium = 0,            # extra charges on gross premium (smoker, leisure activities, BMI too high, etc.)
+    benefitFrequencyLoading = list("1" = 0.0, "2" = 0.0, "4" = 0.0, "12" = 0.0), # TODO: Properly implement this as a function
+    premiumFrequencyLoading = list("1" = 0.0, "2" = 0.0, "4" = 0.0, "12" = 0.0) # TODO: Properly implement this as a function
   ),
-  Features = list(                   # Special cases for the calculations
-    betaGammaInZillmer = NULL,      # Whether beta and gamma-costs should be included in the Zillmer premium calculation
-    alphaRefundLinear  = NULL        # Whether the refund of alpha-costs on surrender is linear in t or follows the NPV of an annuity
+  Features = list(                          # Special cases for the calculations
+    betaGammaInZillmer = FALSE,             # Whether beta and gamma-costs should be included in the Zillmer premium calculation
+    alphaRefundLinear  = TRUE               # Whether the refund of alpha-costs on surrender is linear in t or follows the NPV of an annuity
   ),
 
   ProfitParticipation = list(
-      advanceProfitParticipation = NULL,                # Vorweggewinnbeteiligung (%-Satz der Bruttoprämie)
-      advanceProfitParticipationInclUnitCost = NULL,    # Vorweggewinnbeteiligung (%-Satz der Prämie mit Zu-/Abschlägen, insbesondere nach Stückkosten)
+      advanceProfitParticipation = 0,                # Vorweggewinnbeteiligung (%-Satz der Bruttoprämie)
+      advanceProfitParticipationInclUnitCost = 0,    # Vorweggewinnbeteiligung (%-Satz der Prämie mit Zu-/Abschlägen, insbesondere nach Stückkosten)
 
-      guaranteedInterest = NULL,
-      interestBonusRate = NULL,
-      totalInterest = NULL,
-      mortalityBonusRate = NULL,
-      costBonusRate = NULL,
-      terminalBonusRate = NULL,
-      terminalBonusQuote = NULL,
+      guaranteedInterest = 0,
+      interestBonusRate = 0,
+      totalInterest = 0,
+      mortalityBonusRate = 0,
+      costBonusRate = 0,
+      terminalBonusRate = 0,
+      terminalBonusQuote = 0,
 
-      profitParticipationScheme = NULL                  # Gewinnbeteiligungssystem (object of class Profit Participation)
+      profitParticipationScheme = NULL      # Gewinnbeteiligungssystem (object of class Profit Participation)
   )
 );
 
-# InsuranceContract.ParametersFill
-# Initialize the insurance contract parameters from the passed
-# arguments. Arguments not given are left unchanged. If no existing parameter
-# structure is given, an empty (i.e. all NULL entries) structure is used.
-#
+
+#' Full insurance contract parameter structure.
+#'
+#' All values are filled with NULL,
+#' so the functions \code{\link{InsuranceContract.ParametersFill}} and
+#' \code{\link{InsuranceContract.ParametersFallback}} can be used to override
+#' existing parameters or to provide default values for unset (NULL) entries.
+#'
+#'  @export
+InsuranceContract.ParameterStructure = rapply(InsuranceContract.ParameterDefaults, function (x) NULL, how="replace")
+InsuranceContract.ParameterStructure$Loadings$benefitFrequencyLoading = NULL
+InsuranceContract.ParameterStructure$Loadings$premiumFrequencyLoading = NULL
+
+
+#' InsuranceContract.ParametersFill
+#'
+#' Initialize the insurance contract parameters from the passed
+#' arguments. Arguments not given are left unchanged. If no existing parameter
+#' structure is given, an empty (i.e. all NULL entries) structure is used.
+#'
+#' @param params Initial values of the insurance contract parameters. (default: empty parameter structure)
+#' @param costs,... Values for any of the entries in the insurance contract
+#'                  parameter structure. These values take precedence over the
+#'                  initial parameters provided in \code{params}.
+#'
+#' @export
 InsuranceContract.ParametersFill = function(params=InsuranceContract.ParameterStructure, costs=NULL, ...) {
     # params = InsuranceContract.ParameterStructure;
     params$ContractData = fillFields(params$ContractData, list(...));

@@ -35,59 +35,17 @@ InsuranceTarif = R6Class(
       if (!missing(tarif))          self$tarif = tarif;
       if (!missing(desc))           self$desc = desc;
 
-      # Initialize the parameter structure with default values
-      self$Parameters = InsuranceContract.ParametersFill(
-        # TODO: Move those defaults to InsuranceParameters.R
-        # TODO: Move those defaults to the insurance contract
-        deferralPeriod = 0,
-        guaranteedPeriod = 0,
-        premiumPayments = "in advance",
-        benefitPayments = "in advance",
-        widowProportion = 0,
-        deathBenefitProportion = 0,
-
-        premiumFrequency = 1,
-        benefitFrequency = 1,
-
-        i = 0,
-        premiumFrequencyOrder = 0,
-        benefitFrequencyOrder = 0,
-        widowFactor = 0,
-        premiumRefund = 0,
-
-        balanceSheetDate = as.Date("1900-12-31"),  # Balance sheet date (for the calculation of the balance sheet reserves)
-        balanceSheetMethod = "30/360",
-
-        Costs = initializeCosts(),
-
-        benefitFrequencyLoading = list("1" = 0.0, "2" = 0.0, "4" = 0.0, "12" = 0.0), # TODO: Properly implement this
-        premiumFrequencyLoading = list("1" = 0.0, "2" = 0.0, "4" = 0.0, "12" = 0.0), # TODO: Implement this
-        ongoingAlphaGrossPremium = 0,    # Acquisition cost that increase the gross premium
-        tax = 0.04,                      # insurance tax, factor on each premium paid
-        unitcosts = 0,                   # annual unit cost for each policy (Stückkosten), absolute value
-        security = 0,                    # Additional security loading on all benefit payments, factor on all benefits
-        extraChargeGrossPremium = 0,
-        noMedicalExam = 0,               # Loading when no medicial exam is done, % of SumInsured
-        noMedicalExamRelative = 0,       # Loading when no medicial exam is done, % of gross premium
-        sumRebate = 0,                   # gross premium reduction for large premiums, % of SumInsured
-        premiumRebate = 0,               # gross premium reduction for large premiums, % of gross premium # TODO
-        partnerRebate = 0,
-
-        betaGammaInZillmer = FALSE,      # Whether beta and gamma-costs should be included in the Zillmer premium calculation
-        alphaRefundLinear = TRUE         # Whether the refund of alpha-costs on surrender is linear in t or follows the NPV of an annuity
-      );
-      # Apply the passed arguments to the tariff parameters
+      # Set the passed arguments as tariff parameters
       self$Parameters = InsuranceContract.ParametersFill(self$Parameters, ...)
 
-      # Use the profit participation's parameters as fallback, too
+      # Use the profit participation's parameters as fallback for initialized parameters
       ppScheme = self$Parameters$ProfitParticipation$profitParticipationScheme;
       if (!is.null(ppScheme)) {
-          self$Parameters = InsuranceContract.ParametersFallback(self$Parameters, ppScheme$Parameters)
+          self$Parameters$ProfitParticipation = InsuranceContract.ParametersFallback(self$Parameters$ProfitParticipation, ppScheme$Parameters)
       }
 
-      cat(paste0("Initializing Insurance Tarif ", self$name, "...\n"));
-print("InsuranceTariff Default Parameters:");
-str(self$Parameters);
+      # Fill all remaining uninitialized values with their defaults
+      self$Parameters = InsuranceContract.ParametersFallback(self$Parameters, InsuranceContract.ParameterDefaults);
     },
 
     createModification = function(name  = NULL, tarif = NULL, desc  = NULL, tariffType = NULL, ...) {
