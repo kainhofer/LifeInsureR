@@ -5,19 +5,20 @@
 #' @import lubridate
 NULL
 
-# library(R6)
-# library(lifecontingencies)
-# library(objectProperties)
-# library(lubridate)
-
 
 TariffTypeEnum = setSingleEnum("TariffType", levels = c("annuity", "wholelife", "endowment", "pureendowment", "terme-fix", "dread-disease"))
 
 
-# base class for Insurance Tarifs (holding contrat-independent values and
-# providing methods to calculate cash flows, premiums, etc.). Objects of this
-# class do NOT contain contract-specific values like age, death probabilities,
-# premiums, reserves, etc.
+#' Base class for Insurance Tarifs, providing calculation functions to the contract
+#'
+#' This is a base class for holding contract-independent values and
+#' providing methods to calculate cash flows, premiums, etc. Objects of this
+#' class do NOT contain contract-specific values like age, death probabilities,
+#' premiums, reserves, etc. Rather, they are the calculation kernels that will
+#' be called by the \code{\link{InsuranceContract}} objects to make the actual,
+#' tariff-specific calculations.
+#'
+#' @export
 InsuranceTarif = R6Class(
   "InsuranceTarif",
   public  = list(

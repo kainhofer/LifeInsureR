@@ -1,5 +1,12 @@
-#' @include HelperFunctions.R
-library(openxlsx)
+#' @include HelperFunctions.R InsuranceContract.R InsuranceParameters.R InsuranceTarif.R ProfitParticipation.R
+#'
+#' @import openxlsx
+#' @import ValuationTables
+#' @import R6
+#' @import lubridate
+NULL
+
+
 
 ################################################
 # Helper Functions
@@ -180,6 +187,7 @@ setInsuranceValuesLabels = function(vals) {
 ################################################################################
 
 
+#' @export
 exportInsuranceContract.xlsx = function(contract, filename) {
   # TODO: argument checking for contract and filename
 

@@ -1,10 +1,23 @@
-library(R6)
-library(openxlsx);
-library(ValuationTables);
+#' @include HelperFunctions.R InsuranceParameters.R InsuranceTarif.R ProfitParticipation.R
+#'
+#' @import ValuationTables
+#' @import R6
+#' @import lubridate
+NULL
 
-#' @include HelperFunctions.R
-#' @include InsuranceTarif.R
 
+
+#' Base Class for Insurance Contracts
+#'
+#' R6 class that models a complete, general insurance contract.
+#' The corresponding tariff and the profit participation scheme, as well as
+#' all other relevant contract parameters (if not defined by the tariff or
+#' explicitly overridden by the contract) can be given in the constructor.
+#'
+#' Immediately upon construction, all premiums, reserves and cash flows for the
+#' whole contract period are calculated.
+#'
+#' @export
 InsuranceContract = R6Class(
     "InsuranceContract",
 

@@ -1,12 +1,13 @@
-# @include
+#' @import lubridate
+NULL
 
 
-
-# Initialize a cost matrix with dimensions: [CostType, Basis, Period], with:
-#     CostType: alpha, Zillmer, beta, gamma, gamma_nopremiums
-#     Basis:    SumInsured, SumPremiums, GrossPremium
-#     Period:   once, PremiumPeriod, PremiumFree, PolicyPeriod
-# TODO: gamma an Erlebensleistungen?
+#' Initialize a cost matrix with dimensions: [CostType, Basis, Period], with:
+#'     CostType: alpha, Zillmer, beta, gamma, gamma_nopremiums
+#'     Basis:    SumInsured, SumPremiums, GrossPremium
+#'     Period:   once, PremiumPeriod, PremiumFree, PolicyPeriod
+#' TODO: gamma an Erlebensleistungen?
+#' @export
 initializeCosts = function() {
   dimnm=list(
     c("alpha", "Zillmer", "beta", "gamma", "gamma_nopremiums"),
@@ -20,6 +21,7 @@ initializeCosts = function() {
 }
 
 
+#' @export
 InsuranceContract.Values = list(
   basicData = NULL,
   transitionProbabilities = NULL,
@@ -45,7 +47,8 @@ InsuranceContract.Values = list(
 
 
 
-InsuranceContract.ParameterStructure = list(
+#' @export
+InsuranceContract.ParameterDefaults = list(
   ContractData = list (
     sumInsured = NULL,
     YOB = NULL,
@@ -138,6 +141,17 @@ InsuranceContract.ParametersFill = function(params=InsuranceContract.ParameterSt
     params
 }
 
+#' InsuranceContract.ParametersFallback
+#'
+#' Provide default values for the insurance contract parameters if any of the
+#' parameters is not explicitly set.
+#'
+#' @param params Current, explicitly set contract parameters. All NULL values
+#'               will be filled with the corresponding entry from \code{fallback}.
+#' @param fallback Fallback values that will be used when the corresponding
+#'                 entry in \code{params} is NULL.
+#'
+#' @export
 InsuranceContract.ParametersFallback = function(params, fallback) {
     # params = InsuranceContract.ParameterStructure;
     params$ContractData = fallbackFields(params$ContractData, fallback$ContractData);

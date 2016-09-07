@@ -3,11 +3,15 @@
 #' @import R6
 NULL
 
-# library(R6)
 
-# base class for Profit Participation schemes  (holding contract-independent values and
-# providing methods to calculate the profit participation values from the given
-# reserves).
+
+#' Base Class for Profit Participation Schemes
+#'
+#' base class for Profit Participation schemes  (holding contract-independent values and
+#' providing methods to calculate the profit participation values from the given
+#' reserves).
+#'
+#' @export
 ProfitParticipation = R6Class(
   "ProfitParticipation",
   public  = list(
