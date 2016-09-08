@@ -11,7 +11,9 @@ Depends:
     R6,
     MortalityTables,
     objectProperties,
-    lubridate
+    lubridate,
+    openxlsx,
+    abind
 Description: TODO
 License: GPL (>= 2)
 RoxygenNote: 5.0.1
