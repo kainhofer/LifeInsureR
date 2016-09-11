@@ -248,7 +248,7 @@ InsuranceTarif = R6Class(
       premiumFreqCorr = correctionPaymentFrequency(
             m = params$ContractData$premiumFrequency, i = i,
             order = params$ActuarialBases$premiumFrequencyOrder);
-print("premiumFreqCorr: "); str(premiumFreqCorr);
+
       pvRefund = calculatePVDeath (
             px, qx,
             values$cashFlows$death_GrossPremium,
@@ -317,8 +317,11 @@ print("premiumFreqCorr: "); str(premiumFreqCorr);
 
     getAbsCashFlows = function(params, values) {
 
-      # TODO: Set up a nice list with coefficients for each type of cashflow, rather than multiplying each item manually (this also mitigates the risk of forgetting a dimension, because then the dimensions would not match, while here it's easy to overlook a multiplication)
-      # Multiply each CF column by the corresponding basis
+        # TODO: Set up a nice list with coefficients for each type of cashflow,
+        # rather than multiplying each item manually (this also mitigates the risk
+        # of forgetting a dimension, because then the dimensions would not match,
+        # while here it's easy to overlook a multiplication)
+        # Multiply each CF column by the corresponding basis
         propGP = c("premiums_advance", "premiums_arrears");
         propSI = c("guaranteed_advance", "guaranteed_arrears",
                    "survival_advance", "survival_arrears", "death_SumInsured",
@@ -330,7 +333,7 @@ print("premiumFreqCorr: "); str(premiumFreqCorr);
 
       # Sum all death-related payments to "death"  and remove the death_GrossPremium column
       values$cashFlows[,"death_SumInsured"] = values$cashFlows[,"death_SumInsured"] + values$cashFlows[,"death_GrossPremium"]
-      colnames(values$cashFlows)[colnames(values$cashFlows)=="death_SumInsured"] = "death";
+      colnames(values$cashFlows)[colnames(values$cashFlows) == "death_SumInsured"] = "death";
       # cashFlows[,"death_GrossPremium"] = NULL;
 
       values$cashFlowsCosts = values$cashFlowsCosts[,,"SumInsured"] * params$ContractData$sumInsured +
@@ -372,8 +375,8 @@ print("premiumFreqCorr: "); str(premiumFreqCorr);
         values$presentValuesCosts[,,"GrossPremium"] * values$premiums[["unit.gross"]];
 
       cbind(
-        benefits=benefits,
-        benefitsAndRefund=allBenefits,
+        benefits = benefits,
+        benefitsAndRefund = allBenefits,
         benefitsCosts)
     },
 
@@ -391,22 +394,22 @@ print("premiumFreqCorr: "); str(premiumFreqCorr);
 
       coeff[["Premium"]][["benefits"]][["premiums"]]            = 1;
 
-      coeff[["SumInsured"]][["benefits"]][["guaranteed"]]       = 1+securityLoading;
-      coeff[["SumInsured"]][["benefits"]][["survival"]]         = 1+securityLoading;
-      coeff[["SumInsured"]][["benefits"]][["death_SumInsured"]] = 1+securityLoading;
-      coeff[["SumInsured"]][["benefits"]][["disease_SumInsured"]] = 1+securityLoading;
+      coeff[["SumInsured"]][["benefits"]][["guaranteed"]]       = 1 + securityLoading;
+      coeff[["SumInsured"]][["benefits"]][["survival"]]         = 1 + securityLoading;
+      coeff[["SumInsured"]][["benefits"]][["death_SumInsured"]] = 1 + securityLoading;
+      coeff[["SumInsured"]][["benefits"]][["disease_SumInsured"]] = 1 + securityLoading;
 
       # Premium refund is handled differently for gross and net premiums, because it is proportional to the gross premium
       if (type == "gross") {
-        coeff[["Premium"]][["benefits"]][["death_GrossPremium"]] = -params$ContractData$premiumRefund * (1+securityLoading);
-      } else if (type=="net" || type=="Zillmer") {
-        coeff[["SumInsured"]][["benefits"]][["death_GrossPremium"]] = premiums[["unit.gross"]] * params$ContractData$premiumRefund * (1+securityLoading);
+        coeff[["Premium"]][["benefits"]][["death_GrossPremium"]] = -params$ContractData$premiumRefund * (1 + securityLoading);
+      } else if (type == "net" || type == "Zillmer") {
+        coeff[["SumInsured"]][["benefits"]][["death_GrossPremium"]] = premiums[["unit.gross"]] * params$ContractData$premiumRefund * (1 + securityLoading);
       }
 
 
       # coefficients for the costs
 
-      if (type=="gross") {
+      if (type == "gross") {
         coeff[["SumInsured"]][["costs"]]["alpha", "SumInsured"] = 1;
         coeff[["SumInsured"]][["costs"]]["beta",  "SumInsured"] = 1;
         coeff[["SumInsured"]][["costs"]]["gamma", "SumInsured"] = 1;
@@ -419,7 +422,7 @@ print("premiumFreqCorr: "); str(premiumFreqCorr);
         coeff[["Premium"]][["costs"]]["beta",  "GrossPremium"] = -1;
         coeff[["Premium"]][["costs"]]["gamma", "GrossPremium"] = -1;
 
-      } else if (type=="Zillmer") {
+      } else if (type == "Zillmer") {
         coeff[["SumInsured"]][["costs"]]["Zillmer","SumInsured"] = 1;
         coeff[["SumInsured"]][["costs"]]["Zillmer","SumPremiums"] = values$unitPremiumSum * premiums[["unit.gross"]];
         coeff[["SumInsured"]][["costs"]]["Zillmer","GrossPremium"] = premiums[["unit.gross"]];
@@ -439,8 +442,8 @@ print("premiumFreqCorr: "); str(premiumFreqCorr);
     premiumCalculation = function(params, values) {
       loadings = params$Loadings;
       sumInsured = params$ContractData$sumInsured
-      premiums = c("unit.net" = 0, "unit.Zillmer" = 0, "unit.gross"= 0, "net" = 0, "Zillmer" = 0, "gross" = 0, "written" = 0);
-      coefficients = list("gross"=c(), "Zillmer"=c(), "net"=c());
+      premiums = c("unit.net" = 0, "unit.Zillmer" = 0, "unit.gross" = 0, "net" = 0, "Zillmer" = 0, "gross" = 0, "written" = 0);
+      coefficients = list("gross" = c(), "Zillmer" = c(), "net" = c());
 
       # net, gross and Zillmer premiums are calculated from the present values using the coefficients on each present value as described in the formulas document
       coeff=self$getPremiumCoefficients("gross", values$presentValues["0",]*0, values$presentValuesCosts["0",,]*0, premiums=premiums, params=params, values=values)
