@@ -141,6 +141,7 @@ correctionPaymentFrequency = function(m = 1, i = self$i, order = 0) {
   list(alpha=alpha, beta=beta);
 }
 
+#' @export
 pad0 = function(v, l, value=0) {
   if (l>=length(v)) {
     c(v, rep(value, l-length(v)))
