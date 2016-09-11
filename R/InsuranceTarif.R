@@ -759,17 +759,23 @@ print("FrequencyLoading: "); str(frequencyLoading);
               survival_arrears=values$absCashFlows[,"survival_arrears"]+values$absCashFlows[,"guaranteed_arrears"]
       );
 
-      premium.Zillmer.risk     = v * (values$absCashFlows[,"death"] - c(values$reserves[,"Zillmer"][-1], 0)) * pad0(values$transitionProbabilities$q, l);
+      # premium.Zillmer.risk     = v * (values$absCashFlows[,"death"] - c(values$reserves[,"Zillmer"][-1], 0)) * pad0(values$transitionProbabilities$q, l);
+      # premium.Zillmer.savings  = getSavingsPremium(
+      #         values$reserves[,"Zillmer"], v=v,
+      #         survival_advance = values$absCashFlows[,"survival_advance"] + values$absCashFlows[,"guaranteed_advance"],
+      #         survival_arrears = values$absCashFlows[,"survival_arrears"] + values$absCashFlows[,"guaranteed_arrears"]
+      # );
+      premium.Zillmer.risk     = v * (values$absCashFlows[,"death"] - c(values$reserves[,"contractual"][-1], 0)) * pad0(values$transitionProbabilities$q, l);
       premium.Zillmer.savings  = getSavingsPremium(
-              values$reserves[,"Zillmer"], v=v,
-              survival_advance = values$absCashFlows[,"survival_advance"] + values$absCashFlows[,"guaranteed_advance"],
-              survival_arrears = values$absCashFlows[,"survival_arrears"] + values$absCashFlows[,"guaranteed_arrears"]
+          values$reserves[,"contractual"], v=v,
+          survival_advance = values$absCashFlows[,"survival_advance"] + values$absCashFlows[,"guaranteed_advance"],
+          survival_arrears = values$absCashFlows[,"survival_arrears"] + values$absCashFlows[,"guaranteed_arrears"]
       );
       premium.Zillmer.amortization = getSavingsPremium(
-              pmin(0, values$reserves[,"Zillmer"]), v=v
+              pmin(0, values$reserves[,"contractual"]), v=v
       );
       premium.Zillmer.actsavings = getSavingsPremium(
-              pmax(0, values$reserves[,"Zillmer"]), v=v,
+              pmax(0, values$reserves[,"contractual"]), v=v,
               survival_advance=values$absCashFlows[,"survival_advance"] + values$absCashFlows[,"guaranteed_advance"],
               survival_arrears=values$absCashFlows[,"survival_arrears"] + values$absCashFlows[,"guaranteed_arrears"]
       );
