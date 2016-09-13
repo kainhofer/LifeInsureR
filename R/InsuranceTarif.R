@@ -81,7 +81,7 @@ InsuranceTarif = R6Class(
         q    = q[-age:-1];
       }
       if (!is.null(params$ActuarialBases$invalidityTable)) {
-        i = deathProbabilities(params$ActuarialBases$invalidityTable, YOB=params$ContractData$YOB);
+        i = deathProbabilities(params$ActuarialBases$invalidityTable, YOB = params$ContractData$YOB);
         if (age > 0) {
           i    = i[-age:-1];
         }
@@ -89,12 +89,12 @@ InsuranceTarif = R6Class(
         i = rep(0, length(q));
       }
       i = pad0(i, length(q));
-      df = data.frame(age=ages, q=q, i=i, p=1-q-i, row.names = ages-age)
+      df = data.frame(age = ages, q = q, i = i, p = 1 - q - i, row.names = ages - age)
       df
     },
 
     getCostValues = function(costs, params) {
-        valueOrFunction(costs, params=params, values=NULL)
+        valueOrFunction(costs, params = params, values = NULL)
     },
 
     getBasicCashFlows = function(params) {
@@ -102,17 +102,17 @@ InsuranceTarif = R6Class(
       maxAge = getOmega(params$ActuarialBases$mortalityTable)
       maxlen = min(maxAge - age, params$ContractData$policyPeriod);
       cf = data.frame(
-        guaranteed = rep(0, maxlen+1),
-        survival = rep(0, maxlen+1),
-        death = rep(0, maxlen+1),
-        disease = rep(0, maxlen+1)
+        guaranteed = rep(0, maxlen + 1),
+        survival = rep(0, maxlen + 1),
+        death = rep(0, maxlen + 1),
+        disease = rep(0, maxlen + 1)
       );
       if (self$tariffType == "annuity") {
         # guaranteed payments exist only with annuities (first n years of the payment)
         cf$guaranteed = c(
             rep(0, params$ContractData$deferralPeriod),
             rep(1, params$ContractData$guaranteed),
-            rep(0, max(0, maxlen+1 - params$ContractData$deferralPeriod - params$ContractData$guaranteed)));
+            rep(0, max(0, maxlen + 1 - params$ContractData$deferralPeriod - params$ContractData$guaranteed)));
         cf$survival = c(
             rep(0, params$ContractData$deferralPeriod + params$ContractData$guaranteed),
             rep(1, max(0, maxlen - params$ContractData$deferralPeriod - params$ContractData$guaranteed)),
@@ -149,18 +149,18 @@ InsuranceTarif = R6Class(
       zeroes = pad0(0, cflen);
       ages = pad0(self$getAges(params), cflen);
       cf = data.frame(
-        premiums_advance = zeroes,
-        premiums_arrears = zeroes,
+        premiums_advance   = zeroes,
+        premiums_arrears   = zeroes,
         guaranteed_advance = zeroes,
         guaranteed_arrears = zeroes,
-        survival_advance = zeroes,
-        survival_arrears = zeroes,
-        death_SumInsured = zeroes,
+        survival_advance   = zeroes,
+        survival_arrears   = zeroes,
+        death_SumInsured   = zeroes,
         disease_SumInsured = zeroes,
         death_GrossPremium = zeroes,
-        death_Refund_past = zeroes,
-        death_PremiumFree = zeroes,
-        row.names = ages-age
+        death_Refund_past  = zeroes,
+        death_PremiumFree  = zeroes,
+        row.names          = ages - age
       );
 
       # Premiums:
@@ -568,7 +568,7 @@ print("frequencyLoading: "); str(frequencyLoading);
           advanceProfitParticipationUnitCosts = 0;
           ppScheme      = params$ProfitParticipation$profitParticipationScheme;
           if (!is.null(ppScheme)) {
-              advanceProfitParticipationUnitCosts = ppScheme$getAdvanceProfitParticipationAfterUnitCosts(params = params, values=values)
+              advanceProfitParticipationUnitCosts = ppScheme$getAdvanceProfitParticipationAfterUnitCosts(params = params, values = values)
           }
           surrenderValue = resReduction * (1 - advanceProfitParticipationUnitCosts);
       }
@@ -580,8 +580,8 @@ print("frequencyLoading: "); str(frequencyLoading);
         (values$absPresentValues[, "benefits"] * securityFactor + values$absPresentValues[, "gamma_nopremiums"]) * params$ContractData$sumInsured;
 
       cbind(res,
-            "PremiumsPaid"=Reduce("+", values$absCashFlows$premiums_advance, accumulate = TRUE),
-            "Surrender"=surrenderValue,
+            "PremiumsPaid" = Reduce("+", values$absCashFlows$premiums_advance, accumulate = TRUE),
+            "Surrender" = surrenderValue,
             "PremiumFreeSumInsured" = newSI
       )
     },
@@ -597,24 +597,24 @@ print("frequencyLoading: "); str(frequencyLoading);
       balanceDates = balanceDate + years(1:years);
 
       if (params$ActuarialBases$balanceSheetMethod == "30/360") {
-        baf = ((month(balanceDates + days(1)) - month(contractDates) - 1)%%12 + 1) / 12
+        baf = ((month(balanceDates + days(1)) - month(contractDates) - 1) %% 12 + 1) / 12
       } else if (params$ActuarialBases$balanceSheetMethod == "act/act") {
-        baf = as.numeric((balanceDates + days(1)) - contractDates, units="days" ) / as.numeric(balanceDates - (balanceDates - years(1)), units="days")
+        baf = as.numeric((balanceDates + days(1)) - contractDates, units = "days" ) / as.numeric(balanceDates - (balanceDates - years(1)), units = "days")
       } else if (params$ActuarialBases$balanceSheetMethod == "act/360") {
-        baf = pmin(as.numeric((balanceDates + days(1)) - contractDates, units="days" ) / 360, 1)
+        baf = pmin(as.numeric((balanceDates + days(1)) - contractDates, units = "days" ) / 360, 1)
       } else if (params$ActuarialBases$balanceSheetMethod == "act/365") {
-        baf = pmin(as.numeric((balanceDates + days(1)) - contractDates, units="days" ) / 365, 1)
+        baf = pmin(as.numeric((balanceDates + days(1)) - contractDates, units = "days" ) / 365, 1)
       }
       baf
     },
 
-    reserveCalculationBalanceSheet = function (params, values) {
+    reserveCalculationBalanceSheet = function(params, values) {
       reserves = values$reserves;
       years = length(reserves[,"Zillmer"]);
       # Balance sheet reserves:
       baf = self$getBalanceSheetReserveFactor(params, years = years);
-      resZ_BS = (1-baf)*reserves[,"Zillmer"] + baf*c(reserves[-1,"Zillmer"], 0);
-      resGamma_BS = (1-baf)*reserves[,"gamma"] + baf*c(reserves[-1,"gamma"], 0);
+      resZ_BS = (1 - baf) * reserves[,"Zillmer"] + baf * c(reserves[-1, "Zillmer"], 0);
+      resGamma_BS = (1 - baf) * reserves[,"gamma"] + baf * c(reserves[-1, "gamma"], 0);
       res_BS = resZ_BS + resGamma_BS;
 
       # Collect all reserves to one large matrix
@@ -627,23 +627,24 @@ print("frequencyLoading: "); str(frequencyLoading);
       res
     },
 
-    determineProfitRates = function (params, values) {
+    determineProfitRates = function(params, values, ...) {
         startYear = year(params$ContractData$contractClosing);
         policyPeriod = params$ContractData$policyPeriod;
-        years = startYear:(startYear+policyPeriod);
+        years = startYear:(startYear + policyPeriod);
 
+        # TODO: extract default
 
     },
 
 
-    profitParticipation = function(params, values) {
-        rates = self$determineProfitRates(params, values);
+    profitParticipation = function(params, values, ...) {
+        rates = self$determineProfitRates(params, values, ...);
         self$calculateProfitParticipation(rates, params, values)
     },
 
     calculateProfitParticipation = function(rates, params, values) {
         if (!is.null(params$ProfitParticipation$profitParticipationScheme)) {
-            params$ProfitParticipation$profitParticipationScheme$getProfitParticipation(rates, params=params, values=values)
+            params$ProfitParticipation$profitParticipationScheme$getProfitParticipation(rates, params = params, values = values)
         }
     },
 
@@ -653,17 +654,17 @@ print("frequencyLoading: "); str(frequencyLoading);
 
 
     getBasicDataTimeseries = function(params, values) {
-      res=cbind(
+      res = cbind(
         "PremiumPayment" = c(
               rep(1, params$ContractData$premiumPeriod),
-              rep(0, params$ContractData$policyPeriod - params$ContractData$premiumPeriod+1)),
+              rep(0, params$ContractData$policyPeriod - params$ContractData$premiumPeriod + 1)),
         "SumInsured" = c(
               rep(params$ContractData$sumInsured, params$ContractData$policyPeriod),
               0),
         "Premiums" = values$absCashFlows$premiums_advance + values$absCashFlows$premiums_arrears,
-        "InterestRate" = rep(params$ActuarialBases$i, params$ContractData$policyPeriod+1),
-        "PolicyDuration" = rep(params$ContractData$policyPeriod, params$ContractData$policyPeriod+1),
-        "PremiumPeriod" = rep(params$ContractData$premiumPeriod, params$ContractData$policyPeriod+1)
+        "InterestRate" = rep(params$ActuarialBases$i, params$ContractData$policyPeriod + 1),
+        "PolicyDuration" = rep(params$ContractData$policyPeriod, params$ContractData$policyPeriod + 1),
+        "PremiumPeriod" = rep(params$ContractData$premiumPeriod, params$ContractData$policyPeriod + 1)
       );
       rownames(res) = 0:params$ContractData$policyPeriod;
       res
@@ -731,7 +732,7 @@ print("frequencyLoading: "); str(frequencyLoading);
 
       # premium frequency loading
       frequencyLoading = valueOrFunction(params$Loadings$premiumFrequencyLoading, params=params, values=values);
-print("FrequencyLoading: "); str(frequencyLoading);
+
       afterFrequency   = afterRebates * (1 + frequencyLoading[[toString(params$ContractData$premiumFrequency)]]);
       charge.frequency = afterFrequency - afterRebates;
 
