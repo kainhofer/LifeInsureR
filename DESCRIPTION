@@ -23,7 +23,6 @@ Collate:
     'ProfitParticipation.R'
     'InsuranceTarif.R'
     'InsuranceContract.R'
-    'LifeInsuranceContracts.R'
     'exportInsuranceContract_xlsx.R'
 Suggests:
     knitr,

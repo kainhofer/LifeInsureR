@@ -115,8 +115,34 @@ ProfitParticipation = R6Class(
 
     getTerminalBonusReserves = function(rates, terminalBonus, terminalBonusAccount, params, values) {
         n = length(terminalBonusAccount)
-        str(1/(1.07) ^ ((n-1):0))
-        terminalBonusAccount * 1/(1.07) ^ ((n-1):0)
+        terminalBonusAccount * 1/(1.07) ^ ((n - 1):0)
+    },
+
+    calculateSurvivalBenefit = function(profits, rates, params, values) {
+        profits[,"totalProfit"] + profits[,"terminalBonusReserve"]
+    },
+    calculateDeathBenefitAccrued = function(profits, rates, params, values) {
+        profits[,"totalProfit"]*(1 + c(0,rates$guaranteedInterest))
+    },
+    calculateDeathBenefitTerminal = function(profits, rates, params, values) {
+        n = params$ContractData$policyPeriod;
+        profits[, "terminalBonusReserve"] * (0:n)/n * ((0:n) >= max(10, n - 5))
+    },
+
+    calculateSurrenderBenefitAccrued = function(profits, rates, params, values) {
+        profits[,"totalProfit"]*(1 + c(0,rates$guaranteedInterest) / 2)
+    },
+    calculateSurrenderBenefitTerminal = function(profits, rates, params, values) {
+        n = params$ContractData$policyPeriod;
+        profits[, "terminalBonusReserve"] * (0:n)/n * ((0:n) >= max(10, n - 5))
+    },
+
+    calculatePremiumWaiverBenefitAccrued = function(profits, rates, params, values) {
+        profits[,"totalProfit"]
+    },
+    calculatePremiumWaiverBenefitTerminal = function(profits, rates, params, values) {
+        n = params$ContractData$policyPeriod;
+        profits[, "terminalBonusReserve"] * (0:n)/n * ((0:n) >= max(10, n - 5))
     },
 
 
@@ -144,7 +170,6 @@ ProfitParticipation = R6Class(
 
         terminalBonus = terminalBase * terminalRate; # TODO: Add the AF(v) factor!
         terminalBonusAccount = cumsum(terminalBonus)
-# browser();
         terminalBonusReserves = self$getTerminalBonusReserves(rates, terminalBonus, terminalBonusAccount, params = params, values = values)
 
 
@@ -157,8 +182,8 @@ ProfitParticipation = R6Class(
             terminalBase = terminalBase,
 
             # Profit Rates
-            guaranteedInterest = rates$guaranteedInterest,
-            totalInterest = rates$totalInterest,
+            guaranteedInterest = c(0, rates$guaranteedInterest),
+            totalInterest = c(0, rates$totalInterest),
             interestProfitRate = intRate,
             riskProfitRate = riskRate,
             expenseProfitRate = expenseRate,
@@ -180,22 +205,8 @@ ProfitParticipation = R6Class(
             # Terminal Bonus values
             terminalBonus = terminalBonus,
             terminalBonusAcount = terminalBonusAccount,
-            terminalBonusReserve = terminalBonusReserves,
+            terminalBonusReserve = terminalBonusReserves
 
-            # Profit included in various benefits
-            survival = 0,
-
-            deathAccrued = 0,
-            deathTerminalBonus = 0,
-            death = 0,
-
-            surrenderAccrued = 0,
-            surrenderTerminalBonus = 0,
-            surrender = 0,
-
-            premiumWaiverAccrued = 0,
-            premiumWaiverTerminalBonux = 0,
-            premiumWaiver = 0
         );
         prev = 0;
         for (i in 1:nrow(res)) {
@@ -205,11 +216,37 @@ ProfitParticipation = R6Class(
             res[i,"totalProfit"] = prev + res[i,"totalProfitAssignment"];
             prev = res[i,"totalProfit"];
 
-#            # The totalProfit is initialized with all profits of the current year!
-#            res[i,"totalProfit"]      = prev + res[i,"totalProfit"] + res[i,"interestOnProfit"];
-#            prev = res[i, "totalProfit"];
-#            res[i,"terminalBonus"]    = self$calculateTerminalBonus(t = i, bonusPrevious = res[i-1,"terminalBonus"], profits = res[i,])
         }
+
+        survival       = self$calculateSurvivalBenefit(res, rates = rates, params = params, values = values);
+
+        deathAccrued   = self$calculateDeathBenefitAccrued(res, rates = rates, params = params, values = values);
+        deathTerminalBonus = self$calculateDeathBenefitTerminal(res, rates = rates, params = params, values = values);
+
+        surrenderAccrued  = self$calculateSurrenderBenefitAccrued(res, rates = rates, params = params, values = values);
+        surrenderTerminalBonus = self$calculateSurrenderBenefitTerminal(res, rates = rates, params = params, values = values);
+
+        premiumWaiverAccrued  = self$calculatePremiumWaiverBenefitAccrued(res, rates = rates, params = params, values = values);
+        premiumWaiverTerminalBonus = self$calculatePremiumWaiverBenefitTerminal(res, rates = rates, params = params, values = values);
+
+        res = cbind(
+            res,
+
+            survival = survival,
+
+            deathAccrued = deathAccrued,
+            deathTerminalBonus = deathTerminalBonus,
+            death = deathAccrued + deathTerminalBonus,
+
+            surrenderAccrued  = surrenderAccrued,
+            surrenderTerminalBonus = surrenderTerminalBonus,
+            surrender      = surrenderAccrued + surrenderTerminalBonus,
+
+            premiumWaiverAccrued  = premiumWaiverAccrued,
+            premiumWaiverTerminalBonus = premiumWaiverTerminalBonus,
+            premiumWaiver  = premiumWaiverAccrued + premiumWaiverTerminalBonus
+
+        );
 
         res
     },
@@ -220,12 +257,3 @@ ProfitParticipation = R6Class(
     dummy = 0
   )
 )
-
-# Generali.ProfitParticipation.Erleben.v1 = R6Class ("ProfitParticipation",
-#   inherit = ProfitParticipation,
-#   public = list(
-#     name = "Gewinnplan für Erlebensversicherungen und aufgeschobene Rentenversicherungen per 31.12.2006, Version 1"
-#
-#   )
-# );
-#
