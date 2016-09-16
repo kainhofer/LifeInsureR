@@ -132,8 +132,6 @@ InsuranceContract = R6Class(
         },
 
         determineTransitionProbabilities = function() {
-            # print("determineTransitionProbabilities");
-            # str(self$Parameters$ActuarialBases);
             self$tarif$getTransitionProbabilities(params=self$Parameters);
         },
         determineCashFlowsBasic = function() {
