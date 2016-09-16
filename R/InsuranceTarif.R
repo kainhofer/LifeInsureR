@@ -367,8 +367,12 @@ InsuranceTarif = R6Class(
 
     presentValueBenefits = function(params, values) {
       # TODO: Here we don't use the securityLoading parameter => Shall it be used or are these values to be understood without additional security loading?
-      benefits    = values$presentValues[,"survival"] + values$presentValues[,"death_SumInsured"] + values$presentValues[,"disease_SumInsured"];
-      allBenefits = values$presentValues[,"survival"] + values$presentValues[,"death_SumInsured"] + values$presentValues[,"disease_SumInsured"] + values$presentValues[,"death_GrossPremium"] * values$premiums[["unit.gross"]] * params$ContractData$premiumRefund;
+      benefits    = values$presentValues[,"survival"] +
+                    values$presentValues[,"guaranteed"] +
+                    values$presentValues[,"death_SumInsured"] +
+                    values$presentValues[,"disease_SumInsured"];
+      allBenefits = benefits +
+          values$presentValues[,"death_GrossPremium"] * values$premiums[["unit.gross"]] * params$ContractData$premiumRefund;
 
       benefitsCosts = values$presentValuesCosts[,,"SumInsured"] +
         values$presentValuesCosts[,,"SumPremiums"] * values$unitPremiumSum * values$premiums[["unit.gross"]] +
@@ -569,7 +573,8 @@ InsuranceTarif = R6Class(
           if (!is.null(ppScheme)) {
               advanceProfitParticipationUnitCosts = ppScheme$getAdvanceProfitParticipationAfterUnitCosts(params = params, values = values)
           }
-          surrenderValue = resReduction * (1 - advanceProfitParticipationUnitCosts);
+          partnerRebate = valueOrFunction(params$Loadings$partnerRebate, params = params, values = values);
+          surrenderValue = resReduction * (1 - advanceProfitParticipationUnitCosts - partnerRebate);
       }
 
 
