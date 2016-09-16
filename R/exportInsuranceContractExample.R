@@ -1,0 +1,54 @@
+#' @include showVmGlgExamples.R exportInsuranceContract_xlsx.R InsuranceContract.R
+NULL
+
+#' Export the example calculations of an insurance contract
+#'
+#' Export the given contract to excel (full history/timeseries of all cash
+#' flows, reserves, premiums, etc.) and to a text file (sample calculation
+#' required by the Austrian regulation).
+#'
+#' Three output files are generated:
+#'   - [DATE]_[TARIFF]_Example.xlsx: Full history/timeseries
+#'   - [DATE]_[TARIFF]_Example_PremiumWaiver_t10.xlsx: Full history/timeseries
+#'                 after a premium waiver at the given time \code{prf}
+#'   - [DATE]_[TARIFF]_Examples_VmGlg.txt: Example calculation required for the
+#'                 Austrian regulation (LV-VMGLV)
+#'
+#' @param contract The \code{\link{InsuranceContract}} object to be exported
+#' @param prf The time of the premium waiver
+#' @param outdir The output directory (the file names are not configurable)
+#' @param ... Further parameters (passed on to \link{\code{showVmGlgExamples}})
+#'
+#' @examples
+#' mortalityTables.load("Austria_Annuities_AVOe2005R")
+#' # A trivial deferred annuity tariff with no costs:
+#' tariff = InsuranceTarif$new(name="Test Annuity", type="annuity", mortalityTable = AVOe2005R.unisex, i=0.01)
+#' contract = InsuranceContract$new(
+#'     tariff,
+#'     age = 35, YOB = 1981,
+#'     policyPeriod = 30, premiumPeriod = 15, deferralPeriod = 15,
+#'     sumInsured = 1000,
+#'     contractClosing = as.Date("2016-10-01")
+#' );
+#' exportInsuranceContractExample(contract, prf = 10)
+#'
+#' @export
+exportInsuranceContractExample = function(contract, prf = 10, outdir = ".", ...) {
+    if (!("InsuranceContract" %in% class(contract))) {
+        stop("First argument to function showVmGlgExamples need to be an InsuranceContract object! ",
+             "Given object is of class: ",
+             paste(class(contract), collapse = ", "));
+    }
+    basename = paste(outdir, "/", Sys.Date(), "_", str_replace(contract$tarif$name, " ", "_"), sep = "");
+
+    filename = paste(basename, "_Example.xlsx", sep = "");
+    exportInsuranceContract.xlsx(contract, filename);
+
+    contract.prf = contract$clone()
+    contract.prf$premiumWaiver(t = prf)
+    filename = paste(basename, "_Example_PremiumWaiver_t", prf, ".xlsx", sep = "");
+    exportInsuranceContract.xlsx(contract.prf, filename);
+
+    filename = paste(basename, "_Examples_VmGlg.txt", sep = "")
+    showVmGlgExamples(contract, prf = prf, ..., file = filename)
+}

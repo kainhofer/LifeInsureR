@@ -24,6 +24,8 @@ Collate:
     'InsuranceTarif.R'
     'InsuranceContract.R'
     'exportInsuranceContract_xlsx.R'
+    'showVmGlgExamples.R'
+    'exportInsuranceContractExample.R'
 Suggests:
     knitr,
     rmarkdown
