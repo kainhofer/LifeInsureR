@@ -4,8 +4,10 @@
 #' @import scales
 NULL
 
+#' Display insurance contract calculation example
+#'
 #' Display the values of the example calculation of the given insurance contract
-#' as required by  the Austrian regulation (LV-VMGLV, "LV
+#' as required by the Austrian regulation (LV-VMGLV, "LV
 #' Versicherungsmathematische Grundlagen Verordnung").
 #'
 #' @param contract The insurance contract to calculate and show
