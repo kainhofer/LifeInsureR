@@ -1,4 +1,6 @@
 #' @include showVmGlgExamples.R exportInsuranceContract_xlsx.R InsuranceContract.R
+#'
+#' @import stringr
 NULL
 
 #' Export the example calculations of an insurance contract

@@ -2,9 +2,7 @@
 % Please edit documentation in R/showVmGlgExamples.R
 \name{showVmGlgExamples}
 \alias{showVmGlgExamples}
-\title{Display the values of the example calculation of the given insurance contract
-as required by  the Austrian regulation (LV-VMGLV, "LV
-Versicherungsmathematische Grundlagen Verordnung").}
+\title{Display insurance contract calculation example}
 \usage{
 showVmGlgExamples(contract, prf = 10, t = 10, t_prf = 12, file = "",
   ...)
@@ -24,7 +22,7 @@ showVmGlgExamples(contract, prf = 10, t = 10, t_prf = 12, file = "",
 }
 \description{
 Display the values of the example calculation of the given insurance contract
-as required by  the Austrian regulation (LV-VMGLV, "LV
+as required by the Austrian regulation (LV-VMGLV, "LV
 Versicherungsmathematische Grundlagen Verordnung").
 }
 \examples{

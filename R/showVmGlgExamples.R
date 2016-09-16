@@ -36,7 +36,7 @@ NULL
 #' @export
 showVmGlgExamples = function(contract, prf=10, t=10, t_prf=12, file="", ...) {
 
-    has.prf = prf <= contract$Parameters$ContractData$premiumPeriod;
+    has.prf = prf < contract$Parameters$ContractData$premiumPeriod;
 
     if (!("InsuranceContract" %in% class(contract))) {
         stop("First argument to function showVmGlgExamples need to be an InsuranceContract object! ",
@@ -100,8 +100,8 @@ showVmGlgExamples = function(contract, prf=10, t=10, t_prf=12, file="", ...) {
 
         ifelse(has.prf, sprintf("Rückkaufswert (Prf.) (t=%d):      %8.2f (VS: %.2f)",
                 t_prf,
-                contract.prf$Values$reserves[t + 1, "Surrender"],
-                contract.prf$Values$reserves[t + 1, "PremiumFreeSumInsured"]), ""),
+                contract.prf$Values$reserves[t_prf + 1, "Surrender"],
+                contract.prf$Values$reserves[t_prf + 1, "PremiumFreeSumInsured"]), ""),
         "",
 
         ifelse(has.prf, sprintf("Prämienfreie VS (t=%d):           %8.2f",
