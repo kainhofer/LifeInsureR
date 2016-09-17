@@ -88,7 +88,7 @@ showVmGlgExamples = function(contract, prf=10, t=10, t_prf=12, file="", ...) {
         sprintf("Bilanzreserve (t=%.2f):             %8.2f",
                 contract$Values$reservesBalanceSheet[t + 1, "time"],
                 contract$Values$reservesBalanceSheet[t + 1, "Balance Sheet Reserve"]),
-        sprintf("Prämienübertrag (t=%.2f): NICHT IMPLEMENTIERT", contract$Values$reservesBalanceSheet[t + 1, "time"]),
+        sprintf("Prämienübertrag (BM=%2d):             %8.2f", month(contract$Parameters$ContractData$contractClosing), contract$Values$reservesBalanceSheet[t + 1, "unearned Premiums"]),
         "",
 
         "Rückkauf und Prämienfreistellung:",

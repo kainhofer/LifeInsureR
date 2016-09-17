@@ -621,11 +621,21 @@ InsuranceTarif = R6Class(
       resGamma_BS = (1 - baf) * reserves[,"gamma"] + baf * c(reserves[-1, "gamma"], 0);
       res_BS = resZ_BS + resGamma_BS;
 
+      # Premium transfer / unearned premium:
+      bm = month(params$ContractData$contractClosing)
+      freq = params$ContractData$premiumFrequency
+      # TODO: We have no vector of actual written premiums (implicit assumption
+      # seems to be that the premium stays constant!). Once we have such a vector,
+      # rewrite the following code
+      fact = (bm-1) %% (12/freq) / 12 * freq
+      unearnedPremiums = fact * values$cashFlows$premiums_advance * values$premiums[["written_beforetax"]]
+
       # Collect all reserves to one large matrix
       res = cbind("time" = baf + (1:years) - 1,
                   "Zillmer"               = pmax(resZ_BS,0),
                   "gamma"                 = pmax(resGamma_BS,0),
-                  "Balance Sheet Reserve" = pmax(res_BS,0)
+                  "Balance Sheet Reserve" = pmax(res_BS,0),
+                  "unearned Premiums"     = unearnedPremiums
       );
       rownames(res) <- rownames(reserves);
       res
