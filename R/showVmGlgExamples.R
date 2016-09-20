@@ -107,6 +107,6 @@ showVmGlgExamples = function(contract, prf=10, t=10, t_prf=12, file="", ...) {
         ifelse(has.prf, sprintf("Prämienfreie VS (t=%d):           %8.2f",
                 t, contract$Values$reserves[t + 1, "PremiumFreeSumInsured"]), "")
     );
-    cat(paste(output, collapse = '\n'), file = file)
+    cat(paste(output, collapse = '\r\n'), file = file)
 
 }
