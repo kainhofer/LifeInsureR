@@ -149,6 +149,10 @@ pad0 = function(v, l, value=0) {
         v[0:l]
     }
 }
+#' @export
+padLast = function(v, l) {
+    pad0(v, l, tail(v, n = 1))
+}
 
 valueOrFunction = function(val, ...) {
   if (is.function(val)) {
