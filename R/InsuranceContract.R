@@ -54,16 +54,17 @@ InsuranceContract = R6Class(
             # values. Also, the tariff will fill the profit scheme default,
             # so we need to call the tariff first in any case
             self$Parameters = self$ContractParameters;
-            ppScheme = self$Parameters$ProfitParticipation$profitParticipationScheme;
-            if (!is.null(ppScheme)) {
-                self$Parameters$ProfitParticipation = InsuranceContract.ParametersFallback(
-                    self$Parameters$ProfitParticipation,
-                    ppScheme$Parameters);
-            }
             self$Parameters = InsuranceContract.ParametersFallback(
                 self$ContractParameters,
                 self$tarif$getParameters()
             );
+
+            ppScheme = self$Parameters$ProfitParticipation$profitParticipationScheme;
+            if (!is.null(ppScheme)) {
+                self$Parameters$ProfitParticipation = fallbackFields(
+                    self$Parameters$ProfitParticipation,
+                    ppScheme$Parameters);
+            }
 
             # Costs can be a function => evaluate it to get the real costs
             self$Parameters$Costs = self$evaluateCosts(self$Parameters$Costs)
