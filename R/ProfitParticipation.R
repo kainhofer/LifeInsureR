@@ -4,6 +4,11 @@
 NULL
 
 
+#' @export
+filterProfitRates = function(rates, classes) {
+    filter(.data = rates, profitClass %in% classes)
+}
+
 
 #' Base Class for Profit Participation Schemes
 #'
@@ -86,6 +91,92 @@ ProfitParticipation = R6Class(
         params$ContractData$sumInsured
     },
 
+    setupRates = function(params, values, ...) {
+        # 1) Profit scheme or contract provides general company-wide profit rates for some years:
+        #       profitRates
+        # 2) Contract can override individual rates (either for calendar years or contract years):
+        #       guaranteedInterest, interestProfitRate, totalInterest, mortalityProfitRate,
+        #       expenseProfitRate, sumProfitRate, terminalBonusRate, terminalBonusQuote
+        # 3) Explicit function arguments (either for calendar years or contract years).
+        # 4) Any missing values will be taken from the last given year
+#
+# params = contract.U3.1_2015$Parameters;
+# values = contract.U3.1_2015$Values;
+# browser()
+        startYear = year(params$ContractData$contractClosing);
+        policyPeriod = params$ContractData$policyPeriod;
+policyPeriod = 10;
+        years = startYear:(startYear + policyPeriod);
+
+        columns = c(
+            "year",
+            "guaranteedInterest", "interestProfitRate", "totalInterest",
+            "mortalityProfitRate", "expenseProfitRate", "expenseProfitRate_premiumfree",
+            "sumProfitRate",
+            "terminalBonusRate", "terminalBonusQuote")
+        rates = data.frame(matrix(ncol = length(columns), nrow = length(years), dimnames = list(years = years, rates = columns)))
+
+        # profitRates are general company-wide tables with all default rates
+        # => use them as default, unless overridden
+        defrates = params$ProfitParticipation$profitRates
+        if (!is.null(defrates)) {
+#             profclass = params$ProfitParticipation$profitClass
+# # profclass="B10"
+#             defrates = filter(defrates, profitClass == profclass)
+#             rownames(defrates) = defrates$year
+#
+#             # Use last year before the startYear as a fallback if startYear is not given
+#             if (!startYear %in% defrates$year) {
+#                 # TODO
+#                 # max(defrates$year[(defrates$year <= startYear)])
+#             }
+#
+#             defrates$year
+#             # if (max(d))
+
+        }
+        allrates = defrates
+
+        # 2) Add the explicit overrides per profit rate (from the contract)
+        for (col in columns) {
+            if (!is.null(params$ProfitParticipation[[col]])) {
+                rt = valueOrFunction(params$ProfitParticipation[[col]], params = params, values = values);
+                if (is.null(names(rt))) {
+                    # numeric value or vector => assume values from the contract start year
+                    rates[as.character(years), col] = padLast(rt, length(years));
+                } else {
+                    # values with years assigned => use them only for the given year
+                    rates[names(rt), col] = rt;
+                    rates[names(rt), "year"] = names(rt);
+                }
+            }
+        }
+
+        # 3) Use explicit function param overrides per profit rate (from this function call)
+        for (col in columns) {
+            str(col)
+            rt = match.arg(arg = col);
+str(rt)
+            if (!is.null(rt)) {
+                rt = valueOrFunction(rt, params = params, values = values);
+                if (is.null(names(rt))) {
+                    # numeric value or vector => assume values from the contract start year
+                    rates[as.character(years), col] = padLast(rt, length(years));
+                } else {
+                    # values with years assigned => use them only for the given year
+                    rates[names(rt), col] = rt;
+                    rates[names(rt), "year"] = names(rt);
+                }
+                str(rates)
+            }
+            #             str(
+        }
+        #
+# str(defrates$profitClass)
+#         # TODO: extract default
+#
+    },
+
 
     #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     # Profit rates for the various types of profit
@@ -147,7 +238,9 @@ ProfitParticipation = R6Class(
 
 
 
-    getProfitParticipation = function(rates, params, values) {
+    getProfitParticipation = function(params, values, ...) {
+        rates        = self$setupRates(params = params, values = values, ...)
+
         intBase      = self$getInterestProfitBase(params = params, values = values);
         riskBase     = self$getRiskProfitBase(params = params, values = values);
         expenseBase  = self$getExpenseProfitBase(params = params, values = values);

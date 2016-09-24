@@ -641,24 +641,10 @@ InsuranceTarif = R6Class(
       res
     },
 
-    determineProfitRates = function(params, values, ...) {
-        startYear = year(params$ContractData$contractClosing);
-        policyPeriod = params$ContractData$policyPeriod;
-        years = startYear:(startYear + policyPeriod);
-
-        # TODO: extract default
-
-    },
-
-
-    profitParticipation = function(params, values, ...) {
-        rates = self$determineProfitRates(params, values, ...);
-        self$calculateProfitParticipation(rates, params, values)
-    },
-
-    calculateProfitParticipation = function(rates, params, values) {
-        if (!is.null(params$ProfitParticipation$profitParticipationScheme)) {
-            params$ProfitParticipation$profitParticipationScheme$getProfitParticipation(rates, params = params, values = values)
+    calculateProfitParticipation = function(params, values, ...) {
+        ppScheme = params$ProfitParticipation$profitParticipationScheme;
+        if (!is.null(ppScheme)) {
+            ppScheme$getProfitParticipation(params = params, values = values, ...)
         }
     },
 
