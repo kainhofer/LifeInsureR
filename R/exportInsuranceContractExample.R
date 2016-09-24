@@ -35,22 +35,25 @@ NULL
 #' exportInsuranceContractExample(contract, prf = 10)
 #'
 #' @export
-exportInsuranceContractExample = function(contract, prf = 10, outdir = ".", ...) {
+exportInsuranceContractExample = function(contract, prf = 10, outdir = ".", basename=NULL, ...) {
     if (!("InsuranceContract" %in% class(contract))) {
         stop("First argument to function showVmGlgExamples need to be an InsuranceContract object! ",
              "Given object is of class: ",
              paste(class(contract), collapse = ", "));
     }
-    basename = paste(outdir, "/", Sys.Date(), "_", str_replace(contract$tarif$name, " ", "_"), sep = "");
+    if (missing(basename)) {
+        basename = paste(outdir, "/", Sys.Date(), "_", str_replace(contract$tarif$name, " ", "_"), sep = "");
+        basename = paste(basename, "_RZ", sprintf("%.2f", contract$Parameters$ActuarialBases$i), "_x", contract$Parameters$ContractData$age, "_YoB", contract$Parameters$ContractData$YOB, "_LZ", contract$Parameters$ContractData$policyPeriod, "_PrZ", contract$Parameters$ContractData$premiumPeriod, "_VS", contract$Parameters$ContractData$sumInsured, sep = "" )
+    }
 
-    filename = paste(basename, "_Example.xlsx", sep = "");
+    filename = paste(basename, ".xlsx", sep = "");
     exportInsuranceContract.xlsx(contract, filename);
 
     contract.prf = contract$clone()
     contract.prf$premiumWaiver(t = prf)
-    filename = paste(basename, "_Example_PremiumWaiver_t", prf, ".xlsx", sep = "");
+    filename = paste(basename, "_PremiumWaiver_t", prf, ".xlsx", sep = "");
     exportInsuranceContract.xlsx(contract.prf, filename);
 
-    filename = paste(basename, "_Examples_VmGlg.txt", sep = "")
+    filename = paste(basename, "_VmGlg.txt", sep = "")
     showVmGlgExamples(contract, prf = prf, ..., file = filename)
 }
