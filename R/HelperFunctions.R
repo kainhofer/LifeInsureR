@@ -90,19 +90,19 @@ calculatePVDeath = function(px, qx, benefits, ..., v=1) {
   res[1:l]
 }
 
-calculatePVDisease = function(px=1-qx-ix, qx=1-ix-px, ix=1-px-qx, benefits, ..., v=1) {
+calculatePVDisease = function(px = 1 - qx - ix, qx = 1 - ix - px, ix = 1 - px - qx, benefits, ..., v = 1) {
   init = benefits[1]*0;
   l = min(length(ix), length(qx), length(benefits));
-  qx = pad0(qx, l, value=1);
-  ix = pad0(ix, l, value=0);
-  px = pad0(px, l, value=0);
-  benefits = pad0(benefits, l, value=init);
+  qx = pad0(qx, l, value = 1);
+  ix = pad0(ix, l, value = 0);
+  px = pad0(px, l, value = 0);
+  benefits = pad0(benefits, l, value = init);
 
   # TODO: Make this work for matrices (i.e. currently benefits are assumed to be one-dimensional vectors)
   # TODO: Replace loop by better way (using Reduce?)
-  res = rep(init, l+1);
+  res = rep(init, l + 1);
   for (i in l:1) {
-    res[i] = v*ix[i]*benefits[i] + v*px[i]*res[i+1];
+    res[i] = v * ix[i] * benefits[i] + v * px[i] * res[i + 1];
   }
   res[1:l]
 }
@@ -115,39 +115,39 @@ getSavingsPremium = function(reserves, v=1, survival_advance=c(0), survival_arre
 
 correctionPaymentFrequency = function(m = 1, i = self$i, order = 0) {
   # 0th-order approximation
-  alpha=1;
-  beta=0;
+  alpha = 1;
+  beta = 0;
   # negative orders mean that NO correction is done, e.g. because other means of
   # correction are used like an explicit premium frequency loading on the premium.
-  if (order >=0 ) beta = beta + (m-1)/(2*m);
+  if (order >= 0 ) beta = beta + (m - 1) / (2 * m);
   # For higher orders, simply add one term after the other!
-  if (order >= 1)     beta = beta + (m^2-1)/(6*m^2)*i; # S-Versicherung: *(1-i/2)
+  if (order >= 1)     beta = beta + (m ^ 2 - 1) / (6 * m ^ 2) * i; # S-Versicherung: *(1-i/2)
   # order 1.5 has a special term that should NOT be used for higher-order approximations!
-  if (order == 1.5)   beta = beta + (1-m^2)/(12*m^2)*i^2;
+  if (order == 1.5)   beta = beta + (1 - m ^ 2) / (12 * m ^ 2) * i ^ 2;
 
   if (order >= 2) {
-    beta = beta + (1-m^2)/(24*m^2)*i^2;
-    alpha = alpha + (m^2-1)/(12*m^2)*i^2;
+    beta = beta + (1 - m ^ 2) / (24 * m ^ 2) * i ^ 2;
+    alpha = alpha + (m ^ 2 - 1) / (12 * m ^ 2) * i ^ 2;
   }
   # Exact value
   if (order == Inf) {
-    d = i/(1+i);
-    im = m * ((1+i)^(1/m) - 1);
-    dm = im / (1+im/m);
+    d = i / (1 + i);
+    im = m * ((1 + i) ^ (1/m) - 1);
+    dm = im / (1 + im/m);
 
     alpha = d*i / (dm*im);
-    beta = (i-im) / (dm*im);
+    beta = (i - im) / (dm * im);
   }
-  list(alpha=alpha, beta=beta);
+  list(alpha = alpha, beta = beta);
 }
 
 #' @export
 pad0 = function(v, l, value=0) {
-  if (l>=length(v)) {
-    c(v, rep(value, l-length(v)))
-  } else {
-    v[0:l]
-  }
+    if (l >= length(v)) {
+        c(v, rep(value, l - length(v)))
+    } else {
+        v[0:l]
+    }
 }
 
 valueOrFunction = function(val, ...) {

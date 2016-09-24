@@ -6,7 +6,6 @@
 NULL
 
 
-
 #' Base Class for Insurance Contracts
 #'
 #' R6 class that models a complete, general insurance contract.
@@ -40,9 +39,9 @@ InsuranceContract = R6Class(
             self$tarif = tarif;
 
             self$ContractParameters = InsuranceContract.ParametersFill(
-                age=age,
-                policyPeriod=policyPeriod,
-                sumInsured=sumInsured,
+                age = age,
+                policyPeriod = policyPeriod,
+                sumInsured = sumInsured,
                 ...,
                 premiumWaiver = FALSE,
                 surrenderPenalty = TRUE,
@@ -50,7 +49,10 @@ InsuranceContract = R6Class(
             );
 
             # Set default values for required contract-specific data
-            # First, take the ProfitParticipation defaults, then the tariff defaults
+            # First, take the tariff defaults, then the  ProfitParticipation
+            # defaults, so a tariff can override the profit participation scheme
+            # values. Also, the tariff will fill the profit scheme default,
+            # so we need to call the tariff first in any case
             self$Parameters = self$ContractParameters;
             ppScheme = self$Parameters$ProfitParticipation$profitParticipationScheme;
             if (!is.null(ppScheme)) {
