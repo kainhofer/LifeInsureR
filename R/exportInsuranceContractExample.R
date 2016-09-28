@@ -35,7 +35,7 @@ NULL
 #' exportInsuranceContractExample(contract, prf = 10)
 #'
 #' @export
-exportInsuranceContractExample = function(contract, prf = 10, outdir = ".", basename=NULL, ...) {
+exportInsuranceContractExample = function(contract, prf = 10, outdir = ".", basename=NULL, extraname = NULL, ...) {
     if (!("InsuranceContract" %in% class(contract))) {
         stop("First argument to function showVmGlgExamples need to be an InsuranceContract object! ",
              "Given object is of class: ",
@@ -43,6 +43,9 @@ exportInsuranceContractExample = function(contract, prf = 10, outdir = ".", base
     }
     if (missing(basename)) {
         basename = paste(outdir, "/", Sys.Date(), "_", str_replace(contract$tarif$name, " ", "_"), sep = "");
+        if (!missing(extraname) && !is.null(extraname)) {
+            basename = paste(basename, "_", extraname, sep = "")
+        }
         basename = paste(basename, "_RZ", sprintf("%.2f", contract$Parameters$ActuarialBases$i), "_x", contract$Parameters$ContractData$age, "_YoB", contract$Parameters$ContractData$YOB, "_LZ", contract$Parameters$ContractData$policyPeriod, "_PrZ", contract$Parameters$ContractData$premiumPeriod, "_VS", contract$Parameters$ContractData$sumInsured, sep = "" )
     }
 
