@@ -50,7 +50,7 @@ InsuranceContract.Values = list(
 
 #' @export
 InsuranceContract.ParameterDefaults = list(
-    ContractData = list (
+    ContractData = list(
         sumInsured = 100000,
         YOB = 1975,
         age = 40,
