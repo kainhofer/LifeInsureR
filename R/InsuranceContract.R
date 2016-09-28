@@ -147,7 +147,7 @@ InsuranceContract = R6Class(
             sum(self$Values$cashFlows$premiums_advance + self$Values$cashFlows$premiums_arrears);
         },
         determineCashFlowsCosts = function() {
-            self$tarif$getCashFlowsCosts(params=self$Parameters);
+            self$tarif$getCashFlowsCosts(params = self$Parameters, values = self$Values);
         },
         calculatePresentValues = function() {
             self$tarif$presentValueCashFlows(params=self$Parameters, values=self$Values);

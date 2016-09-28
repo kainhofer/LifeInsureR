@@ -68,7 +68,10 @@ InsuranceContract.ParameterDefaults = list(
 
         widowProportion = 0,                    # Witwenübergang (Anteil an VS des VN)
         deathBenefitProportion = 1,             # For endowments: Proportion of the death benefit relative to the life benefit
-        premiumRefund = 0                       # Proportion of premiums refunded on death (including additional risk, e.g. 1.10 = 110% of paid premiums)
+        premiumRefund = 0,                      # Proportion of premiums refunded on death (including additional risk, e.g. 1.10 = 110% of paid premiums)
+        premiumIncrease = 1,                    # The yearly growth factor of the premium, i.e. 1.05 means +5% increase each year; a Vector describes the premiums for all years
+        annuityIncrease = 1,                    # The yearly growth factor of the annuity payments, i.e. 1.05 means +5% incrase each year; a vector describes the annuity unit payments for all years
+        deathBenefit = 1                        # The yearly relative death benefit (relative to the initial sum insured); Can be set to a function(len, params, values), e.g. deathBenefit = deathBenefit.linearDecreasing
     ),
     ContractState = list(
         premiumWaiver = FALSE,                  # Vertrag ist prämienfrei gestellt

@@ -97,45 +97,132 @@ InsuranceTarif = R6Class(
         valueOrFunction(costs, params = params, values = NULL)
     },
 
+    # Get the unit premium cash flow for the whole contract period.
+    #   - For constant premiums it will be rep(1, premiumPeriod),
+    #   - for single premiums it will be c(1, 0, 0, ...),
+    #   - for increasing premiums it will be (1+increase)^(0:(premiumPeriod-1))
+    # and 0 after the premium period
+    getPremiumCF = function(len, params, values) {
+        premPeriod = min(params$ContractData$premiumPeriod, params$ContractData$policyPeriod, len);
+        if (is.null(params$ContractData$premiumIncrease)) {
+            pad0(rep(1, premPeriod - 1), len);
+        } else {
+            inc = valueOrFunction(params$ContractData$premiumIncrease, premiumPeriod = premPeriod, params = params, values = values)
+            if (is.vector(inc) && length(inc) > 1) {
+                # If premiumIncrease is (or returns) a vector, treat it as
+                # relative premium amounts, ie. c(1, 1.1, 1.2) means +10% of
+                # the initial premium for the second and third year
+                pad0(inc, len)
+            } else {
+                pad0(inc ^ (0:(premPeriod - 1)), len)
+            }
+        }
+    },
+
+    # Get the unit annuity cash flow (guaranteed and contingent) for the whole annuity payment period.
+    #   - For constant annuity it will be rep(1, annuityPeriod),
+    #   - for increasing annuities it will be (1+increase)^(0:(premiumPeriod-1))
+    # and 0 after the premium period
+    getAnnuityCF = function(len, params, values) {
+        annuityPeriod = min(params$ContractData$policyPeriod - params$ContractData$deferralPeriod, len);
+        if (is.null(params$ContractData$annuityIncrease)) {
+            pad0(rep(1, annuityPeriod), len);
+        } else {
+            inc = valueOrFunction(params$ContractData$annuityIncrease, annuityPeriod = annuityPeriod, params = params, values = values)
+            if (is.vector(inc) && length(inc) > 1) {
+                # If annuityIncrease is (or returns) a vector, treat it as
+                # relative annuity amounts, ie. c(1, 1.1, 1.2) means +10% of
+                # the initial annuity for the second and third year
+                pad0(inc, len)
+            } else {
+                # a numeric value means constant yearly increases (multiplicative)
+                pad0(inc ^ (0:annuityPeriod), len)
+            }
+        }
+    },
+
+    # Get the unit death cash flow for the whole protection period.
+    #   - For constant death benefit it will be rep(1, policyPeriod),
+    #   - for linearly decreasing sum insured it will be (policyPeriod:0)/policyPeriod
+    getDeathCF = function(len, params, values) {
+        period = params$ContractData$policyPeriod - params$ContractData$deferralPeriod;
+        if (is.null(params$ContractData$deathBenefit)) {
+            pad0(rep(1, period), len)
+        } else {
+            benefit = valueOrFunction(params$ContractData$deathBenefit, len = len, params = params, values = values)
+            if (is.vector(benefit) && length(benefit) > 1) {
+                # If deathBenefit is (or returns) a vector, treat it as
+                # relative annuity amounts, ie. c(1, 1.1, 1.2) means +10% of
+                # the initial annuity for the second and third year
+                pad0(benefit, len)
+            } else {
+                # constant death benefit
+                pad0(rep(benefit, period), len)
+            }
+        }
+    },
+
     getBasicCashFlows = function(params) {
-      age = params$ContractData$age;
-      maxAge = getOmega(params$ActuarialBases$mortalityTable)
-      maxlen = min(maxAge - age, params$ContractData$policyPeriod);
-      cf = data.frame(
-        guaranteed = rep(0, maxlen + 1),
-        survival = rep(0, maxlen + 1),
-        death = rep(0, maxlen + 1),
-        disease = rep(0, maxlen + 1)
-      );
-      if (self$tariffType == "annuity") {
-        # guaranteed payments exist only with annuities (first n years of the payment)
-        cf$guaranteed = c(
-            rep(0, params$ContractData$deferralPeriod),
-            rep(1, params$ContractData$guaranteed),
-            rep(0, max(0, maxlen + 1 - params$ContractData$deferralPeriod - params$ContractData$guaranteed)));
-        cf$survival = c(
-            rep(0, params$ContractData$deferralPeriod + params$ContractData$guaranteed),
-            rep(1, max(0, maxlen - params$ContractData$deferralPeriod - params$ContractData$guaranteed)),
-            0)
-      } else if (self$tariffType == "terme-fix") {
-        cf$guaranteed = c(rep(0, params$ContractData$policyPeriod), 1);
-      } else if (self$tariffType == "dread-disease") {
-        cf$disease = c(
-            rep(0, params$ContractData$deferralPeriod),
-            rep(1, maxlen - params$ContractData$deferralPeriod),
-            0);
-      } else {
-        if (self$tariffType == "endowment" || self$tariffType == "pureendowment") {
-          cf$survival = c(rep(0, params$ContractData$policyPeriod), 1);
+        age = params$ContractData$age;
+        maxAge = getOmega(params$ActuarialBases$mortalityTable)
+        policyPeriod = params$ContractData$policyPeriod;
+        deferralPeriod = params$ContractData$deferralPeriod;
+        guaranteedPeriod = params$ContractData$guaranteedPeriod;
+        maxlen = min(maxAge - age, policyPeriod);
+
+        cf = data.frame(
+            guaranteed = rep(0, maxlen + 1),
+            survival = rep(0, maxlen + 1),
+            death = rep(0, maxlen + 1),
+            disease = rep(0, maxlen + 1),
+            sumInsured = rep(1, maxlen + 1)
+        );
+        if (self$tariffType == "annuity") {
+            annuityPeriod = maxlen - deferralPeriod;
+            annuityCF = self$getAnnuityCF(len = annuityPeriod, params = params, values = values)
+            # guaranteed payments exist only with annuities (first n years of the payment)
+            cf$guaranteed = c(
+                rep(0, deferralPeriod),
+                head(annuityCF, n = guaranteedPeriod),
+                rep(0, max(0, maxlen + 1 - deferralPeriod - guaranteedPeriod)));
+            cf$survival = c(
+                rep(0, deferralPeriod + guaranteedPeriod),
+                tail(annuityCF, n = -guaranteedPeriod),
+                # rep(1, max(0, maxlen - deferralPeriod - guaranteedPeriod)),
+                0)
+            cf$sumInsured = c(
+                rep(1, deferralPeriod), # increases/decreases of annuities happen only after deferral!
+                annuityCF,
+                0)
+
+        } else if (self$tariffType == "terme-fix") {
+            cf$guaranteed = c(rep(0, policyPeriod), 1);
+
+        } else if (self$tariffType == "dread-disease") {
+            cf$disease = c(
+                rep(0, deferralPeriod),
+                rep(1, maxlen - deferralPeriod),
+                0);
+        } else {
+            # For endowments, use the death factor here in the basic death CF
+            # to fix the relation of death to survival benefit
+            deathCF = self$getDeathCF(maxlen - deferralPeriod, params = params, values = values)
+
+            if (self$tariffType == "endowment" || self$tariffType == "pureendowment") {
+                cf$survival = c(rep(0, policyPeriod), 1);
+            }
+            if (self$tariffType == "endowment" || self$tariffType == "wholelife") {
+                cf$death = c(
+                    rep(0, deferralPeriod),
+                    deathCF,
+                    0);
+                cf$sumInsured = c(
+                    rep(0, deferralPeriod),
+                    deathCF,
+                    1);
+            }
         }
-        if (self$tariffType == "endowment" || self$tariffType == "wholelife") {
-          cf$death = c(
-              rep(0, params$ContractData$deferralPeriod),
-              rep(1, maxlen - params$ContractData$deferralPeriod),
-              0);
-        }
-      }
-      cf
+        cf
     },
 
     getCashFlows = function(params, values) {
@@ -165,7 +252,7 @@ InsuranceTarif = R6Class(
 
       # Premiums:
       if (!params$ContractState$premiumWaiver) {
-        premiums = pad0(rep(1, min(params$ContractData$premiumPeriod, params$ContractData$policyPeriod)), cflen);
+        premiums = self$getPremiumCF(len = cflen, params = params, values = values)
         if (params$ContractData$premiumPayments == "in advance") {
           cf$premiums_advance = premiums;
         } else {
@@ -199,7 +286,7 @@ InsuranceTarif = R6Class(
       cf
     },
 
-    getCashFlowsCosts = function(params) {
+    getCashFlowsCosts = function(params, values) {
       age = params$ContractData$age;
       maxAge = getOmega(params$ActuarialBases$mortalityTable)
       policyPeriod = params$ContractData$policyPeriod;
@@ -229,6 +316,11 @@ InsuranceTarif = R6Class(
       if (params$ContractState$premiumWaiver) {
         cf[,"gamma",] = cf[,"gamma_nopremiums",];
       }
+
+      # some values like sumInsured or gross premium might change over time,
+      # so multiply them with the unit cash flows stored in values$cashFlows
+      cf[,,"SumInsured"] = cf[,,"SumInsured"] * values$cashFlowsBasic$sumInsured
+
       cf
     },
 
@@ -322,6 +414,10 @@ InsuranceTarif = R6Class(
         # of forgetting a dimension, because then the dimensions would not match,
         # while here it's easy to overlook a multiplication)
         # Multiply each CF column by the corresponding basis
+        #
+        # All propSI cash flows are already set up with the correct multiple
+        # of the sumInsured (in cashFlowsBasic) for non-constant sums insured.
+        # So here, we don't need to multiply with  values$cashFlowsBasic$sumInsured!
         propGP = c("premiums_advance", "premiums_arrears");
         propSI = c("guaranteed_advance", "guaranteed_arrears",
                    "survival_advance", "survival_arrears", "death_SumInsured",
@@ -336,6 +432,8 @@ InsuranceTarif = R6Class(
       colnames(values$cashFlows)[colnames(values$cashFlows) == "death_SumInsured"] = "death";
       # cashFlows[,"death_GrossPremium"] = NULL;
 
+      # costs relative to sumInsured are already set up as the correct multiple
+      # of the original SI, including the dynamic changes over time!
       values$cashFlowsCosts = values$cashFlowsCosts[,,"SumInsured"] * params$ContractData$sumInsured +
         values$cashFlowsCosts[,,"SumPremiums"] * values$unitPremiumSum * values$premiums[["gross"]] +
         values$cashFlowsCosts[,,"GrossPremium"] * values$premiums[["gross"]];

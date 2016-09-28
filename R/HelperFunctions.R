@@ -5,6 +5,55 @@ PaymentTimeEnum = setSingleEnum("PaymentTime", levels = c("in advance", "in arre
 #PaymentCountEnum = setSingleEnum(PaymentCount, levels = c(1,2,3))
 
 
+#' Describes the death benefit of a linearly decreasing whole life insurance (after a possible deferall period)
+#'
+#' The death benefit will be the full sumInsured for the first year after the
+#' deferral period and then decrease linearly to 0 at the end of the policyPeriod.
+#' This can be used with the \code{deathBenefit} parameter for insurance
+#' contracts, but should not be called directly.
+#'
+#' @param len The desired length of the Cash flow vector (can be shorter than
+#'            the policyPeriod, if q_x=1 before the end of the contract, e.g.
+#'            for life-long insurances)
+#' @param params The full parameter set of the insurance contract (including
+#'               all inherited values from the tariff and the profit participation)
+#' @param values The values calculated from the insurance contract so far
+#'
+#' @export
+deathBenefit.linearDecreasing = function(len, params, values) {
+    protectionPeriod = params$ContractData$policyPeriod - params$ContractData$deferralPeriod;
+    pad0((protectionPeriod:0) / protectionPeriod, l = len)
+}
+
+
+#' Describes the death benefit of a decreasing whole life insurance (after a possible deferall period)
+#'
+#' The death benefit will be the full sumInsured for the first year after the
+#' deferral period and then decrease like an annuity to 0 at the end of the policyPeriod.
+#' This can be used with the \code{deathBenefit} parameter for insurance
+#' contracts, but should not be called directly.
+#'
+#' @param len The desired length of the Cash flow vector (can be shorter than
+#'            the policyPeriod, if q_x=1 before the end of the contract, e.g.
+#'            for life-long insurances)
+#' @param params The full parameter set of the insurance contract (including
+#'               all inherited values from the tariff and the profit participation)
+#' @param values The values calculated from the insurance contract so far
+#'
+#' @export
+deathBenefit.annuityDecreasing = function(interest) {
+    function(len, params, values) {
+        protectionPeriod = params$ContractData$policyPeriod - params$ContractData$deferralPeriod;
+        vk = 1/(1 + interest);
+        if (interest == 0) {
+            sumInsured = (protectionPeriod:0) / protectionPeriod
+        } else {
+            sumInsured = (vk ^ (protectionPeriod:0) - 1) / (vk ^ protectionPeriod - 1)
+        }
+        pad0(sumInsured, l = len)
+    }
+}
+
 mergeValues = function(starting, ending, t) {
   rbind(starting[1:t,], ending[-1:-t,])
 }
