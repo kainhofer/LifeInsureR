@@ -100,13 +100,8 @@ ProfitParticipation = R6Class(
         #       expenseProfitRate, sumProfitRate, terminalBonusRate, terminalBonusQuote
         # 3) Explicit function arguments (either for calendar years or contract years).
         # 4) Any missing values will be taken from the last given year
-#
-# params = contract.U3.1_2015$Parameters;
-# values = contract.U3.1_2015$Values;
-# browser()
         startYear = year(params$ContractData$contractClosing);
         policyPeriod = params$ContractData$policyPeriod;
-policyPeriod = 10;
         years = startYear:(startYear + policyPeriod);
 
         columns = c(
@@ -116,27 +111,20 @@ policyPeriod = 10;
             "sumProfitRate",
             "terminalBonusRate", "terminalBonusQuote")
         rates = data.frame(matrix(ncol = length(columns), nrow = length(years), dimnames = list(years = years, rates = columns)))
+        rates$year = years;
 
-        # profitRates are general company-wide tables with all default rates
+        # 1) profitRates are general company-wide tables with all default rates
         # => use them as default, unless overridden
         defrates = params$ProfitParticipation$profitRates
         if (!is.null(defrates)) {
-#             profclass = params$ProfitParticipation$profitClass
-# # profclass="B10"
-#             defrates = filter(defrates, profitClass == profclass)
-#             rownames(defrates) = defrates$year
-#
-#             # Use last year before the startYear as a fallback if startYear is not given
-#             if (!startYear %in% defrates$year) {
-#                 # TODO
-#                 # max(defrates$year[(defrates$year <= startYear)])
-#             }
-#
-#             defrates$year
-#             # if (max(d))
+            profclass = params$ProfitParticipation$profitClass
+            defrates = dplyr::filter(defrates, profitClass == profclass)
+            rownames(defrates) = defrates$year
 
+            defcols = intersect(columns, colnames(defrates))
+
+            rates[rownames(defrates), defcols] = defrates[, defcols]
         }
-        allrates = defrates
 
         # 2) Add the explicit overrides per profit rate (from the contract)
         for (col in columns) {
@@ -144,9 +132,10 @@ policyPeriod = 10;
                 rt = valueOrFunction(params$ProfitParticipation[[col]], params = params, values = values);
                 if (is.null(names(rt))) {
                     # numeric value or vector => assume values from the contract start year
+                    # and fill ALL policy years with the given rates (last entry repeated)
                     rates[as.character(years), col] = padLast(rt, length(years));
                 } else {
-                    # values with years assigned => use them only for the given year
+                    # values with years assigned => use them only for the given year(s), don't override any other year
                     rates[names(rt), col] = rt;
                     rates[names(rt), "year"] = names(rt);
                 }
@@ -154,28 +143,37 @@ policyPeriod = 10;
         }
 
         # 3) Use explicit function param overrides per profit rate (from this function call)
-        for (col in columns) {
-            str(col)
-            rt = match.arg(arg = col);
-str(rt)
+        argcols = match.call(expand.dots = FALSE)$`...`;
+        matching.cols = intersect(columns, names(argcols))
+        for (col in matching.cols) {
+            rt = eval(argcols[[col]]);
             if (!is.null(rt)) {
                 rt = valueOrFunction(rt, params = params, values = values);
                 if (is.null(names(rt))) {
                     # numeric value or vector => assume values from the contract start year
+                    # and fill ALL policy years with the given rates (last entry repeated)
                     rates[as.character(years), col] = padLast(rt, length(years));
                 } else {
-                    # values with years assigned => use them only for the given year
+                    # values with years assigned => use them only for the given year(s), don't override any other year
                     rates[names(rt), col] = rt;
                     rates[names(rt), "year"] = names(rt);
                 }
                 str(rates)
             }
-            #             str(
         }
-        #
-# str(defrates$profitClass)
-#         # TODO: extract default
-#
+        rownames(rates) = rates[, "year"]
+
+        # 4) Fill all NAs with the last known value
+        newrates = rates %>% dplyr::mutate_all(fillNAgaps)
+        rownames(newrates) = newrates$year
+
+        # 5) Replace all NA values with 0, so we don't run into any problems later on
+        newrates[is.na(newrates)] <- 0
+
+        # TODO: Fix guaranteedInterest + interestProfitRate = totalInterest, where one of them might be missing!
+
+        # Return only the policy years...
+        newrates[as.character(years),]
     },
 
 
@@ -184,24 +182,24 @@ str(rt)
     # Can / shall be overridden in child classes that use other schemes!
     #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     getInterestProfitRate = function(rates, params, values) {
-        c(0, rates$interest)
+        rates$interestProfitRate
     },
     getRiskProfitRate = function(rates, params, values) {
-        c(0, rates$risk)
+        rates$mortalityProfitRate
     },
     getExpenseProfitRate = function(rates, params, values) {
-        c(0, rates$expense)
+        rates$expenseProfitRate
     },
     getSumProfitRate = function(rates, params, values) {
-        c(0, rates$sum)
+        rates$sumProfitRate
     },
     getTerminalBonusRate = function(rates, params, values) {
-        c(0, rates$terminalBonus)
+        rates$terminalBonusRate
     },
 
 
     getInterestOnProfits = function(rates, params, values) {
-        c(0, rates$totalInterest)
+        rates$totalInterest
     },
 
 
@@ -214,7 +212,7 @@ str(rt)
         profits[,"totalProfit"] + profits[,"terminalBonusReserve"]
     },
     calculateDeathBenefitAccrued = function(profits, rates, params, values) {
-        profits[,"totalProfit"]*(1 + c(0,rates$guaranteedInterest))
+        profits[,"totalProfit"]*(1 + rates$guaranteedInterest)
     },
     calculateDeathBenefitTerminal = function(profits, rates, params, values) {
         n = params$ContractData$policyPeriod;
@@ -222,7 +220,7 @@ str(rt)
     },
 
     calculateSurrenderBenefitAccrued = function(profits, rates, params, values) {
-        profits[,"totalProfit"]*(1 + c(0,rates$guaranteedInterest) / 2)
+        profits[,"totalProfit"]*(1 + rates$guaranteedInterest / 2)
     },
     calculateSurrenderBenefitTerminal = function(profits, rates, params, values) {
         n = params$ContractData$policyPeriod;
@@ -269,47 +267,45 @@ str(rt)
 
         res = cbind(
             # Profit Calculation Bases
-            interestBase = intBase,
-            riskBase = riskBase,
-            expenseBase = expenseBase,
-            sumBase = sumBase,
-            terminalBase = terminalBase,
+            interestBase = c(intBase),
+            riskBase = c(riskBase),
+            expenseBase = c(expenseBase),
+            sumBase = c(sumBase),
+            terminalBase = c(terminalBase),
 
             # Profit Rates
-            guaranteedInterest = c(0, rates$guaranteedInterest),
-            totalInterest = c(0, rates$totalInterest),
-            interestProfitRate = intRate,
-            riskProfitRate = riskRate,
-            expenseProfitRate = expenseRate,
-            sumProfitRate = sumRate,
-            terminalBonusRate = terminalRate,
-            interestOnProfitRate = interestOnProfitRate,
+            guaranteedInterest = c(rates$guaranteedInterest),
+            totalInterest = c(rates$totalInterest),
+            interestProfitRate = c(intRate),
+            riskProfitRate = c(riskRate),
+            expenseProfitRate = c(expenseRate),
+            sumProfitRate = c(sumRate),
+            terminalBonusRate = c(terminalRate),
+            interestOnProfitRate = c(interestOnProfitRate),
 
             # Profit components
-            interestProfit = intProfit,
-            riskProfit = riskProfit,
-            expenseProfit = expenseProfit,
-            sumProfit = sumProfit,
-            componentsProfit = intProfit + riskProfit + expenseProfit + sumProfit,
-            interestOnProfit = 0,
-            totalProfitAssignment = 0,
+            interestProfit = c(intProfit),
+            riskProfit = c(riskProfit),
+            expenseProfit = c(expenseProfit),
+            sumProfit = c(sumProfit),
+            componentsProfit = c(intProfit + riskProfit + expenseProfit + sumProfit),
+            interestOnProfit = c(0),
+            totalProfitAssignment = c(0),
 
-            totalProfit = 0,
+            totalProfit = c(0),
 
             # Terminal Bonus values
-            terminalBonus = terminalBonus,
-            terminalBonusAcount = terminalBonusAccount,
-            terminalBonusReserve = terminalBonusReserves
+            terminalBonus = c(terminalBonus),
+            terminalBonusAcount = c(terminalBonusAccount),
+            terminalBonusReserve = c(terminalBonusReserves)
 
         );
         prev = 0;
         for (i in 1:nrow(res)) {
-#            res[i,"previousProfit"]   = prev;
             res[i,"interestOnProfit"] = res[i,"interestOnProfitRate"] * prev;
             res[i,"totalProfitAssignment"] = res[i, "componentsProfit"] + res[i,"interestOnProfit"];
             res[i,"totalProfit"] = prev + res[i,"totalProfitAssignment"];
             prev = res[i,"totalProfit"];
-
         }
 
         survival       = self$calculateSurvivalBenefit(res, rates = rates, params = params, values = values);

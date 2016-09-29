@@ -203,6 +203,50 @@ padLast = function(v, l) {
     pad0(v, l, tail(v, n = 1))
 }
 
+#' Taken from the R Cookbook:
+#' http://www.cookbook-r.com/Manipulating_data/Filling_in_NAs_with_last_non-NA_value/
+#' LICENSE (from that page): The R code is freely available for use without any restrictions.
+#' In other words: you may reuse the R code for any purpose (and under any license).
+#'
+#' @export
+fillNAgaps <- function(x, firstBack=FALSE) {
+    ## NA's in a vector or factor are replaced with last non-NA values
+    ## If firstBack is TRUE, it will fill in leading NA's with the first
+    ## non-NA value. If FALSE, it will not change leading NA's.
+
+    # If it's a factor, store the level labels and convert to integer
+    lvls <- NULL
+    if (is.factor(x)) {
+        lvls <- levels(x)
+        x    <- as.integer(x)
+    }
+
+    goodIdx <- !is.na(x)
+
+    # These are the non-NA values from x only
+    # Add a leading NA or take the first good value, depending on firstBack
+    if (firstBack)   goodVals <- c(x[goodIdx][1], x[goodIdx])
+    else             goodVals <- c(NA,            x[goodIdx])
+
+    # Fill the indices of the output vector with the indices pulled from
+    # these offsets of goodVals. Add 1 to avoid indexing to zero.
+    fillIdx <- cumsum(goodIdx) + 1
+
+    x <- goodVals[fillIdx]
+
+    # If it was originally a factor, convert it back
+    if (!is.null(lvls)) {
+        x <- factor(x, levels = seq_along(lvls), labels = lvls)
+    }
+
+    x
+}
+
+
+
+
+
+#' @export
 valueOrFunction = function(val, ...) {
   if (is.function(val)) {
     val(...)
