@@ -2,7 +2,7 @@
 #'
 #' @import MortalityTables
 #' @import R6
-#' @import lubridate
+#' @importFrom lubridate year month years days
 NULL
 
 

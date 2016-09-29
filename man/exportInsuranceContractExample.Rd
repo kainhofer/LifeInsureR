@@ -4,7 +4,8 @@
 \alias{exportInsuranceContractExample}
 \title{Export the example calculations of an insurance contract}
 \usage{
-exportInsuranceContractExample(contract, prf = 10, outdir = ".", ...)
+exportInsuranceContractExample(contract, prf = 10, outdir = ".",
+  basename = NULL, extraname = NULL, ...)
 }
 \arguments{
 \item{contract}{The \code{\link{InsuranceContract}} object to be exported}

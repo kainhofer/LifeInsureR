@@ -2,7 +2,6 @@
 #'
 #' @import MortalityTables
 #' @import R6
-#' @import lubridate
 NULL
 
 

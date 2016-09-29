@@ -1,12 +1,13 @@
 #' @include HelperFunctions.R InsuranceParameters.R
 #'
 #' @import R6
+#' @import dplyr
 NULL
 
 
 #' @export
 filterProfitRates = function(rates, classes) {
-    filter(.data = rates, profitClass %in% classes)
+    dplyr::filter(.data = rates, profitClass %in% classes)
 }
 
 

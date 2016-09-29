@@ -14,8 +14,5 @@ so the functions \code{\link{InsuranceContract.ParametersFill}} and
 \code{\link{InsuranceContract.ParametersFallback}} can be used to override
 existing parameters or to provide default values for unset (NULL) entries.
 }
-\details{
-@export
-}
 \keyword{datasets}
 

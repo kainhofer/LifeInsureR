@@ -1,5 +1,4 @@
 #' @include HelperFunctions.R
-#' @import lubridate
 NULL
 
 
@@ -136,8 +135,8 @@ InsuranceContract.ParameterDefaults = list(
 #' \code{\link{InsuranceContract.ParametersFallback}} can be used to override
 #' existing parameters or to provide default values for unset (NULL) entries.
 #'
-#'  @export
-InsuranceContract.ParameterStructure = rapply(InsuranceContract.ParameterDefaults, function(x) NULL, how="replace")
+#' @export
+InsuranceContract.ParameterStructure = rapply(InsuranceContract.ParameterDefaults, function(x) NULL, how = "replace")
 InsuranceContract.ParameterStructure$Loadings$benefitFrequencyLoading = NULL
 InsuranceContract.ParameterStructure$Loadings$premiumFrequencyLoading = NULL
 
