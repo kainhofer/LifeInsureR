@@ -164,7 +164,9 @@ ProfitParticipation = R6Class(
         rownames(rates) = rates[, "year"]
 
         # 4) Fill all NAs with the last known value
-        newrates = rates %>% dplyr::mutate_all(fillNAgaps)
+        # First, make sure that all entries are in the correct order (sorted by year)
+        rates
+        newrates = rates %>% dplyr::arrange(year) %>% dplyr::mutate_all(fillNAgaps)
         rownames(newrates) = newrates$year
 
         # 5) Replace all NA values with 0, so we don't run into any problems later on
@@ -173,7 +175,12 @@ ProfitParticipation = R6Class(
         # TODO: Fix guaranteedInterest + interestProfitRate = totalInterest, where one of them might be missing!
 
         # Return only the policy years...
-        newrates[as.character(years),]
+        self$adjustRates(newrates[as.character(years),], params = params, values = values)
+    },
+
+    adjustRates = function(rates, params, values) {
+        rates[1,] = 0;
+        rates
     },
 
 
@@ -296,7 +303,7 @@ ProfitParticipation = R6Class(
 
             # Terminal Bonus values
             terminalBonus = c(terminalBonus),
-            terminalBonusAcount = c(terminalBonusAccount),
+            terminalBonusAccount = c(terminalBonusAccount),
             terminalBonusReserve = c(terminalBonusReserves)
 
         );
