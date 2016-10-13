@@ -23,6 +23,7 @@ Collate:
     'ProfitParticipation.R'
     'InsuranceTarif.R'
     'InsuranceContract.R'
+    'contractGrid.R'
     'exportInsuranceContract_xlsx.R'
     'showVmGlgExamples.R'
     'exportInsuranceContractExample.R'
