@@ -68,6 +68,14 @@ InsuranceContract = R6Class(
             # Costs can be a function => evaluate it to get the real costs
             self$Parameters$Costs = self$evaluateCosts(self$Parameters$Costs)
 
+            if (is.null(self$Parameters$ContractData$premiumPeriod)) {
+                self$Parameters$ContractData$premiumPeriod = self$Parameters$ContractData$policyPeriod
+            } else {
+                self$Parameters$ContractData$premiumPeriod = valueOrFunction(
+                    self$Parameters$ContractData$premiumPeriod,
+                    params = self$Parameters, values = self$Values);
+            }
+
             self$calculateContract();
         },
 
