@@ -752,20 +752,24 @@ InsuranceTarif = R6Class(
 
 
     getBasicDataTimeseries = function(params, values) {
-      res = cbind(
-        "PremiumPayment" = c(
-              rep(1, params$ContractData$premiumPeriod),
-              rep(0, params$ContractData$policyPeriod - params$ContractData$premiumPeriod + 1)),
-        "SumInsured" = c(
-              rep(params$ContractData$sumInsured, params$ContractData$policyPeriod),
-              0),
-        "Premiums" = values$absCashFlows$premiums_advance + values$absCashFlows$premiums_arrears,
-        "InterestRate" = rep(params$ActuarialBases$i, params$ContractData$policyPeriod + 1),
-        "PolicyDuration" = rep(params$ContractData$policyPeriod, params$ContractData$policyPeriod + 1),
-        "PremiumPeriod" = rep(params$ContractData$premiumPeriod, params$ContractData$policyPeriod + 1)
-      );
-      rownames(res) = 0:params$ContractData$policyPeriod;
-      res
+        policyPeriod  = params$ContractData$policyPeriod;
+        premiumPeriod = params$ContractData$premiumPeriod;
+        res = cbind(
+            "PremiumPayment" = c(
+                rep(1, premiumPeriod),
+                rep(0, policyPeriod - premiumPeriod + 1)),
+            "SumInsured" = c(
+                rep(params$ContractData$sumInsured, policyPeriod),
+                0),
+            "Premiums" = c(
+                values$absCashFlows$premiums_advance + values$absCashFlows$premiums_arrears,
+                rep(0, policyPeriod - length(values$absCashFlows$premiums_advance) + 1)),
+            "InterestRate" = rep(params$ActuarialBases$i, policyPeriod + 1),
+            "PolicyDuration" = rep(policyPeriod, policyPeriod + 1),
+            "PremiumPeriod" = rep(premiumPeriod, policyPeriod + 1)
+        );
+        rownames(res) = 0:policyPeriod;
+        res
     },
 
     premiumDecomposition = function(params, values) {
