@@ -158,7 +158,6 @@ ProfitParticipation = R6Class(
                     rates[names(rt), col] = rt;
                     rates[names(rt), "year"] = names(rt);
                 }
-                str(rates)
             }
         }
         rownames(rates) = rates[, "year"]
