@@ -9,7 +9,7 @@ contractGrid = function(axes = list(ages = seq(20, 60, 10), policyPeriod = seq(5
             c(as.list(axisVals), ...))
     })
     dimnames = makeContractGridDimnames(axes)
-    matrix(vals, nrow = length(axes[[1]]), ncol = length(axes[[2]]), byrow = FALSE, dimnames = dimnames)
+    array(vals, dim = sapply(axes, length), dimnames = dimnames)
 }
 
 makeContractGridDimname = function(value) { UseMethod("makeContractGridDimname", value) }
@@ -26,7 +26,7 @@ contractGridPremium = function(contractGrid = NULL, premium="written", ...) {
     if (missing(contractGrid) || is.null(contractGrid)) {
         contractGrid = contractGrid(...)
     }
-    apply(contractGrid, 1:2, function(c) { c[[1]]$Values$premiums[[premium]] })
+    apply(contractGrid, 1:length(dim(contractGrid)), function(c) { c[[1]]$Values$premiums[[premium]] })
 }
 
 if (FALSE) {
