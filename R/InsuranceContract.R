@@ -68,6 +68,16 @@ InsuranceContract = R6Class(
             # Costs can be a function => evaluate it to get the real costs
             self$Parameters$Costs = self$evaluateCosts(self$Parameters$Costs)
 
+            # Calculate the technical age (e.g. female are made younger, contracts on joint lives, etc.)
+            if (is.null(self$Parameters$ContractData$technicalAge)) {
+                self$Parameters$ContractData$technicalAge = self$Parameters$ContractData$age
+            } else {
+                self$Parameters$ContractData$technicalAge = valueOrFunction(
+                    self$Parameters$ContractData$technicalAge,
+                    params = self$Parameters, values = self$Values);
+            }
+
+
             if (is.null(self$Parameters$ContractData$premiumPeriod)) {
                 self$Parameters$ContractData$premiumPeriod = self$Parameters$ContractData$policyPeriod
             } else {

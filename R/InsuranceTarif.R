@@ -66,7 +66,7 @@ InsuranceTarif = R6Class(
 
     getAges = function(params) {
       ages = ages(params$ActuarialBases$mortalityTable, YOB = params$ContractData$YOB);
-      age = params$ContractData$age;
+      age = params$ContractData$technicalAge;
       if (age > 0) {
         ages = ages[-age:-1];
       }
@@ -74,7 +74,7 @@ InsuranceTarif = R6Class(
     },
 
     getTransitionProbabilities = function(params) {
-      age = params$ContractData$age;
+      age = params$ContractData$technicalAge;
       ages = self$getAges(params);
       q = deathProbabilities(params$ActuarialBases$mortalityTable, YOB = params$ContractData$YOB);
       if (age > 0) {
@@ -163,7 +163,7 @@ InsuranceTarif = R6Class(
     },
 
     getBasicCashFlows = function(params) {
-        age = params$ContractData$age;
+        age = params$ContractData$technicalAge;
         maxAge = getOmega(params$ActuarialBases$mortalityTable)
         policyPeriod = params$ContractData$policyPeriod;
         deferralPeriod = params$ContractData$deferralPeriod;
@@ -226,7 +226,7 @@ InsuranceTarif = R6Class(
     },
 
     getCashFlows = function(params, values) {
-      age = params$ContractData$age;
+      age = params$ContractData$technicalAge;
       maxAge = getOmega(params$ActuarialBases$mortalityTable)
 
       if (is.null(values$cashFlowsBasic)) {
@@ -287,7 +287,7 @@ InsuranceTarif = R6Class(
     },
 
     getCashFlowsCosts = function(params, values) {
-      age = params$ContractData$age;
+      age = params$ContractData$technicalAge;
       maxAge = getOmega(params$ActuarialBases$mortalityTable)
       policyPeriod = params$ContractData$policyPeriod;
       premiumPeriod = params$ContractData$premiumPeriod;

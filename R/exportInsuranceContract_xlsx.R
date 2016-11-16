@@ -251,6 +251,7 @@ exportInsuranceContract.xlsx = function(contract, filename) {
     "Mortality table"     = contract$Parameters$ActuarialBases$mortalityTable@name,
     "YOB"                 = contract$Parameters$ContractData$YOB,
     "Age"                 = contract$Parameters$ContractData$age,
+    "Technical Age"       = contract$Parameters$ContractData$technicalAge,
     "Policy duration"     = contract$Parameters$ContractData$policyPeriod,
     "Premium period"      = contract$Parameters$ContractData$premiumPeriod,
     "Deferral period"     = contract$Parameters$ContractData$deferralPeriod,

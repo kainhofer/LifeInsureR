@@ -3,6 +3,7 @@
 
 PaymentTimeEnum = setSingleEnum("PaymentTime", levels = c("in advance", "in arrears"))
 #PaymentCountEnum = setSingleEnum(PaymentCount, levels = c(1,2,3))
+SexEnum = setSingleEnum("Sex", levels = c("unisex", "male", "female"))
 
 
 #' Describes the death benefit of a linearly decreasing whole life insurance (after a possible deferall period)
