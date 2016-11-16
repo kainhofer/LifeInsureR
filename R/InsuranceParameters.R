@@ -137,8 +137,8 @@ InsuranceContract.ParameterDefaults = list(
 #'
 #' @export
 InsuranceContract.ParameterStructure = rapply(InsuranceContract.ParameterDefaults, function(x) NULL, how = "replace")
-InsuranceContract.ParameterStructure$Loadings$benefitFrequencyLoading = NULL
-InsuranceContract.ParameterStructure$Loadings$premiumFrequencyLoading = NULL
+InsuranceContract.ParameterStructure$Loadings["benefitFrequencyLoading"] = list(NULL)
+InsuranceContract.ParameterStructure$Loadings["premiumFrequencyLoading"] = list(NULL)
 
 
 #' InsuranceContract.ParametersFill
