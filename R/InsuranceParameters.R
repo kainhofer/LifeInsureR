@@ -97,6 +97,7 @@ InsuranceContract.ParameterDefaults = list(
         noMedicalExam = 0,                      # Loading when no medicial exam is done, % of SumInsured
         noMedicalExamRelative = 0,              # Loading when no medicial exam is done, % of gross premium
         sumRebate = 0,                          # gross premium reduction for large premiums, % of SumInsured
+        extraRebate = 0,                        # gross premium reduction for any reason, % of SumInsured
         premiumRebate = 0,                      # gross premium reduction for large premiums, % of gross premium # TODO
         partnerRebate = 0,                      # Partnerrabatt auf Prämie mit Zu-/Abschlägen, wenn mehr als 1 Vertrag gleichzeitig abgeschlossen wird, additiv mit advanceBonusInclUnitCost and premiumRebate
         extraChargeGrossPremium = 0,            # extra charges on gross premium (smoker, leisure activities, BMI too high, etc.)

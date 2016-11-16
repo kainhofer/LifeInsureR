@@ -575,6 +575,7 @@ InsuranceTarif = R6Class(
       unitCosts     = valueOrFunction(loadings$unitcosts,    params = params, values = values);
       noMedicalExam = valueOrFunction(loadings$noMedicalExam,params = params, values = values);
       noMedicalExam.relative = valueOrFunction(loadings$noMedicalExamRelative,params = params, values = values);
+      extraRebate   = valueOrFunction(loadings$extraRebate,  params = params, values = values);
       sumRebate     = valueOrFunction(loadings$sumRebate,    params = params, values = values);
       premiumRebate = valueOrFunction(loadings$premiumRebate,params = params, values = values);
       extraChargeGrossPremium = valueOrFunction(loadings$extraChargeGrossPremium, params = params, values = values);
@@ -591,7 +592,7 @@ InsuranceTarif = R6Class(
       partnerRebate = valueOrFunction(loadings$partnerRebate, params = params, values = values);
 
       frequencyLoading = valueOrFunction(loadings$premiumFrequencyLoading, params = params, values = values);
-      premiumBeforeTax = (premiums[["unit.gross"]]*(1 + noMedicalExam.relative + extraChargeGrossPremium) + noMedicalExam - sumRebate) * sumInsured * (1 - advanceProfitParticipation) + unitCosts;
+      premiumBeforeTax = (premiums[["unit.gross"]]*(1 + noMedicalExam.relative + extraChargeGrossPremium) + noMedicalExam - sumRebate - extraRebate) * sumInsured * (1 - advanceProfitParticipation) + unitCosts;
       premiumBeforeTax = premiumBeforeTax * (1 - premiumRebate - advanceProfitParticipationUnitCosts - partnerRebate);
       premiumBeforeTax = premiumBeforeTax * (1 + frequencyLoading[[toString(params$ContractData$premiumFrequency)]]) / params$ContractData$premiumFrequency;
       premiums[["written_beforetax"]] = premiumBeforeTax;
@@ -794,7 +795,8 @@ InsuranceTarif = R6Class(
 
       # sum rebate:
       sumRebate        = valueOrFunction(loadings$sumRebate,    params = params, values = values);
-      afterSumRebate   = withMedExam - sumRebate * sumInsured; # calculate the charge as the difference, because we want a vector!
+      extraRebate      = valueOrFunction(loadings$extraRebate,  params = params, values = values);
+      afterSumRebate   = withMedExam - (sumRebate + extraRebate) * sumInsured; # calculate the charge as the difference, because we want a vector!
       rebate.sum       = afterSumRebate - withMedExam;
 
       # advance profit participation has two parts, one before and one after unit costs. Part 1:
