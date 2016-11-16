@@ -1,12 +1,16 @@
 #' @export
-contractGrid = function(axes = list(ages = seq(20, 60, 10), policyPeriod = seq(5, 35, 5)), ...) {
+contractGrid = function(axes = list(age = seq(20, 60, 10), policyPeriod = seq(5, 35, 5)), YOB = NULL, observationYear = NULL, ...) {
+
+    obsYear = observationYear;
     # Create all combinations of the variables given for the axes:
     gridByRow = expand.grid(axes);
     # Apply InsuranceContract$new to each combination (and add the additional arguments)
     vals = apply(gridByRow, 1, function(axisVals) {
-        do.call(
-            InsuranceContract$new,
-            c(as.list(axisVals), ...))
+        args = c(as.list(axisVals), ...);
+        if (!is.null(observationYear)) {
+            args$YOB = obsYear - args$age;
+        }
+        do.call(InsuranceContract$new, args)
     })
     dimnames = makeContractGridDimnames(axes)
     array(vals, dim = sapply(axes, length), dimnames = dimnames)
