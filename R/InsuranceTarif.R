@@ -726,8 +726,15 @@ InsuranceTarif = R6Class(
       # TODO: We have no vector of actual written premiums (implicit assumption
       # seems to be that the premium stays constant!). Once we have such a vector,
       # rewrite the following code
-      fact = (bm-1) %% (12/freq) / 12 * freq
-      unearnedPremiums = fact * values$cashFlows$premiums_advance * values$premiums[["written_beforetax"]]
+      fact = (bm - 1) %% (12/freq) / 12 * freq
+      unearnedPremiums = fact * values$cashFlows$premiums_advance * values$premiums[["written_beforetax"]] # TODO
+      # If advance profit participation is granted, unearned premiums still apply to the whole gross premium without PP and partner rebate!
+      ppScheme      = params$ProfitParticipation$profitParticipationScheme;
+      if (!is.null(ppScheme)) {
+          partnerRebate = valueOrFunction(params$Loadings$partnerRebate, params = params, values = values);
+          advanceProfitParticipation = ppScheme$getAdvanceProfitParticipationAfterUnitCosts(params = params, values = values);
+          unearnedPremiums = unearnedPremiums / (1 - partnerRebate - advanceProfitParticipation);
+      }
 
       # Collect all reserves to one large matrix
       res = cbind("time" = baf + (1:years) - 1,
