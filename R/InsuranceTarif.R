@@ -594,6 +594,7 @@ InsuranceTarif = R6Class(
       frequencyLoading = valueOrFunction(loadings$premiumFrequencyLoading, params = params, values = values);
       premiumBeforeTax = (premiums[["unit.gross"]]*(1 + noMedicalExam.relative + extraChargeGrossPremium) + noMedicalExam - sumRebate - extraRebate) * sumInsured * (1 - advanceProfitParticipation) + unitCosts;
       premiumBeforeTax = premiumBeforeTax * (1 - premiumRebate - advanceProfitParticipationUnitCosts - partnerRebate);
+      # TODO / FIXME: Add a check that frequencyLoading has an entry for the premiumFrequency -> Otherwise do not add any loading (currently NULL is returned, basically setting all premiums to NULL)
       premiumBeforeTax = premiumBeforeTax * (1 + frequencyLoading[[toString(params$ContractData$premiumFrequency)]]) / params$ContractData$premiumFrequency;
       premiums[["written_beforetax"]] = premiumBeforeTax;
       premiums[["tax"]] = premiumBeforeTax * tax;
