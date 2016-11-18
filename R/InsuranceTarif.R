@@ -187,7 +187,7 @@ InsuranceTarif = R6Class(
                 rep(0, max(0, maxlen + 1 - deferralPeriod - guaranteedPeriod)));
             cf$survival = c(
                 rep(0, deferralPeriod + guaranteedPeriod),
-                tail(annuityCF, n = -guaranteedPeriod),
+                if (guaranteedPeriod > 0) tail(annuityCF, n = -guaranteedPeriod) else annuityCF,
                 # rep(1, max(0, maxlen - deferralPeriod - guaranteedPeriod)),
                 0)
             cf$sumInsured = c(
