@@ -86,6 +86,11 @@ InsuranceContract = R6Class(
                     params = self$Parameters, values = self$Values);
             }
 
+            # Evaluate all possibly variable values (mortalityTable depending on sex, etc.)
+            self$Parameters$ActuarialBases$mortalityTable = valueOrFunction(
+                self$Parameters$ActuarialBases$mortalityTable,
+                params = self$Parameters, values = self$Values)
+
             self$calculateContract();
         },
 
