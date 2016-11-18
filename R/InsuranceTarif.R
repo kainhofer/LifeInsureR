@@ -544,29 +544,29 @@ InsuranceTarif = R6Class(
     premiumCalculation = function(params, values) {
       loadings = params$Loadings;
       sumInsured = params$ContractData$sumInsured
-      premiums = c("unit.net" = 0, "unit.Zillmer" = 0, "unit.gross" = 0, "net" = 0, "Zillmer" = 0, "gross" = 0, "written" = 0);
+      values$premiums = c("unit.net" = 0, "unit.Zillmer" = 0, "unit.gross" = 0, "net" = 0, "Zillmer" = 0, "gross" = 0, "written" = 0);
       coefficients = list("gross" = c(), "Zillmer" = c(), "net" = c());
 
       # net, gross and Zillmer premiums are calculated from the present values using the coefficients on each present value as described in the formulas document
-      coeff = self$getPremiumCoefficients("gross", values$presentValues["0",]*0, values$presentValuesCosts["0",,]*0, premiums = premiums, params = params, values = values)
+      coeff = self$getPremiumCoefficients("gross", values$presentValues["0",]*0, values$presentValuesCosts["0",,]*0, premiums = values$premiums, params = params, values = values)
       enumerator  = sum(coeff[["SumInsured"]][["benefits"]] * values$presentValues["0",]) + sum(coeff[["SumInsured"]][["costs"]] * values$presentValuesCosts["0",,]);
       denominator = sum(coeff[["Premium"   ]][["benefits"]] * values$presentValues["0",]) + sum(coeff[["Premium"   ]][["costs"]] * values$presentValuesCosts["0",,]);
-      premiums[["unit.gross"]] = enumerator/denominator * (1 + loadings$ongoingAlphaGrossPremium);
-      premiums[["gross"]] = premiums[["unit.gross"]] * sumInsured;
+      values$premiums[["unit.gross"]] = enumerator/denominator * (1 + loadings$ongoingAlphaGrossPremium);
+      values$premiums[["gross"]] = values$premiums[["unit.gross"]] * sumInsured;
       coefficients[["gross"]] = coeff;
 
-      coeff = self$getPremiumCoefficients("net", values$presentValues["0",]*0, values$presentValuesCosts["0",,]*0, premiums = premiums, params = params, values = values)
+      coeff = self$getPremiumCoefficients("net", values$presentValues["0",]*0, values$presentValuesCosts["0",,]*0, premiums = values$premiums, params = params, values = values)
       enumerator  = sum(coeff[["SumInsured"]][["benefits"]] * values$presentValues["0",]) + sum(coeff[["SumInsured"]][["costs"]] * values$presentValuesCosts["0",,]);
       denominator = sum(coeff[["Premium"   ]][["benefits"]] * values$presentValues["0",]) + sum(coeff[["Premium"   ]][["costs"]] * values$presentValuesCosts["0",,]);
-      premiums[["unit.net"]] = enumerator/denominator;
-      premiums[["net"]] = premiums[["unit.net"]] * sumInsured;
+      values$premiums[["unit.net"]] = enumerator/denominator;
+      values$premiums[["net"]] = values$premiums[["unit.net"]] * sumInsured;
       coefficients[["net"]] = coeff;
 
-      coeff = self$getPremiumCoefficients("Zillmer", values$presentValues["0",]*0, values$presentValuesCosts["0",,]*0, premiums = premiums, params = params, values = values);
+      coeff = self$getPremiumCoefficients("Zillmer", values$presentValues["0",]*0, values$presentValuesCosts["0",,]*0, premiums = values$premiums, params = params, values = values);
       enumerator  = sum(coeff[["SumInsured"]][["benefits"]] * values$presentValues["0",]) + sum(coeff[["SumInsured"]][["costs"]] * values$presentValuesCosts["0",,]);
       denominator = sum(coeff[["Premium"   ]][["benefits"]] * values$presentValues["0",]) + sum(coeff[["Premium"   ]][["costs"]] * values$presentValuesCosts["0",,]);
-      premiums[["unit.Zillmer"]] = enumerator/denominator;
-      premiums[["Zillmer"]] = premiums[["unit.Zillmer"]] * sumInsured;
+      values$premiums[["unit.Zillmer"]] = enumerator/denominator;
+      values$premiums[["Zillmer"]] = values$premiums[["unit.Zillmer"]] * sumInsured;
       coefficients[["Zillmer"]] = coeff;
 
 
@@ -592,15 +592,15 @@ InsuranceTarif = R6Class(
       partnerRebate = valueOrFunction(loadings$partnerRebate, params = params, values = values);
 
       frequencyLoading = valueOrFunction(loadings$premiumFrequencyLoading, params = params, values = values);
-      premiumBeforeTax = (premiums[["unit.gross"]]*(1 + noMedicalExam.relative + extraChargeGrossPremium) + noMedicalExam - sumRebate - extraRebate) * sumInsured * (1 - advanceProfitParticipation) + unitCosts;
+      premiumBeforeTax = (values$premiums[["unit.gross"]]*(1 + noMedicalExam.relative + extraChargeGrossPremium) + noMedicalExam - sumRebate - extraRebate) * sumInsured * (1 - advanceProfitParticipation) + unitCosts;
       premiumBeforeTax = premiumBeforeTax * (1 - premiumRebate - advanceProfitParticipationUnitCosts - partnerRebate);
       # TODO / FIXME: Add a check that frequencyLoading has an entry for the premiumFrequency -> Otherwise do not add any loading (currently NULL is returned, basically setting all premiums to NULL)
       premiumBeforeTax = premiumBeforeTax * (1 + frequencyLoading[[toString(params$ContractData$premiumFrequency)]]) / params$ContractData$premiumFrequency;
-      premiums[["written_beforetax"]] = premiumBeforeTax;
-      premiums[["tax"]] = premiumBeforeTax * tax;
-      premiums[["written"]] = premiumBeforeTax * (1 + tax);
+      values$premiums[["written_beforetax"]] = premiumBeforeTax;
+      values$premiums[["tax"]] = premiumBeforeTax * tax;
+      values$premiums[["written"]] = premiumBeforeTax * (1 + tax);
 
-      list("premiums" = premiums, "coefficients" = coefficients)
+      list("premiums" = values$premiums, "coefficients" = coefficients)
     },
 
     reserveCalculation = function(params, values) {
