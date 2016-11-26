@@ -1,4 +1,4 @@
-#' @include HelperFunctions.R InsuranceParameters.R
+#' @include HelperFunctions.R InsuranceParameters.R ProfitParticipation.R
 #'
 #' @import MortalityTables
 #' @import R6
@@ -761,21 +761,26 @@ InsuranceTarif = R6Class(
 
 
     getBasicDataTimeseries = function(params, values) {
-        policyPeriod  = params$ContractData$policyPeriod;
+        # TODO: Find a general solution to cut the policyPeriod at the maximum age (currently this code is duplicated all over!)
+        age = params$ContractData$age;
+        maxAge = getOmega(params$ActuarialBases$mortalityTable)
+        policyPeriod = params$ContractData$policyPeriod;
         premiumPeriod = params$ContractData$premiumPeriod;
+        maxlen = min(maxAge - age, policyPeriod) + 1;
+        policyPeriod = min(maxAge - age, policyPeriod);
         res = cbind(
             "PremiumPayment" = c(
                 rep(1, premiumPeriod),
-                rep(0, policyPeriod - premiumPeriod + 1)),
+                rep(0, maxlen - premiumPeriod)),
             "SumInsured" = c(
                 rep(params$ContractData$sumInsured, policyPeriod),
                 0),
             "Premiums" = c(
                 values$absCashFlows$premiums_advance + values$absCashFlows$premiums_arrears,
-                rep(0, policyPeriod - length(values$absCashFlows$premiums_advance) + 1)),
-            "InterestRate" = rep(params$ActuarialBases$i, policyPeriod + 1),
-            "PolicyDuration" = rep(policyPeriod, policyPeriod + 1),
-            "PremiumPeriod" = rep(premiumPeriod, policyPeriod + 1)
+                rep(0, maxlen - length(values$absCashFlows$premiums_advance))),
+            "InterestRate" = rep(params$ActuarialBases$i, maxlen),
+            "PolicyDuration" = rep(policyPeriod, maxlen),
+            "PremiumPeriod" = rep(premiumPeriod, maxlen)
         );
         rownames(res) = 0:policyPeriod;
         res
