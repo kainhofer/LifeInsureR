@@ -65,6 +65,8 @@ InsuranceContract = R6Class(
                     ppScheme$Parameters);
             }
 
+            self$consolidateContractData(tarif = tarif, age = age, policyPeriod = policyPeriod, sumInsured = sumInsured, ...);
+
             # Costs can be a function => evaluate it to get the real costs
             self$Parameters$Costs = self$evaluateCosts(self$Parameters$Costs)
 
@@ -109,8 +111,59 @@ InsuranceContract = R6Class(
             );
         },
 
+        consolidateContractData = function(...) {
+            args = list(...);
+
+            #####
+            # PREMIUM PAYMENT PERIOD (default: policyPeriod, can be given as function or numeric value)
+            #####
+            if (is.null(self$Parameters$ContractData$premiumPeriod)) {
+                self$Parameters$ContractData$premiumPeriod = self$Parameters$ContractData$policyPeriod
+            } else {
+                self$Parameters$ContractData$premiumPeriod = valueOrFunction(
+                    self$Parameters$ContractData$premiumPeriod,
+                    params = self$Parameters, values = self$Values);
+            }
+
+            #####
+            # COSTS PARAMTERS: can be a function => evaluate it to get the real costs
+            #####
+            self$Parameters$Costs = self$evaluateCosts(self$Parameters$Costs)
+
+            #####
+            # AGES for multiple joint lives:
+            #####
+            # For joint lives, some parameters can be given multiple times: age, sex
+            # Collect all given values into one vector!
+            age = unlist(args[names(args) == "age"], use.names = FALSE)
+            if (!is.null(age)) {
+                self$Parameters$ContractData$age = age;
+            }
+            sex = unlist(args[names(args) == "sex"], use.names = FALSE)
+            if (!is.null(sex)) {
+                self$Parameters$ContractData$sex = sex;
+            }
+
+            #####
+            # TECHNICAL AGE
+            #####
+            # Calculate the technical age (e.g. female are made younger, contracts on joint lives, etc.)
+            if (is.null(self$Parameters$ContractData$technicalAge)) {
+                self$Parameters$ContractData$technicalAge = self$Parameters$ContractData$age[1]
+            } else {
+                self$Parameters$ContractData$technicalAge = valueOrFunction(
+                    self$Parameters$ContractData$technicalAge,
+                    params = self$Parameters, values = self$Values);
+            }
+
+            # Evaluate all possibly variable values (mortalityTable depending on sex, etc.)
+            self$Parameters$ActuarialBases$mortalityTable = valueOrFunction(
+                self$Parameters$ActuarialBases$mortalityTable,
+                params = self$Parameters, values = self$Values)
+
+        }
         evaluateCosts = function(costs) {
-            self$tarif$getCostValues(costs, params=self$Parameters);
+            self$tarif$getCostValues(costs, params = self$Parameters);
         },
 
 
