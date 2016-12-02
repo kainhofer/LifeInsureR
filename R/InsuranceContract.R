@@ -160,8 +160,8 @@ InsuranceContract = R6Class(
             self$Parameters$ActuarialBases$mortalityTable = valueOrFunction(
                 self$Parameters$ActuarialBases$mortalityTable,
                 params = self$Parameters, values = self$Values)
+        },
 
-        }
         evaluateCosts = function(costs) {
             self$tarif$getCostValues(costs, params = self$Parameters);
         },
