@@ -54,6 +54,7 @@ InsuranceContract.ParameterDefaults = list(
         YOB = 1975,
         age = 40,
         technicalAge = NULL,
+        ageDifferences = NULL,                  # Age differences of all other insured relative to the first one, for joint live insurances
         sex = "unisex",                         # Sex, to allow gender-sepecific pricing (e.g. different mortalities or age modification)
         policyPeriod = 25,                      # gesamte Vertragslaufzeit
         premiumPeriod = NULL,                   # Default: policyPeriod, unless explicitly overridden

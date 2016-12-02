@@ -114,6 +114,14 @@ InsuranceContract = R6Class(
             if (!is.null(sex)) {
                 self$Parameters$ContractData$sex = sex;
             }
+            if (is.null(self$Parameters$ContractData$ageDifferences)) {
+                self$Parameters$ContractData$ageDifferences = diff(self$Parameters$ContractData$age);
+            } else {
+                self$Parameters$ContractData$ageDifferences = valueOrFunction(
+                    self$Parameters$ContractData$ageDifferences,
+                    params = self$Parameters, values = self$Values);
+            }
+
 
             #####
             # TECHNICAL AGE

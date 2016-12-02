@@ -76,12 +76,12 @@ InsuranceTarif = R6Class(
     getTransitionProbabilities = function(params) {
       age = params$ContractData$technicalAge;
       ages = self$getAges(params);
-      q = deathProbabilities(params$ActuarialBases$mortalityTable, YOB = params$ContractData$YOB);
+      q = deathProbabilities(params$ActuarialBases$mortalityTable, YOB = params$ContractData$YOB, ageDifferences = params$ContractData$ageDifferences);
       if (age > 0) {
         q    = q[-age:-1];
       }
       if (!is.null(params$ActuarialBases$invalidityTable)) {
-        i = deathProbabilities(params$ActuarialBases$invalidityTable, YOB = params$ContractData$YOB);
+        i = deathProbabilities(params$ActuarialBases$invalidityTable, YOB = params$ContractData$YOB, ageDifferences = params$ContractData$ageDifferences);
         if (age > 0) {
           i    = i[-age:-1];
         }
