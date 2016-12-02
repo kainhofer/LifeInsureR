@@ -34,13 +34,10 @@ InsuranceContract = R6Class(
 
         #### The code:
 
-        initialize = function(tarif, age, policyPeriod, sumInsured = 1, ... ) {
+        initialize = function(tarif, ...) {
             self$tarif = tarif;
 
             self$ContractParameters = InsuranceContract.ParametersFill(
-                age = age,
-                policyPeriod = policyPeriod,
-                sumInsured = sumInsured,
                 ...,
                 premiumWaiver = FALSE,
                 surrenderPenalty = TRUE,
@@ -65,33 +62,7 @@ InsuranceContract = R6Class(
                     ppScheme$Parameters);
             }
 
-            self$consolidateContractData(tarif = tarif, age = age, policyPeriod = policyPeriod, sumInsured = sumInsured, ...);
-
-            # Costs can be a function => evaluate it to get the real costs
-            self$Parameters$Costs = self$evaluateCosts(self$Parameters$Costs)
-
-            # Calculate the technical age (e.g. female are made younger, contracts on joint lives, etc.)
-            if (is.null(self$Parameters$ContractData$technicalAge)) {
-                self$Parameters$ContractData$technicalAge = self$Parameters$ContractData$age
-            } else {
-                self$Parameters$ContractData$technicalAge = valueOrFunction(
-                    self$Parameters$ContractData$technicalAge,
-                    params = self$Parameters, values = self$Values);
-            }
-
-
-            if (is.null(self$Parameters$ContractData$premiumPeriod)) {
-                self$Parameters$ContractData$premiumPeriod = self$Parameters$ContractData$policyPeriod
-            } else {
-                self$Parameters$ContractData$premiumPeriod = valueOrFunction(
-                    self$Parameters$ContractData$premiumPeriod,
-                    params = self$Parameters, values = self$Values);
-            }
-
-            # Evaluate all possibly variable values (mortalityTable depending on sex, etc.)
-            self$Parameters$ActuarialBases$mortalityTable = valueOrFunction(
-                self$Parameters$ActuarialBases$mortalityTable,
-                params = self$Parameters, values = self$Values)
+            self$consolidateContractData(tarif = tarif, ...);
 
             self$calculateContract();
         },
