@@ -765,9 +765,9 @@ InsuranceTarif = R6Class(
         age = params$ContractData$age;
         maxAge = getOmega(params$ActuarialBases$mortalityTable)
         policyPeriod = params$ContractData$policyPeriod;
-        premiumPeriod = params$ContractData$premiumPeriod;
         maxlen = min(maxAge - age, policyPeriod) + 1;
         policyPeriod = min(maxAge - age, policyPeriod);
+        premiumPeriod = min(policyPeriod, params$ContractData$premiumPeriod);
         res = cbind(
             "PremiumPayment" = c(
                 rep(1, premiumPeriod),
@@ -776,8 +776,8 @@ InsuranceTarif = R6Class(
                 rep(params$ContractData$sumInsured, policyPeriod),
                 0),
             "Premiums" = c(
-                values$absCashFlows$premiums_advance + values$absCashFlows$premiums_arrears,
-                rep(0, maxlen - length(values$absCashFlows$premiums_advance))),
+                head(values$absCashFlows$premiums_advance + values$absCashFlows$premiums_arrears, premiumPeriod),
+                rep(0, maxlen - premiumPeriod)),
             "InterestRate" = rep(params$ActuarialBases$i, maxlen),
             "PolicyDuration" = rep(policyPeriod, maxlen),
             "PremiumPeriod" = rep(premiumPeriod, maxlen)
