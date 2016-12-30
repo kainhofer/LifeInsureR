@@ -9,40 +9,40 @@ NULL
 #' TODO: gamma an Erlebensleistungen?
 #' @export
 initializeCosts = function() {
-  dimnm=list(
+  dimnm = list(
     c("alpha", "Zillmer", "beta", "gamma", "gamma_nopremiums"),
     c("SumInsured", "SumPremiums", "GrossPremium"),
     c("once", "PremiumPeriod", "PremiumFree", "PolicyPeriod")
   );
   array(0,
-        dim=sapply(dimnm, length),
-        dimnames=dimnm
+        dim = sapply(dimnm, length),
+        dimnames = dimnm
   )
 }
 
 
 #' @export
 InsuranceContract.Values = list(
-  basicData = NULL,
-  transitionProbabilities = NULL,
+    basicData = NULL,
+    transitionProbabilities = NULL,
 
-  cashFlowsBasic = NULL,
-  cashFlows = NULL,
-  cashFlowsCosts = NULL,
-  unitPremiumSum = 0,
+    cashFlowsBasic = NULL,
+    cashFlows = NULL,
+    cashFlowsCosts = NULL,
+    unitPremiumSum = 0,
 
-  presentValues = NULL,
-  presentValuesCosts = NULL,
+    presentValues = NULL,
+    presentValuesCosts = NULL,
 
-  premiumCoefficients = NULL,
-  premiums = NULL,
-  absCashFlows = NULL,
-  absPresentValues = NULL,
+    premiumCoefficients = NULL,
+    premiums = NULL,
+    absCashFlows = NULL,
+    absPresentValues = NULL,
 
-  reserves = NULL,
-  reservesBalanceSheet = NULL,
+    reserves = NULL,
+    reservesBalanceSheet = NULL,
 
-  premiumComposition = NULL
+    premiumComposition = NULL
 );
 
 
