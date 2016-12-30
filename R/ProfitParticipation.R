@@ -264,13 +264,11 @@ ProfitParticipation = R6Class(
         riskBase     = self$Functions$getRiskProfitBase(params = params, values = values);
         expenseBase  = self$Functions$getExpenseProfitBase(params = params, values = values);
         sumBase      = self$Functions$getSumProfitBase(params = params, values = values);
-        terminalBase = self$Functions$getTerminalBonusBase(params = params, values = values);
 
         intRate      = self$Functions$getInterestProfitRate(rates, params = params, values = values);
         riskRate     = self$Functions$getRiskProfitRate(rates, params = params, values = values);
         expenseRate  = self$Functions$getExpenseProfitRate(rates, params = params, values = values);
         sumRate      = self$Functions$getSumProfitRate(rates, params = params, values = values);
-        terminalRate = self$Functions$getTerminalBonusRate(rates, params = params, values = values);
 
         intProfit     = self$Functions$calculateInterestProfit(base = intBase, rate = intRate, waiting = waitingFactor, params = params, values = values);
         riskProfit    = self$Functions$calculateInterestProfit(base = riskBase, rate = riskRate, waiting = waitingFactor, params = params, values = values);
@@ -287,7 +285,6 @@ ProfitParticipation = R6Class(
             riskBase = c(riskBase),
             expenseBase = c(expenseBase),
             sumBase = c(sumBase),
-            terminalBase = c(terminalBase),
 
             # Profit Rates
             guaranteedInterest = c(rates$guaranteedInterest),
@@ -296,7 +293,6 @@ ProfitParticipation = R6Class(
             riskProfitRate = c(riskRate),
             expenseProfitRate = c(expenseRate),
             sumProfitRate = c(sumRate),
-            terminalBonusRate = c(terminalRate),
             interestOnProfitRate = c(interestOnProfitRate),
 
             # Profit components
@@ -319,13 +315,18 @@ ProfitParticipation = R6Class(
         }
 
 
-        #### Terminal Bonus calculations (might depend on the individual profit assignments calculated above! => Pass the current profit calculation inside the values!)
+        #### Terminal Bonus calculations (might depend on the individual profit assignments calculated above!
+        #### => TODO: Pass the current profit calculation inside the values!)
+        terminalBase = self$Functions$getTerminalBonusBase(params = params, values = values);
+        terminalRate = self$Functions$getTerminalBonusRate(rates, params = params, values = values);
         terminalBonus = terminalBase * terminalRate; # TODO: Add the AF(v) factor!
         terminalBonusAccount = cumsum(terminalBonus)
         terminalBonusReserves = self$Functions$getTerminalBonusReserves(rates, terminalBonus, terminalBonusAccount, params = params, values = values)
         res = cbind(
             res,
             # Terminal Bonus values
+            terminalBase = c(terminalBase),
+            terminalBonusRate = c(terminalRate),
             terminalBonus = c(terminalBonus),
             terminalBonusAccount = c(terminalBonusAccount),
             terminalBonusReserve = c(terminalBonusReserves)
@@ -359,7 +360,6 @@ ProfitParticipation = R6Class(
             premiumWaiverAccrued  = premiumWaiverAccrued,
             premiumWaiverTerminalBonus = premiumWaiverTerminalBonus,
             premiumWaiver  = premiumWaiverAccrued + premiumWaiverTerminalBonus
-
         );
 
         res
