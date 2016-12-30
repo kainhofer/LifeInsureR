@@ -1,4 +1,4 @@
-#' @include HelperFunctions.R InsuranceParameters.R
+#' @include HelperFunctions.R InsuranceParameters.R ProfitParticipation_Functions.R
 #'
 #' @import R6
 #' @import dplyr
@@ -24,15 +24,101 @@ ProfitParticipation = R6Class(
     name  = "Name des Gewinnplans",
     Parameters = InsuranceContract.ParameterStructure$ProfitParticipation,
 
+    Functions = list(
+
+        #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        # Calculation bases for the various types of profit
+        # Can / shall be overridden in child classes that use other bases!
+        #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        getInterestProfitBase = profPart.base.meanContractualReserve,
+        getRiskProfitBase     = profPart.base.ZillmerRiskPremium,
+        getExpenseProfitBase  = profPart.base.sumInsured,
+        getSumProfitBase      = profPart.base.sumInsured,
+        getTerminalBonusBase  = profPart.base.sumInsured,
+
+        #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        # Profit rates for the various types of profit
+        # Can / shall be overridden in child classes that use other schemes!
+        #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        getInterestProfitRate = function(rates, params, values) {
+            rates$interestProfitRate
+        },
+        getRiskProfitRate = function(rates, params, values) {
+            rates$mortalityProfitRate
+        },
+        getExpenseProfitRate = function(rates, params, values) {
+            rates$expenseProfitRate
+        },
+        getSumProfitRate = function(rates, params, values) {
+            rates$sumProfitRate
+        },
+        getTerminalBonusRate = function(rates, params, values) {
+            rates$terminalBonusRate
+        },
+
+        getInterestOnProfits = profPart.rate.totalInterest,
+
+
+        getTerminalBonusReserves = function(rates, terminalBonus, terminalBonusAccount, params, values) {
+            n = length(terminalBonusAccount)
+            terminalBonusAccount * 1/(1.07) ^ ((n - 1):0)
+        },
+
+        calculateInterestProfit = profPart.calculate.RateOnBase,
+        calculateRiskProfit = profPart.calculate.RateOnBase,
+        calculateExpenseProfit = profPart.calculate.RateOnBase,
+        calculateSumProfit = profPart.calculate.RateOnBase,
+
+        calculateTerminalBonus = profPart.calculate.RateOnBase,
+
+        #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        # Calculations of the assigned profit amounts, based on the bases and
+        # rates defined with the functions above.
+        # Can / shall be overridden in child classes that use other bases!
+        #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        calculateSurvivalBenefit = function(profits, rates, params, values) {
+            profits[,"totalProfit"] + profits[,"terminalBonusReserve"]
+        },
+        calculateDeathBenefitAccrued = function(profits, rates, params, values) {
+            profits[,"totalProfit"]*(1 + rates$guaranteedInterest)
+        },
+        calculateDeathBenefitTerminal = function(profits, rates, params, values) {
+            n = params$ContractData$policyPeriod;
+            profits[, "terminalBonusReserve"] * (0:n)/n * ((0:n) >= max(10, n - 5))
+        },
+        calculateSurrenderBenefitAccrued = function(profits, rates, params, values) {
+            profits[,"totalProfit"]*(1 + rates$guaranteedInterest / 2)
+        },
+        calculateSurrenderBenefitTerminal = function(profits, rates, params, values) {
+            n = params$ContractData$policyPeriod;
+            profits[, "terminalBonusReserve"] * (0:n)/n * ((0:n) >= max(10, n - 5))
+        },
+        calculatePremiumWaiverBenefitAccrued = function(profits, rates, params, values) {
+            profits[,"totalProfit"]
+        },
+        calculatePremiumWaiverBenefitTerminal = function(profits, rates, params, values) {
+            n = params$ContractData$policyPeriod;
+            profits[, "terminalBonusReserve"] * (0:n)/n * ((0:n) >= max(10, n - 5))
+        },
+
+        dummy = 0
+    ),
+
 
     initialize = function(name = NULL, ...) {
       if (!missing(name))           self$name = name;
       self$setParameters(...);
+      self$setFunctions(...);
       self$setFallbackParameters();
     },
 
     setParameters = function(...) {
         self$Parameters = fillFields(self$Parameters, list(...));
+    },
+
+    setFunctions = function(...) {
+        self$Functions = fillFields(self$Functions, list(...));
     },
 
     setFallbackParameters = function() {
@@ -69,28 +155,6 @@ ProfitParticipation = R6Class(
     #   - Terminal bonus
     ############################################################################
 
-    #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    # Calculation bases for the various types of profit
-    # Can / shall be overridden in child classes that use other bases!
-    #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    getInterestProfitBase = function(params, values) {
-        # Rolling mean of the value for the current and previous year.
-        pmax(0, rollingmean(c(0, values$reserves[,"contractual"])))
-    },
-    getRiskProfitBase = function(params, values) {
-        # The risk premium of t=0 is used to determine the risk profit at time
-        # t=1, so shift the whole vector!
-        c(0, head(values$premiumComposition[,"Zillmer.risk"], -1))
-    },
-    getExpenseProfitBase = function(params, values) {
-        params$ContractData$sumInsured
-    },
-    getSumProfitBase = function(params, values) {
-        params$ContractData$sumInsured
-    },
-    getTerminalBonusBase = function(params, values) {
-        params$ContractData$sumInsured
-    },
 
     setupRates = function(params, values, ...) {
         # 1) Profit scheme or contract provides general company-wide profit rates for some years:
@@ -106,7 +170,7 @@ ProfitParticipation = R6Class(
 
         columns = c(
             "year",
-            "guaranteedInterest", "interestProfitRate", "totalInterest",
+            "guaranteedInterest", "interestProfitRate", "totalInterest", "interestProfitRate2", "totalInterest2",
             "mortalityProfitRate", "expenseProfitRate", "expenseProfitRate_premiumfree",
             "sumProfitRate",
             "terminalBonusRate", "terminalBonusQuote")
@@ -183,92 +247,39 @@ ProfitParticipation = R6Class(
     },
 
 
-    #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    # Profit rates for the various types of profit
-    # Can / shall be overridden in child classes that use other schemes!
-    #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    getInterestProfitRate = function(rates, params, values) {
-        rates$interestProfitRate
-    },
-    getRiskProfitRate = function(rates, params, values) {
-        rates$mortalityProfitRate
-    },
-    getExpenseProfitRate = function(rates, params, values) {
-        rates$expenseProfitRate
-    },
-    getSumProfitRate = function(rates, params, values) {
-        rates$sumProfitRate
-    },
-    getTerminalBonusRate = function(rates, params, values) {
-        rates$terminalBonusRate
-    },
-
-
-    getInterestOnProfits = function(rates, params, values) {
-        rates$totalInterest
-    },
-
-
-    getTerminalBonusReserves = function(rates, terminalBonus, terminalBonusAccount, params, values) {
-        n = length(terminalBonusAccount)
-        terminalBonusAccount * 1/(1.07) ^ ((n - 1):0)
-    },
-
-    calculateSurvivalBenefit = function(profits, rates, params, values) {
-        profits[,"totalProfit"] + profits[,"terminalBonusReserve"]
-    },
-    calculateDeathBenefitAccrued = function(profits, rates, params, values) {
-        profits[,"totalProfit"]*(1 + rates$guaranteedInterest)
-    },
-    calculateDeathBenefitTerminal = function(profits, rates, params, values) {
-        n = params$ContractData$policyPeriod;
-        profits[, "terminalBonusReserve"] * (0:n)/n * ((0:n) >= max(10, n - 5))
-    },
-
-    calculateSurrenderBenefitAccrued = function(profits, rates, params, values) {
-        profits[,"totalProfit"]*(1 + rates$guaranteedInterest / 2)
-    },
-    calculateSurrenderBenefitTerminal = function(profits, rates, params, values) {
-        n = params$ContractData$policyPeriod;
-        profits[, "terminalBonusReserve"] * (0:n)/n * ((0:n) >= max(10, n - 5))
-    },
-
-    calculatePremiumWaiverBenefitAccrued = function(profits, rates, params, values) {
-        profits[,"totalProfit"]
-    },
-    calculatePremiumWaiverBenefitTerminal = function(profits, rates, params, values) {
-        n = params$ContractData$policyPeriod;
-        profits[, "terminalBonusReserve"] * (0:n)/n * ((0:n) >= max(10, n - 5))
-    },
 
 
 
     getProfitParticipation = function(params, values, ...) {
+browser();
+        waiting      = valueOrFunction(params$ProfitParticipation$waitingPeriod, params = params, values = values);
+        if (is.numeric(waiting) && waiting > 0) {
+            waitingFactor = c(rep(0, waiting + 1), rep(1, params$ContractData$policyPeriod - waiting));
+        } else {
+            waitingFactor = 1;
+        }
+
         rates        = self$setupRates(params = params, values = values, ...)
 
-        intBase      = self$getInterestProfitBase(params = params, values = values);
-        riskBase     = self$getRiskProfitBase(params = params, values = values);
-        expenseBase  = self$getExpenseProfitBase(params = params, values = values);
-        sumBase      = self$getSumProfitBase(params = params, values = values);
-        terminalBase = self$getTerminalBonusBase(params = params, values = values);
+        intBase      = self$Functions$getInterestProfitBase(params = params, values = values);
+        riskBase     = self$Functions$getRiskProfitBase(params = params, values = values);
+        expenseBase  = self$Functions$getExpenseProfitBase(params = params, values = values);
+        sumBase      = self$Functions$getSumProfitBase(params = params, values = values);
+        terminalBase = self$Functions$getTerminalBonusBase(params = params, values = values);
 
-        intRate      = self$getInterestProfitRate(rates, params = params, values = values);
-        riskRate     = self$getRiskProfitRate(rates, params = params, values = values);
-        expenseRate  = self$getExpenseProfitRate(rates, params = params, values = values);
-        sumRate      = self$getSumProfitRate(rates, params = params, values = values);
-        terminalRate = self$getTerminalBonusRate(rates, params = params, values = values);
+        intRate      = self$Functions$getInterestProfitRate(rates, params = params, values = values);
+        riskRate     = self$Functions$getRiskProfitRate(rates, params = params, values = values);
+        expenseRate  = self$Functions$getExpenseProfitRate(rates, params = params, values = values);
+        sumRate      = self$Functions$getSumProfitRate(rates, params = params, values = values);
+        terminalRate = self$Functions$getTerminalBonusRate(rates, params = params, values = values);
 
-        intProfit     = intBase  * intRate;
-        riskProfit    = riskBase * riskRate;
-        expenseProfit = expenseBase * expenseRate;
-        sumProfit     = sumBase  * sumRate;
+        intProfit     = self$Functions$calculateInterestProfit(base = intBase, rate = intRate, waiting = waitingFactor, params = params, values = values);
+        riskProfit    = self$Functions$calculateInterestProfit(base = riskBase, rate = riskRate, waiting = waitingFactor, params = params, values = values);
+        expenseProfit = self$Functions$calculateInterestProfit(base = expenseBase, rate = expenseRate, waiting = waitingFactor, params = params, values = values);
+        sumProfit     = self$Functions$calculateInterestProfit(base = sumBase, rate = sumRate, waiting = waitingFactor, params = params, values = values);
 
-        interestOnProfitRate = self$getInterestOnProfits(rates, params = params, values = values);
+        interestOnProfitRate = self$Functions$getInterestOnProfits(rates, params = params, values = values);
 
-
-        terminalBonus = terminalBase * terminalRate; # TODO: Add the AF(v) factor!
-        terminalBonusAccount = cumsum(terminalBonus)
-        terminalBonusReserves = self$getTerminalBonusReserves(rates, terminalBonus, terminalBonusAccount, params = params, values = values)
 
 
         res = cbind(
@@ -300,11 +311,6 @@ ProfitParticipation = R6Class(
 
             totalProfit = c(0),
 
-            # Terminal Bonus values
-            terminalBonus = c(terminalBonus),
-            terminalBonusAccount = c(terminalBonusAccount),
-            terminalBonusReserve = c(terminalBonusReserves)
-
         );
         prev = 0;
         for (i in 1:nrow(res)) {
@@ -314,16 +320,30 @@ ProfitParticipation = R6Class(
             prev = res[i,"totalProfit"];
         }
 
-        survival       = self$calculateSurvivalBenefit(res, rates = rates, params = params, values = values);
 
-        deathAccrued   = self$calculateDeathBenefitAccrued(res, rates = rates, params = params, values = values);
-        deathTerminalBonus = self$calculateDeathBenefitTerminal(res, rates = rates, params = params, values = values);
+        #### Terminal Bonus calculations (might depend on the individual profit assignments calculated above! => Pass the current profit calculation inside the values!)
+        terminalBonus = terminalBase * terminalRate; # TODO: Add the AF(v) factor!
+        terminalBonusAccount = cumsum(terminalBonus)
+        terminalBonusReserves = self$Functions$getTerminalBonusReserves(rates, terminalBonus, terminalBonusAccount, params = params, values = values)
+        res = cbind(
+            res,
+            # Terminal Bonus values
+            terminalBonus = c(terminalBonus),
+            terminalBonusAccount = c(terminalBonusAccount),
+            terminalBonusReserve = c(terminalBonusReserves)
+        )
 
-        surrenderAccrued  = self$calculateSurrenderBenefitAccrued(res, rates = rates, params = params, values = values);
-        surrenderTerminalBonus = self$calculateSurrenderBenefitTerminal(res, rates = rates, params = params, values = values);
 
-        premiumWaiverAccrued  = self$calculatePremiumWaiverBenefitAccrued(res, rates = rates, params = params, values = values);
-        premiumWaiverTerminalBonus = self$calculatePremiumWaiverBenefitTerminal(res, rates = rates, params = params, values = values);
+        survival       = self$Functions$calculateSurvivalBenefit(res, rates = rates, params = params, values = values);
+
+        deathAccrued   = self$Functions$calculateDeathBenefitAccrued(res, rates = rates, params = params, values = values);
+        deathTerminalBonus = self$Functions$calculateDeathBenefitTerminal(res, rates = rates, params = params, values = values);
+
+        surrenderAccrued  = self$Functions$calculateSurrenderBenefitAccrued(res, rates = rates, params = params, values = values);
+        surrenderTerminalBonus = self$Functions$calculateSurrenderBenefitTerminal(res, rates = rates, params = params, values = values);
+
+        premiumWaiverAccrued  = self$Functions$calculatePremiumWaiverBenefitAccrued(res, rates = rates, params = params, values = values);
+        premiumWaiverTerminalBonus = self$Functions$calculatePremiumWaiverBenefitTerminal(res, rates = rates, params = params, values = values);
 
         res = cbind(
             res,

@@ -116,6 +116,8 @@ InsuranceContract.ParameterDefaults = list(
         advanceProfitParticipation = 0,                # Vorweggewinnbeteiligung (%-Satz der Bruttoprämie)
         advanceProfitParticipationInclUnitCost = 0,    # Vorweggewinnbeteiligung (%-Satz der Prämie mit Zu-/Abschlägen, insbesondere nach Stückkosten)
 
+        waitingPeriod = NULL,
+
         guaranteedInterest = NULL,                # Individual contract-specific overrides (i.e. not keyed by year)
         interestProfitRate = NULL,
         totalInterest = NULL,

@@ -176,7 +176,7 @@ InsuranceContract = R6Class(
             self$Values$premiumCompositionSums = self$premiumCompositionSums();
             self$Values$premiumCompositionPV = self$premiumCompositionPV();
 
-            # self$Values$profitParticipation = self$profitParticipation();
+            self$Values$profitParticipation = self$profitParticipation();
             # self$Values$reservesInclProfit = self$calculateReservesWithProfit();
 
             self$addHistorySnapshot(
