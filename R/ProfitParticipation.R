@@ -251,7 +251,6 @@ ProfitParticipation = R6Class(
 
 
     getProfitParticipation = function(params, values, ...) {
-browser();
         waiting      = valueOrFunction(params$ProfitParticipation$waitingPeriod, params = params, values = values);
         if (is.numeric(waiting) && waiting > 0) {
             waitingFactor = c(rep(0, waiting + 1), rep(1, params$ContractData$policyPeriod - waiting));
