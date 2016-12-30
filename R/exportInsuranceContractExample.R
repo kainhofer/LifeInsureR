@@ -41,8 +41,11 @@ exportInsuranceContractExample = function(contract, prf = 10, outdir = ".", base
              "Given object is of class: ",
              paste(class(contract), collapse = ", "));
     }
+    cleanname = contract$tarif$name;
+    cleanname = str_replace(cleanname, " ", "_");
+    cleanname = str_replace(cleanname, "[/:]", "-");
     if (missing(basename)) {
-        basename = paste(outdir, "/", Sys.Date(), "_", str_replace(contract$tarif$name, " ", "_"), sep = "");
+        basename = paste(outdir, "/", Sys.Date(), "_", cleanname, sep = "");
         if (!missing(extraname) && !is.null(extraname)) {
             basename = paste(basename, "_", extraname, sep = "")
         }
