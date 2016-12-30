@@ -44,8 +44,8 @@ InsuranceTarif = R6Class(
           self$Parameters$ProfitParticipation = InsuranceContract.ParametersFallback(self$Parameters$ProfitParticipation, ppScheme$Parameters)
       }
 
-      # Fill all remaining uninitialized values with their defaults
-      self$Parameters = InsuranceContract.ParametersFallback(self$Parameters, InsuranceContract.ParameterDefaults);
+      # Fill all remaining uninitialized values with their defaults, except for profit participation params
+      self$Parameters = InsuranceContract.ParametersFallback(self$Parameters, InsuranceContract.ParameterDefaults, ppParameters = FALSE);
     },
 
     createModification = function(name  = NULL, tarif = NULL, desc  = NULL, tariffType = NULL, ...) {

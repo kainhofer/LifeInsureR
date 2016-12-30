@@ -185,14 +185,16 @@ InsuranceContract.ParametersFill = function(params=InsuranceContract.ParameterSt
 #'                 entry in \code{params} is NULL.
 #'
 #' @export
-InsuranceContract.ParametersFallback = function(params, fallback) {
+InsuranceContract.ParametersFallback = function(params, fallback, ppParameters = TRUE) {
     # params = InsuranceContract.ParameterStructure;
     params$ContractData = fallbackFields(params$ContractData, fallback$ContractData);
     params$ContractState = fallbackFields(params$ContractState, fallback$ContractState);
     params$ActuarialBases = fallbackFields(params$ActuarialBases, fallback$ActuarialBases);
     params$Loadings = fallbackFields(params$Loadings, fallback$Loadings);
     params$Features = fallbackFields(params$Features, fallback$Features);
-    params$ProfitParticipation = fallbackFields(params$ProfitParticipation, fallback$ProfitParticipation);
+    if (ppParameters) {
+        params$ProfitParticipation = fallbackFields(params$ProfitParticipation, fallback$ProfitParticipation);
+    }
 
     # Costs are a special case, because they are an array rather than a list:
     # TODO: Find a way to partially fall back
