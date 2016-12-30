@@ -368,6 +368,65 @@ exportInsuranceContract.xlsx = function(contract, filename) {
 
 
   ################################################
+  # Print out Profit Participation
+  ################################################
+
+  sheet = "Gewinnbeteiligung";
+  addWorksheet(wb, sheet);
+
+  # Age, death and survival probabilities
+  ccol = 1;
+  crow = 4;
+
+  ccol = ccol + writeAgeQTable(wb, sheet, probs = qp, crow = crow, ccol = 1, styles = styles);
+  ccol.table = ccol - 1;
+  ccol = ccol + writeValuesTable(wb, sheet, as.data.frame(setInsuranceValuesLabels(contract$Values$profitParticipation)),
+                                 crow = crow, ccol = ccol, tableName = "ProfitParticipation", styles = styles,
+                                 # caption = "Gewinnbeteiligung",
+                                 valueStyle = styles$currency0) + 1;
+
+  nrrow = dim(contract$Values$profitParticipation)[[1]];
+
+  cnames = colnames(contract$Values$profitParticipation);
+  # Make sure "terminalBonusRate" is NOT matched! Need to use a negative lookahead..
+  baseCols = grep("^(?!terminal).*Base$", cnames, perl = TRUE);
+  rateCols = grep("^(?!terminal).*(Interest|Rate)$", cnames, perl = TRUE);
+  profitCols = grep(".*Profit$", cnames);
+  terminalBonusCols = grep("^terminal.*", cnames);
+  deathCols = grep("^death.*", cnames);
+  surrenderCols = grep("^surrender.*", cnames);
+  premiumWaiverCols = grep("^premiumWaiver.*", cnames);
+
+  # Rates are displayed in %:
+  addStyle(wb, sheet, style = styles$rate, rows = (crow + 2):(crow + nrrow + 1), cols = rateCols + ccol.table, gridExpand = TRUE, stack = TRUE);
+
+  # Add table headers for the various sections:
+  if (length(baseCols) > 0) {
+      writeTableCaption(wb, sheet, "Basisgrößen", rows = crow, cols = baseCols + ccol.table, style = styles$header);
+  }
+  if (length(rateCols) > 0) {
+      writeTableCaption(wb, sheet, "Gewinnbeteiligungssätze", rows = crow, cols = rateCols + ccol.table, style = styles$header);
+  }
+  if (length(profitCols) > 0) {
+      writeTableCaption(wb, sheet, "GB Zuweisungen", rows = crow, cols = profitCols + ccol.table, style = styles$header);
+  }
+  if (length(terminalBonusCols) > 0) {
+      writeTableCaption(wb, sheet, "Schlussgewinn", rows = crow, cols = terminalBonusCols + ccol.table, style = styles$header);
+  }
+  if (length(deathCols) > 0) {
+      writeTableCaption(wb, sheet, "Todesfallleistung", rows = crow, cols = deathCols + ccol.table, style = styles$header);
+  }
+  if (length(surrenderCols) > 0) {
+      writeTableCaption(wb, sheet, "Rückkauf", rows = crow, cols = surrenderCols + ccol.table, style = styles$header);
+  }
+  if (length(premiumWaiverCols) > 0) {
+      writeTableCaption(wb, sheet, "Prämienfreistellung", rows = crow, cols = premiumWaiverCols + ccol.table, style = styles$header);
+  }
+
+  setColWidths(wb, sheet, cols = 1:50, widths = "auto", ignoreMergedCells = TRUE)
+
+
+  ################################################
   # Print out premium decomposition
   ################################################
 
