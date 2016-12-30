@@ -8,27 +8,71 @@
 \alias{profPart.base.ZillmerRiskPremium}
 \alias{profPart.base.meanContractualReserve}
 \alias{profPart.base.sumInsured}
+\alias{profPart.benefit.Profit}
+\alias{profPart.benefit.ProfitPlusGuaranteedInterest}
+\alias{profPart.benefit.ProfitPlusHalfGuaranteedInterest}
+\alias{profPart.benefit.ProfitPlusHalfTotalInterest}
+\alias{profPart.benefit.ProfitPlusTerminalBonusReserve}
+\alias{profPart.benefit.ProfitPlusTotalInterest}
+\alias{profPart.benefit.TerminalBonus5YearsProRata}
 \alias{profPart.calculate.RateOnBase}
+\alias{profPart.calculate.RatePlusGuaranteeOnBase}
+\alias{profPart.rate.expenseProfit}
+\alias{profPart.rate.interestProfit}
+\alias{profPart.rate.interestProfit2}
+\alias{profPart.rate.riskProfit}
+\alias{profPart.rate.sumProfit}
+\alias{profPart.rate.terminalBonus}
 \alias{profPart.rate.totalInterest}
 \alias{profPart.rate.totalInterest2}
 \title{Base Class for Profit Participation Schemes}
 \format{An object of class \code{R6ClassGenerator} of length 24.}
 \usage{
-profPart.base.PreviousZillmerReserve(params, values)
+profPart.base.PreviousZillmerReserve(rates, params, values, ...)
 
-profPart.base.ZillmerReserveT2(params, values)
+profPart.base.ZillmerReserveT2(rates, params, values, ...)
 
-profPart.base.meanContractualReserve(params, values)
+profPart.base.meanContractualReserve(rates, params, values, ...)
 
-profPart.base.ZillmerRiskPremium(params, values)
+profPart.base.ZillmerRiskPremium(rates, params, values, ...)
 
-profPart.base.sumInsured(params, values)
+profPart.base.sumInsured(rates, params, values, ...)
 
-profPart.rate.totalInterest(rates, params, values)
+profPart.rate.interestProfit(rates, params, values, ...)
 
-profPart.rate.totalInterest2(rates, params, values)
+profPart.rate.riskProfit(rates, params, values, ...)
 
-profPart.calculate.RateOnBase(base, rate, waiting, params, values)
+profPart.rate.expenseProfit(rates, params, values, ...)
+
+profPart.rate.sumProfit(rates, params, values, ...)
+
+profPart.rate.terminalBonus(rates, params, values, ...)
+
+profPart.rate.totalInterest(rates, params, values, ...)
+
+profPart.rate.totalInterest2(rates, params, values, ...)
+
+profPart.rate.interestProfit2(rates, params, values, ...)
+
+profPart.calculate.RateOnBase(base, rate, waiting, rates, params, values, ...)
+
+profPart.calculate.RatePlusGuaranteeOnBase(base, rate, waiting, rates, params,
+  values, ...)
+
+profPart.benefit.ProfitPlusTerminalBonusReserve(profits, rates, params, values)
+
+profPart.benefit.Profit(profits, rates, params, values)
+
+profPart.benefit.ProfitPlusGuaranteedInterest(profits, rates, params, values)
+
+profPart.benefit.ProfitPlusTotalInterest(profits, rates, params, values)
+
+profPart.benefit.ProfitPlusHalfTotalInterest(profits, rates, params, values)
+
+profPart.benefit.ProfitPlusHalfGuaranteedInterest(profits, rates, params,
+  values)
+
+profPart.benefit.TerminalBonus5YearsProRata(profits, rates, params, values)
 
 ProfitParticipation
 }
@@ -49,11 +93,39 @@ reserves).
 
 \item \code{profPart.base.sumInsured}: Basis for expense/sum profit: sum insured
 
+\item \code{profPart.rate.interestProfit}: Returns the array of interest profit rates (keyed by year)
+
+\item \code{profPart.rate.riskProfit}: Returns the array of risk profit rates (keyed by year)
+
+\item \code{profPart.rate.expenseProfit}: Returns the array of expense profit rates (keyed by year)
+
+\item \code{profPart.rate.sumProfit}: Returns the array of sum profit rates (keyed by year)
+
+\item \code{profPart.rate.terminalBonus}: Returns the array of terminal bonus rates (keyed by year)
+
 \item \code{profPart.rate.totalInterest}: Rate for interest on past profits: total interest rate
 
 \item \code{profPart.rate.totalInterest2}: Rate for interest on past profits: second total interest rate
 
+\item \code{profPart.rate.interestProfit2}: Rate for interest on past profits: second interest profit rate (not including guaranteed interest), keyed by year
+
 \item \code{profPart.calculate.RateOnBase}: Calculate profit by a simple rate applied on the basis (with an optional waiting vector of values 0 or 1)
+
+\item \code{profPart.calculate.RatePlusGuaranteeOnBase}: Calculate profit by a rate + guaranteed interest applied on the basis (with an optional waiting vector of values 0 or 1)
+
+\item \code{profPart.benefit.ProfitPlusTerminalBonusReserve}: Calculate survival benefit as total profit amount plus the terminal bonus reserve
+
+\item \code{profPart.benefit.Profit}: Calculate benefit as total profit accrued so far
+
+\item \code{profPart.benefit.ProfitPlusGuaranteedInterest}: Calculate accrued death benefit as total profit with (guaranteed) interest for one year
+
+\item \code{profPart.benefit.ProfitPlusTotalInterest}: Calculate accrued death benefit as total profit with total interest (interest on profit rate) for one year
+
+\item \code{profPart.benefit.ProfitPlusHalfTotalInterest}: Calculate accrued benefit as total profit with total interest (interest on profit rate) for half a year
+
+\item \code{profPart.benefit.ProfitPlusHalfGuaranteedInterest}: Calculate death benefit as total profit with (guaranteed) interest for one year
+
+\item \code{profPart.benefit.TerminalBonus5YearsProRata}: Calculate benefit from terminal bonus as 1/n parts of the terminal bonus reserve during the last 5 years
 }}
 \keyword{datasets}
 

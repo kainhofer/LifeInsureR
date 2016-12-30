@@ -30,46 +30,36 @@ ProfitParticipation = R6Class(
         # Calculation bases for the various types of profit
         # Can / shall be overridden in child classes that use other bases!
         #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-        getInterestProfitBase = profPart.base.meanContractualReserve,
-        getRiskProfitBase     = profPart.base.ZillmerRiskPremium,
-        getExpenseProfitBase  = profPart.base.sumInsured,
-        getSumProfitBase      = profPart.base.sumInsured,
-        getTerminalBonusBase  = profPart.base.sumInsured,
+        getInterestProfitBase   = profPart.base.meanContractualReserve,
+        getRiskProfitBase       = profPart.base.ZillmerRiskPremium,
+        getExpenseProfitBase    = profPart.base.sumInsured,
+        getSumProfitBase        = profPart.base.sumInsured,
 
         #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         # Profit rates for the various types of profit
         # Can / shall be overridden in child classes that use other schemes!
         #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-        getInterestProfitRate = function(rates, params, values) {
-            rates$interestProfitRate
-        },
-        getRiskProfitRate = function(rates, params, values) {
-            rates$mortalityProfitRate
-        },
-        getExpenseProfitRate = function(rates, params, values) {
-            rates$expenseProfitRate
-        },
-        getSumProfitRate = function(rates, params, values) {
-            rates$sumProfitRate
-        },
-        getTerminalBonusRate = function(rates, params, values) {
-            rates$terminalBonusRate
-        },
+        getInterestProfitRate   = profPart.rate.interestProfit,
+        getRiskProfitRate       = profPart.rate.riskProfit,
+        getExpenseProfitRate    = profPart.rate.expenseProfit,
+        getSumProfitRate        = profPart.rate.sumProfit,
 
-        getInterestOnProfits = profPart.rate.totalInterest,
+        getInterestOnProfits    = profPart.rate.totalInterest,
 
 
-        getTerminalBonusReserves = function(rates, terminalBonus, terminalBonusAccount, params, values) {
+
+        calculateInterestProfit = profPart.calculate.RateOnBase,
+        calculateRiskProfit     = profPart.calculate.RateOnBase,
+        calculateExpenseProfit  = profPart.calculate.RateOnBase,
+        calculateSumProfit      = profPart.calculate.RateOnBase,
+
+        getTerminalBonusBase    = profPart.base.sumInsured,
+        getTerminalBonusRate    = profPart.rate.terminalBonus,
+        calculateTerminalBonus  = profPart.calculate.RateOnBase,
+        getTerminalBonusReserves = function(profits, rates, terminalBonus, terminalBonusAccount, params, values) {
             n = length(terminalBonusAccount)
             terminalBonusAccount * 1/(1.07) ^ ((n - 1):0)
         },
-
-        calculateInterestProfit = profPart.calculate.RateOnBase,
-        calculateRiskProfit = profPart.calculate.RateOnBase,
-        calculateExpenseProfit = profPart.calculate.RateOnBase,
-        calculateSumProfit = profPart.calculate.RateOnBase,
-
-        calculateTerminalBonus = profPart.calculate.RateOnBase,
 
         #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         # Calculations of the assigned profit amounts, based on the bases and
@@ -77,30 +67,14 @@ ProfitParticipation = R6Class(
         # Can / shall be overridden in child classes that use other bases!
         #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-        calculateSurvivalBenefit = function(profits, rates, params, values) {
-            profits[,"totalProfit"] + profits[,"terminalBonusReserve"]
-        },
-        calculateDeathBenefitAccrued = function(profits, rates, params, values) {
-            profits[,"totalProfit"]*(1 + rates$guaranteedInterest)
-        },
-        calculateDeathBenefitTerminal = function(profits, rates, params, values) {
-            n = params$ContractData$policyPeriod;
-            profits[, "terminalBonusReserve"] * (0:n)/n * ((0:n) >= max(10, n - 5))
-        },
-        calculateSurrenderBenefitAccrued = function(profits, rates, params, values) {
-            profits[,"totalProfit"]*(1 + rates$guaranteedInterest / 2)
-        },
-        calculateSurrenderBenefitTerminal = function(profits, rates, params, values) {
-            n = params$ContractData$policyPeriod;
-            profits[, "terminalBonusReserve"] * (0:n)/n * ((0:n) >= max(10, n - 5))
-        },
-        calculatePremiumWaiverBenefitAccrued = function(profits, rates, params, values) {
-            profits[,"totalProfit"]
-        },
-        calculatePremiumWaiverBenefitTerminal = function(profits, rates, params, values) {
-            n = params$ContractData$policyPeriod;
-            profits[, "terminalBonusReserve"] * (0:n)/n * ((0:n) >= max(10, n - 5))
-        },
+        calculateSurvivalBenefit      = profPart.benefit.ProfitPlusTerminalBonusReserve,
+        calculateDeathBenefitAccrued  = profPart.benefit.ProfitPlusGuaranteedInterest,
+        calculateDeathBenefitTerminal = profPart.benefit.TerminalBonus5YearsProRata,
+        calculateSurrenderBenefitAccrued = profPart.benefit.ProfitPlusHalfGuaranteedInterest,
+        calculateSurrenderBenefitTerminal = profPart.benefit.TerminalBonus5YearsProRata,
+        calculatePremiumWaiverBenefitAccrued = profPart.benefit.Profit,
+        calculatePremiumWaiverBenefitTerminal = profPart.benefit.TerminalBonus5YearsProRata,
+
 
         dummy = 0
     ),
@@ -260,22 +234,22 @@ ProfitParticipation = R6Class(
 
         rates        = self$setupRates(params = params, values = values, ...)
 
-        intBase      = self$Functions$getInterestProfitBase(params = params, values = values);
-        riskBase     = self$Functions$getRiskProfitBase(params = params, values = values);
-        expenseBase  = self$Functions$getExpenseProfitBase(params = params, values = values);
-        sumBase      = self$Functions$getSumProfitBase(params = params, values = values);
+        intBase      = self$Functions$getInterestProfitBase(rates = rates, params = params, values = values);
+        riskBase     = self$Functions$getRiskProfitBase(rates = rates, params = params, values = values);
+        expenseBase  = self$Functions$getExpenseProfitBase(rates = rates, params = params, values = values);
+        sumBase      = self$Functions$getSumProfitBase(rates = rates, params = params, values = values);
 
-        intRate      = self$Functions$getInterestProfitRate(rates, params = params, values = values);
-        riskRate     = self$Functions$getRiskProfitRate(rates, params = params, values = values);
-        expenseRate  = self$Functions$getExpenseProfitRate(rates, params = params, values = values);
-        sumRate      = self$Functions$getSumProfitRate(rates, params = params, values = values);
+        intRate      = self$Functions$getInterestProfitRate(rates = rates, params = params, values = values);
+        riskRate     = self$Functions$getRiskProfitRate(rates = rates, params = params, values = values);
+        expenseRate  = self$Functions$getExpenseProfitRate(rates = rates, params = params, values = values);
+        sumRate      = self$Functions$getSumProfitRate(rates = rates, params = params, values = values);
 
-        intProfit     = self$Functions$calculateInterestProfit(base = intBase, rate = intRate, waiting = waitingFactor, params = params, values = values);
-        riskProfit    = self$Functions$calculateInterestProfit(base = riskBase, rate = riskRate, waiting = waitingFactor, params = params, values = values);
-        expenseProfit = self$Functions$calculateInterestProfit(base = expenseBase, rate = expenseRate, waiting = waitingFactor, params = params, values = values);
-        sumProfit     = self$Functions$calculateInterestProfit(base = sumBase, rate = sumRate, waiting = waitingFactor, params = params, values = values);
+        intProfit     = self$Functions$calculateInterestProfit(base = intBase, rate = intRate, waiting = waitingFactor, rates = rates, params = params, values = values);
+        riskProfit    = self$Functions$calculateInterestProfit(base = riskBase, rate = riskRate, waiting = waitingFactor, rates = rates, params = params, values = values);
+        expenseProfit = self$Functions$calculateInterestProfit(base = expenseBase, rate = expenseRate, waiting = waitingFactor, rates = rates, params = params, values = values);
+        sumProfit     = self$Functions$calculateInterestProfit(base = sumBase, rate = sumRate, waiting = waitingFactor, rates = rates, params = params, values = values);
 
-        interestOnProfitRate = self$Functions$getInterestOnProfits(rates, params = params, values = values);
+        interestOnProfitRate = self$Functions$getInterestOnProfits(rates = rates, params = params, values = values);
 
 
 
@@ -317,11 +291,11 @@ ProfitParticipation = R6Class(
 
         #### Terminal Bonus calculations (might depend on the individual profit assignments calculated above!
         #### => TODO: Pass the current profit calculation inside the values!)
-        terminalBase = self$Functions$getTerminalBonusBase(params = params, values = values);
-        terminalRate = self$Functions$getTerminalBonusRate(rates, params = params, values = values);
-        terminalBonus = terminalBase * terminalRate; # TODO: Add the AF(v) factor!
-        terminalBonusAccount = cumsum(terminalBonus)
-        terminalBonusReserves = self$Functions$getTerminalBonusReserves(rates, terminalBonus, terminalBonusAccount, params = params, values = values)
+        terminalBase = self$Functions$getTerminalBonusBase(res, rates = rates, params = params, values = values);
+        terminalRate = self$Functions$getTerminalBonusRate(res, rates = rates, params = params, values = values);
+        terminalBonus = self$Functions$calculateTerminalBonus(res, base = terminalBase, rate = terminalRate, waiting = waitingFactor, rates = rates, params = params, values = values); # TODO: Add the AF(v) factor!
+        terminalBonusAccount = cumsum(terminalBonus); # TODO: Generalize! Not every scheme uses a cumulative account!
+        terminalBonusReserves = self$Functions$getTerminalBonusReserves(res, rates = rates, terminalBonus, terminalBonusAccount, params = params, values = values)
         res = cbind(
             res,
             # Terminal Bonus values
