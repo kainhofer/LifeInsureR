@@ -25,15 +25,23 @@ writeAgeQTable = function(wb, sheet, probs, crow = 1, ccol = 1, styles = list())
   dim(probs)[[2]] + 2;
 };
 
+writeTableCaption = function(wb, sheet, caption, rows, cols, style = NULL) {
+    r = min(rows);
+    c = min(cols);
+    writeData(wb, sheet, caption, startCol = c, startRow = r);
+    if (!is.null(style)) {
+        addStyle(wb, sheet, style = style, rows = r, cols = c, stack = TRUE);
+    }
+    mergeCells(wb, sheet, rows = rows, cols = cols);
+}
+
 writeValuesTable = function(wb, sheet, values, caption = NULL, crow = 1, ccol = 1, rowNames = FALSE, tableStyle = "tableStyleMedium3", tableName = NULL, withFilter=FALSE, styles = list(), valueStyle = NULL) {
   nrrow = dim(values)[[1]];
   nrcol = dim(values)[[2]];
   addcol = if (rowNames) 1 else 0;
   ecol = ccol + addcol + nrcol - 1;
   if (!missing(caption)) {
-    writeData(wb, sheet, caption, startCol = ccol + addcol, startRow = crow);
-    addStyle(wb, sheet, style = styles$header, rows = crow, cols = ccol + addcol, stack = TRUE);
-    mergeCells(wb, sheet, rows = crow, cols = (ccol + addcol):ecol);
+      writeTableCaption(wb, sheet, caption, rows = crow, cols = (ccol + addcol):ecol, style = styles$header)
   }
 
   writeDataTable(wb, sheet, values, startRow = crow + 1, startCol = ccol, colNames = TRUE,
@@ -206,9 +214,11 @@ exportInsuranceContract.xlsx = function(contract, filename) {
                               halign = "center", valign = "center", textDecoration = "bold"),
     hide0 = createStyle(numFmt = "General; General; \"\""),
     currency0 = createStyle(numFmt = "[$€-C07] #,##0.00;[red]-[$€-C07] #,##0.00;\"\""),
-    cost0 = createStyle(numFmt = "0.000%; 0.000%; \"\""),
+    cost0 = createStyle(numFmt = "0.0##%; 0.0##%; \"\""),
     pv0 = createStyle(numFmt = "0.00000;-0.00000;\"\""),
     qx = createStyle(numFmt = "0.000000"),
+    rate = createStyle(numFmt = "0.00####%"),
+    digit = createStyle(numFmt = "0;-0;\"\""),
     wrap = createStyle(wrapText = TRUE),
     center = createStyle(halign = "center", valign = "center")
   );
@@ -311,13 +321,24 @@ exportInsuranceContract.xlsx = function(contract, filename) {
   addStyle(wb, sheet, style = styles$center, rows = (crow + 2):(crow + 1 + dim(tbl)[[1]]), cols = ccol:(ccol + 1), gridExpand = TRUE, stack = TRUE);
   ccol = ccol + dim(tbl)[[2]] + 2;
 
+  ccol.table = ccol - 1;
   ccol = ccol + writeValuesTable(wb, sheet, as.data.frame(setInsuranceValuesLabels(contract$Values$basicData)),
                                  crow = crow, ccol = ccol, tableName = "Grunddaten", styles = styles,
-                                 caption = "Vertragsgrunddaten im Zeitverlauf", valueStyle = styles$currency0) + 1;
+                                 caption = "Vertragsgrunddaten im Zeitverlauf") + 1;
   setColWidths(wb, sheet, cols = 1:50, widths = "auto", ignoreMergedCells = TRUE)
 
-  # TODO: Change PremiumPayment column to 0=prf. / 1=prpfl. / -1=außerplanm.prf.
-  # TODO: Change InterestRate column to percent format
+  # Change InterestRate column to percent format
+  # Change premiumPayment column to single-digit column
+  # Change period columnts to normal numbers
+  nrrow = dim(contract$Values$basicData)[[1]];
+  cnames = colnames(contract$Values$basicData);
+
+  r = (crow + 2):(crow + nrrow + 1);
+  addStyle(wb, sheet, style = styles$rate, rows = r, cols = grep("^InterestRate$", cnames) + ccol.table, gridExpand = TRUE, stack = TRUE);
+  addStyle(wb, sheet, style = styles$digit, rows = r,
+           cols = grep("^(PremiumPayment|PolicyDuration|PremiumPeriod)$", cnames) + ccol.table,
+           gridExpand = TRUE, stack = TRUE);
+  addStyle(wb, sheet, style = styles$currency0, rows = r, cols = grep("^(SumInsured|Premiums)$", cnames) + ccol.table, gridExpand = TRUE, stack = TRUE);
 
 
 
