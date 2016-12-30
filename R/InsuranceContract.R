@@ -176,8 +176,7 @@ InsuranceContract = R6Class(
             self$Values$premiumCompositionSums = self$premiumCompositionSums();
             self$Values$premiumCompositionPV = self$premiumCompositionPV();
 
-            self$Values$profitParticipation = self$profitParticipation();
-            # self$Values$reservesInclProfit = self$calculateReservesWithProfit();
+            self$profitParticipation();
 
             self$addHistorySnapshot(
                 time    = 0,
@@ -237,11 +236,19 @@ InsuranceContract = R6Class(
             self$tarif$calculatePresentValues(self$Values$premiumComposition, params = self$Parameters);
         },
 
-        profitParticipation = function() {
-            self$tarif$calculateProfitParticipation(params = self$Parameters, values = self$Values);
+        profitParticipation = function(...) {
+            self$Values$profitParticipation = self$calculateProfitParticipation(...);
+            self$Values$reservesInclProfit = self$calculateReservesWithProfit(...);
+
+            # For convenience, return the profit participation table:
+            self$Values$profitParticipation
         },
-        calculateReservesWithProfit = function() {
-            self$tarif$reservesWithProfit(params = self$Parameters, values = self$Values);
+
+        calculateProfitParticipation = function(...) {
+            self$tarif$calculateProfitParticipation(params = self$Parameters, values = self$Values, ...);
+        },
+        calculateReservesWithProfit = function(...) {
+            self$tarif$reservesWithProfit(params = self$Parameters, values = self$Values, ...);
         },
 
 

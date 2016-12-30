@@ -755,7 +755,7 @@ InsuranceTarif = R6Class(
         }
     },
 
-    reservesWithProfit = function(params, values) {
+    reservesWithProfit = function(params, values, ...) {
         # TODO
     },
 
