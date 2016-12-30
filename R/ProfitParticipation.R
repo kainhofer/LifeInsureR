@@ -362,6 +362,32 @@ ProfitParticipation = R6Class(
             premiumWaiver  = premiumWaiverAccrued + premiumWaiverTerminalBonus
         );
 
+        # Clean the huge dataframe by removing columns that refer to profit
+        # sources that the current profit plan does not provide
+        toremove = c();
+        cnames = colnames(res)
+        if (!"interest" %in% params$ProfitParticipation$profitComponents) {
+            toremove = c(toremove, grep("^interest[BP]", cnames));
+        }
+        if (!"risk" %in% params$ProfitParticipation$profitComponents) {
+            toremove = c(toremove, grep("^risk", cnames));
+        }
+        if (!"expense" %in% params$ProfitParticipation$profitComponents) {
+            toremove = c(toremove, grep("^expense", cnames));
+        }
+        if (!"sum" %in% params$ProfitParticipation$profitComponents) {
+            toremove = c(toremove, grep("^sum", cnames));
+        }
+        if (!"terminal" %in% params$ProfitParticipation$profitComponents) {
+            toremove = c(toremove,
+                grep("^terminal", cnames),
+                grep("^.*TerminalBonus$", cnames)
+            );
+        }
+        if (length(toremove) > 0) {
+            res = res[,-toremove]
+        }
+
         res
     },
 
