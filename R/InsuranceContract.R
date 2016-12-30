@@ -251,7 +251,7 @@ InsuranceContract = R6Class(
 
         # Premium Waiver: Stop all premium payments at time t
         # the SumInsured is determined from the available
-        premiumWaiver = function (t) {
+        premiumWaiver = function(t) {
             newSumInsured = self$Values$reserves[[toString(t), "PremiumFreeSumInsured"]];
             self$Parameters$ContractState$premiumWaiver = TRUE;
             self$Parameters$ContractState$surrenderPenalty = FALSE; # Surrender penalty has already been applied, don't apply a second time
@@ -267,7 +267,7 @@ InsuranceContract = R6Class(
 
             pv = self$calculatePresentValues();
             pvc = self$calculatePresentValuesCosts();
-            self$Values$presentValuesCosts = mergeValues3D(starting = self$Values$presentValuesCosts, ending=pvc, t = t);
+            self$Values$presentValuesCosts = mergeValues3D(starting = self$Values$presentValuesCosts, ending = pvc, t = t);
 
             # TODO:
             # the premiumCalculation function returns the premiums AND the cofficients,
@@ -278,7 +278,7 @@ InsuranceContract = R6Class(
 
             # Update the cash flows and present values with the values of the premium
             pvAllBenefits = self$calculatePresentValuesBenefits()
-            self$Values$presentValues = mergeValues(starting = self$Values$presentValues, ending=cbind(pv, pvAllBenefits), t = t);
+            self$Values$presentValues = mergeValues(starting = self$Values$presentValues, ending = cbind(pv, pvAllBenefits), t = t);
 
             self$Values$absCashFlows       = mergeValues(starting = self$Values$absCashFlows,       ending = self$calculateAbsCashFlows(), t = t);
             self$Values$absPresentValues   = mergeValues(starting = self$Values$absPresentValues,   ending = self$calculateAbsPresentValues(), t = t);
@@ -290,7 +290,7 @@ InsuranceContract = R6Class(
                                     type = "PremiumWaiver", params = self$Parameters, values = self$Values);
         },
 
-        dummy=NULL
+        dummy = NULL
     )
-);
+)
 # InsuranceContract$debug("premiumWaiver")
