@@ -309,8 +309,7 @@ browser();
             interestOnProfit = c(0),
             totalProfitAssignment = c(0),
 
-            totalProfit = c(0),
-
+            totalProfit = c(0)
         );
         prev = 0;
         for (i in 1:nrow(res)) {
