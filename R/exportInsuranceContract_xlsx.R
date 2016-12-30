@@ -217,17 +217,10 @@ exportInsuranceContract.xlsx = function(contract, filename) {
   # General Workbook setup
   ################################################
   wb = openxlsx::createWorkbook();
-  addWorksheet(wb, "Tarifinformationen");
-  addWorksheet(wb, "Basisdaten");
-  addWorksheet(wb, "Reserven");
-  addWorksheet(wb, "Prämienzerlegung");
-  addWorksheet(wb, "abs.Barwerte");
-  addWorksheet(wb, "abs.Cash-Flows");
-  addWorksheet(wb, "Barwerte");
-  addWorksheet(wb, "Cash-Flows");
 
   # Print out general Contract and Tariff information, including results
   sheet = "Tarifinformationen"
+  addWorksheet(wb, sheet);
   crow = 1;
   writeData(wb, sheet, matrix(c(
     "Tarif:", contract$tarif$tarif,
@@ -304,10 +297,12 @@ exportInsuranceContract.xlsx = function(contract, filename) {
   # Print out Basic contract data as time series
   ################################################
 
+  sheet = "Basisdaten";
+  addWorksheet(wb, sheet);
+
   # Age, death and survival probabilities
   ccol = 1;
   crow = 4;
-  sheet = "Basisdaten";
   tbl = qp[,"age", drop = FALSE];
   writeDataTable(wb, sheet, setInsuranceValuesLabels(tbl),
                  startRow = crow + 1, startCol = ccol, colNames = TRUE, rowNames = TRUE,
@@ -330,10 +325,12 @@ exportInsuranceContract.xlsx = function(contract, filename) {
   # Print out Reserves
   ################################################
 
+  sheet = "Reserven";
+  addWorksheet(wb, sheet);
+
   # Age, death and survival probabilities
   ccol = 1;
   crow = 4;
-  sheet = "Reserven";
 
   ccol = ccol + writeAgeQTable(wb, sheet, probs = qp, crow = crow, ccol = 1, styles = styles);
   ccol = ccol + writeValuesTable(wb, sheet, as.data.frame(setInsuranceValuesLabels(contract$Values$reserves)),
@@ -356,6 +353,7 @@ exportInsuranceContract.xlsx = function(contract, filename) {
   # Age, death and survival probabilities
   crow = 4;
   sheet = "Prämienzerlegung";
+  addWorksheet(wb, sheet);
 
   crow = crow + dim(qp)[[1]] + 4;
   ccol = 1 + writeAgeQTable(wb, sheet, probs = qp, crow = crow, ccol = 1, styles = styles);
@@ -382,10 +380,12 @@ exportInsuranceContract.xlsx = function(contract, filename) {
   # Print out absolute values of present values
   ################################################
 
-  # Age, death and survival probabilities
+  sheet = "abs.Barwerte";
+  addWorksheet(wb, sheet);
+
+    # Age, death and survival probabilities
   ccol = 1;
   crow = 4;
-  sheet = "abs.Barwerte";
   ccol = ccol + writeAgeQTable(wb, sheet, probs = qp, crow = crow, ccol = 1, styles = styles);
 
   ccol = ccol + writeValuesTable(wb, sheet, as.data.frame(setInsuranceValuesLabels(contract$Values$absPresentValues)),
@@ -402,6 +402,7 @@ exportInsuranceContract.xlsx = function(contract, filename) {
   ccol = 1;
   crow = 4;
   sheet = "abs.Cash-Flows";
+  addWorksheet(wb, sheet);
   ccol = ccol + writeAgeQTable(wb, sheet, probs = qp, crow = crow, ccol = 1, styles = styles);
   ccol = ccol + writeValuesTable(wb, sheet, as.data.frame(setInsuranceValuesLabels(contract$Values$absCashFlows)),
                                  crow = crow, ccol = ccol, tableName = "CashFlows_absolute", styles = styles,
@@ -413,11 +414,13 @@ exportInsuranceContract.xlsx = function(contract, filename) {
   # Print out present values
   ################################################
 
-  # Age, death and survival probabilities
+  sheet = "Barwerte";
+  addWorksheet(wb, sheet);
+
+    # Age, death and survival probabilities
   costPV = as.data.frame(contract$tarif$costValuesAsMatrix(setInsuranceValuesLabels(contract$Values$presentValuesCosts)));
   ccol = 1;
   crow = 4;
-  sheet = "Barwerte";
   # We add six lines before the present values to show the coefficients for the premium calculation
   ccol = ccol + writeAgeQTable(wb, sheet, probs = qp, crow = crow + 6, ccol = 1, styles = styles);
 
@@ -457,11 +460,13 @@ exportInsuranceContract.xlsx = function(contract, filename) {
   # Print out cash flows
   ################################################
 
+  sheet = "Cash-Flows";
+  addWorksheet(wb, sheet);
+
   # Age, death and survival probabilities
   costCF = as.data.frame(contract$tarif$costValuesAsMatrix(setInsuranceValuesLabels(contract$Values$cashFlowsCosts)));
   ccol = 1;
   crow = 4;
-  sheet = "Cash-Flows";
   ccol = ccol + writeAgeQTable(wb, sheet, probs = qp, crow = crow, ccol = 1, styles = styles);
   ccol = ccol + writeValuesTable(wb, sheet, setInsuranceValuesLabels(contract$Values$cashFlows),
                                  crow = crow, ccol = ccol, tableName = "CashFlows_Benefits", styles = styles,
