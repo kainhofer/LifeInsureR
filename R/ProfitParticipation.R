@@ -100,6 +100,14 @@ ProfitParticipation = R6Class(
         self$Parameters = fallbackFields(self$Parameters, InsuranceContract.ParameterDefaults$ProfitParticipation);
     },
 
+    createModification = function(name  = NULL, ...) {
+        cloned = self$clone();
+        if (!missing(name)) cloned$name = name;
+        cloned$Parameters = fillFields(cloned$Parameters, list(...));
+        cloned$Functions  = fillFields(cloned$Functions, list(...));
+        cloned
+    },
+
 
     ############################################################################
     # Advance Profit Participation
