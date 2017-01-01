@@ -11,7 +11,9 @@
 \alias{profPart.benefit.Profit}
 \alias{profPart.benefit.ProfitPlusGuaranteedInterest}
 \alias{profPart.benefit.ProfitPlusHalfGuaranteedInterest}
+\alias{profPart.benefit.ProfitPlusHalfInterestMinGuaranteeTotal}
 \alias{profPart.benefit.ProfitPlusHalfTotalInterest}
+\alias{profPart.benefit.ProfitPlusInterestMinGuaranteeTotal}
 \alias{profPart.benefit.ProfitPlusTerminalBonusReserve}
 \alias{profPart.benefit.ProfitPlusTotalInterest}
 \alias{profPart.benefit.TerminalBonus5YearsProRata}
@@ -20,6 +22,7 @@
 \alias{profPart.rate.expenseProfit}
 \alias{profPart.rate.interestProfit}
 \alias{profPart.rate.interestProfit2}
+\alias{profPart.rate.interestProfitPlusGuarantee}
 \alias{profPart.rate.riskProfit}
 \alias{profPart.rate.sumProfit}
 \alias{profPart.rate.terminalBonus}
@@ -48,6 +51,8 @@ profPart.rate.sumProfit(rates, params, values, ...)
 
 profPart.rate.terminalBonus(rates, params, values, ...)
 
+profPart.rate.interestProfitPlusGuarantee(rates, params, values, ...)
+
 profPart.rate.totalInterest(rates, params, values, ...)
 
 profPart.rate.totalInterest2(rates, params, values, ...)
@@ -70,6 +75,12 @@ profPart.benefit.ProfitPlusTotalInterest(profits, rates, params, values)
 profPart.benefit.ProfitPlusHalfTotalInterest(profits, rates, params, values)
 
 profPart.benefit.ProfitPlusHalfGuaranteedInterest(profits, rates, params,
+  values)
+
+profPart.benefit.ProfitPlusInterestMinGuaranteeTotal(profits, rates, params,
+  values)
+
+profPart.benefit.ProfitPlusHalfInterestMinGuaranteeTotal(profits, rates, params,
   values)
 
 profPart.benefit.TerminalBonus5YearsProRata(profits, rates, params, values)
@@ -103,6 +114,8 @@ reserves).
 
 \item \code{profPart.rate.terminalBonus}: Returns the array of terminal bonus rates (keyed by year)
 
+\item \code{profPart.rate.interestProfitPlusGuarantee}: Rate for interest on past profits: total interest rate
+
 \item \code{profPart.rate.totalInterest}: Rate for interest on past profits: total interest rate
 
 \item \code{profPart.rate.totalInterest2}: Rate for interest on past profits: second total interest rate
@@ -124,6 +137,10 @@ reserves).
 \item \code{profPart.benefit.ProfitPlusHalfTotalInterest}: Calculate accrued benefit as total profit with total interest (interest on profit rate) for half a year
 
 \item \code{profPart.benefit.ProfitPlusHalfGuaranteedInterest}: Calculate death benefit as total profit with (guaranteed) interest for one year
+
+\item \code{profPart.benefit.ProfitPlusInterestMinGuaranteeTotal}: Calculate accrued benefit as total profit with interest for one year (min of guarantee and total interest)
+
+\item \code{profPart.benefit.ProfitPlusHalfInterestMinGuaranteeTotal}: Calculate accrued benefit as total profit with interest for half a year (min of guarantee and total interest)
 
 \item \code{profPart.benefit.TerminalBonus5YearsProRata}: Calculate benefit from terminal bonus as 1/n parts of the terminal bonus reserve during the last 5 years
 }}

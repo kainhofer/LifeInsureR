@@ -102,6 +102,13 @@ profPart.rate.terminalBonus = function(rates, params, values, ...) {
 #' @describeIn ProfitParticipation
 #' Rate for interest on past profits: total interest rate
 #' @export
+profPart.rate.interestProfitPlusGuarantee = function(rates, params, values, ...) {
+    rates$totalInterest + rates$guaranteedInterest
+};
+
+#' @describeIn ProfitParticipation
+#' Rate for interest on past profits: total interest rate
+#' @export
 profPart.rate.totalInterest = function(rates, params, values, ...) {
     rates$totalInterest
 };
@@ -194,6 +201,20 @@ profPart.benefit.ProfitPlusHalfTotalInterest = function(profits, rates, params, 
 #' @export
 profPart.benefit.ProfitPlusHalfGuaranteedInterest = function(profits, rates, params, values) {
     profits[,"totalProfit"] * (1 + rates$guaranteedInterest/2)
+};
+
+#' @describeIn ProfitParticipation
+#' Calculate accrued benefit as total profit with interest for one year (min of guarantee and total interest)
+#' @export
+profPart.benefit.ProfitPlusInterestMinGuaranteeTotal = function(profits, rates, params, values) {
+    profits[,"totalProfit"] * (1 + pmin(rates$guaranteedInterest, rates$totalInterest))
+};
+
+#' @describeIn ProfitParticipation
+#' Calculate accrued benefit as total profit with interest for half a year (min of guarantee and total interest)
+#' @export
+profPart.benefit.ProfitPlusHalfInterestMinGuaranteeTotal = function(profits, rates, params, values) {
+    profits[,"totalProfit"] * (1 + pmin(rates$guaranteedInterest, rates$totalInterest)/2)
 };
 
 #' @describeIn ProfitParticipation
