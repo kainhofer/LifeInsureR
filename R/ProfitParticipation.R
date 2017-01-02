@@ -155,7 +155,7 @@ ProfitParticipation = R6Class(
             "guaranteedInterest", "interestProfitRate", "totalInterest", "interestProfitRate2", "totalInterest2",
             "mortalityProfitRate", "expenseProfitRate", "expenseProfitRate_premiumfree",
             "sumProfitRate",
-            "terminalBonusRate", "terminalBonusQuote")
+            "terminalBonusRate", "terminalBonusFundRatio")
         rates = data.frame(matrix(ncol = length(columns), nrow = length(years), dimnames = list(years = years, rates = columns)))
         rates$year = years;
 
