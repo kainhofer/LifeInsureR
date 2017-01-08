@@ -143,7 +143,7 @@ ProfitParticipation = R6Class(
         #       profitRates
         # 2) Contract can override individual rates (either for calendar years or contract years):
         #       guaranteedInterest, interestProfitRate, totalInterest, mortalityProfitRate,
-        #       expenseProfitRate, sumProfitRate, terminalBonusRate, terminalBonusQuote
+        #       expenseProfitRate, sumProfitRate, terminalBonusRate, terminalBonusFundRatio
         # 3) Explicit function arguments (either for calendar years or contract years).
         # 4) Any missing values will be taken from the last given year
         startYear = year(params$ContractData$contractClosing);
