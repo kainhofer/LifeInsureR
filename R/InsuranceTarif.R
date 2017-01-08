@@ -868,22 +868,29 @@ InsuranceTarif = R6Class(
       premium.alpha.Zillmer = unit.premiumCF * values$absPresentValues["0", "Zillmer"] / values$absPresentValues["0", "premiums.unit"];
       premium.alpha.noZ = premium.alpha - premium.alpha.Zillmer; # ungezillmerter Teil der Abschlusskosten
 
-      premium.net      = unit.premiumCF * premiums[["net"]];
+      premium.net       = unit.premiumCF * premiums[["net"]];
 
-      premium.risk     = v * (values$absCashFlows[,"death"] - c(values$reserves[,"net"][-1], 0)) * pad0(values$transitionProbabilities$q, l);
-      premium.savings  = getSavingsPremium(
-        values$reserves[,"net"], v = v,
-              survival_advance = values$absCashFlows[,"survival_advance"] + values$absCashFlows[,"guaranteed_advance"],
-              survival_arrears = values$absCashFlows[,"survival_arrears"] + values$absCashFlows[,"guaranteed_arrears"]
+      securityLoading   = params$Loadings$security;
+      premium.risk.actual   = v * (values$absCashFlows[,"death"] - c(values$reserves[,"net"][-1], 0)) * pad0(values$transitionProbabilities$q, l);
+      premium.risk.security = v * (values$absCashFlows[,"death"] * securityLoading) * pad0(values$transitionProbabilities$q, l);
+      premium.risk          = premium.risk.actual + premium.risk.security;
+      premium.risk.disease.actual   = v * (values$absCashFlows[,"disease_SumInsured"] - c(values$reserves[,"net"][-1], 0)) * pad0(values$transitionProbabilities$i, l);
+      premium.risk.disease.security = v * (values$absCashFlows[,"disease_SumInsured"] * securityLoading) * pad0(values$transitionProbabilities$i, l);
+      premium.risk.disease          = premium.risk.disease.actual + premium.risk.disease.security;
+      premium.savings       = getSavingsPremium(
+          values$reserves[,"net"], v = v,
+          survival_advance = values$absCashFlows[,"survival_advance"] + values$absCashFlows[,"guaranteed_advance"],
+          survival_arrears = values$absCashFlows[,"survival_arrears"] + values$absCashFlows[,"guaranteed_arrears"]
       );
 
-      # premium.Zillmer.risk     = v * (values$absCashFlows[,"death"] - c(values$reserves[,"Zillmer"][-1], 0)) * pad0(values$transitionProbabilities$q, l);
-      # premium.Zillmer.savings  = getSavingsPremium(
-      #         values$reserves[,"Zillmer"], v = v,
-      #         survival_advance = values$absCashFlows[,"survival_advance"] + values$absCashFlows[,"guaranteed_advance"],
-      #         survival_arrears = values$absCashFlows[,"survival_arrears"] + values$absCashFlows[,"guaranteed_arrears"]
-      # );
-      premium.Zillmer.risk     = v * (values$absCashFlows[,"death"] - c(values$reserves[,"contractual"][-1], 0)) * pad0(values$transitionProbabilities$q, l);
+      premium.Zillmer.risk.actual   = v * (values$absCashFlows[,"death"] - c(values$reserves[,"contractual"][-1], 0)) * pad0(values$transitionProbabilities$q, l);
+      premium.Zillmer.risk.security = v * (values$absCashFlows[,"death"] * securityLoading) * pad0(values$transitionProbabilities$q, l);
+      premium.Zillmer.risk          = premium.risk.actual + premium.risk.security;
+      premium.Zillmer.risk.disease.actual   = v * (values$absCashFlows[,"disease_SumInsured"] - c(values$reserves[,"contractual"][-1], 0)) * pad0(values$transitionProbabilities$i, l);
+      premium.Zillmer.risk.disease.security = v * (values$absCashFlows[,"disease_SumInsured"] * securityLoading) * pad0(values$transitionProbabilities$i, l);
+      premium.Zillmer.risk.disease          = premium.risk.disease.actual + premium.risk.disease.security;
+
+
       premium.Zillmer.savings  = getSavingsPremium(
           values$reserves[,"contractual"], v = v,
           survival_advance = values$absCashFlows[,"survival_advance"] + values$absCashFlows[,"guaranteed_advance"],
@@ -910,22 +917,33 @@ InsuranceTarif = R6Class(
         "charge.noMedicalExam" = charge.noMedicalExam,
         "gross"           = premium.gross,
 
-        "gamma"   = premium.gamma,
-        "beta"    = premium.beta,
-        "alpha"   = premium.alpha,
+        "gamma"           = premium.gamma,
+        "beta"            = premium.beta,
+        "alpha"           = premium.alpha,
         "alpha.noZillmer" = premium.alpha.noZ,
-        "alpha.Zillmer" = premium.alpha.Zillmer,
-        "Zillmer" = premium.Zillmer,
+        "alpha.Zillmer"   = premium.alpha.Zillmer,
+        "Zillmer"         = premium.Zillmer,
 
-        "net"     = premium.net,
+        "net"                   = premium.net,
 
-        "risk"    = premium.risk,
-        "savings" = premium.savings,
+        "risk"                          = premium.risk,
+        "premium.risk.actual"           = premium.risk.actual,
+        "premium.risk.security"         = premium.risk.security,
+        "risk.disease"                  = premium.risk.disease,
+        "premium.risk.disease.actual"   = premium.risk.disease.actual,
+        "premium.risk.disease.security" = premium.risk.disease.security,
+        "savings"                       = premium.savings,
 
-        "Zillmer.risk"    = premium.Zillmer.risk,
-        "Zillmer.savings" = premium.Zillmer.savings,
-        "Zillmer.amortization" = premium.Zillmer.amortization,
-        "Zillmer.savings.real" = premium.Zillmer.actsavings
+        "Zillmer.risk"                  =  premium.Zillmer.risk,
+        "Zillmer.risk.actual"           = premium.Zillmer.risk.actual,
+        "Zillmer.risk.security"         = premium.Zillmer.risk.security,
+        "Zillmer.risk.disease"          = premium.Zillmer.risk.disease,
+        "Zillmer.risk.disease.actual"   = premium.Zillmer.risk.disease.actual,
+        "Zillmer.risk.disease.security" = premium.Zillmer.risk.disease.security,
+
+        "Zillmer.savings"               = premium.Zillmer.savings,
+        "Zillmer.amortization"          = premium.Zillmer.amortization,
+        "Zillmer.savings.real"          = premium.Zillmer.actsavings
       )
       rownames(res) <- rownames(premiums);
       res
