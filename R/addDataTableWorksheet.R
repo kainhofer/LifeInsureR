@@ -1,3 +1,4 @@
+#' Add a new worksheet to the excel workbook and export the given data table x to it nicely formatted.
 #' @export
 addDataTableWorksheet = function(wb, sheet, title = NULL, x = NULL, loopdim = 3, style = NULL, tableStyle = "TableStyleMedium17", comparisons = NULL, comparisonStyle = NULL, ...) {
     addWorksheet(wb, sheet);

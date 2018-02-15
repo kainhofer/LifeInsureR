@@ -12,4 +12,3 @@ values given in valuelist. Members of valuelist that are not yet in
 fields are ignored. This allows a huge valuelist to be used to fill
 fields in multiple lists with given structure.
 }
-

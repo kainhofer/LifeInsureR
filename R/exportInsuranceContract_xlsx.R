@@ -72,7 +72,7 @@ writePremiumCoefficients = function(wb, sheet, values, tarif = NULL, type = "ben
            rows = crow:(crow + 5), cols = ccol + 1);
 
   # The first column of the benefits coefficients is for "age", which we want to remove
-  mod = function(a) { as.data.frame(t(a)) };
+  mod = function(vals) { as.data.frame(t(vals)) };
   if (type == "costs") {
     mod = function(vals) {
       vals = setInsuranceValuesLabels(vals);

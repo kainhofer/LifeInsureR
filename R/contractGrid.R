@@ -1,3 +1,8 @@
+#' Create a multi-dimensional grid of InsuranceContract objects, where the axes
+#' ranges are given with the axes argument.
+#' This function will return the full InsuranceContract objects, so apply can
+#' later be used to extract premiums, reserves and other values to display in
+#' a grid.
 #' @export
 contractGrid = function(axes = list(age = seq(20, 60, 10), policyPeriod = seq(5, 35, 5)), YOB = NULL, observationYear = NULL, ...) {
 
@@ -16,16 +21,20 @@ contractGrid = function(axes = list(age = seq(20, 60, 10), policyPeriod = seq(5,
     array(vals, dim = sapply(axes, length), dimnames = dimnames)
 }
 
-makeContractGridDimname = function(value) { UseMethod("makeContractGridDimname", value) }
 makeContractGridDimname.InsuranceTarif = function(tarif) { tarif$name }
 makeContractGridDimname.mortalityTable = function(table) { table@name }
 makeContractGridDimname.numeric = function(value) { value }
 makeContractGridDimname.default = function(value) { value }
+makeContractGridDimname = function(value) { UseMethod("makeContractGridDimname", value) }
 makeContractGridDimnames = function(axes) {
     lapply(axes, function(axis) { lapply(axis, makeContractGridDimname); } )
 }
 
-
+#' Create a multi-dimensional grid of premiums for insurance contracts, where the axes
+#' ranges are given with the axes argument.
+#' This function will return the full InsuranceContract objects, so apply can
+#' later be used to extract premiums, reserves and other values to display in
+#' a grid.
 #' @export
 contractGridPremium = function(contractGrid = NULL, premium="written", ...) {
     if (missing(contractGrid) || is.null(contractGrid)) {

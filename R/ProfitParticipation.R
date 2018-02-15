@@ -3,7 +3,8 @@
 #' @import R6
 #' @import dplyr
 NULL
-
+# Shut up the package checker:
+if (getRversion() >= "2.15.1")  utils::globalVariables(c("profitClass"))
 
 #' @export
 filterProfitRates = function(rates, classes) {

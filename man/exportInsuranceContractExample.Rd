@@ -14,7 +14,7 @@ exportInsuranceContractExample(contract, prf = 10, outdir = ".",
 
 \item{outdir}{The output directory (the file names are not configurable)}
 
-\item{...}{Further parameters (passed on to \link{\code{showVmGlgExamples}})}
+\item{...}{Further parameters (passed on to \code{\link{showVmGlgExamples}})}
 }
 \description{
 Export the given contract to excel (full history/timeseries of all cash
@@ -30,9 +30,11 @@ Three output files are generated:
                 Austrian regulation (LV-VMGLV)
 }
 \examples{
+library("MortalityTables")
 mortalityTables.load("Austria_Annuities_AVOe2005R")
 # A trivial deferred annuity tariff with no costs:
-tariff = InsuranceTarif$new(name="Test Annuity", type="annuity", mortalityTable = AVOe2005R.unisex, i=0.01)
+tariff = InsuranceTarif$new(name="Test Annuity", type="annuity",
+    mortalityTable = AVOe2005R.unisex, i=0.01)
 contract = InsuranceContract$new(
     tariff,
     age = 35, YOB = 1981,
@@ -43,4 +45,3 @@ contract = InsuranceContract$new(
 exportInsuranceContractExample(contract, prf = 10)
 
 }
-

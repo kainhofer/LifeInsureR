@@ -183,7 +183,6 @@ profPart.calculate.RatePlusGuaranteeOnBase = function(base, rate, waiting, rates
 #' Calculate profit by a simple rate applied on the basis (with only (1-SGFFactor) put into profit participation, and an optional waiting vector of values 0 or 1)
 #' @export
 profPart.calculate.RateOnBaseSGFFactor = function(base, rate, waiting, rates, params, values, ...) {
-    str(rates)
     base * rate * waiting * (1 - rates$terminalBonusFundRatio)
 };
 

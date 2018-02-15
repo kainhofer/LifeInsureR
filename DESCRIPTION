@@ -4,19 +4,27 @@ Version: 0.1
 Date: 2016-05-07
 Title: A framework for general life insurance contracts, including profit
     participation, contract changes etc.
+Description: R6 classes to model traditional life insurance
+    contracts like annuities, whole life insurances or endowments. All relevant
+    quantities like premium decomposition, reserves and benefits over the whole
+    contract period are calculated and potentially exported to excel. Mortalities
+    are given using the MortalityTables package.
 Authors@R: c(person("Reinhold", "Kainhofer", role=c("aut", "cre"), email="reinhold@kainhofer.com"))
 Author: Reinhold Kainhofer [aut, cre]
 Maintainer: Reinhold Kainhofer <reinhold@kainhofer.com>
-Depends:
+Imports:
     R6,
     MortalityTables,
     objectProperties,
     lubridate,
     openxlsx,
-    abind
-Description: TODO
+    abind,
+    dplyr,
+    scales,
+    stringr,
+    methods
 License: GPL (>= 2)
-RoxygenNote: 5.0.1
+RoxygenNote: 6.0.1
 Collate:
     'HelperFunctions.R'
     'InsuranceParameters.R'
@@ -31,5 +39,6 @@ Collate:
     'exportInsuranceContractExample.R'
 Suggests:
     knitr,
-    rmarkdown
+    rmarkdown,
+    pander
 VignetteBuilder: knitr

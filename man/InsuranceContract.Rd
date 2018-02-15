@@ -19,4 +19,3 @@ Immediately upon construction, all premiums, reserves and cash flows for the
 whole contract period are calculated.
 }
 \keyword{datasets}
-

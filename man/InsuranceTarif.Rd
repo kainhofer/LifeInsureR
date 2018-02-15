@@ -17,4 +17,3 @@ be called by the \code{\link{InsuranceContract}} objects to make the actual,
 tariff-specific calculations.
 }
 \keyword{datasets}
-

@@ -1,9 +1,12 @@
-#' @import abind
+#' @importFrom abind abind
+#' @importFrom objectProperties setSingleEnum
+#' @importFrom utils head tail
+#' @importFrom methods new
 #'
 
-PaymentTimeEnum = setSingleEnum("PaymentTime", levels = c("in advance", "in arrears"))
-#PaymentCountEnum = setSingleEnum(PaymentCount, levels = c(1,2,3))
-SexEnum = setSingleEnum("Sex", levels = c("unisex", "male", "female"))
+PaymentTimeEnum = objectProperties::setSingleEnum("PaymentTime", levels = c("in advance", "in arrears"))
+#PaymentCountEnum = objectProperties::setSingleEnum(PaymentCount, levels = c(1,2,3))
+SexEnum = objectProperties::setSingleEnum("Sex", levels = c("unisex", "male", "female"))
 
 
 #' Describes the death benefit of a linearly decreasing whole life insurance (after a possible deferall period)
@@ -163,7 +166,7 @@ getSavingsPremium = function(reserves, v=1, survival_advance=c(0), survival_arre
   pad0(reserves[-1], length(reserves))*v - reserves + survival_advance + survival_arrears*v
 }
 
-correctionPaymentFrequency = function(m = 1, i = self$i, order = 0) {
+correctionPaymentFrequency = function(i, m = 1, order = 0) {
   # 0th-order approximation
   alpha = 1;
   beta = 0;

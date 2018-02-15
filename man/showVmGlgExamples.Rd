@@ -28,7 +28,8 @@ Versicherungsmathematische Grundlagen Verordnung").
 \examples{
 mortalityTables.load("Austria_Annuities_AVOe2005R")
 # A trivial deferred annuity tariff with no costs:
-tariff = InsuranceTarif$new(name="Test Annuity", type="annuity", mortalityTable = AVOe2005R.unisex, i=0.01)
+tariff = InsuranceTarif$new(name="Test Annuity", type="annuity",
+    mortalityTable = AVOe2005R.unisex, i=0.01)
 contract = InsuranceContract$new(
     tariff,
     age = 35, YOB = 1981,
@@ -42,4 +43,3 @@ showVmGlgExamples(contract)
 showVmGlgExamples(contract, file = "annuity-example.txt")
 
 }
-

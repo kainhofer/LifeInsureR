@@ -15,4 +15,3 @@ http://www.cookbook-r.com/Manipulating_data/Filling_in_NAs_with_last_non-NA_valu
 LICENSE (from that page): The R code is freely available for use without any restrictions.
 In other words: you may reuse the R code for any purpose (and under any license).
 }
-

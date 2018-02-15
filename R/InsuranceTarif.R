@@ -3,10 +3,11 @@
 #' @import MortalityTables
 #' @import R6
 #' @importFrom lubridate year month years days
+#' @importFrom objectProperties setSingleEnum
 NULL
 
 
-TariffTypeEnum = setSingleEnum("TariffType", levels = c("annuity", "wholelife", "endowment", "pureendowment", "terme-fix", "dread-disease"))
+TariffTypeEnum = objectProperties::setSingleEnum("TariffType", levels = c("annuity", "wholelife", "endowment", "pureendowment", "terme-fix", "dread-disease"))
 
 
 #' Base class for Insurance Tarifs, providing calculation functions to the contract
@@ -334,11 +335,11 @@ InsuranceTarif = R6Class(
 
       i = params$ActuarialBases$i;
       v = 1/(1 + i);
-      benefitFreqCorr = correctionPaymentFrequency(
-            m = params$ContractData$benefitFrequency, i = i,
+      benefitFreqCorr = correctionPaymentFrequency(i = i,
+            m = params$ContractData$benefitFrequency,
             order = params$ActuarialBases$benefitFrequencyOrder);
-      premiumFreqCorr = correctionPaymentFrequency(
-            m = params$ContractData$premiumFrequency, i = i,
+      premiumFreqCorr = correctionPaymentFrequency(i = i,
+            m = params$ContractData$premiumFrequency,
             order = params$ActuarialBases$premiumFrequencyOrder);
 
       pvRefund = calculatePVDeath(
@@ -885,10 +886,10 @@ InsuranceTarif = R6Class(
 
       premium.Zillmer.risk.actual   = v * (values$absCashFlows[,"death"] - c(values$reserves[,"contractual"][-1], 0)) * pad0(values$transitionProbabilities$q, l);
       premium.Zillmer.risk.security = v * (values$absCashFlows[,"death"] * securityLoading) * pad0(values$transitionProbabilities$q, l);
-      premium.Zillmer.risk          = premium.risk.actual + premium.risk.security;
+      premium.Zillmer.risk          = premium.Zillmer.risk.actual + premium.Zillmer.risk.security;
       premium.Zillmer.risk.disease.actual   = v * (values$absCashFlows[,"disease_SumInsured"] - c(values$reserves[,"contractual"][-1], 0)) * pad0(values$transitionProbabilities$i, l);
       premium.Zillmer.risk.disease.security = v * (values$absCashFlows[,"disease_SumInsured"] * securityLoading) * pad0(values$transitionProbabilities$i, l);
-      premium.Zillmer.risk.disease          = premium.risk.disease.actual + premium.risk.disease.security;
+      premium.Zillmer.risk.disease          = premium.Zillmer.risk.disease.actual + premium.Zillmer.risk.disease.security;
 
 
       premium.Zillmer.savings  = getSavingsPremium(

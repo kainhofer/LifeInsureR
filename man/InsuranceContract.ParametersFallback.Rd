@@ -17,4 +17,3 @@ entry in \code{params} is NULL.}
 Provide default values for the insurance contract parameters if any of the
 parameters is not explicitly set.
 }
-

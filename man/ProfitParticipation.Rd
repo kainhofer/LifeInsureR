@@ -14,4 +14,3 @@ providing methods to calculate the profit participation values from the given
 reserves).
 }
 \keyword{datasets}
-

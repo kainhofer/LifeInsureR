@@ -17,4 +17,3 @@ Initialize a cost matrix with dimensions: [CostType, Basis, Period], with:
     Period:   once, PremiumPeriod, PremiumFree, PolicyPeriod
 TODO: gamma an Erlebensleistungen?
 }
-

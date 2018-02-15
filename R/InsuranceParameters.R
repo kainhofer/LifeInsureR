@@ -21,6 +21,7 @@ initializeCosts = function() {
 }
 
 
+#' Data structure (filled only with NULL) for insurance contract class member values.
 #' @export
 InsuranceContract.Values = list(
     basicData = NULL,
@@ -46,7 +47,9 @@ InsuranceContract.Values = list(
 );
 
 
-
+#' Default parameters for the InsuranceContract class. A new contract will be
+#' pre-filled with these values, and values passed in the constructor (or with
+#' other setter functions) will override these values.
 #' @export
 InsuranceContract.ParameterDefaults = list(
     ContractData = list(

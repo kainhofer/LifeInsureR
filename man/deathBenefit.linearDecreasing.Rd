@@ -22,4 +22,3 @@ deferral period and then decrease linearly to 0 at the end of the policyPeriod.
 This can be used with the \code{deathBenefit} parameter for insurance
 contracts, but should not be called directly.
 }
-

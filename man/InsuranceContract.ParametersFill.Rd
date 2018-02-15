@@ -20,4 +20,3 @@ Initialize the insurance contract parameters from the passed
 arguments. Arguments not given are left unchanged. If no existing parameter
 structure is given, an empty (i.e. all NULL entries) structure is used.
 }
-

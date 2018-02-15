@@ -15,4 +15,3 @@ so the functions \code{\link{InsuranceContract.ParametersFill}} and
 existing parameters or to provide default values for unset (NULL) entries.
 }
 \keyword{datasets}
-
