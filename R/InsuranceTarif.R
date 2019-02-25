@@ -488,7 +488,7 @@ InsuranceTarif = R6Class(
     # been set in the passed "premiums" argument.
     getPremiumCoefficients = function(type="gross", coeffBenefits, coeffCosts, premiums, params, values) {
       # Merge a possibly passed loadings override with the defaults of this class:
-      securityLoading = params$Loadings$security;
+      securityLoading = valueOrFunction(params$Loadings$security, params = params, values = values);
 
       coeff = list(
         "SumInsured" = list("benefits" = coeffBenefits*0, "costs" = coeffCosts*0),
@@ -605,7 +605,7 @@ InsuranceTarif = R6Class(
     },
 
     reserveCalculation = function(params, values) {
-      securityFactor = (1 + params$Loadings$security);
+      securityFactor = (1 + valueOrFunction(params$Loadings$security, params = params, values = values));
       ppScheme      = params$ProfitParticipation$profitParticipationScheme;
 
       # Net, Zillmer and Gross reserves
@@ -871,7 +871,7 @@ InsuranceTarif = R6Class(
 
       premium.net       = unit.premiumCF * premiums[["net"]];
 
-      securityLoading   = params$Loadings$security;
+      securityLoading   = valueOrFunction(params$Loadings$security, params = params, values = values);
       premium.risk.actual   = v * (values$absCashFlows[,"death"] - c(values$reserves[,"net"][-1], 0)) * pad0(values$transitionProbabilities$q, l);
       premium.risk.security = v * (values$absCashFlows[,"death"] * securityLoading) * pad0(values$transitionProbabilities$q, l);
       premium.risk          = premium.risk.actual + premium.risk.security;
