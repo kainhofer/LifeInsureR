@@ -5,8 +5,8 @@
 \title{Add a new worksheet to the excel workbook and export the given data table x to it nicely formatted.}
 \usage{
 addDataTableWorksheet(wb, sheet, title = NULL, x = NULL, loopdim = 3,
-  style = NULL, tableStyle = "TableStyleMedium17", comparisons = NULL,
-  comparisonStyle = NULL, ...)
+  style = NULL, tableStyle = "TableStyleMedium17",
+  comparisons = NULL, comparisonStyle = NULL, ...)
 }
 \description{
 Add a new worksheet to the excel workbook and export the given data table x to it nicely formatted.

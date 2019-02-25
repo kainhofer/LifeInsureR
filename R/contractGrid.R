@@ -22,6 +22,7 @@ contractGrid = function(axes = list(age = seq(20, 60, 10), policyPeriod = seq(5,
 }
 
 makeContractGridDimname.InsuranceTarif = function(tarif) { tarif$name }
+makeContractGridDimname.R6 = function(tarif) { tarif$name }
 makeContractGridDimname.mortalityTable = function(table) { table@name }
 makeContractGridDimname.numeric = function(value) { value }
 makeContractGridDimname.default = function(value) { value }

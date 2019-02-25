@@ -12,6 +12,7 @@ Description: R6 classes to model traditional life insurance
 Authors@R: c(person("Reinhold", "Kainhofer", role=c("aut", "cre"), email="reinhold@kainhofer.com"))
 Author: Reinhold Kainhofer [aut, cre]
 Maintainer: Reinhold Kainhofer <reinhold@kainhofer.com>
+Encoding: UTF-8
 Imports:
     R6,
     MortalityTables,
@@ -24,7 +25,7 @@ Imports:
     stringr,
     methods
 License: GPL (>= 2)
-RoxygenNote: 6.0.1
+RoxygenNote: 6.1.1
 Collate:
     'HelperFunctions.R'
     'InsuranceParameters.R'

@@ -64,32 +64,36 @@ profPart.rate.totalInterest2(rates, params, values, ...)
 
 profPart.rate.interestProfit2(rates, params, values, ...)
 
-profPart.calculate.RateOnBase(base, rate, waiting, rates, params, values, ...)
+profPart.calculate.RateOnBase(base, rate, waiting, rates, params, values,
+  ...)
 
-profPart.calculate.RatePlusGuaranteeOnBase(base, rate, waiting, rates, params,
-  values, ...)
+profPart.calculate.RatePlusGuaranteeOnBase(base, rate, waiting, rates,
+  params, values, ...)
 
 profPart.calculate.RateOnBaseSGFFactor(base, rate, waiting, rates, params,
   values, ...)
 
-profPart.benefit.ProfitPlusTerminalBonusReserve(profits, rates, params, values)
+profPart.benefit.ProfitPlusTerminalBonusReserve(profits, rates, params,
+  values)
 
 profPart.benefit.Profit(profits, rates, params, values)
 
-profPart.benefit.ProfitPlusGuaranteedInterest(profits, rates, params, values)
+profPart.benefit.ProfitPlusGuaranteedInterest(profits, rates, params,
+  values)
 
 profPart.benefit.ProfitPlusTotalInterest(profits, rates, params, values)
 
-profPart.benefit.ProfitPlusHalfTotalInterest(profits, rates, params, values)
+profPart.benefit.ProfitPlusHalfTotalInterest(profits, rates, params,
+  values)
 
 profPart.benefit.ProfitPlusHalfGuaranteedInterest(profits, rates, params,
   values)
 
-profPart.benefit.ProfitPlusInterestMinGuaranteeTotal(profits, rates, params,
-  values)
+profPart.benefit.ProfitPlusInterestMinGuaranteeTotal(profits, rates,
+  params, values)
 
-profPart.benefit.ProfitPlusHalfInterestMinGuaranteeTotal(profits, rates, params,
-  values)
+profPart.benefit.ProfitPlusHalfInterestMinGuaranteeTotal(profits, rates,
+  params, values)
 
 profPart.benefit.TerminalBonus5YearsProRata(profits, rates, params, values)
 }

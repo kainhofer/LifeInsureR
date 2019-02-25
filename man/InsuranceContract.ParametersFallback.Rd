@@ -4,7 +4,8 @@
 \alias{InsuranceContract.ParametersFallback}
 \title{InsuranceContract.ParametersFallback}
 \usage{
-InsuranceContract.ParametersFallback(params, fallback, ppParameters = TRUE)
+InsuranceContract.ParametersFallback(params, fallback,
+  ppParameters = TRUE)
 }
 \arguments{
 \item{params}{Current, explicitly set contract parameters. All NULL values

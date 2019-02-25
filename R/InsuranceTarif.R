@@ -2,7 +2,7 @@
 #'
 #' @import MortalityTables
 #' @import R6
-#' @importFrom lubridate year month years days
+#' @importFrom lubridate year month years days year<-
 #' @importFrom objectProperties setSingleEnum
 NULL
 
