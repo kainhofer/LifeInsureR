@@ -8,7 +8,7 @@ contractGrid = function(axes = list(age = seq(20, 60, 10), policyPeriod = seq(5,
 
     obsYear = observationYear;
     # Create all combinations of the variables given for the axes:
-    gridByRow = expand.grid(axes);
+    gridByRow = expand.grid(axes, KEEP.OUT.ATTRS = FALSE);
     # Apply InsuranceContract$new to each combination (and add the additional arguments)
     vals = apply(gridByRow, 1, function(axisVals) {
         args = c(as.list(axisVals), ...);
@@ -25,6 +25,7 @@ makeContractGridDimname.InsuranceTarif = function(tarif) { tarif$name }
 makeContractGridDimname.R6 = function(tarif) { tarif$name }
 makeContractGridDimname.mortalityTable = function(table) { table@name }
 makeContractGridDimname.numeric = function(value) { value }
+makeContractGridDimname.double = function(value) { value }
 makeContractGridDimname.default = function(value) { value }
 makeContractGridDimname = function(value) { UseMethod("makeContractGridDimname", value) }
 makeContractGridDimnames = function(axes) {

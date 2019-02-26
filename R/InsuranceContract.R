@@ -84,17 +84,21 @@ InsuranceContract = R6Class(
 
         consolidateContractData = function(...) {
             args = list(...);
-
+            
+            # Evaluate policy period, i.e. if a function is used, calculate its numeric value
+            self$Parameters$ContractData$policyPeriod = valueOrFunction(
+              self$Parameters$ContractData$policyPeriod,
+              params = self$Parameters, values = self$Values);
+            
             #####
             # PREMIUM PAYMENT PERIOD (default: policyPeriod, can be given as function or numeric value)
             #####
             if (is.null(self$Parameters$ContractData$premiumPeriod)) {
                 self$Parameters$ContractData$premiumPeriod = self$Parameters$ContractData$policyPeriod
-            } else {
-                self$Parameters$ContractData$premiumPeriod = valueOrFunction(
-                    self$Parameters$ContractData$premiumPeriod,
-                    params = self$Parameters, values = self$Values);
             }
+            self$Parameters$ContractData$premiumPeriod = valueOrFunction(
+              self$Parameters$ContractData$premiumPeriod,
+              params = self$Parameters, values = self$Values);
 
             #####
             # COSTS PARAMTERS: can be a function => evaluate it to get the real costs
