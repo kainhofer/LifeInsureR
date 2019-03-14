@@ -85,6 +85,30 @@ InsuranceContract = R6Class(
         consolidateContractData = function(...) {
             args = list(...);
             
+            # Calculate YOB, age, contract closing etc. from each other
+            # 1. Contract date (if not given) is NOW, unless age + YOB is given => Then year is derived as YOB+age
+            if (is.null(self$Parameters$ContractData$contractClosing)) {
+              if (!is.null(self$Parameters$ContractData$age) && !is.null(self$Parameters$ContractData$YOB)) {
+                # Use current day, but determine year from YOB and age
+                self$Parameters$ContractData$contractClosing = Sys.Date() %>% 
+                  'year<-'(self$Parameters$ContractData$YOB + self$Parameters$ContractData$age);
+              }
+            }
+            
+            # 2. Current age: If YOB is given, calculate from contract closing and YOB, otherwise assume 40 
+            if (is.null(self$Parameters$ContractData$age)) {
+              if (is.null(self$Parameters$ContractData$YOB)) {
+                self$Parameters$ContractData$age = 40; # No information to derive age => Assume 40
+                warning("InsuranceContract: Missing age, no information to derive age from YOB and contractClosing => Assuming default age 40. Tariff: ", self$tarif$name)
+              } else {
+                self$Parameters$ContractData$age = year(self$Parameters$ContractData$contractClosing) - 
+                  self$Parameters$ContractData$YOB;
+              }
+            }
+            if (is.null(self$Parameters$ContractData$YOB)) {
+              self$Parameters$ContractData$YOB = year(self$Parameters$ContractData$contractClosing) - self$Parameters$ContractData$age;
+            }
+            
             # Evaluate policy period, i.e. if a function is used, calculate its numeric value
             self$Parameters$ContractData$policyPeriod = valueOrFunction(
               self$Parameters$ContractData$policyPeriod,
