@@ -34,7 +34,7 @@ InsuranceContract = R6Class(
 
         #### The code:
 
-        initialize = function(tarif, ...) {
+        initialize = function(tarif, calculate = "all", ...) {
             self$tarif = tarif;
 
             self$ContractParameters = InsuranceContract.ParametersFill(
@@ -64,7 +64,7 @@ InsuranceContract = R6Class(
 
             self$consolidateContractData(tarif = tarif, ...);
 
-            self$calculateContract();
+            self$calculateContract(calculate = calculate);
         },
 
         addHistorySnapshot = function(time = 0, comment = "Initial contract values", type = "Contract", params = self$Parameters, values = self$Values) {
@@ -174,38 +174,47 @@ InsuranceContract = R6Class(
         },
 
 
-        calculateContract = function() {
+        calculateContract = function(calculate = "all") {
             self$Values$transitionProbabilities = self$determineTransitionProbabilities();
+            if (calculate == "probabilities") return();
 
             self$Values$cashFlowsBasic = self$determineCashFlowsBasic();
             self$Values$cashFlows = self$determineCashFlows();
             self$Values$unitPremiumSum = self$determinePremiumSum();
             self$Values$cashFlowsCosts = self$determineCashFlowsCosts();
-
+            if (calculate == "cashflows") return();
+            
             self$Values$presentValues = self$calculatePresentValues();
             self$Values$presentValuesCosts = self$calculatePresentValuesCosts();
-
+            if (calculate == "presentvalues") return();
+            
             # the premiumCalculation function returns the premiums AND the cofficients,
             # so we have to extract the coefficients and store them in a separate variable
             res = self$calculatePremiums();
             self$Values$premiumCoefficients = res[["coefficients"]];
             self$Values$premiums = res[["premiums"]]
-
+            if (calculate == "premiums") return();
+            
             # Update the cash flows and present values with the values of the premium
             pvAllBenefits = self$calculatePresentValuesBenefits()
             self$Values$presentValues = cbind(self$Values$presentValues, pvAllBenefits)
 
             self$Values$absCashFlows = self$calculateAbsCashFlows();
             self$Values$absPresentValues = self$calculateAbsPresentValues();
+            if (calculate == "absvalues") return();
+            
             self$Values$reserves = self$calculateReserves();
             self$Values$reservesBalanceSheet = self$calculateReservesBalanceSheet();
+            if (calculate == "reserves") return();
             self$Values$basicData = self$getBasicDataTimeseries()
             self$Values$premiumComposition = self$premiumAnalysis();
             self$Values$premiumCompositionSums = self$premiumCompositionSums();
             self$Values$premiumCompositionPV = self$premiumCompositionPV();
-
+            if (calculate == "premiumcomposition") return();
+            
             self$profitParticipation();
-
+            if (calculate == "profitparticipation") return();
+            
             self$addHistorySnapshot(
                 time    = 0,
                 comment = "Initial contract values",
@@ -213,6 +222,7 @@ InsuranceContract = R6Class(
                 params  = self$Parameters,
                 values  = self$Values
             );
+            if (calculate == "history") return();
         },
 
         determineTransitionProbabilities = function() {
