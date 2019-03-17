@@ -501,7 +501,6 @@ InsuranceTarif = R6Class(
 
       # Costs proportional to NetPremium introduce a non-linearity, as the NP is not available when the gross premium is calculated
       # => the corresponding costs PV is included in the coefficient!
-browser();
       coeff.benefits = (1 + securityLoading);
       if (type == "gross") {
           # TODO: How to include this into the Zillmer premium calculation?
