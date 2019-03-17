@@ -371,6 +371,7 @@ exportInsuranceContract.xlsx = function(contract, filename) {
   # Print out Profit Participation
   ################################################
 
+  if (!is.null(contract$Values$profitParticipation)) {
   sheet = "Gewinnbeteiligung";
   addWorksheet(wb, sheet);
 
@@ -425,6 +426,7 @@ exportInsuranceContract.xlsx = function(contract, filename) {
 
   setColWidths(wb, sheet, cols = 1:50, widths = "auto", ignoreMergedCells = TRUE)
 
+  }
 
   ################################################
   # Print out premium decomposition
