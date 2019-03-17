@@ -497,14 +497,15 @@ InsuranceTarif = R6Class(
 
       coeff[["Premium"]][["benefits"]][["premiums"]]            = 1;
 
-      coeff[["SumInsured"]][["benefits"]][["guaranteed"]]       = 1 + securityLoading;
-      coeff[["SumInsured"]][["benefits"]][["survival"]]         = 1 + securityLoading;
-      coeff[["SumInsured"]][["benefits"]][["death_SumInsured"]] = 1 + securityLoading;
-      coeff[["SumInsured"]][["benefits"]][["disease_SumInsured"]] = 1 + securityLoading;
+      coeff.benefits = (1 + securityLoading);
+      coeff[["SumInsured"]][["benefits"]][["guaranteed"]]       = coeff.benefits;
+      coeff[["SumInsured"]][["benefits"]][["survival"]]         = coeff.benefits;
+      coeff[["SumInsured"]][["benefits"]][["death_SumInsured"]] = coeff.benefits;
+      coeff[["SumInsured"]][["benefits"]][["disease_SumInsured"]] = coeff.benefits;
 
       # Premium refund is handled differently for gross and net premiums, because it is proportional to the gross premium
       if (type == "gross") {
-        coeff[["Premium"]][["benefits"]][["death_GrossPremium"]] = -params$ContractData$premiumRefund * (1 + securityLoading);
+        coeff[["Premium"]][["benefits"]][["death_GrossPremium"]] = -params$ContractData$premiumRefund * coeff.benefits;
       } else if (type == "net" || type == "Zillmer") {
         coeff[["SumInsured"]][["benefits"]][["death_GrossPremium"]] = premiums[["unit.gross"]] * params$ContractData$premiumRefund * (1 + securityLoading);
       }
@@ -524,6 +525,10 @@ InsuranceTarif = R6Class(
         coeff[["Premium"]][["costs"]]["alpha", "GrossPremium"] = -1;
         coeff[["Premium"]][["costs"]]["beta",  "GrossPremium"] = -1;
         coeff[["Premium"]][["costs"]]["gamma", "GrossPremium"] = -1;
+
+        coeff[["SumInsured"]][["costs"]]["alpha", "Constant"] = 1 / params$ContractData$sumInsured;
+        coeff[["SumInsured"]][["costs"]]["beta",  "Constant"] = 1 / params$ContractData$sumInsured;
+        coeff[["SumInsured"]][["costs"]]["gamma", "Constant"] = 1 / params$ContractData$sumInsured;
 
       } else if (type == "Zillmer") {
         coeff[["SumInsured"]][["costs"]]["Zillmer","SumInsured"] = 1;
