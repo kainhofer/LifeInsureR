@@ -100,9 +100,12 @@ labelsReplace = function(labels) {
   labels[labels == "beta"] = "β";
   labels[labels == "gamma"] = "γ";
   labels[labels == "gamma_nopremiums"] = "γ prf.";
+  labels[labels == "unitcosts"] = "StkK";
   labels[labels == "SumInsured"] = "VS";
   labels[labels == "SumPremiums"] = "PS";
   labels[labels == "GrossPremium"] = "BP";
+  labels[labels == "NetPremium"] = "NP";
+  labels[labels == "Constant"] = "";
 
   # Cash Flows
   labels[labels == "premiums_advance"] = "Präm. vorsch.";

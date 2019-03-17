@@ -475,7 +475,9 @@ InsuranceTarif = R6Class(
 
       benefitsCosts = values$presentValuesCosts[,,"SumInsured"] +
         values$presentValuesCosts[,,"SumPremiums"] * values$unitPremiumSum * values$premiums[["unit.gross"]] +
-        values$presentValuesCosts[,,"GrossPremium"] * values$premiums[["unit.gross"]];
+        values$presentValuesCosts[,,"GrossPremium"] * values$premiums[["unit.gross"]] +
+        values$presentValuesCosts[,,"NetPremium"] * values$premiums[["unit.net"]] +
+        values$presentValuesCosts[,,"Constant"] / params$ContractData$sumInsured;
 
       cbind(
         benefits = benefits,
@@ -497,7 +499,14 @@ InsuranceTarif = R6Class(
 
       coeff[["Premium"]][["benefits"]][["premiums"]]            = 1;
 
+      # Costs proportional to NetPremium introduce a non-linearity, as the NP is not available when the gross premium is calculated
+      # => the corresponding costs PV is included in the coefficient!
+browser();
       coeff.benefits = (1 + securityLoading);
+      if (type == "gross") {
+          # TODO: How to include this into the Zillmer premium calculation?
+          coeff.benefits = coeff.benefits * (1 + sum(values$presentValuesCosts["0", c("alpha", "beta", "gamma"), "NetPremium"]) / values$presentValues[["0","premiums"]])
+      }
       coeff[["SumInsured"]][["benefits"]][["guaranteed"]]       = coeff.benefits;
       coeff[["SumInsured"]][["benefits"]][["survival"]]         = coeff.benefits;
       coeff[["SumInsured"]][["benefits"]][["death_SumInsured"]] = coeff.benefits;
@@ -531,6 +540,7 @@ InsuranceTarif = R6Class(
         coeff[["SumInsured"]][["costs"]]["gamma", "Constant"] = 1 / params$ContractData$sumInsured;
 
       } else if (type == "Zillmer") {
+          # TODO: Include costs with basis NetPremium and fixed costs!
         coeff[["SumInsured"]][["costs"]]["Zillmer","SumInsured"] = 1;
         coeff[["SumInsured"]][["costs"]]["Zillmer","SumPremiums"] = values$unitPremiumSum * premiums[["unit.gross"]];
         coeff[["SumInsured"]][["costs"]]["Zillmer","GrossPremium"] = premiums[["unit.gross"]];

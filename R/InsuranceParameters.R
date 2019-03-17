@@ -3,22 +3,53 @@ NULL
 
 
 #' Initialize a cost matrix with dimensions: [CostType, Basis, Period], with:
-#'     CostType: alpha, Zillmer, beta, gamma, gamma_nopremiums
-#'     Basis:    SumInsured, SumPremiums, GrossPremium
+#'     CostType: alpha, Zillmer, beta, gamma, gamma_nopremiums, unitcosts
+#'     Basis:    SumInsured, SumPremiums, GrossPremium, NetPremium, Constant
 #'     Period:   once, PremiumPeriod, PremiumFree, PolicyPeriod
 #' TODO: gamma an Erlebensleistungen?
 #' @export
-initializeCosts = function() {
-  dimnm = list(
-    c("alpha", "Zillmer", "beta", "gamma", "gamma_nopremiums"),
-    c("SumInsured", "SumPremiums", "GrossPremium"),
-    c("once", "PremiumPeriod", "PremiumFree", "PolicyPeriod")
-  );
-  array(0,
-        dim = sapply(dimnm, length),
-        dimnames = dimnm
-  )
+initializeCosts = function(costs, alpha, Zillmer, beta, gamma, gamma.paidUp, gamma.premiumfree, unitcosts, unitcosts.PolicyPeriod) {
+    if (missing(costs)) {
+        dimnm = list(
+            type = c("alpha", "Zillmer", "beta", "gamma", "gamma_nopremiums", "unitcosts"),
+            basis = c("SumInsured", "SumPremiums", "GrossPremium", "NetPremium", "Constant"),
+            frequency = c("once", "PremiumPeriod", "PremiumFree", "PolicyPeriod")
+        );
+        costs = array(
+            0,
+            dim = sapply(dimnm, length),
+            dimnames = dimnm
+        );
+    }
+    if (!missing(alpha)) {
+        costs[["alpha",  "SumPremiums", "once"]] = alpha;
+    }
+    if (!missing(Zillmer)) {
+        costs[["Zillmer","SumPremiums", "once"]] = Zillmer;
+    }
+    if (!missing(beta))  {
+        costs[["beta", "GrossPremium", "PremiumPeriod"]] = beta;
+    }
+    if (!missing(gamma)) {
+        costs[["gamma", "SumInsured", "PremiumPeriod"]] = gamma;
+    }
+    if (!missing(gamma.premiumfree)) {
+        costs[["gamma", "SumInsured", "PremiumFree"]] = gamma.premiumfree;
+    }
+    if (!missing(gamma.paidUp))  {
+        costs[["gamma_nopremiums", "SumInsured", "PolicyPeriod"]] = gamma.paidUp;
+    }
+    if (!missing(unitcosts)) {
+        costs[["unitcosts", "Constant", "PremiumPeriod"]] = unitcosts;
+    }
+    if (!missing(unitcosts.PolicyPeriod)) {
+        costs[["unitcosts", "Constant", "PolicyPeriod"]] = unitcosts.PolicyPeriod;
+    }
+    costs
 }
+# costs[["beta", "GrossPremium", "once"]] = 0.12; // Bei EINMALERLAG!
+# costs[["gamma", "SumInsured", "PolicyPeriod"]] = 0.0005;
+# costs[["alpha", "NetPremium", "once"]]
 
 
 #' Data structure (filled only with NULL) for insurance contract class member values.
