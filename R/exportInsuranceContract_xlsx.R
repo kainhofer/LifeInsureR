@@ -95,12 +95,13 @@ writePremiumCoefficients = function(wb, sheet, values, tarif = NULL, type = "ben
 }
 
 labelsReplace = function(labels) {
-  labels[labels == "alpha"] = "α";
+  labels[labels == "alpha"] = intToUtf8(0x03B1); #"α";
   labels[labels == "Zillmer"] = "Zill.";
-  labels[labels == "beta"] = "β";
-  labels[labels == "gamma"] = "γ";
-  labels[labels == "gamma_nopremiums"] = "γ prf.";
+  labels[labels == "beta"] = intToUtf8(0x03B2);#"β";
+  labels[labels == "gamma"] = intToUtf8(0x03B3); #"γ";
+  labels[labels == "gamma_nopremiums"] = paste(intToUtf8(0x03B3), "prf.");
   labels[labels == "unitcosts"] = "StkK";
+
   labels[labels == "SumInsured"] = "VS";
   labels[labels == "SumPremiums"] = "PS";
   labels[labels == "GrossPremium"] = "BP";
@@ -139,7 +140,7 @@ labelsReplace = function(labels) {
   labels[labels == "adequate"] = "ausr.";
   labels[labels == "contractual"] = "vertragl.";
   labels[labels == "conversion"] = "Umrechn.";
-  labels[labels == "alphaRefund"] = "α-Rücktrag";
+  labels[labels == "alphaRefund"] = paste0(intToUtf8(0x03B1), "-Rücktrag"); # "α-Rücktrag";
   labels[labels == "reduction"] = "Sparpr.für DK";
   labels[labels == "PremiumsPaid"] = "Pr.Summe";
   labels[labels == "Surrender"] = "Rückkauf";
@@ -157,8 +158,8 @@ labelsReplace = function(labels) {
   labels[labels == "rebate.sum"] = "Summenrab."
   labels[labels == "charge.noMedicalExam"] = "o.ärztl.U."
   labels[labels == "gross"] = "Brutto"
-  labels[labels == "alpha.noZillmer"] = "α(ungez.)";
-  labels[labels == "alpha.Zillmer"] = "α(gezill.)";
+  labels[labels == "alpha.noZillmer"] = paste0(intToUtf8(0x03B1), "(ungez.)");# "α(ungez.)";
+  labels[labels == "alpha.Zillmer"] = paste0(intToUtf8(0x03B1), "(gezill.)"); # "α(gezill.)";
   labels[labels == "net"] = "Netto";
   labels[labels == "risk"] = "Risikopr.";
   labels[labels == "savings"] = "Sparpr.";
