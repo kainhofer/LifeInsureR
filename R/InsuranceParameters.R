@@ -129,7 +129,6 @@ InsuranceContract.ParameterDefaults = list(
     Loadings = list( # Loadings can also be function(sumInsured, premiums)
         ongoingAlphaGrossPremium = 0,           # Acquisition cost that increase the gross premium
         tax = 0.04,                             # insurance tax, factor on each premium paid
-        unitcosts = 0,                          # annual unit cost for each policy (Stückkosten), absolute value
         security = 0,                           # Additional security loading on all benefit payments, factor on all benefits
         noMedicalExam = 0,                      # Loading when no medicial exam is done, % of SumInsured
         noMedicalExamRelative = 0,              # Loading when no medicial exam is done, % of gross premium

@@ -114,9 +114,9 @@ InsuranceContract = R6Class(
               self$Parameters$ContractData$policyPeriod,
               params = self$Parameters, values = self$Values);
             
-            #####
+            #### #
             # PREMIUM PAYMENT PERIOD (default: policyPeriod, can be given as function or numeric value)
-            #####
+            #### #
             if (is.null(self$Parameters$ContractData$premiumPeriod)) {
                 self$Parameters$ContractData$premiumPeriod = self$Parameters$ContractData$policyPeriod
             }
@@ -124,14 +124,19 @@ InsuranceContract = R6Class(
               self$Parameters$ContractData$premiumPeriod,
               params = self$Parameters, values = self$Values);
 
-            #####
+            #### #
             # COSTS PARAMTERS: can be a function => evaluate it to get the real costs
-            #####
+            #### #
             self$Parameters$Costs = self$evaluateCosts(self$Parameters$Costs)
+            args = list(...);
+            if (!is.null(args$unitcosts)) {
+                warning("Defining unit costs with the unitcosts argument to InsuranceTarif or InsuranceContract is deprecated. Please set the unitcosts field of the general cost structure.")
+                self$Parameters$Costs[["unitcosts", "Constant", "PremiumPeriod"]] = args$unitcosts;
+            }
 
-            #####
+            #### #
             # AGES for multiple joint lives:
-            #####
+            #### #
             # For joint lives, some parameters can be given multiple times: age, sex
             # Collect all given values into one vector!
             age = unlist(args[names(args) == "age"], use.names = FALSE)
@@ -151,9 +156,9 @@ InsuranceContract = R6Class(
             }
 
 
-            #####
+            #### #
             # TECHNICAL AGE
-            #####
+            #### #
             # Calculate the technical age (e.g. female are made younger, contracts on joint lives, etc.)
             if (is.null(self$Parameters$ContractData$technicalAge)) {
                 self$Parameters$ContractData$technicalAge = self$Parameters$ContractData$age[1]

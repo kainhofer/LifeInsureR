@@ -47,6 +47,12 @@ InsuranceTarif = R6Class(
 
       # Fill all remaining uninitialized values with their defaults, except for profit participation params
       self$Parameters = InsuranceContract.ParametersFallback(self$Parameters, InsuranceContract.ParameterDefaults, ppParameters = FALSE);
+
+      args = list(...);
+      if (!is.null(args$unitcosts)) {
+          warning("Defining unit costs with the unitcosts argument to InsuranceTarif is deprecated. Please set the unitcosts field of the general cost structure.")
+          self$Parameters$Costs[["unitcosts", "Constant", "PremiumPeriod"]] = args$unitcosts;
+      }
     },
 
     createModification = function(name  = NULL, tarif = NULL, desc  = NULL, tariffType = NULL, ...) {
@@ -437,7 +443,9 @@ InsuranceTarif = R6Class(
       # of the original SI, including the dynamic changes over time!
       values$cashFlowsCosts = values$cashFlowsCosts[,,"SumInsured"] * params$ContractData$sumInsured +
         values$cashFlowsCosts[,,"SumPremiums"] * values$unitPremiumSum * values$premiums[["gross"]] +
-        values$cashFlowsCosts[,,"GrossPremium"] * values$premiums[["gross"]];
+        values$cashFlowsCosts[,,"GrossPremium"] * values$premiums[["gross"]] +
+          values$cashFlowsCosts[,,"NetPremium"] * values$premiums[["net"]] +
+          values$cashFlowsCosts[,,"Constant"];
 
       cbind(values$cashFlows, values$cashFlowsCosts)
     },
@@ -453,8 +461,8 @@ InsuranceTarif = R6Class(
       pv[,c("guaranteed", "survival", "death_SumInsured", "disease_SumInsured", "death_PremiumFree")] =
         pv[,c("guaranteed", "survival", "death_SumInsured", "disease_SumInsured", "death_PremiumFree")] * params$ContractData$sumInsured;
       pv[,c("death_GrossPremium", "death_Refund_past", "death_Refund_future")] = pv[,c("death_GrossPremium", "death_Refund_past", "death_Refund_future")] * values$premiums[["gross"]] * params$ContractData$premiumRefund;
-      pv[,c("benefits", "benefitsAndRefund", "alpha", "Zillmer", "beta", "gamma", "gamma_nopremiums")] =
-        pv[,c("benefits", "benefitsAndRefund", "alpha", "Zillmer", "beta", "gamma", "gamma_nopremiums")] * params$ContractData$sumInsured;
+      pv[,c("benefits", "benefitsAndRefund", "alpha", "Zillmer", "beta", "gamma", "gamma_nopremiums", "unitcosts")] =
+        pv[,c("benefits", "benefitsAndRefund", "alpha", "Zillmer", "beta", "gamma", "gamma_nopremiums", "unitcosts")] * params$ContractData$sumInsured;
 
       # Sum all death-related payments to "death"  and remove the death_SumInsured column
       pv[,"death_SumInsured"] = pv[,"death_SumInsured"] + pv[,"death_GrossPremium"]
@@ -606,8 +614,17 @@ InsuranceTarif = R6Class(
 
       partnerRebate = valueOrFunction(loadings$partnerRebate, params = params, values = values);
 
+      pv.unitcosts = values$presentValuesCosts["0","unitcosts","SumInsured"] * sumInsured +
+          values$presentValuesCosts["0","unitcosts","SumPremiums"] * values$unitPremiumSum * values$premiums[["gross"]] +
+          values$presentValuesCosts["0","unitcosts","GrossPremium"] * values$premiums[["gross"]] +
+          values$presentValuesCosts["0","unitcosts","NetPremium"] * values$premiums[["net"]] +
+          values$presentValuesCosts["0","unitcosts","Constant"];
+      premium.unitcosts = pv.unitcosts / values$presentValues[["0", "premiums"]];
+      values$premiums[["unitcost"]] = premium.unitcosts;
+
+
       frequencyLoading = valueOrFunction(loadings$premiumFrequencyLoading, params = params, values = values);
-      premiumBeforeTax = (values$premiums[["unit.gross"]]*(1 + noMedicalExam.relative + extraChargeGrossPremium) + noMedicalExam - sumRebate - extraRebate) * sumInsured * (1 - advanceProfitParticipation) + unitCosts;
+      premiumBeforeTax = (values$premiums[["unit.gross"]]*(1 + noMedicalExam.relative + extraChargeGrossPremium) + noMedicalExam - sumRebate - extraRebate) * sumInsured * (1 - advanceProfitParticipation) + premium.unitcosts + unitCosts;
       premiumBeforeTax = premiumBeforeTax * (1 - premiumRebate - advanceProfitParticipationUnitCosts - partnerRebate);
       # TODO / FIXME: Add a check that frequencyLoading has an entry for the premiumFrequency -> Otherwise do not add any loading (currently NULL is returned, basically setting all premiums to NULL)
       premiumBeforeTax = premiumBeforeTax * (1 + frequencyLoading[[toString(params$ContractData$premiumFrequency)]]) / params$ContractData$premiumFrequency;
@@ -836,7 +853,7 @@ InsuranceTarif = R6Class(
       profits.advance  = afterProfit - afterSumRebate;
 
       # unit costs
-      unitCosts        = valueOrFunction(loadings$unitcosts,    params = params, values = values);
+      unitCosts        = premiums[["unitcost"]];
       # unit costs are only charged if a premium is paid, so exclude all times with premium==0!
       afterUnitCosts   = afterProfit + (afterProfit != 0)*unitCosts;
       unitcosts        = afterUnitCosts - afterProfit;
