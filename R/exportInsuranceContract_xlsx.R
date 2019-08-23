@@ -98,7 +98,7 @@ labelsReplace = function(labels) {
   labels[labels == "alpha"] = intToUtf8(0x03B1); #"α";
   labels[labels == "Zillmer"] = "Zill.";
   labels[labels == "beta"] = intToUtf8(0x03B2);#"β";
-  labels[labels == "gamma"] = intToUtf8(0x03B3); #"γ";
+  labels[labels == "gamma"] = intToUtf8(0x03B3);
   labels[labels == "gamma_nopremiums"] = paste(intToUtf8(0x03B3), "prf.");
   labels[labels == "unitcosts"] = "StkK";
 

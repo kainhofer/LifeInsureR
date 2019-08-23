@@ -11,7 +11,7 @@ contractGrid = function(axes = list(age = seq(20, 60, 10), policyPeriod = seq(5,
     gridByRow = expand.grid(axes, KEEP.OUT.ATTRS = FALSE);
     # Apply InsuranceContract$new to each combination (and add the additional arguments)
     vals = apply(gridByRow, 1, function(axisVals) {
-        args = c(as.list(axisVals), ...);
+        args = c(as.list(axisVals), list(...));
         if (!is.null(observationYear)) {
             args$YOB = obsYear - args$age;
         }

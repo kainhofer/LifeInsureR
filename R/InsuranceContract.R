@@ -47,8 +47,6 @@ InsuranceContract = R6Class(
             # Set default values for required contract-specific data
             # First, take the tariff defaults, then the  ProfitParticipation
             # defaults, so a tariff can override the profit participation scheme
-            # values. Also, the tariff will fill the profit scheme default,
-            # so we need to call the tariff first in any case
             self$Parameters = self$ContractParameters;
             self$Parameters = InsuranceContract.ParametersFallback(
                 self$ContractParameters,
@@ -63,7 +61,7 @@ InsuranceContract = R6Class(
             }
 
             self$consolidateContractData(tarif = tarif, ...);
-
+# browser();
             self$calculateContract(calculate = calculate);
         },
 
@@ -123,7 +121,14 @@ InsuranceContract = R6Class(
             self$Parameters$ContractData$premiumPeriod = valueOrFunction(
               self$Parameters$ContractData$premiumPeriod,
               params = self$Parameters, values = self$Values);
+            # At least 1 year premium period!
+            self$Parameters$ContractData$premiumPeriod = max(self$Parameters$ContractData$premiumPeriod, 1);
 
+            # Evaluate deferral period, i.e. if a function is used, calculate its numeric value from the other parameters
+            self$Parameters$ContractData$deferralPeriod = valueOrFunction(
+              self$Parameters$ContractData$deferralPeriod,
+              params = self$Parameters, values = self$Values);
+            
             #### #
             # COSTS PARAMTERS: can be a function => evaluate it to get the real costs
             #### #
@@ -133,7 +138,7 @@ InsuranceContract = R6Class(
                 warning("Defining unit costs with the unitcosts argument to InsuranceTarif or InsuranceContract is deprecated. Please set the unitcosts field of the general cost structure.")
                 self$Parameters$Costs[["unitcosts", "Constant", "PremiumPeriod"]] = args$unitcosts;
             }
-
+# browser();
             #### #
             # AGES for multiple joint lives:
             #### #

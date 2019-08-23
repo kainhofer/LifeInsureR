@@ -51,7 +51,7 @@ InsuranceTarif = R6Class(
       args = list(...);
       if (!is.null(args$unitcosts)) {
           warning("Defining unit costs with the unitcosts argument to InsuranceTarif is deprecated. Please set the unitcosts field of the general cost structure.")
-          self$Parameters$Costs[["unitcosts", "Constant", "PremiumPeriod"]] = args$unitcosts;
+#          self$Parameters$Costs[["unitcosts", "Constant", "PremiumPeriod"]] = args$unitcosts;
       }
     },
 
@@ -624,7 +624,7 @@ InsuranceTarif = R6Class(
 
 
       frequencyLoading = valueOrFunction(loadings$premiumFrequencyLoading, params = params, values = values);
-      premiumBeforeTax = (values$premiums[["unit.gross"]]*(1 + noMedicalExam.relative + extraChargeGrossPremium) + noMedicalExam - sumRebate - extraRebate) * sumInsured * (1 - advanceProfitParticipation) + premium.unitcosts + unitCosts;
+      premiumBeforeTax = (values$premiums[["unit.gross"]]*(1 + noMedicalExam.relative + extraChargeGrossPremium) + noMedicalExam - sumRebate - extraRebate) * sumInsured * (1 - advanceProfitParticipation) + premium.unitcosts;
       premiumBeforeTax = premiumBeforeTax * (1 - premiumRebate - advanceProfitParticipationUnitCosts - partnerRebate);
       # TODO / FIXME: Add a check that frequencyLoading has an entry for the premiumFrequency -> Otherwise do not add any loading (currently NULL is returned, basically setting all premiums to NULL)
       premiumBeforeTax = premiumBeforeTax * (1 + frequencyLoading[[toString(params$ContractData$premiumFrequency)]]) / params$ContractData$premiumFrequency;
