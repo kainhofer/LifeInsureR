@@ -130,15 +130,10 @@ InsuranceContract = R6Class(
               params = self$Parameters, values = self$Values);
             
             #### #
-            # COSTS PARAMTERS: can be a function => evaluate it to get the real costs
+            # COSTS PARAMETERS: can be a function => evaluate it to get the real costs
             #### #
             self$Parameters$Costs = self$evaluateCosts(self$Parameters$Costs)
-            args = list(...);
-            if (!is.null(args$unitcosts)) {
-                warning("Defining unit costs with the unitcosts argument to InsuranceTarif or InsuranceContract is deprecated. Please set the unitcosts field of the general cost structure.")
-                self$Parameters$Costs[["unitcosts", "Constant", "PremiumPeriod"]] = args$unitcosts;
-            }
-# browser();
+
             #### #
             # AGES for multiple joint lives:
             #### #

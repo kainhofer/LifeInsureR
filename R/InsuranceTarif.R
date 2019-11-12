@@ -47,12 +47,6 @@ InsuranceTarif = R6Class(
 
       # Fill all remaining uninitialized values with their defaults, except for profit participation params
       self$Parameters = InsuranceContract.ParametersFallback(self$Parameters, InsuranceContract.ParameterDefaults, ppParameters = FALSE);
-
-      args = list(...);
-      if (!is.null(args$unitcosts)) {
-          warning("Defining unit costs with the unitcosts argument to InsuranceTarif is deprecated. Please set the unitcosts field of the general cost structure.")
-#          self$Parameters$Costs[["unitcosts", "Constant", "PremiumPeriod"]] = args$unitcosts;
-      }
     },
 
     createModification = function(name  = NULL, tarif = NULL, desc  = NULL, tariffType = NULL, ...) {
@@ -619,7 +613,7 @@ InsuranceTarif = R6Class(
           values$presentValuesCosts["0","unitcosts","GrossPremium"] * values$premiums[["gross"]] +
           values$presentValuesCosts["0","unitcosts","NetPremium"] * values$premiums[["net"]] +
           values$presentValuesCosts["0","unitcosts","Constant"];
-      premium.unitcosts = pv.unitcosts / values$presentValues[["0", "premiums"]];
+      premium.unitcosts = pv.unitcosts / values$presentValues[["0", "premiums"]] + valueOrFunction(loadings$unitcosts, params = params, values = values);
       values$premiums[["unitcost"]] = premium.unitcosts;
 
 
