@@ -7,7 +7,7 @@
 NULL
 
 
-TariffTypeEnum = objectProperties::setSingleEnum("TariffType", levels = c("annuity", "wholelife", "endowment", "pureendowment", "terme-fix", "dread-disease"))
+TariffTypeEnum = objectProperties::setSingleEnum("TariffType", levels = c("annuity", "wholelife", "endowment", "pureendowment", "terme-fix", "dread-disease", "endowment + dread-disease"))
 
 
 #' Base class for Insurance Tarifs, providing calculation functions to the contract
@@ -209,10 +209,10 @@ InsuranceTarif = R6Class(
             # to fix the relation of death to survival benefit
             deathCF = self$getDeathCF(maxlen - deferralPeriod, params = params, values = values)
 
-            if (self$tariffType == "endowment" || self$tariffType == "pureendowment") {
+            if (self$tariffType == "endowment" || self$tariffType == "pureendowment" || self$tariffType == "endowment + dread-disease") {
                 cf$survival = c(rep(0, policyPeriod), 1);
             }
-            if (self$tariffType == "endowment" || self$tariffType == "wholelife") {
+            if (self$tariffType == "endowment" || self$tariffType == "wholelife" || self$tariffType == "endowment + dread-disease") {
                 cf$death = c(
                     rep(0, deferralPeriod),
                     deathCF,
@@ -221,6 +221,12 @@ InsuranceTarif = R6Class(
                     rep(0, deferralPeriod),
                     deathCF,
                     1);
+            }
+            if (self$tariffType == "endowment + dread-disease") {
+              cf$disease = c(
+                rep(0, deferralPeriod),
+                rep(1, maxlen - deferralPeriod),
+                0);
             }
         }
         cf
