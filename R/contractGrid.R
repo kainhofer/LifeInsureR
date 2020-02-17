@@ -21,13 +21,21 @@ contractGrid = function(axes = list(age = seq(20, 60, 10), policyPeriod = seq(5,
     array(vals, dim = sapply(axes, length), dimnames = dimnames)
 }
 
+#' @export
 makeContractGridDimname.InsuranceTarif = function(tarif) { tarif$name }
+#' @export
 makeContractGridDimname.R6 = function(tarif) { tarif$name }
+#' @export
 makeContractGridDimname.mortalityTable = function(table) { table@name }
+#' @export
 makeContractGridDimname.numeric = function(value) { value }
+#' @export
 makeContractGridDimname.double = function(value) { value }
+#' @export
 makeContractGridDimname.default = function(value) { value }
+#' @export
 makeContractGridDimname = function(value) { UseMethod("makeContractGridDimname", value) }
+#' @export
 makeContractGridDimnames = function(axes) {
     lapply(axes, function(axis) { lapply(axis, makeContractGridDimname); } )
 }

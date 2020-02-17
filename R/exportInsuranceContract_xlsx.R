@@ -206,9 +206,9 @@ exportInsuranceContract.xlsx = function(contract, filename) {
   nrrows = dim(contract$Values$cashFlows)[[1]]; # Some vectors are longer(e.g. qx), so determine the max nr or rows
   qp = contract$Values$transitionProbabilities[1:nrrows,]; # extract the probabilities once, will be needed in every sheet
 
-  ################################################
+  ############################################### #
   # Style information
-  ################################################
+  ############################################### #
   styles = list(
     header = createStyle(border = "TopBottomLeftRight", borderColour = "#DA9694", borderStyle = "medium",
                          fgFill = "#C0504D", fontColour = "#FFFFFF",
@@ -227,9 +227,9 @@ exportInsuranceContract.xlsx = function(contract, filename) {
     center = createStyle(halign = "center", valign = "center")
   );
 
-  ################################################
+  ############################################### #
   # General Workbook setup
-  ################################################
+  ############################################### #
   wb = openxlsx::createWorkbook();
 
   # Print out general Contract and Tariff information, including results
@@ -250,9 +250,9 @@ exportInsuranceContract.xlsx = function(contract, filename) {
 
   crow = crow + 4;
 
-  ################################################
+  ############################################### #
   # Basic parameters
-  ################################################
+  ############################################### #
   values = c(
     "Sum insured"         = contract$Parameters$ContractData$sumInsured,
     "Mortality table"     = contract$Parameters$ActuarialBases$mortalityTable@name,

@@ -3,17 +3,18 @@
 \name{initializeCosts}
 \alias{initializeCosts}
 \title{Initialize a cost matrix with dimensions: [CostType, Basis, Period], with:
-    CostType: alpha, Zillmer, beta, gamma, gamma_nopremiums
-    Basis:    SumInsured, SumPremiums, GrossPremium
+    CostType: alpha, Zillmer, beta, gamma, gamma_nopremiums, unitcosts
+    Basis:    SumInsured, SumPremiums, GrossPremium, NetPremium, Constant
     Period:   once, PremiumPeriod, PremiumFree, PolicyPeriod
 TODO: gamma an Erlebensleistungen?}
 \usage{
-initializeCosts()
+initializeCosts(costs, alpha, Zillmer, beta, gamma, gamma.paidUp,
+  gamma.premiumfree, unitcosts, unitcosts.PolicyPeriod)
 }
 \description{
 Initialize a cost matrix with dimensions: [CostType, Basis, Period], with:
-    CostType: alpha, Zillmer, beta, gamma, gamma_nopremiums
-    Basis:    SumInsured, SumPremiums, GrossPremium
+    CostType: alpha, Zillmer, beta, gamma, gamma_nopremiums, unitcosts
+    Basis:    SumInsured, SumPremiums, GrossPremium, NetPremium, Constant
     Period:   once, PremiumPeriod, PremiumFree, PolicyPeriod
 TODO: gamma an Erlebensleistungen?
 }
