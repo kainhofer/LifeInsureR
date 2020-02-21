@@ -248,14 +248,23 @@ fillNAgaps <- function(x, firstBack=FALSE) {
 
 
 
-
-
 #' @export
 valueOrFunction = function(val, ...) {
   if (is.function(val)) {
     val(...)
   } else {
     val
+  }
+}
+
+#' @export
+applyHook = function(hook, val, ...) {
+  if (is.function(hook)) {
+    hook(val, ...)
+  } else if (is.null(hook)) {
+    val
+  } else {
+    warning("Hook function", hook, "is neither a function nor NULL. Please provide a function or leave it empty!")
   }
 }
 

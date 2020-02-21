@@ -43,7 +43,6 @@ InsuranceContract = R6Class(
                 surrenderPenalty = TRUE,
                 alphaRefunded = FALSE
             );
-
             # Set default values for required contract-specific data
             # First, take the tariff defaults, then the  ProfitParticipation
             # defaults, so a tariff can override the profit participation scheme

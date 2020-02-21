@@ -165,6 +165,12 @@ InsuranceContract.ParameterDefaults = list(
         profitComponents = c("interest", "risk", "expense", "sum", "terminal"),
         profitClass = NULL,
         profitRates = NULL                     # General, company-wide profit rates, key columns are year and profitClass
+    ),
+    
+    Hooks = list(
+      # Functions with signature function(x, params, values, ...), default NULL is equivalent to function(x, ...) {x}
+      adjustCashFlows = NULL,
+      adjustCashFlowsCosts = NULL
     )
 );
 
@@ -202,6 +208,7 @@ InsuranceContract.ParametersFill = function(params=InsuranceContract.ParameterSt
     params$Loadings = fillFields(params$Loadings, list(...));
     params$Features = fillFields(params$Features, list(...));
     params$ProfitParticipation = fillFields(params$ProfitParticipation, list(...));
+    params$Hooks = fillFields(params$Hooks, list(...))
 
     # Costs are a special case, because they are an array rather than a list:
     # TODO: Find a way to partially override
@@ -230,6 +237,7 @@ InsuranceContract.ParametersFallback = function(params, fallback, ppParameters =
     if (ppParameters) {
         params$ProfitParticipation = fallbackFields(params$ProfitParticipation, fallback$ProfitParticipation);
     }
+    params$Hooks = fallbackFields(params$Hooks, fallback$Hooks);
 
     # Costs are a special case, because they are an array rather than a list:
     # TODO: Find a way to partially fall back

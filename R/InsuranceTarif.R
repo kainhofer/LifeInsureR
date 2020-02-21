@@ -290,7 +290,7 @@ InsuranceTarif = R6Class(
         cf$death_Refund_past[(cf$death_GrossPremium > 0)] = 1;
       }
 
-      cf
+      applyHook(params$Hooks$adjustCashFlows, cf, params, values)
     },
 
     getCashFlowsCosts = function(params, values) {
@@ -328,7 +328,7 @@ InsuranceTarif = R6Class(
       # so multiply them with the unit cash flows stored in values$cashFlows
       cf[,,"SumInsured"] = cf[,,"SumInsured"] * values$cashFlowsBasic$sumInsured
 
-      cf
+      applyHook(params$Hooks$adjustCashFlowsCosts, cf, params, values)
     },
 
     presentValueCashFlows = function(cashFlows, params, values) {
