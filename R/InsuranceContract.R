@@ -28,6 +28,9 @@ InsuranceContract = R6Class(
         #### Caching values for this contract, initialized/calculated when the object is created
         Values = InsuranceContract.Values,
 
+        #### List of all tariff blocks (independently calculated, but combined to one contract, e.g. dynamic/sum increases)
+        blocks = list(),
+
         #### Keeping the history of all contract changes during its lifetime
         history = list(),
 
@@ -60,8 +63,7 @@ InsuranceContract = R6Class(
             }
 
             self$consolidateContractData(tarif = tarif, ...);
-# browser();
-            self$calculateContract(calculate = calculate);
+            self$calculateContract(calculate = calculate, start = self$Parameters$ContractData$blockStart);
         },
 
         addHistorySnapshot = function(time = 0, comment = "Initial contract values", type = "Contract", params = self$Parameters, values = self$Values) {
@@ -81,36 +83,36 @@ InsuranceContract = R6Class(
 
         consolidateContractData = function(...) {
             args = list(...);
-            
+
             # Calculate YOB, age, contract closing etc. from each other
             # 1. Contract date (if not given) is NOW, unless age + YOB is given => Then year is derived as YOB+age
             if (is.null(self$Parameters$ContractData$contractClosing)) {
               if (!is.null(self$Parameters$ContractData$age) && !is.null(self$Parameters$ContractData$YOB)) {
                 # Use current day, but determine year from YOB and age
-                self$Parameters$ContractData$contractClosing = Sys.Date() %>% 
+                self$Parameters$ContractData$contractClosing = Sys.Date() %>%
                   'year<-'(self$Parameters$ContractData$YOB + self$Parameters$ContractData$age);
               }
             }
-            
-            # 2. Current age: If YOB is given, calculate from contract closing and YOB, otherwise assume 40 
+
+            # 2. Current age: If YOB is given, calculate from contract closing and YOB, otherwise assume 40
             if (is.null(self$Parameters$ContractData$age)) {
               if (is.null(self$Parameters$ContractData$YOB)) {
                 self$Parameters$ContractData$age = 40; # No information to derive age => Assume 40
                 warning("InsuranceContract: Missing age, no information to derive age from YOB and contractClosing => Assuming default age 40. Tariff: ", self$tarif$name)
               } else {
-                self$Parameters$ContractData$age = year(self$Parameters$ContractData$contractClosing) - 
+                self$Parameters$ContractData$age = year(self$Parameters$ContractData$contractClosing) -
                   self$Parameters$ContractData$YOB;
               }
             }
             if (is.null(self$Parameters$ContractData$YOB)) {
               self$Parameters$ContractData$YOB = year(self$Parameters$ContractData$contractClosing) - self$Parameters$ContractData$age;
             }
-            
+
             # Evaluate policy period, i.e. if a function is used, calculate its numeric value
             self$Parameters$ContractData$policyPeriod = valueOrFunction(
               self$Parameters$ContractData$policyPeriod,
               params = self$Parameters, values = self$Values);
-            
+
             #### #
             # PREMIUM PAYMENT PERIOD (default: policyPeriod, can be given as function or numeric value)
             #### #
@@ -127,7 +129,7 @@ InsuranceContract = R6Class(
             self$Parameters$ContractData$deferralPeriod = valueOrFunction(
               self$Parameters$ContractData$deferralPeriod,
               params = self$Parameters, values = self$Values);
-            
+
             #### #
             # COSTS PARAMETERS: can be a function => evaluate it to get the real costs
             #### #
@@ -178,50 +180,105 @@ InsuranceContract = R6Class(
         },
 
 
-        calculateContract = function(calculate = "all") {
-            self$Values$transitionProbabilities = self$determineTransitionProbabilities();
+
+
+
+        calculateContract = function(calculate = "all", start = 0, preservePastPV = TRUE, recalculatePremiums = TRUE, recalculatePremiumSum = TRUE) {
+            self$Values$int = self$determineInternalValues(start = start)
+            self$Values$transitionProbabilities = mergeValues(
+              starting = self$Values$transitionProbabilities,
+              ending = self$determineTransitionProbabilities(start = start),
+              t = start)
             if (calculate == "probabilities") return();
 
-            self$Values$cashFlowsBasic = self$determineCashFlowsBasic();
-            self$Values$cashFlows = self$determineCashFlows();
-            self$Values$unitPremiumSum = self$determinePremiumSum();
-            self$Values$cashFlowsCosts = self$determineCashFlowsCosts();
+            self$Values$cashFlowsBasic = mergeValues(
+                starting = self$Values$cashFlowsBasic,
+                ending = self$determineCashFlowsBasic(start = start),
+                t = start);
+            self$Values$cashFlows = mergeValues(
+                starting = self$Values$cashFlows,
+                ending = self$determineCashFlows(start = start),
+                t = start);
+
+            if (recalculatePremiumSum) {
+                # Premium waiver: Premium sum is not affected by premium waivers, i.e. everything depending on the premium sum uses the original premium sum!
+                self$Values$unitPremiumSum = self$determinePremiumSum(start = start);
+            }
+            self$Values$cashFlowsCosts = mergeValues3D(
+                starting = self$Values$cashFlowsCosts,
+                ending = self$determineCashFlowsCosts(start = start),
+                t = start);
             if (calculate == "cashflows") return();
-            
-            self$Values$presentValues = self$calculatePresentValues();
-            self$Values$presentValuesCosts = self$calculatePresentValuesCosts();
+
+
+            # Shall we re-calculate PV or preserve the old ones???
+            pv = self$calculatePresentValues(start = start)
+            pvCost = self$calculatePresentValuesCosts(start = start)
+            oldPV = self$Values$presentValues
+            if (preservePastPV) {
+                # Preserve past present values, i.e. the PV represents the PV
+                # with the knowledge of the past, even though the future CF
+                # might have changed meanwhile, so the PV at time 0 is no
+                # longer the PV of the current cash flows... The PV at time t
+                # always represents the information available at time t, but no
+                # future chagnes.
+                # This is useful to preserver the PV information neede to
+                # calculate the premiums from the past.
+                if (!is.null(self$Values$presentValues)) {
+                    self$Values$presentValues = self$Values$presentValues[1:NCOL(pv)]
+                }
+                self$Values$presentValues = mergeValues(starting = self$Values$presentValues, ending = pv, t = start)
+                self$Values$presentValuesCosts = mergeValues3D(starting = self$Values$presentValuesCosts, ending = pvCost, t = start)
+            } else {
+                # Recalculate present value for times before start, i.e. make all PV consistent with the current cash flows
+                self$Values$presentValues = pv
+                self$Values$presentValuesCosts = pvCost
+            }
             if (calculate == "presentvalues") return();
-            
+
             # the premiumCalculation function returns the premiums AND the cofficients,
             # so we have to extract the coefficients and store them in a separate variable
-            res = self$calculatePremiums();
+            res = self$calculatePremiums(start = start);
             self$Values$premiumCoefficients = res[["coefficients"]];
+            # TODO: Store premiums in a data.frame???
             self$Values$premiums = res[["premiums"]]
+            self$Values$int$premiumCalculationTime = start
             if (calculate == "premiums") return();
-            
-            # Update the cash flows and present values with the values of the premium
-            pvAllBenefits = self$calculatePresentValuesBenefits()
-            self$Values$presentValues = cbind(self$Values$presentValues, pvAllBenefits)
 
-            self$Values$absCashFlows = self$calculateAbsCashFlows();
-            self$Values$absPresentValues = self$calculateAbsPresentValues();
+# TODO-start:
+# the premiumCalculation function returns the premiums AND the cofficients,
+# so we have to extract the coefficients and store them in a separate variable
+# res = self$calculatePremiums(start = start);
+# self$Values$premiumCoefficients = mergeValues(starting = self$Values$premiumCoefficients, ending=res[["coefficients"]], t = t);
+# self$Values$premiums = mergeValues(starting= = res[["premiums"]]
+
+            # Update the cash flows and present values with the values of the premium
+            pvAllBenefits = self$calculatePresentValuesBenefits(start = start)
+            if (preservePastPV) {
+                self$Values$presentValues = mergeValues(starting = oldPV, ending = cbind(pv, pvAllBenefits), t = start)
+            } else {
+                self$Values$presentValues = cbind(pv, pvAllBenefits)
+            }
+
+            self$Values$absCashFlows       = mergeValues(starting = self$Values$absCashFlows,       ending = self$calculateAbsCashFlows(start = start), t = start);
+            self$Values$absPresentValues   = mergeValues(starting = self$Values$absPresentValues,   ending = self$calculateAbsPresentValues(start = start), t = start);
             if (calculate == "absvalues") return();
-            
-            self$Values$reserves = self$calculateReserves();
-            self$Values$reservesBalanceSheet = self$calculateReservesBalanceSheet();
+
+            self$Values$reserves           = mergeValues(starting = self$Values$reserves,           ending = self$calculateReserves(start = start), t = start);
+            self$Values$reservesBalanceSheet = mergeValues(starting = self$Values$reservesBalanceSheet,ending = self$calculateReservesBalanceSheet(start = start), t = start);
             if (calculate == "reserves") return();
-            self$Values$basicData = self$getBasicDataTimeseries()
-            self$Values$premiumComposition = self$premiumAnalysis();
-            self$Values$premiumCompositionSums = self$premiumCompositionSums();
-            self$Values$premiumCompositionPV = self$premiumCompositionPV();
+            self$Values$basicData          = mergeValues(starting = self$Values$basicData,          ending = self$getBasicDataTimeseries(start = start), t = start);
+            self$Values$premiumComposition = mergeValues(starting = self$Values$premiumComposition, ending = self$premiumAnalysis(start = start), t = start);
+            self$Values$premiumCompositionSums = mergeValues(starting = self$Values$premiumCompositionSums, ending = self$premiumCompositionSums(start = start), t = start);
+            self$Values$premiumCompositionPV = mergeValues(starting = self$Values$premiumCompositionPV, ending = self$premiumCompositionPV(start = start), t = start);
             if (calculate == "premiumcomposition") return();
-            
-            self$profitParticipation();
+
+            self$profitParticipation(start = start); # TODO-start
             if (calculate == "profitparticipation") return();
-            
+
             self$addHistorySnapshot(
-                time    = 0,
-                comment = "Initial contract values",
+                time    = start,
+                comment = ifelse(start == 0, "Initial contract values", paste("Contract recalculation at time ", start)),
                 type    = "Contract",
                 params  = self$Parameters,
                 values  = self$Values
@@ -229,53 +286,57 @@ InsuranceContract = R6Class(
             if (calculate == "history") return();
         },
 
-        determineTransitionProbabilities = function() {
-            self$tarif$getTransitionProbabilities(params = self$Parameters);
+        determineInternalValues = function(start = 0) {
+          self$tarif$getInternalValues(params = self$Parameters, start = start);
         },
-        determineCashFlowsBasic = function() {
-            self$tarif$getBasicCashFlows(params = self$Parameters);
+
+        determineTransitionProbabilities = function(start = 0) {
+            self$tarif$getTransitionProbabilities(params = self$Parameters, values = self$Values, start = start);
         },
-        determineCashFlows = function() {
-            self$tarif$getCashFlows(params = self$Parameters, values = self$Values);
+        determineCashFlowsBasic = function(start = 0) {
+            self$tarif$getBasicCashFlows(params = self$Parameters, values = self$Values, start = start);
         },
-        determinePremiumSum = function() {
+        determineCashFlows = function(start = 0) {
+            self$tarif$getCashFlows(params = self$Parameters, values = self$Values, start = start);
+        },
+        determinePremiumSum = function(start = 0) {
             sum(self$Values$cashFlows$premiums_advance + self$Values$cashFlows$premiums_arrears);
         },
-        determineCashFlowsCosts = function() {
-            self$tarif$getCashFlowsCosts(params = self$Parameters, values = self$Values);
+        determineCashFlowsCosts = function(start = 0) {
+            self$tarif$getCashFlowsCosts(params = self$Parameters, values = self$Values, start = start);
         },
-        calculatePresentValues = function() {
-            self$tarif$presentValueCashFlows(params = self$Parameters, values = self$Values);
+        calculatePresentValues = function(start = 0) {
+            self$tarif$presentValueCashFlows(params = self$Parameters, values = self$Values, start = start);
         },
-        calculatePresentValuesCosts = function() {
-            self$tarif$presentValueCashFlowsCosts(params = self$Parameters, values = self$Values);
+        calculatePresentValuesCosts = function(start = 0) {
+            self$tarif$presentValueCashFlowsCosts(params = self$Parameters, values = self$Values, start = start);
         },
-        calculatePremiums = function() {
-            self$tarif$premiumCalculation(params = self$Parameters, values = self$Values);
+        calculatePremiums = function(start = 0) {
+            self$tarif$premiumCalculation(params = self$Parameters, values = self$Values, start = start);
         },
-        calculatePresentValuesBenefits = function() {
-            self$tarif$presentValueBenefits(params = self$Parameters, values = self$Values);
+        calculatePresentValuesBenefits = function(start = 0) {
+            self$tarif$presentValueBenefits(params = self$Parameters, values = self$Values, start = start);
         },
-        calculateAbsCashFlows = function() {
-            self$tarif$getAbsCashFlows(params = self$Parameters, values = self$Values);
+        calculateAbsCashFlows = function(start = 0) {
+            self$tarif$getAbsCashFlows(params = self$Parameters, values = self$Values, start = start);
         },
-        calculateAbsPresentValues = function() {
-            self$tarif$getAbsPresentValues(params = self$Parameters, values = self$Values);
+        calculateAbsPresentValues = function(start = 0) {
+            self$tarif$getAbsPresentValues(params = self$Parameters, values = self$Values, start = start);
         },
-        calculateReserves = function() {
-            self$tarif$reserveCalculation(params = self$Parameters, values = self$Values);
+        calculateReserves = function(start = 0) {
+            self$tarif$reserveCalculation(params = self$Parameters, values = self$Values, start = start);
         },
-        calculateReservesBalanceSheet = function() {
-            self$tarif$reserveCalculationBalanceSheet(params = self$Parameters, values = self$Values);
+        calculateReservesBalanceSheet = function(start = 0) {
+            self$tarif$reserveCalculationBalanceSheet(params = self$Parameters, values = self$Values, start = start);
         },
-        premiumAnalysis = function() {
-            self$tarif$premiumDecomposition(params = self$Parameters, values = self$Values);
+        premiumAnalysis = function(start = 0) {
+            self$tarif$premiumDecomposition(params = self$Parameters, values = self$Values, start = start);
         },
-        premiumCompositionSums = function() {
-            self$tarif$calculateFutureSums(self$Values$premiumComposition);
+        premiumCompositionSums = function(start = 0) {
+            self$tarif$calculateFutureSums(self$Values$premiumComposition, start = start);
         },
-        premiumCompositionPV = function() {
-            self$tarif$calculatePresentValues(self$Values$premiumComposition, params = self$Parameters);
+        premiumCompositionPV = function(start = 0) {
+            self$tarif$calculatePresentValues(self$Values$premiumComposition, params = self$Parameters, start = start);
         },
 
         profitParticipation = function(...) {
@@ -294,7 +355,7 @@ InsuranceContract = R6Class(
         },
 
 
-        getBasicDataTimeseries = function() {
+        getBasicDataTimeseries = function(start = 0) {
             self$tarif$getBasicDataTimeseries(params = self$Parameters, values = self$Values);
         },
 

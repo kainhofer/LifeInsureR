@@ -59,13 +59,31 @@ deathBenefit.annuityDecreasing = function(interest) {
 }
 
 mergeValues = function(starting, ending, t) {
-  rbind(starting[1:t,], ending[-1:-t,])
+  # if either starting or ending is missing, always use the other, irrespective of t:
+  if (missing(ending) || is.null(ending)) {
+    starting
+  } else if (missing(starting) || is.null(starting)) {
+    ending
+  } else if (t == 0) {
+    ending
+  } else {
+    rbind(starting[1:t,], ending[-1:-t,])
+  }
 }
 mergeValues3D = function(starting, ending, t) {
-  abind(starting[1:t,,], ending[-1:-t,,], along = 1)
+  # if either starting or ending is missing, always use the other, irrespective of t:
+  if (missing(ending) || is.null(ending)) {
+    starting
+  } else if (missing(starting) || is.null(starting)) {
+    ending
+  } else if (t == 0) {
+    ending
+  } else {
+    abind(starting[1:t,,], ending[-1:-t,,], along = 1)
+  }
 }
 # Caution: px is not neccessarily 1-qx, because we might also have dread diseases so that px=1-qx-ix! However, the ix is not used for the survival present value
-calculatePVSurvival = function(px=1-qx, qx=1-px, advance, arrears=c(0), ..., m=1, mCorrection = list(alpha=1, beta=0), v=1) {
+calculatePVSurvival = function(px = 1 - qx, qx = 1 - px, advance, arrears = c(0), ..., m = 1, mCorrection = list(alpha = 1, beta = 0), v = 1, start = 0) {
   # assuming advance and arrears have the same dimensions...
   init = advance[1]*0;
   l = max(length(qx), length(advance), length(arrears));
@@ -76,7 +94,7 @@ calculatePVSurvival = function(px=1-qx, qx=1-px, advance, arrears=c(0), ..., m=1
   # TODO: Make this work for matrices (i.e. currently advance and arrears are assumed to be one-dimensional vectors)
   # TODO: Replace loop by better way (using Reduce?)
   res = rep(0, l+1);
-  for (i in l:1) {
+  for (i in l:(start + 1)) {
     # coefficients for the payments (including corrections for payments during the year (using the alpha(m) and beta(m)):
     advcoeff = mCorrection$alpha - mCorrection$beta*(1-p[i]*v);
     arrcoeff = mCorrection$alpha - (mCorrection$beta + 1/m)*(1-p[i]*v);
@@ -87,64 +105,64 @@ calculatePVSurvival = function(px=1-qx, qx=1-px, advance, arrears=c(0), ..., m=1
 }
 
 
-calculatePVGuaranteed = function(advance, arrears=c(0), ..., m=1, mCorrection = list(alpha=1, beta=0), v=1) {
+calculatePVGuaranteed = function(advance, arrears = c(0), ..., m = 1, mCorrection = list(alpha = 1, beta = 0), v = 1, start = 0) {
   # assuming advance and arrears have the same dimensions...
   init = advance[1]*0;
   l = max(length(advance), length(arrears));
-  advance = pad0(advance, l, value=init);
-  arrears = pad0(arrears, l, value=init);
+  advance = pad0(advance, l, value = init);
+  arrears = pad0(arrears, l, value = init);
 
   # TODO: Make this work for matrices (i.e. currently advance and arrears are assumed to be one-dimensional vectors)
   # TODO: Replace loop by better way (using Reduce?)
-  res = rep(0, l+1);
-  for (i in l:1) {
+  res = rep(0, l + 1);
+  for (i in l:(start + 1)) {
     # coefficients for the payments (including corrections for payments during the year (using the alpha(m) and beta(m)):
-    advcoeff = mCorrection$alpha - mCorrection$beta*(1-v);
-    arrcoeff = mCorrection$alpha - (mCorrection$beta + 1/m)*(1-v);
+    advcoeff = mCorrection$alpha - mCorrection$beta * (1 - v);
+    arrcoeff = mCorrection$alpha - (mCorrection$beta + 1 / m) * (1 - v);
     # The actual recursion:
-    res[i] = advance[i]*advcoeff + arrears[i]*arrcoeff + v*res[i+1];
+    res[i] = advance[i]*advcoeff + arrears[i]*arrcoeff + v*res[i + 1];
   }
   res[1:l]
 }
 
 
 # TODO: So far, we are assuming, the costs array has sufficient time steps and does not need to be padded!
-calculatePVCosts = function(px=1-qx, qx=1-px, costs, ..., v=1) {
+calculatePVCosts = function(px = 1 - qx, qx = 1 - px, costs, ..., v = 1, start = 0) {
   l = max(length(qx), dim(costs)[1]);
-  p = pad0(px, l, value=0);
+  p = pad0(px, l, value = 0);
   costs = costs[1:l,,];
 
   # Take the array structure from the cash flow array and initialize it with 0
   res = costs*0;
   prev = res[1,,]*0;
   # Backward recursion starting from the last time:
-  for (i in l:1) {
+  for (i in l:(start + 1)) {
     # cat("values at iteration ", i, ": ", v, q[i], costs[i,,], prev);
     res[i,,] = costs[i,,] + v*p[i]*prev;
-    prev=res[i,,];
+    prev = res[i,,];
   }
   res
 }
 
-calculatePVDeath = function(px, qx, benefits, ..., v=1) {
+calculatePVDeath = function(px, qx, benefits, ..., v = 1, start = 0) {
   init = benefits[1]*0; # Preserve the possible array structure of the benefits -> vectorized calculations possible!
   l = max(length(qx), length(benefits));
-  q = pad0(qx, l, value=1);
-  p = pad0(px, l, value=0);
-  benefits = pad0(benefits, l, value=init);
+  q = pad0(qx, l, value = 1);
+  p = pad0(px, l, value = 0);
+  benefits = pad0(benefits, l, value = init);
 
   # TODO: Make this work for matrices (i.e. currently benefits are assumed to be one-dimensional vectors)
   # TODO: Replace loop by better way (using Reduce?)
-  res = rep(init, l+1);
-  for (i in l:1) {
+  res = rep(init, l + 1);
+  for (i in l:(start + 1)) {
     # Caution: p_x is not neccessarily 1-q_x, because we might also have dread diseases, so that px=1-qx-ix!
-    res[i] = v*q[i]*benefits[i] + v*p[i]*res[i+1];
+    res[i] = v * q[i] * benefits[i] + v * p[i] * res[i + 1];
   }
   res[1:l]
 }
 
-calculatePVDisease = function(px = 1 - qx - ix, qx = 1 - ix - px, ix = 1 - px - qx, benefits, ..., v = 1) {
-  init = benefits[1]*0;
+calculatePVDisease = function(px = 1 - qx - ix, qx = 1 - ix - px, ix = 1 - px - qx, benefits, ..., v = 1, start = 0) {
+  init = benefits[1] * 0;
   l = min(length(ix), length(qx), length(benefits));
   qx = pad0(qx, l, value = 1);
   ix = pad0(ix, l, value = 0);
@@ -154,7 +172,7 @@ calculatePVDisease = function(px = 1 - qx - ix, qx = 1 - ix - px, ix = 1 - px - 
   # TODO: Make this work for matrices (i.e. currently benefits are assumed to be one-dimensional vectors)
   # TODO: Replace loop by better way (using Reduce?)
   res = rep(init, l + 1);
-  for (i in l:1) {
+  for (i in l:(start + 1)) {
     res[i] = v * ix[i] * benefits[i] + v * px[i] * res[i + 1];
   }
   res[1:l]
@@ -195,16 +213,33 @@ correctionPaymentFrequency = function(i, m = 1, order = 0) {
 }
 
 #' @export
-pad0 = function(v, l, value=0) {
-    if (l >= length(v)) {
-        c(v, rep(value, l - length(v)))
-    } else {
-        v[0:l]
-    }
+pad0 = function(v, l, value = 0, start = 0) {
+  # 3 cases: desired length<=start => only 0
+  #          desired length within start+v => cut v
+  #          desired length longer than start+v => pad with 0/value
+  if (l <= start) {
+    rep(0, l)
+  } else if (start <= l && l <= start + length(v)) {
+    c(rep(0, start), v[0:(l - start)])
+  } else {
+    # Need padding
+    c(rep(0, start), v, rep(value, l - length(v) - start))
+  }
 }
+
+#' Set all entries of the given vector to 0 up until index 'start'
 #' @export
-padLast = function(v, l) {
-    pad0(v, l, tail(v, n = 1))
+head0 = function(v, start = 0) {
+  if (start == 0) {
+    v
+  } else {
+    c(rep(0, start), tail(v, -start))
+  }
+}
+
+#' @export
+padLast = function(v, l, start = 0) {
+    pad0(v, l, value = tail(v, n = 1), start = start)
 }
 
 #' Taken from the R Cookbook:

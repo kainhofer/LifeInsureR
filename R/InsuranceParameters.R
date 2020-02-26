@@ -95,6 +95,7 @@ InsuranceContract.ParameterDefaults = list(
         deferralPeriod = 0,                     # Aufschubzeit bei Leibrenten
         guaranteedPeriod = 0,                   # Garantiezeit bei Leibrenten
         contractClosing = NULL,                 # Contract closing date (day/month is relevant for balance sheet reserves)
+        blockStart = 0,                         # When the current tariff block starts (main block starts a 0, dynamic increases start leter!)
 
         premiumPayments = "in advance",         # Prämienzahlungsweise (vor-/nachschüssig)
         benefitPayments = "in advance",         # Leistungszahlungsweise (vor-/nachschüssig)
@@ -166,7 +167,7 @@ InsuranceContract.ParameterDefaults = list(
         profitClass = NULL,
         profitRates = NULL                     # General, company-wide profit rates, key columns are year and profitClass
     ),
-    
+
     Hooks = list(
       # Functions with signature function(x, params, values, ...), default NULL is equivalent to function(x, ...) {x}
       adjustCashFlows = NULL,

@@ -65,6 +65,20 @@ InsuranceTarif = R6Class(
       self$Parameters
     },
 
+    # Get some internal parameters cached (length of data.frames, policy periods cut at max.age, etc.)
+    getInternalValues = function(params, start = 0) {
+      p = c()
+      age = params$ContractData$technicalAge
+      maxAge = getOmega(params$ActuarialBases$mortalityTable)
+      policyPeriod = params$ContractData$policyPeriod
+      list(
+        l = min(maxAge - age, policyPeriod) + 1,
+        policyTerm = min(maxAge - age, policyPeriod),
+        premiumTerm = min(policyPeriod, params$ContractData$premiumPeriod)
+      )
+    },
+
+
     getAges = function(params) {
       ages = ages(params$ActuarialBases$mortalityTable, YOB = params$ContractData$YOB);
       age = params$ContractData$technicalAge;
@@ -74,9 +88,10 @@ InsuranceTarif = R6Class(
       ages
     },
 
-    getTransitionProbabilities = function(params) {
+    getTransitionProbabilities = function(params, values, start = 0) {
       age = params$ContractData$technicalAge;
       ages = self$getAges(params);
+      # TODO: Use the start parameter to include possible selection tables (i.e. contract/block starts at time 'start' => qx depend on when contract started, e.g. immediate annuities in DAV 2004-R)
       q = deathProbabilities(params$ActuarialBases$mortalityTable, YOB = params$ContractData$YOB, ageDifferences = params$ContractData$ageDifferences);
       if (age > 0) {
         q    = q[-age:-1];
@@ -90,6 +105,7 @@ InsuranceTarif = R6Class(
         i = rep(0, length(q));
       }
       i = pad0(i, length(q));
+      # TODO: Implement case where invalidity/disease does NOT end the contract!
       df = data.frame(age = ages, q = q, i = i, p = 1 - q - i, row.names = ages - age)
       df
     },
@@ -103,144 +119,151 @@ InsuranceTarif = R6Class(
     #   - for single premiums it will be c(1, 0, 0, ...),
     #   - for increasing premiums it will be (1+increase)^(0:(premiumPeriod-1))
     # and 0 after the premium period
-    getPremiumCF = function(len, params, values) {
-        premPeriod = min(params$ContractData$premiumPeriod, params$ContractData$policyPeriod, len);
-        if (is.null(params$ContractData$premiumIncrease)) {
-            pad0(rep(1, premPeriod - 1), len);
+    getPremiumCF = function(len, params, values, start = 0) {
+      premPeriod = min(params$ContractData$premiumPeriod, params$ContractData$policyPeriod, len);
+      if (is.null(params$ContractData$premiumIncrease)) {
+        pad0(rep(1, premPeriod - 1), len, start = start);
+      } else {
+        inc = valueOrFunction(params$ContractData$premiumIncrease, premiumPeriod = premPeriod, params = params, values = values)
+        if (is.vector(inc) && length(inc) > 1) {
+          # If premiumIncrease is (or returns) a vector, treat it as
+          # relative premium amounts, ie. c(1, 1.1, 1.2) means +10% of
+          # the initial premium for the second and third year
+          pad0(inc, len, start = start)
         } else {
-            inc = valueOrFunction(params$ContractData$premiumIncrease, premiumPeriod = premPeriod, params = params, values = values)
-            if (is.vector(inc) && length(inc) > 1) {
-                # If premiumIncrease is (or returns) a vector, treat it as
-                # relative premium amounts, ie. c(1, 1.1, 1.2) means +10% of
-                # the initial premium for the second and third year
-                pad0(inc, len)
-            } else {
-                pad0(inc ^ (0:(premPeriod - 1)), len)
-            }
+          pad0(inc ^ (0:(premPeriod - start - 1)), len, start = start)
         }
+      }
     },
 
-    # Get the unit annuity cash flow (guaranteed and contingent) for the whole annuity payment period.
+    # Get the unit annuity cash flow (guaranteed and contingent) for the whole annuity payment period (after potential deferral period)
     #   - For constant annuity it will be rep(1, annuityPeriod),
     #   - for increasing annuities it will be (1+increase)^(0:(premiumPeriod-1))
     # and 0 after the premium period
-    getAnnuityCF = function(len, params, values) {
-        annuityPeriod = min(params$ContractData$policyPeriod - params$ContractData$deferralPeriod, len);
-        if (is.null(params$ContractData$annuityIncrease)) {
-            pad0(rep(1, annuityPeriod), len);
+    getAnnuityCF = function(len, params, values, start = 0) {
+      annuityPeriod = min(params$ContractData$policyPeriod - params$ContractData$deferralPeriod, len);
+      if (is.null(params$ContractData$annuityIncrease)) {
+        pad0(rep(1, annuityPeriod), len, start = start);
+      } else {
+        inc = valueOrFunction(params$ContractData$annuityIncrease, annuityPeriod = annuityPeriod, params = params, values = values)
+        if (is.vector(inc) && length(inc) > 1) {
+          # If annuityIncrease is (or returns) a vector, treat it as
+          # relative annuity amounts, ie. c(1, 1.1, 1.2) means +10% of
+          # the initial annuity for the second and third year
+          pad0(inc, len, start = start)
         } else {
-            inc = valueOrFunction(params$ContractData$annuityIncrease, annuityPeriod = annuityPeriod, params = params, values = values)
-            if (is.vector(inc) && length(inc) > 1) {
-                # If annuityIncrease is (or returns) a vector, treat it as
-                # relative annuity amounts, ie. c(1, 1.1, 1.2) means +10% of
-                # the initial annuity for the second and third year
-                pad0(inc, len)
-            } else {
-                # a numeric value means constant yearly increases (multiplicative)
-                pad0(inc ^ (0:annuityPeriod), len)
-            }
+          # a numeric value means constant yearly increases (multiplicative)
+          pad0(inc ^ (0:annuityPeriod), len, start = start)
         }
+      }
     },
 
-    # Get the unit death cash flow for the whole protection period.
+    # Get the unit death cash flow for the whole protection period (after potential deferral period!)
     #   - For constant death benefit it will be rep(1, policyPeriod),
     #   - for linearly decreasing sum insured it will be (policyPeriod:0)/policyPeriod
-    getDeathCF = function(len, params, values) {
-        period = params$ContractData$policyPeriod - params$ContractData$deferralPeriod;
-        if (is.null(params$ContractData$deathBenefit)) {
-            pad0(rep(1, period), len)
+    getDeathCF = function(len, params, values, start = 0) {
+      period = params$ContractData$policyPeriod - params$ContractData$deferralPeriod;
+      if (is.null(params$ContractData$deathBenefit)) {
+        pad0(rep(1, period), len, start = start)
+      } else {
+        benefit = valueOrFunction(params$ContractData$deathBenefit, len = len, params = params, values = values)
+        if (is.vector(benefit) && length(benefit) > 1) {
+          # If deathBenefit is (or returns) a vector, treat it as
+          # relative annuity amounts, ie. c(1, 1.1, 1.2) means +10% of
+          # the initial annuity for the second and third year
+          pad0(benefit, len, start = start)
         } else {
-            benefit = valueOrFunction(params$ContractData$deathBenefit, len = len, params = params, values = values)
-            if (is.vector(benefit) && length(benefit) > 1) {
-                # If deathBenefit is (or returns) a vector, treat it as
-                # relative annuity amounts, ie. c(1, 1.1, 1.2) means +10% of
-                # the initial annuity for the second and third year
-                pad0(benefit, len)
-            } else {
-                # constant death benefit
-                pad0(rep(benefit, period), len)
-            }
+          # constant death benefit
+          pad0(rep(benefit, period), len, start = start)
         }
+      }
     },
 
-    getBasicCashFlows = function(params) {
-        age = params$ContractData$technicalAge;
-        maxAge = getOmega(params$ActuarialBases$mortalityTable)
-        policyPeriod = params$ContractData$policyPeriod;
-        deferralPeriod = params$ContractData$deferralPeriod;
-        guaranteedPeriod = params$ContractData$guaranteedPeriod;
-        maxlen = min(maxAge - age, policyPeriod);
+    getBasicCashFlows = function(params, values, start = 0) {
+      deferralPeriod = params$ContractData$deferralPeriod;
+      guaranteedPeriod = params$ContractData$guaranteedPeriod;
 
-        cf = data.frame(
-            guaranteed = rep(0, maxlen + 1),
-            survival = rep(0, maxlen + 1),
-            death = rep(0, maxlen + 1),
-            disease = rep(0, maxlen + 1),
-            sumInsured = rep(1, maxlen + 1)
-        );
-        if (self$tariffType == "annuity") {
-            annuityPeriod = maxlen - deferralPeriod;
-            annuityCF = self$getAnnuityCF(len = annuityPeriod, params = params, values = values)
-            # guaranteed payments exist only with annuities (first n years of the payment)
-            cf$guaranteed = c(
-                rep(0, deferralPeriod),
-                head(annuityCF, n = guaranteedPeriod),
-                rep(0, max(0, maxlen + 1 - deferralPeriod - guaranteedPeriod)));
-            cf$survival = c(
-                rep(0, deferralPeriod + guaranteedPeriod),
-                if (guaranteedPeriod > 0) tail(annuityCF, n = -guaranteedPeriod) else annuityCF,
-                # rep(1, max(0, maxlen - deferralPeriod - guaranteedPeriod)),
-                0)
-            cf$sumInsured = c(
-                rep(1, deferralPeriod), # increases/decreases of annuities happen only after deferral!
-                annuityCF,
-                0)
+      zeroes = pad0(0, values$int$l)
 
-        } else if (self$tariffType == "terme-fix") {
-            cf$guaranteed = c(rep(0, policyPeriod), 1);
+      cf = data.frame(
+        guaranteed = zeroes,
+        survival = zeroes,
+        death = zeroes,
+        disease = zeroes,
+        sumInsured = c(rep(0, start), rep(1, values$int$l - start))
+      );
+      if (self$tariffType == "annuity") {
+        annuityPeriod = values$int$policyTerm - deferralPeriod;
+        # getAnnuityCF correctly handles start inside and after deferral period!
+        annuityCF = self$getAnnuityCF(len = annuityPeriod, params = params, values = values, start = max(0, start - deferralPeriod))
+        # guaranteed payments exist only with annuities (first n years of the payment)
+        cf$guaranteed = pad0(
+          c(
+            rep(0, deferralPeriod),
+            head(annuityCF, n = guaranteedPeriod)
+          ), values$int$l);
+        cf$survival = pad0(c(
+          rep(0, deferralPeriod + guaranteedPeriod),
+          if (guaranteedPeriod > 0) tail(annuityCF, n = -guaranteedPeriod) else annuityCF,
+          0), values$int$l)
 
-        } else if (self$tariffType == "dread-disease") {
-            cf$disease = c(
-                rep(0, deferralPeriod),
-                rep(1, maxlen - deferralPeriod),
-                0);
+        if (start <= deferralPeriod) {
+          # start current contract block within deferral period
+          # increases/decreases of annuities happen only after deferral!
+          cf$sumInsured = c(rep(0, start), rep(1, deferralPeriod - start), annuityCF, 0)
         } else {
-            # For endowments, use the death factor here in the basic death CF
-            # to fix the relation of death to survival benefit
-            deathCF = self$getDeathCF(maxlen - deferralPeriod, params = params, values = values)
-
-            if (self$tariffType == "endowment" || self$tariffType == "pureendowment" || self$tariffType == "endowment + dread-disease") {
-                cf$survival = c(rep(0, policyPeriod), 1);
-            }
-            if (self$tariffType == "endowment" || self$tariffType == "wholelife" || self$tariffType == "endowment + dread-disease") {
-                cf$death = c(
-                    rep(0, deferralPeriod),
-                    deathCF,
-                    0);
-                cf$sumInsured = c(
-                    rep(0, deferralPeriod),
-                    deathCF,
-                    1);
-            }
-            if (self$tariffType == "endowment + dread-disease") {
-              cf$disease = c(
-                rep(0, deferralPeriod),
-                rep(1, maxlen - deferralPeriod),
-                0);
-            }
+          # start current contract block after deferral period
+          cf$sumInsured = c(rep(0, deferralPeriod), annuityCF, 0)
         }
-        cf
+
+
+      } else if (self$tariffType == "terme-fix") {
+        # Begin of bock does not have any influence
+        cf$guaranteed = c(rep(0, values$int$policyTerm), 1);
+
+      } else if (self$tariffType == "dread-disease") {
+        # potential Payments start after deferral period and after start of this block
+        cf$disease = c(
+          rep(0, max(deferralPeriod, start)),
+          rep(1, values$int$l - 1 - max(deferralPeriod, start)),
+          0);
+      } else {
+        # For endowments, use the death factor here in the basic death CF
+        # to fix the relation of death to survival benefit
+        deathCF = self$getDeathCF(values$int$l - 1 - deferralPeriod, params = params, values = values, start = max(0, start - deferralPeriod))
+
+        if (self$tariffType == "endowment" || self$tariffType == "pureendowment" || self$tariffType == "endowment + dread-disease") {
+          cf$survival = c(rep(0, values$int$policyTerm), 1); # start of block does not have any influence!
+        }
+        if (self$tariffType == "endowment" || self$tariffType == "wholelife" || self$tariffType == "endowment + dread-disease") {
+          # start of block already properly handled in deathCF
+          cf$death = c(
+            rep(0, deferralPeriod),
+            deathCF,
+            0);
+          cf$sumInsured = c(
+            rep(0, deferralPeriod),
+            deathCF,
+            1);
+        }
+        if (self$tariffType == "endowment + dread-disease") {
+          cf$disease = c(
+            rep(0, max(deferralPeriod, start)),
+            rep(1, values$int$l - 1 - max(deferralPeriod, start)),
+            0);
+        }
+      }
+      cf
     },
 
-    getCashFlows = function(params, values) {
+    getCashFlows = function(params, values, start = 0) {
       age = params$ContractData$technicalAge;
-      maxAge = getOmega(params$ActuarialBases$mortalityTable)
 
       if (is.null(values$cashFlowsBasic)) {
-        values$cashFlowsBasic = self$getBasicCashFlows(params);
+        values$cashFlowsBasic = self$getBasicCashFlows(params, values, start = start);
       }
-      cflen = length(values$cashFlowsBasic$survival);
-      zeroes = pad0(0, cflen);
+      cflen = values$int$l
+      zeroes = pad0(0, cflen)
       ages = pad0(self$getAges(params), cflen);
       cf = data.frame(
         premiums_advance   = zeroes,
@@ -259,7 +282,7 @@ InsuranceTarif = R6Class(
 
       # Premiums:
       if (!params$ContractState$premiumWaiver) {
-        premiums = self$getPremiumCF(len = cflen, params = params, values = values)
+        premiums = self$getPremiumCF(len = cflen, params = params, values = values, start = start)
         if (params$ContractData$premiumPayments == "in advance") {
           cf$premiums_advance = premiums;
         } else {
@@ -293,29 +316,21 @@ InsuranceTarif = R6Class(
       applyHook(params$Hooks$adjustCashFlows, cf, params, values)
     },
 
-    getCashFlowsCosts = function(params, values) {
-      age = params$ContractData$technicalAge;
-      maxAge = getOmega(params$ActuarialBases$mortalityTable)
-      policyPeriod = params$ContractData$policyPeriod;
-      premiumPeriod = params$ContractData$premiumPeriod;
-
-      maxlen = min(maxAge - age, policyPeriod) + 1;
-      policyPeriod = min(maxAge - age, policyPeriod);
-      premiumPeriod = min(policyPeriod, premiumPeriod);
-
+    getCashFlowsCosts = function(params, values, start = 0) {
+      # Cost cash flows start at block start time (function argument "start" => one-off alpha costs start are charged at that time!)
       dm = dim(params$Costs);
       dmnames = dimnames(params$Costs);
-      cf = array(0, dim = list(maxlen, dm[1], dm[2]), dimnames = list(0:(maxlen - 1), dmnames[[1]], dmnames[[2]]));
-      cf[1,,] = cf[1,,] + params$Costs[,,"once"]
-      for (i in 1:premiumPeriod) {
+      cf = array(0, dim = list(values$int$l, dm[1], dm[2]), dimnames = list(0:(values$int$l - 1), dmnames[[1]], dmnames[[2]]));
+      cf[start + 1,,] = cf[start + 1,,] + params$Costs[,,"once"]
+      for (i in (start + 1):values$int$premiumTerm) {
         cf[i,,] = cf[i,,] + params$Costs[,,"PremiumPeriod"];
       }
-      if (premiumPeriod < policyPeriod) {
-        for (i in (premiumPeriod + 1):policyPeriod) {
+      if (values$int$premiumTerm < values$int$policyTerm) {
+        for (i in (max(start, values$int$premiumTerm) + 1):values$int$policyTerm) {
           cf[i,,] = cf[i,,] + params$Costs[,,"PremiumFree"];
         }
       }
-      for (i in 1:policyPeriod) {
+      for (i in (start + 1):values$int$policyTerm) {
         cf[i,,] = cf[i,,] + params$Costs[,,"PolicyPeriod"];
       }
 
@@ -331,79 +346,78 @@ InsuranceTarif = R6Class(
       applyHook(params$Hooks$adjustCashFlowsCosts, cf, params, values)
     },
 
-    presentValueCashFlows = function(cashFlows, params, values) {
+    presentValueCashFlows = function(cashFlows, params, values, start = 0) {
 
-      len = length(values$cashFlows$premiums_advance);
       qq = self$getTransitionProbabilities(params);
-      qx = pad0(qq$q, len);
-      ix = pad0(qq$i, len);
-      px = pad0(qq$p, len);
+      qx = pad0(qq$q, values$int$l);
+      ix = pad0(qq$i, values$int$l);
+      px = pad0(qq$p, values$int$l);
 
       i = params$ActuarialBases$i;
       v = 1/(1 + i);
       benefitFreqCorr = correctionPaymentFrequency(i = i,
-            m = params$ContractData$benefitFrequency,
-            order = params$ActuarialBases$benefitFrequencyOrder);
+                                                   m = params$ContractData$benefitFrequency,
+                                                   order = params$ActuarialBases$benefitFrequencyOrder);
       premiumFreqCorr = correctionPaymentFrequency(i = i,
-            m = params$ContractData$premiumFrequency,
-            order = params$ActuarialBases$premiumFrequencyOrder);
+                                                   m = params$ContractData$premiumFrequency,
+                                                   order = params$ActuarialBases$premiumFrequencyOrder);
 
+      # TODO: Calculate all present values only from start time of block onwards!
       pvRefund = calculatePVDeath(
-            px, qx,
-            values$cashFlows$death_GrossPremium,
-            v = v);
+        px, qx,
+        values$cashFlows$death_GrossPremium,
+        v = v, start = start);
       pvRefundPast = calculatePVDeath(
-            px, qx,
-            values$cashFlows$death_Refund_past,
-            v = v) * (values$cashFlows[,"death_GrossPremium"] - values$cashFlows[,"premiums_advance"]);
+        px, qx,
+        values$cashFlows$death_Refund_past,
+        v = v, start = start) * (values$cashFlows[,"death_GrossPremium"] - values$cashFlows[,"premiums_advance"]);
 
       pv = cbind(
         premiums = calculatePVSurvival(
-              px, qx,
-              values$cashFlows$premiums_advance, values$cashFlows$premiums_arrears,
-              m = params$ContractData$premiumFrequency, mCorrection = premiumFreqCorr,
-              v = v),
+          px, qx,
+          values$cashFlows$premiums_advance, values$cashFlows$premiums_arrears,
+          m = params$ContractData$premiumFrequency, mCorrection = premiumFreqCorr,
+          v = v, start = start),
         guaranteed = calculatePVGuaranteed(
-              values$cashFlows$guaranteed_advance, values$cashFlows$guaranteed_arrears,
-              m = params$ContractData$benefitFrequency, mCorrection = benefitFreqCorr,
-              v = v),
+          values$cashFlows$guaranteed_advance, values$cashFlows$guaranteed_arrears,
+          m = params$ContractData$benefitFrequency, mCorrection = benefitFreqCorr,
+          v = v, start = start),
         survival = calculatePVSurvival(
-              px, qx,
-              values$cashFlows$survival_advance, values$cashFlows$survival_arrears,
-              m = params$ContractData$benefitFrequency, mCorrection = benefitFreqCorr,
-              v = v),
+          px, qx,
+          values$cashFlows$survival_advance, values$cashFlows$survival_arrears,
+          m = params$ContractData$benefitFrequency, mCorrection = benefitFreqCorr,
+          v = v, start = start),
         death_SumInsured = calculatePVDeath(
-              px, qx,
-              values$cashFlows$death_SumInsured,
-              v = v),
+          px, qx,
+          values$cashFlows$death_SumInsured,
+          v = v, start = start),
         disease_SumInsured = calculatePVDisease(
-              px, qx, ix,
-              values$cashFlows$disease_SumInsured, v = v),
+          px, qx, ix,
+          values$cashFlows$disease_SumInsured, v = v, start = start),
         death_GrossPremium = pvRefund,
         death_Refund_past = pvRefundPast,
         death_Refund_future = pvRefund - pvRefundPast,
         death_PremiumFree = calculatePVDeath(
-              px, qx,
-              values$cashFlows$death_PremiumFree, v = v)
+          px, qx,
+          values$cashFlows$death_PremiumFree, v = v, start = start)
       );
 
-      rownames(pv) <- pad0(rownames(qq), len);
+      rownames(pv) <- pad0(rownames(qq), values$int$l);
       pv
     },
 
-    presentValueCashFlowsCosts = function(params, values) {
-      len = dim(values$cashFlowsCosts)[1];
+    presentValueCashFlowsCosts = function(params, values, start = 0) {
+      len = values$int$l;
       q = self$getTransitionProbabilities(params);
       qx = pad0(q$q, len);
       px = pad0(q$p, len);
-
       v = 1/(1 + params$ActuarialBases$i)
-      pvc = calculatePVCosts(px, qx, values$cashFlowsCosts, v = v);
+      pvc = calculatePVCosts(px, qx, values$cashFlowsCosts, v = v, start = start);
       pvc
     },
 
     # Cost values (CF, present values, etc.) are an Tx5x3 matrix => convert to Tx15 matrix (alpha | Zillmer | beta | gamma)
-    costValuesAsMatrix = function(costValues) {
+    costValuesAsMatrix = function(costValues, start = 0) {
       dm = dim(costValues);
       nm = dimnames(costValues);
       colnames = t(outer(nm[[2]], nm[[3]], paste, sep = "."));
@@ -414,7 +428,7 @@ InsuranceTarif = R6Class(
       res
     },
 
-    getAbsCashFlows = function(params, values) {
+    getAbsCashFlows = function(params, values, start = 0) {
 
         # TODO: Set up a nice list with coefficients for each type of cashflow,
         # rather than multiplying each item manually (this also mitigates the risk
@@ -450,7 +464,7 @@ InsuranceTarif = R6Class(
       cbind(values$cashFlows, values$cashFlowsCosts)
     },
 
-    getAbsPresentValues = function(params, values) {
+    getAbsPresentValues = function(params, values, start = 0) {
       pv = values$presentValues;
 
       #pv[,"age"] = pv[,"premiums"];
@@ -472,7 +486,7 @@ InsuranceTarif = R6Class(
     },
 
 
-    presentValueBenefits = function(params, values) {
+    presentValueBenefits = function(params, values, start = 0) {
       # TODO: Here we don't use the securityLoading parameter => Shall it be used or are these values to be understood without additional security loading?
       benefits    = values$presentValues[,"survival"] +
                     values$presentValues[,"guaranteed"] +
@@ -496,9 +510,10 @@ InsuranceTarif = R6Class(
     # When getPremiumCoefficients is called, the values$premiums array has NOT been filled! Instead,
     # some of the premium fields (all required for the current calculation) have
     # been set in the passed "premiums" argument.
-    getPremiumCoefficients = function(type="gross", coeffBenefits, coeffCosts, premiums, params, values) {
+    getPremiumCoefficients = function(type = "gross", coeffBenefits, coeffCosts, premiums, params, values, start = 0) {
       # Merge a possibly passed loadings override with the defaults of this class:
       securityLoading = valueOrFunction(params$Loadings$security, params = params, values = values);
+      t = as.character(start)
 
       coeff = list(
         "SumInsured" = list("benefits" = coeffBenefits*0, "costs" = coeffCosts*0),
@@ -512,7 +527,7 @@ InsuranceTarif = R6Class(
       coeff.benefits = (1 + securityLoading);
       if (type == "gross") {
           # TODO: How to include this into the Zillmer premium calculation?
-          coeff.benefits = coeff.benefits * (1 + sum(values$presentValuesCosts["0", c("alpha", "beta", "gamma"), "NetPremium"]) / values$presentValues[["0","premiums"]])
+          coeff.benefits = coeff.benefits * (1 + sum(values$presentValuesCosts[t, c("alpha", "beta", "gamma"), "NetPremium"]) / values$presentValues[[t,"premiums"]])
       }
       coeff[["SumInsured"]][["benefits"]][["guaranteed"]]       = coeff.benefits;
       coeff[["SumInsured"]][["benefits"]][["survival"]]         = coeff.benefits;
@@ -564,30 +579,36 @@ InsuranceTarif = R6Class(
       coeff
     },
 
-    premiumCalculation = function(params, values) {
+    premiumCalculation = function(params, values, start = 0) {
       loadings = params$Loadings;
       sumInsured = params$ContractData$sumInsured
       values$premiums = c("unit.net" = 0, "unit.Zillmer" = 0, "unit.gross" = 0, "net" = 0, "Zillmer" = 0, "gross" = 0, "written" = 0);
       coefficients = list("gross" = c(), "Zillmer" = c(), "net" = c());
 
+      # Get the present values of the premiums, claims and costs at time 'start' (where the premium is to be calculated)
+      t = as.character(start)
+      pv = values$presentValues[t,]
+      pvCost = values$presentValuesCosts[t,,]
+
+
       # net, gross and Zillmer premiums are calculated from the present values using the coefficients on each present value as described in the formulas document
-      coeff = self$getPremiumCoefficients("gross", values$presentValues["0",]*0, values$presentValuesCosts["0",,]*0, premiums = values$premiums, params = params, values = values)
-      enumerator  = sum(coeff[["SumInsured"]][["benefits"]] * values$presentValues["0",]) + sum(coeff[["SumInsured"]][["costs"]] * values$presentValuesCosts["0",,]);
-      denominator = sum(coeff[["Premium"   ]][["benefits"]] * values$presentValues["0",]) + sum(coeff[["Premium"   ]][["costs"]] * values$presentValuesCosts["0",,]);
+      coeff = self$getPremiumCoefficients("gross", pv * 0, pvCost * 0, premiums = values$premiums, params = params, values = values, start = start)
+      enumerator  = sum(coeff[["SumInsured"]][["benefits"]] * pv) + sum(coeff[["SumInsured"]][["costs"]] * pvCost);
+      denominator = sum(coeff[["Premium"   ]][["benefits"]] * pv) + sum(coeff[["Premium"   ]][["costs"]] * pvCost);
       values$premiums[["unit.gross"]] = enumerator/denominator * (1 + loadings$ongoingAlphaGrossPremium);
       values$premiums[["gross"]] = values$premiums[["unit.gross"]] * sumInsured;
       coefficients[["gross"]] = coeff;
 
-      coeff = self$getPremiumCoefficients("net", values$presentValues["0",]*0, values$presentValuesCosts["0",,]*0, premiums = values$premiums, params = params, values = values)
-      enumerator  = sum(coeff[["SumInsured"]][["benefits"]] * values$presentValues["0",]) + sum(coeff[["SumInsured"]][["costs"]] * values$presentValuesCosts["0",,]);
-      denominator = sum(coeff[["Premium"   ]][["benefits"]] * values$presentValues["0",]) + sum(coeff[["Premium"   ]][["costs"]] * values$presentValuesCosts["0",,]);
+      coeff = self$getPremiumCoefficients("net", pv*0, pvCost*0, premiums = values$premiums, params = params, values = values, start = start)
+      enumerator  = sum(coeff[["SumInsured"]][["benefits"]] * pv) + sum(coeff[["SumInsured"]][["costs"]] * pvCost);
+      denominator = sum(coeff[["Premium"   ]][["benefits"]] * pv) + sum(coeff[["Premium"   ]][["costs"]] * pvCost);
       values$premiums[["unit.net"]] = enumerator/denominator;
       values$premiums[["net"]] = values$premiums[["unit.net"]] * sumInsured;
       coefficients[["net"]] = coeff;
 
-      coeff = self$getPremiumCoefficients("Zillmer", values$presentValues["0",]*0, values$presentValuesCosts["0",,]*0, premiums = values$premiums, params = params, values = values);
-      enumerator  = sum(coeff[["SumInsured"]][["benefits"]] * values$presentValues["0",]) + sum(coeff[["SumInsured"]][["costs"]] * values$presentValuesCosts["0",,]);
-      denominator = sum(coeff[["Premium"   ]][["benefits"]] * values$presentValues["0",]) + sum(coeff[["Premium"   ]][["costs"]] * values$presentValuesCosts["0",,]);
+      coeff = self$getPremiumCoefficients("Zillmer", pv * 0, pvCost * 0, premiums = values$premiums, params = params, values = values, start = start);
+      enumerator  = sum(coeff[["SumInsured"]][["benefits"]] * pv) + sum(coeff[["SumInsured"]][["costs"]] * pvCost);
+      denominator = sum(coeff[["Premium"   ]][["benefits"]] * pv) + sum(coeff[["Premium"   ]][["costs"]] * pvCost);
       values$premiums[["unit.Zillmer"]] = enumerator/denominator;
       values$premiums[["Zillmer"]] = values$premiums[["unit.Zillmer"]] * sumInsured;
       coefficients[["Zillmer"]] = coeff;
@@ -614,12 +635,12 @@ InsuranceTarif = R6Class(
 
       partnerRebate = valueOrFunction(loadings$partnerRebate, params = params, values = values);
 
-      pv.unitcosts = values$presentValuesCosts["0","unitcosts","SumInsured"] * sumInsured +
-          values$presentValuesCosts["0","unitcosts","SumPremiums"] * values$unitPremiumSum * values$premiums[["gross"]] +
-          values$presentValuesCosts["0","unitcosts","GrossPremium"] * values$premiums[["gross"]] +
-          values$presentValuesCosts["0","unitcosts","NetPremium"] * values$premiums[["net"]] +
-          values$presentValuesCosts["0","unitcosts","Constant"];
-      premium.unitcosts = pv.unitcosts / values$presentValues[["0", "premiums"]] + valueOrFunction(loadings$unitcosts, params = params, values = values);
+      pv.unitcosts = pvCost["unitcosts","SumInsured"] * sumInsured +
+        pvCost["unitcosts","SumPremiums"] * values$unitPremiumSum * values$premiums[["gross"]] +
+        pvCost["unitcosts","GrossPremium"] * values$premiums[["gross"]] +
+        pvCost["unitcosts","NetPremium"] * values$premiums[["net"]] +
+        pvCost["unitcosts","Constant"];
+      premium.unitcosts = pv.unitcosts / pv[["premiums"]] + valueOrFunction(loadings$unitcosts, params = params, values = values);
       values$premiums[["unitcost"]] = premium.unitcosts;
 
 
@@ -635,21 +656,22 @@ InsuranceTarif = R6Class(
       list("premiums" = values$premiums, "coefficients" = coefficients)
     },
 
-    reserveCalculation = function(params, values) {
+    reserveCalculation = function(params, values, start = 0) {
+      t = as.character(start)
       securityFactor = (1 + valueOrFunction(params$Loadings$security, params = params, values = values));
       ppScheme      = params$ProfitParticipation$profitParticipationScheme;
 
       # Net, Zillmer and Gross reserves
       resNet = values$absPresentValues[,"benefitsAndRefund"] * securityFactor - values$premiums[["net"]] * values$absPresentValues[,"premiums.unit"];
-      BWZcorr = values$absPresentValues["0", "Zillmer"] / values$absPresentValues["0", "premiums"] * values$absPresentValues[,"premiums"];
+      BWZcorr = values$absPresentValues[t, "Zillmer"] / values$absPresentValues[t, "premiums"] * values$absPresentValues[,"premiums"];
       resZ = resNet - BWZcorr;
 
       resAdeq = values$absPresentValues[,"benefitsAndRefund"] * securityFactor +
-        values$absPresentValues[,"alpha"] + values$absPresentValues[,"beta"] + values$absPresentValues["gamma"] -
+        values$absPresentValues[,"alpha"] + values$absPresentValues[,"beta"] + values$absPresentValues[,"gamma"] -
         values$premiums[["gross"]] * values$absPresentValues[,"premiums.unit"];
 
       #values$premiums[["Zillmer"]] * values$absPresentValues[,"premiums"];
-      resGamma = values$absPresentValues[,"gamma"] - values$absPresentValues["0", "gamma"] / values$absPresentValues["0", "premiums"] * values$absPresentValues[,"premiums"]
+      resGamma = values$absPresentValues[,"gamma"] - values$absPresentValues[t, "gamma"] / values$absPresentValues[t, "premiums"] * values$absPresentValues[,"premiums"]
 
       advanceProfitParticipation = 0;
       if (!is.null(ppScheme)) {
@@ -657,17 +679,17 @@ InsuranceTarif = R6Class(
       }
       resConversion = (resZ + resGamma) * (1 - advanceProfitParticipation);
 
-      # Alpha refund: Distribute alpha-costs to 5 year (or if shorter, the policy period):
-      r = min(params$ContractData$policyPeriod, 5);
+      # Alpha refund: Distribute alpha-costs to 5 years (or if shorter, the policy period), always starting at time 'start':
+      r = min(params$ContractData$policyPeriod - start, 5);
       ZillmerSoFar = Reduce("+", values$absCashFlows$Zillmer, accumulate = TRUE);
       ZillmerTotal = sum(values$absCashFlows$Zillmer);
       len = length(ZillmerSoFar);
       if (params$Features$alphaRefundLinear) {
-        ZillmerVerteilungCoeff = pad0((0:r)/r, len, 1);
+        ZillmerVerteilungCoeff = pad0((0:r)/r, len, 1, start = start);
       } else {
         q = self$getTransitionProbabilities(params);
         # vector of all ä_{x+t, r-t}
-        pvAlphaTmp = calculatePVSurvival(q = pad0(q$q, len), advance = pad0(rep(1,r), len), v = 1/(1 + params$ActuarialBases$i));
+        pvAlphaTmp = calculatePVSurvival(q = pad0(q$q, len), advance = pad0(rep(1,r), len), v = 1/(1 + params$ActuarialBases$i), start = start);
         ZillmerVerteilungCoeff = (1 - pvAlphaTmp/pvAlphaTmp[[1]]);
       }
       alphaRefund = ZillmerSoFar - ZillmerVerteilungCoeff * ZillmerTotal;
@@ -677,6 +699,7 @@ InsuranceTarif = R6Class(
 
       # Collect all reserves to one large matrix
       res = cbind(
+            "SumInsured"  = head0(rep(params$ContractData$sumInsured, values$int$l), start = start),
             "net"         = resNet,
             "Zillmer"     = resZ,
             "adequate"    = resAdeq,
@@ -712,8 +735,10 @@ InsuranceTarif = R6Class(
 
       # Calculate new sum insured after premium waiver
       Storno = 0; # TODO: Implement storno costs
-      newSI = (surrenderValue - values$absPresentValues[,"death_Refund_past"] * securityFactor - c(Storno)) /
-        (values$absPresentValues[, "benefits"] * securityFactor + values$absPresentValues[, "gamma_nopremiums"]) * params$ContractData$sumInsured;
+      premiumfreePV = (values$absPresentValues[, "benefits"] * securityFactor + values$absPresentValues[, "gamma_nopremiums"]); # PV of future premium free claims + costs
+      newSI = ifelse(premiumfreePV == 0, 0,
+        (surrenderValue - values$absPresentValues[,"death_Refund_past"] * securityFactor - c(Storno)) /
+        premiumfreePV * params$ContractData$sumInsured);
 
       cbind(res,
             "PremiumsPaid" = Reduce("+", values$absCashFlows$premiums_advance, accumulate = TRUE),
@@ -722,7 +747,7 @@ InsuranceTarif = R6Class(
       )
     },
 
-    getBalanceSheetReserveFactor = function(params, years=1) {
+    getBalanceSheetReserveFactor = function(params, years = 1, start = 0) {
       balanceDate = params$ActuarialBases$balanceSheetDate
       year(balanceDate) = year(params$ContractData$contractClosing);
       if (balanceDate < params$ContractData$contractClosing) {
@@ -744,7 +769,7 @@ InsuranceTarif = R6Class(
       baf
     },
 
-    reserveCalculationBalanceSheet = function(params, values) {
+    reserveCalculationBalanceSheet = function(params, values, start = 0) {
       reserves = values$reserves;
       years = length(reserves[,"Zillmer"]);
       # Balance sheet reserves:
@@ -792,39 +817,27 @@ InsuranceTarif = R6Class(
     },
 
 
-    getBasicDataTimeseries = function(params, values) {
-        # TODO: Find a general solution to cut the policyPeriod at the maximum age (currently this code is duplicated all over!)
-        age = params$ContractData$age;
-        maxAge = getOmega(params$ActuarialBases$mortalityTable)
-        policyPeriod = params$ContractData$policyPeriod;
-        maxlen = min(maxAge - age, policyPeriod) + 1;
-        policyPeriod = min(maxAge - age, policyPeriod);
-        premiumPeriod = min(policyPeriod, params$ContractData$premiumPeriod);
+    getBasicDataTimeseries = function(params, values, start = 0) {
         res = cbind(
-            "PremiumPayment" = c(
-                rep(1, premiumPeriod),
-                rep(0, maxlen - premiumPeriod)),
-            "SumInsured" = c(
-                rep(params$ContractData$sumInsured, policyPeriod),
-                0),
-            "Premiums" = c(
-                head(values$absCashFlows$premiums_advance + values$absCashFlows$premiums_arrears, premiumPeriod),
-                rep(0, maxlen - premiumPeriod)),
-            "InterestRate" = rep(params$ActuarialBases$i, maxlen),
-            "PolicyDuration" = rep(policyPeriod, maxlen),
-            "PremiumPeriod" = rep(premiumPeriod, maxlen)
+            "PremiumPayment" = values$premiumComposition[, "charged"] > 0,
+            "SumInsured" = values$reserves[, "SumInsured"],
+            "Premiums" = values$absCashFlows$premiums_advance + values$absCashFlows$premiums_arrears,
+            "InterestRate" = rep(params$ActuarialBases$i, values$int$l),
+            "PolicyDuration" = rep(values$int$policyTerm, values$int$l),
+            "PremiumPeriod" = rep(values$int$premiumTerm, values$int$l)
         );
-        rownames(res) = 0:policyPeriod;
+        rownames(res) = 0:(values$int$l-1);
         res
     },
 
-    premiumDecomposition = function(params, values) {
+    premiumDecomposition = function(params, values, start = 0) {
       loadings   = params$Loadings;
       sumInsured = params$ContractData$sumInsured;
       premiums   = values$premiums;
       v          = 1/(1 + params$ActuarialBases$i);
       l          = dim(values$reserves)[[1]];
       ppScheme   = params$ProfitParticipation$profitParticipationScheme;
+      t          = as.character(start)
 
       # TODO: This assumes all premiums are paid in advance!
       premium.gross    = values$absCashFlows[,"premiums_advance"];
@@ -893,49 +906,50 @@ InsuranceTarif = R6Class(
 
       # Gross premium = net + zillmeredAlpha + unzillmeredAlpha + beta + gamma premium
       unit.premiumCF   = premium.gross / premiums[["gross"]];
-      premium.gamma    = unit.premiumCF * values$absPresentValues["0", "gamma"] / values$absPresentValues["0", "premiums.unit"];
-      premium.beta     = unit.premiumCF * values$absPresentValues["0", "beta"]  / values$absPresentValues["0", "premiums.unit"];
-      premium.alpha    = unit.premiumCF * values$absPresentValues["0", "alpha"] / values$absPresentValues["0", "premiums.unit"];
+      premium.gamma    = unit.premiumCF * values$absPresentValues[t, "gamma"] / values$absPresentValues[t, "premiums.unit"];
+      premium.beta     = unit.premiumCF * values$absPresentValues[t, "beta"]  / values$absPresentValues[t, "premiums.unit"];
+      premium.alpha    = unit.premiumCF * values$absPresentValues[t, "alpha"] / values$absPresentValues[t, "premiums.unit"];
       premium.Zillmer  = unit.premiumCF * premiums[["Zillmer"]];
-      premium.alpha.Zillmer = unit.premiumCF * values$absPresentValues["0", "Zillmer"] / values$absPresentValues["0", "premiums.unit"];
+      premium.alpha.Zillmer = unit.premiumCF * values$absPresentValues[t, "Zillmer"] / values$absPresentValues[t, "premiums.unit"];
       premium.alpha.noZ = premium.alpha - premium.alpha.Zillmer; # ungezillmerter Teil der Abschlusskosten
 
       premium.net       = unit.premiumCF * premiums[["net"]];
 
       securityLoading   = valueOrFunction(params$Loadings$security, params = params, values = values);
-      premium.risk.actual   = v * (values$absCashFlows[,"death"] - c(values$reserves[,"net"][-1], 0)) * pad0(values$transitionProbabilities$q, l);
+      premium.risk.actual   = v * head0(values$absCashFlows[,"death"] - c(values$reserves[,"net"][-1], 0), start = start) * pad0(values$transitionProbabilities$q, l);
       premium.risk.security = v * (values$absCashFlows[,"death"] * securityLoading) * pad0(values$transitionProbabilities$q, l);
       premium.risk          = premium.risk.actual + premium.risk.security;
-      premium.risk.disease.actual   = v * (values$absCashFlows[,"disease_SumInsured"] - c(values$reserves[,"net"][-1], 0)) * pad0(values$transitionProbabilities$i, l);
+      # TODO-start: Make sure the premium components are 0 before start!
+      premium.risk.disease.actual   = v * head0(values$absCashFlows[,"disease_SumInsured"] - c(values$reserves[,"net"][-1], 0), start = start) * pad0(values$transitionProbabilities$i, l);
       premium.risk.disease.security = v * (values$absCashFlows[,"disease_SumInsured"] * securityLoading) * pad0(values$transitionProbabilities$i, l);
       premium.risk.disease          = premium.risk.disease.actual + premium.risk.disease.security;
-      premium.savings       = getSavingsPremium(
+      premium.savings       = head0(getSavingsPremium(
           values$reserves[,"net"], v = v,
           survival_advance = values$absCashFlows[,"survival_advance"] + values$absCashFlows[,"guaranteed_advance"],
           survival_arrears = values$absCashFlows[,"survival_arrears"] + values$absCashFlows[,"guaranteed_arrears"]
-      );
+      ), start = start)
 
-      premium.Zillmer.risk.actual   = v * (values$absCashFlows[,"death"] - c(values$reserves[,"contractual"][-1], 0)) * pad0(values$transitionProbabilities$q, l);
+      premium.Zillmer.risk.actual   = v * head0(values$absCashFlows[,"death"] - c(values$reserves[,"contractual"][-1], 0), start = start) * pad0(values$transitionProbabilities$q, l);
       premium.Zillmer.risk.security = v * (values$absCashFlows[,"death"] * securityLoading) * pad0(values$transitionProbabilities$q, l);
       premium.Zillmer.risk          = premium.Zillmer.risk.actual + premium.Zillmer.risk.security;
-      premium.Zillmer.risk.disease.actual   = v * (values$absCashFlows[,"disease_SumInsured"] - c(values$reserves[,"contractual"][-1], 0)) * pad0(values$transitionProbabilities$i, l);
+      premium.Zillmer.risk.disease.actual   = v * head0(values$absCashFlows[,"disease_SumInsured"] - c(values$reserves[,"contractual"][-1], 0), start = start) * pad0(values$transitionProbabilities$i, l);
       premium.Zillmer.risk.disease.security = v * (values$absCashFlows[,"disease_SumInsured"] * securityLoading) * pad0(values$transitionProbabilities$i, l);
       premium.Zillmer.risk.disease          = premium.Zillmer.risk.disease.actual + premium.Zillmer.risk.disease.security;
 
 
-      premium.Zillmer.savings  = getSavingsPremium(
+      premium.Zillmer.savings  = head0(getSavingsPremium(
           values$reserves[,"contractual"], v = v,
           survival_advance = values$absCashFlows[,"survival_advance"] + values$absCashFlows[,"guaranteed_advance"],
           survival_arrears = values$absCashFlows[,"survival_arrears"] + values$absCashFlows[,"guaranteed_arrears"]
-      );
-      premium.Zillmer.amortization = getSavingsPremium(
+      ), start = start)
+      premium.Zillmer.amortization = head0(getSavingsPremium(
               pmin(0, values$reserves[,"contractual"]), v = v
-      );
-      premium.Zillmer.actsavings = getSavingsPremium(
+      ), start = start)
+      premium.Zillmer.actsavings = head0(getSavingsPremium(
               pmax(0, values$reserves[,"contractual"]), v = v,
               survival_advance = values$absCashFlows[,"survival_advance"] + values$absCashFlows[,"guaranteed_advance"],
               survival_arrears = values$absCashFlows[,"survival_arrears"] + values$absCashFlows[,"guaranteed_arrears"]
-      );
+      ), start = start)
 
       res = cbind(
         "charged"         = premium.charged,
@@ -981,14 +995,17 @@ InsuranceTarif = R6Class(
       res
     },
 
-    calculateFutureSums = function(values, ...) {
-      rcumsum = function(vec) rev(cumsum(rev(vec)));
+    calculateFutureSums = function(values, ..., start = 0) {
+      rcumsum = function(vec) c(
+        head(vec, start),
+        rev(cumsum(rev(tail(vec, length(vec) - start))))
+      )
       apply(values, 2, rcumsum)
     },
-    calculatePresentValues = function(values, params) {
+    calculatePresentValues = function(values, params, start = 0) {
       len = dim(values)[1];
       q = self$getTransitionProbabilities(params);
-      pv = function(vec) calculatePVSurvival(px = pad0(q$p, len), advance = vec, v = 1/(1 + params$ActuarialBases$i));
+      pv = function(vec) calculatePVSurvival(px = pad0(q$p, len), advance = vec, v = 1/(1 + params$ActuarialBases$i), start = start);
       apply(values, 2, pv)
     },
 

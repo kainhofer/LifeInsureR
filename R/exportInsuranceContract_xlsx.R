@@ -7,9 +7,9 @@ NULL
 
 
 
-################################################
-# Helper Functions
-################################################
+################################################ #
+# Helper Functions                            ####
+################################################ #
 
 
 writeAgeQTable = function(wb, sheet, probs, crow = 1, ccol = 1, styles = list()) {
@@ -189,13 +189,13 @@ setInsuranceValuesLabels = function(vals) {
 }
 
 
-################################################################################
+############################################################################### #
 #
 # The actual export function
 #
 #    exportInsuranceContract.xlsx(contract, filename)
 #
-################################################################################
+############################################################################### #
 
 
 #' @export
@@ -207,7 +207,7 @@ exportInsuranceContract.xlsx = function(contract, filename) {
   qp = contract$Values$transitionProbabilities[1:nrrows,]; # extract the probabilities once, will be needed in every sheet
 
   ############################################### #
-  # Style information
+  # Style information                          ####
   ############################################### #
   styles = list(
     header = createStyle(border = "TopBottomLeftRight", borderColour = "#DA9694", borderStyle = "medium",
@@ -228,7 +228,7 @@ exportInsuranceContract.xlsx = function(contract, filename) {
   );
 
   ############################################### #
-  # General Workbook setup
+  # General Workbook setup                     ####
   ############################################### #
   wb = openxlsx::createWorkbook();
 
@@ -251,7 +251,7 @@ exportInsuranceContract.xlsx = function(contract, filename) {
   crow = crow + 4;
 
   ############################################### #
-  # Basic parameters
+  # Basic parameters                           ####
   ############################################### #
   values = c(
     "Sum insured"         = contract$Parameters$ContractData$sumInsured,
@@ -307,9 +307,9 @@ exportInsuranceContract.xlsx = function(contract, filename) {
 
 
 
-  ################################################
-  # Print out Basic contract data as time series
-  ################################################
+  ################################################# #
+  # Print out Basic contract data as time series ####
+  ################################################# #
 
   sheet = "Basisdaten";
   addWorksheet(wb, sheet);
@@ -346,9 +346,9 @@ exportInsuranceContract.xlsx = function(contract, filename) {
 
 
 
-  ################################################
-  # Print out Reserves
-  ################################################
+  ############################################### #
+  # Print out Reserves                         ####
+  ############################################### #
 
   sheet = "Reserven";
   addWorksheet(wb, sheet);
@@ -371,9 +371,9 @@ exportInsuranceContract.xlsx = function(contract, filename) {
   setColWidths(wb, sheet, cols = 1:50, widths = "auto", ignoreMergedCells = TRUE)
 
 
-  ################################################
-  # Print out Profit Participation
-  ################################################
+  ################################################ #
+  # Print out Profit Participation              ####
+  ################################################ #
 
   if (!is.null(contract$Values$profitParticipation)) {
   sheet = "Gewinnbeteiligung";
@@ -432,9 +432,9 @@ exportInsuranceContract.xlsx = function(contract, filename) {
 
   }
 
-  ################################################
-  # Print out premium decomposition
-  ################################################
+  ############################################### #
+  # Print out premium decomposition            ####
+  ############################################### #
 
   # Age, death and survival probabilities
   crow = 4;
@@ -462,9 +462,9 @@ exportInsuranceContract.xlsx = function(contract, filename) {
 
   setColWidths(wb, sheet, cols = 1:50, widths = "auto", ignoreMergedCells = TRUE)
 
-  ################################################
-  # Print out absolute values of present values
-  ################################################
+  ################################################ #
+  # Print out absolute values of present values ####
+  ################################################ #
 
   sheet = "abs.Barwerte";
   addWorksheet(wb, sheet);
@@ -480,9 +480,9 @@ exportInsuranceContract.xlsx = function(contract, filename) {
   setColWidths(wb, sheet, cols = 1:50, widths = "auto", ignoreMergedCells = TRUE)
 
 
-  ################################################
-  # Print out absolute values for cash flows
-  ################################################
+  ############################################### #
+  # Print out absolute values for cash flows   ####
+  ############################################### #
 
   # Age, death and survival probabilities
   ccol = 1;
@@ -496,9 +496,9 @@ exportInsuranceContract.xlsx = function(contract, filename) {
   setColWidths(wb, sheet, cols = 1:50, widths = "auto", ignoreMergedCells = TRUE)
 
 
-  ################################################
-  # Print out present values
-  ################################################
+  ############################################### #
+  # Print out present values                   ####
+  ############################################### #
 
   sheet = "Barwerte";
   addWorksheet(wb, sheet);
@@ -510,17 +510,20 @@ exportInsuranceContract.xlsx = function(contract, filename) {
   # We add six lines before the present values to show the coefficients for the premium calculation
   ccol = ccol + writeAgeQTable(wb, sheet, probs = qp, crow = crow + 6, ccol = 1, styles = styles);
 
+  # Time the premium was last calculated (i.e. access the present values at that time rather than 0 in the formulas for the premium)
+  tPrem = contract$Values$int$premiumCalculationTime
+
   # Store the start/end columns of the coefficients, since we need them later in the formula for the premiums!
   w1 = writePremiumCoefficients(wb, sheet, contract$Values$premiumCoefficients, type = "benefits", crow = crow, ccol = ccol - 2, tarif = contract$tarif);
   area.premiumcoeff = paste0(int2col(ccol), "%d:", int2col(ccol + w1 - 1), "%d");
-  area.premiumvals  = paste0("$", int2col(ccol), "$", crow + 6 + 2, ":$", int2col(ccol + w1 - 1), "$", crow + 6 + 2);
+  area.premiumvals  = paste0("$", int2col(ccol), "$", crow + 6 + 2 + tPrem, ":$", int2col(ccol + w1 - 1), "$", crow + 6 + 2 + tPrem);
   ccol = ccol + writeValuesTable(wb, sheet, as.data.frame(setInsuranceValuesLabels(contract$Values$presentValues)),
                                  crow = crow + 6, ccol = ccol, tableName = "PresentValues_Benefits", styles = styles,
                                  caption = "Leistungsbarwerte", valueStyle = styles$pv0) + 1;
 
   w2 = writePremiumCoefficients(wb, sheet, contract$Values$premiumCoefficients, type = "costs", crow = crow, ccol = ccol - 2, tarif = contract$tarif);
   area.costcoeff = paste0(int2col(ccol), "%d:", int2col(ccol + w2 - 1), "%d");
-  area.costvals  = paste0("$", int2col(ccol), "$", crow + 6 + 2, ":$", int2col(ccol + w2 - 1), "$", crow + 6 + 2);
+  area.costvals  = paste0("$", int2col(ccol), "$", crow + 6 + 2 + tPrem, ":$", int2col(ccol + w2 - 1), "$", crow + 6 + 2 + tPrem);
   ccol = ccol + writeValuesTable(wb, sheet, as.data.frame(costPV),
                                  crow = crow + 6, ccol = ccol, tableName = "PresentValues_Costs", styles = styles,
                                  caption = "Kostenbarwerte", valueStyle = styles$cost0) + 1;
@@ -542,9 +545,9 @@ exportInsuranceContract.xlsx = function(contract, filename) {
   setColWidths(wb, sheet, cols = 1:50, widths = "auto", ignoreMergedCells = TRUE)
 
 
-  ################################################
-  # Print out cash flows
-  ################################################
+  ############################################## #
+  # Print out cash flows                      ####
+  ############################################## #
 
   sheet = "Cash-Flows";
   addWorksheet(wb, sheet);
