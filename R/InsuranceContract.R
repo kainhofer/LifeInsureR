@@ -156,7 +156,7 @@ InsuranceContract = R6Class(
             do.call(self$addBlock, params)
         },
 
-        calculateContract = function(calculate = "all", start = 0, preservePastPV = TRUE, recalculatePremiums = TRUE, recalculatePremiumSum = TRUE) {
+        calculateContract = function(calculate = "all", start = 0, preservePastPV = TRUE, recalculatePremiums = TRUE, recalculatePremiumSum = TRUE, history_comment = NULL, history_type = "Contract") {
             if (!is.null(self$blocks)) {
                 .args = as.list(match.call()[-1])
                 for (b in self$blocks) {
@@ -204,7 +204,7 @@ InsuranceContract = R6Class(
                 # This is useful to preserver the PV information neede to
                 # calculate the premiums from the past.
                 if (!is.null(self$Values$presentValues)) {
-                    self$Values$presentValues = self$Values$presentValues[1:NCOL(pv)]
+                    self$Values$presentValues = self$Values$presentValues[,1:NCOL(pv)]
                 }
                 self$Values$presentValues = mergeValues(starting = self$Values$presentValues, ending = pv, t = start)
                 self$Values$presentValuesCosts = mergeValues3D(starting = self$Values$presentValuesCosts, ending = pvCost, t = start)
@@ -224,13 +224,6 @@ InsuranceContract = R6Class(
             self$Values$int$premiumCalculationTime = start
             if (calculate == "premiums") return(invisible(self));
 
-# TODO-start:
-# the premiumCalculation function returns the premiums AND the cofficients,
-# so we have to extract the coefficients and store them in a separate variable
-# res = private$calculatePremiums(start = start);
-# self$Values$premiumCoefficients = mergeValues(starting = self$Values$premiumCoefficients, ending=res[["coefficients"]], t = t);
-# self$Values$premiums = mergeValues(starting= = res[["premiums"]]
-
             # Update the cash flows and present values with the values of the premium
             pvAllBenefits = private$calculatePresentValuesBenefits(start = start)
             if (preservePastPV) {
@@ -246,10 +239,10 @@ InsuranceContract = R6Class(
             self$Values$reserves           = mergeValues(starting = self$Values$reserves,           ending = private$calculateReserves(start = start), t = start);
             self$Values$reservesBalanceSheet = mergeValues(starting = self$Values$reservesBalanceSheet,ending = private$calculateReservesBalanceSheet(start = start), t = start);
             if (calculate == "reserves") return(invisible(self));
-            self$Values$basicData          = mergeValues(starting = self$Values$basicData,          ending = private$getBasicDataTimeseries(start = start), t = start);
             self$Values$premiumComposition = mergeValues(starting = self$Values$premiumComposition, ending = private$premiumAnalysis(start = start), t = start);
             self$Values$premiumCompositionSums = mergeValues(starting = self$Values$premiumCompositionSums, ending = private$premiumCompositionSums(start = start), t = start);
             self$Values$premiumCompositionPV = mergeValues(starting = self$Values$premiumCompositionPV, ending = private$premiumCompositionPV(start = start), t = start);
+            self$Values$basicData          = mergeValues(starting = self$Values$basicData,          ending = private$getBasicDataTimeseries(start = start), t = start);
             if (calculate == "premiumcomposition") return(invisible(self));
 
             private$profitParticipation(start = start); # TODO-start
@@ -257,8 +250,10 @@ InsuranceContract = R6Class(
 
             self$addHistorySnapshot(
                 time    = start,
-                comment = ifelse(start == 0, "Initial contract values", paste("Contract recalculation at time ", start)),
-                type    = "Contract",
+                comment = ifelse(is.null(history_comment),
+                                 ifelse(start == 0, "Initial contract values", paste("Contract recalculation at time ", start)),
+                                 history_comment),,
+                type    = history_type,
                 params  = self$Parameters,
                 values  = self$Values
             );
@@ -339,6 +334,25 @@ InsuranceContract = R6Class(
 
             invisible(self)
         },
+
+        # Premium Waiver: Stop all premium payments at time t
+        # the SumInsured is determined from the available
+        premiumWaiverNew = function(t) {
+            newSumInsured = self$Values$reserves[[toString(t), "PremiumFreeSumInsured"]];
+            self$Parameters$ContractState$premiumWaiver = TRUE;
+            self$Parameters$ContractState$surrenderPenalty = FALSE; # Surrender penalty has already been applied, don't apply a second time
+            self$Parameters$ContractState$alphaRefunded = TRUE;     # Alpha cost (if applicable) have already been refunded partially, don't refund again
+
+            self$Parameters$ContractData$sumInsured = newSumInsured;
+
+            self$calculateContract(
+                start = t,
+                preservePastPV = TRUE, recalculatePremiums = TRUE, recalculatePremiumSum = FALSE,
+                history_comment = sprintf("Premium waiver at time %d", t), history_type = "PremiumWaiver")
+
+            invisible(self)
+        },
+
 
 
         # Premium Waiver: Stop all premium payments at time t
@@ -562,7 +576,7 @@ InsuranceContract = R6Class(
 
 
         getBasicDataTimeseries = function(start = 0) {
-            self$tarif$getBasicDataTimeseries(params = self$Parameters, values = self$Values);
+            self$tarif$getBasicDataTimeseries(params = self$Parameters, values = self$Values, start = start);
         },
 
         dummy.private = NULL

@@ -88,3 +88,22 @@ contract.Bsp$Values$premiumComposition
 contract.Bsp$Values$reserves
 
 
+contract.Bsp.waiver = InsuranceContract$
+  new(
+    Tarif.Bsp,
+    age = 35, policyPeriod = 15, premiumPeriod = 15,
+    premiumFrequency = 12,
+    sumInsured = 100000,
+    contractClosing = as.Date("2020-07-01"),
+    id = "Hauptvertrag"
+  )$premiumWaiver(t = 5)
+
+contract.Bsp.waiverNew = InsuranceContract$
+  new(
+    Tarif.Bsp,
+    age = 35, policyPeriod = 15, premiumPeriod = 15,
+    premiumFrequency = 12,
+    sumInsured = 100000,
+    contractClosing = as.Date("2020-07-01"),
+    id = "Hauptvertrag"
+  )$premiumWaiverNew(t = 5)
