@@ -55,63 +55,26 @@ Tarif.Bsp = InsuranceTarif$new(
   surrenderValueCalculation = surrender.Bsp
 );
 
-if (false) {
-  contract.Bsp.DynStart = InsuranceContract$new(
-    Tarif.Bsp,
-    age = 45, policyPeriod = 5, premiumPeriod = 5,
-    premiumFrequency = 12,
-    sumInsured = 100000,
-    contractClosing = as.Date("2030-07-01")
-  );
-  exportInsuranceContract.xlsx(contract.Bsp.DynStart, t = 5, basename = "Endowment_Dynamic_From0_Baseline");
-  # exportInsuranceContractExample(contract.Bsp.DynStart, t = 5, basename = "Endowment_Dynamic_From0_Baseline");
-  # showVmGlgExamples(contract.Bsp.Dyn, t = 10)
-}
-
-
-contract.Bsp.DynStart$Values$cashFlowsBasic
-contract.Bsp.DynStart$Values$cashFlows
-contract.Bsp.DynStart$Values$cashFlowsCosts
-contract.Bsp.DynStart$Values$presentValues
-
-
-contract.Bsp.Dyn = InsuranceContract$new(
-  Tarif.Bsp,
-  age = 35, policyPeriod = 15, premiumPeriod = 15,
-  premiumFrequency = 12,
-  sumInsured = 100000,
-  contractClosing = as.Date("2020-07-01"),
-  blockStart = 10
-);
-exportInsuranceContract.xlsx(contract.Bsp.Dyn, filename = "Endowment_Dynamic_From5.xlsx");
-
-
-# exportInsuranceContractExample(contract.Bsp.Dyn, t = 5, basename = "Endowment_Dynamic_From5");
-# showVmGlgExamples(contract.Bsp.Dyn, t = 10)
-
-
-contract.Bsp.Dyn$Values$cashFlowsBasic
-contract.Bsp.Dyn$Values$cashFlows
-contract.Bsp.Dyn$Values$cashFlowsCosts
-contract.Bsp.Dyn$Values$presentValues
-contract.Bsp.Dyn$Values$reserves
-contract.Bsp.Dyn$Values$premiumComposition
-
-
 ################################################################### #
 #              EXAMPLE CONTRACT                                  ####
 ################################################################### #
 
 
-contract.Bsp = InsuranceContract$new(
-  Tarif.Bsp,
-  age = 35, policyPeriod = 15, premiumPeriod = 15,
-  premiumFrequency = 12,
-  sumInsured = 100000,
-  contractClosing = as.Date("2020-07-01")
-);
-exportInsuranceContractExample(contract.Bsp, t = 5);
-showVmGlgExamples(contract.Bsp, t = 10)
+contract.Bsp = InsuranceContract$
+  new(
+    Tarif.Bsp,
+    age = 35, policyPeriod = 15, premiumPeriod = 15,
+    premiumFrequency = 12,
+    sumInsured = 100000,
+    contractClosing = as.Date("2020-07-01"),
+    id = "Hauptvertrag"
+  )$
+  addDynamics(t = 5, NewSumInsured = 200000, id = "Dynamik 1", i = 0.00)$
+  addDynamics(t = 10, NewSumInsured = 250000, id = "Dynamik 2", i = 0.01);
+# exportInsuranceContractExample(contract.Bsp, t = 5);
+# showVmGlgExamples(contract.Bsp, t = 10)
+
+exportInsuranceContract.xlsx(contract.Bsp, filename = "BEISPIEL_Contract.xlsx")
 
 
 contract.Bsp$Values$cashFlowsBasic
@@ -124,32 +87,4 @@ contract.Bsp$Values$premiums
 contract.Bsp$Values$premiumComposition
 contract.Bsp$Values$reserves
 
-
-################################################################### #
-#              DYNAMIC INCREASE                                  ####
-################################################################### #
-
-
-contract.Bsp.Dyn = InsuranceContract$new(
-  Tarif.Bsp,
-  age = 35, policyPeriod = 15, premiumPeriod = 15,
-  premiumFrequency = 12,
-  sumInsured = 100000,
-  contractClosing = as.Date("2020-07-01"),
-  blockStart = 10
-);
-exportInsuranceContractExample(contract.Bsp.Dyn, t = 5);
-showVmGlgExamples(contract.Bsp.Dyn, t = 10)
-
-
-contract.Bsp.Dyn$Values$cashFlowsBasic
-contract.Bsp.Dyn$Values$cashFlows
-contract.Bsp.Dyn$Values$cashFlowsCosts
-contract.Bsp.Dyn$Values$presentValues
-# contract.Bsp.Dyn$Values$presentValuesCosts
-contract.Bsp.Dyn$Values$premiumSum
-contract.Bsp.Dyn$Values$premiums
-contract.Bsp.Dyn$Values$premiumComposition
-contract.Bsp.Dyn$Values$reserves
-contract.Bsp.Dyn$Values$basicData
 

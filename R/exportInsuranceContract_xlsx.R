@@ -11,6 +11,12 @@ NULL
 # Helper Functions                            ####
 ################################################ #
 
+addValuesWorksheet = function(wb, sheet, ...) {
+  addWorksheet(wb, sheet, gridLines = FALSE, ...)
+  # showGridLines(wb, sheet, showGridLines = FALSE)
+  setColWidths(wb, sheet, cols = 1:50, widths = "auto", ignoreMergedCells = TRUE)
+}
+
 
 writeAgeQTable = function(wb, sheet, probs, crow = 1, ccol = 1, styles = list()) {
   writeData(wb, sheet, "Sterblichkeiten", startCol = ccol + 2, startRow = crow);
@@ -19,7 +25,7 @@ writeAgeQTable = function(wb, sheet, probs, crow = 1, ccol = 1, styles = list())
   writeDataTable(wb, sheet, setInsuranceValuesLabels(probs),
                  startRow = crow + 1, startCol = ccol, colNames = TRUE, rowNames = TRUE,
                  tableStyle = "tableStyleMedium3", withFilter = FALSE, headerStyle = styles$tableHeader);
-  freezePane(wb, sheet, firstActiveRow = crow + 2, firstActiveCol = ccol + 2)
+  # freezePane(wb, sheet, firstActiveRow = crow + 2, firstActiveCol = ccol + 2)
   addStyle(wb, sheet, style = styles$center, rows = (crow + 2):(crow + 1 + dim(probs)[[1]]), cols = ccol:(ccol + 1), gridExpand = TRUE, stack = TRUE);
   addStyle(wb, sheet, style = styles$qx, rows = (crow + 2):(crow + 1 + dim(probs)[[1]]), cols = (ccol + 2):(ccol + 3), gridExpand = TRUE, stack = TRUE);
   dim(probs)[[2]] + 2;
@@ -35,7 +41,7 @@ writeTableCaption = function(wb, sheet, caption, rows, cols, style = NULL) {
     mergeCells(wb, sheet, rows = rows, cols = cols);
 }
 
-writeValuesTable = function(wb, sheet, values, caption = NULL, crow = 1, ccol = 1, rowNames = FALSE, tableStyle = "tableStyleMedium3", tableName = NULL, withFilter=FALSE, styles = list(), valueStyle = NULL) {
+writeValuesTable = function(wb, sheet, values, caption = NULL, crow = 1, ccol = 1, rowNames = FALSE, tableStyle = "tableStyleLight17", tableName = NULL, withFilter=FALSE, styles = list(), valueStyle = NULL) {
   nrrow = dim(values)[[1]];
   nrcol = dim(values)[[2]];
   addcol = if (rowNames) 1 else 0;
@@ -95,6 +101,18 @@ writePremiumCoefficients = function(wb, sheet, values, tarif = NULL, type = "ben
 }
 
 labelsReplace = function(labels) {
+  # TODO: Use recode here!
+
+  # Pr?mienarten
+  labels[labels == "unit.net"] = "Netto";
+  labels[labels == "unit.Zillmer"] = "Zillmer";
+  labels[labels == "unit.gross"] = "Brutto";
+  labels[labels == "written_yearly"] = "Verrechnet";
+  labels[labels == "written"] = "netto";
+  labels[labels == "unitcost"] = "St?ckkosten";
+  labels[labels == "written_beforetax"] = "vor Steuer";
+
+  # Kosten
   labels[labels == "alpha"] = intToUtf8(0x03B1); #"α";
   labels[labels == "Zillmer"] = "Zill.";
   labels[labels == "beta"] = intToUtf8(0x03B2);#"β";
@@ -102,6 +120,7 @@ labelsReplace = function(labels) {
   labels[labels == "gamma_nopremiums"] = paste(intToUtf8(0x03B3), "prf.");
   labels[labels == "unitcosts"] = "StkK";
 
+  # Kosten-Basen
   labels[labels == "SumInsured"] = "VS";
   labels[labels == "SumPremiums"] = "PS";
   labels[labels == "GrossPremium"] = "BP";
@@ -174,10 +193,18 @@ labelsReplace = function(labels) {
   labels[labels == "PremiumPayment"] = "Prämienzhlg.";
   labels[labels == "Premiums"] = "Prämien";
   labels[labels == "age"] = "Alter";
+  labels[labels == "Sum insured"] = "Vers.summe";
+  labels[labels == "Mortality table"] = "Sterbetafel";
+  labels[labels == "i"] = "Garantiezins";
+  labels[labels == "Age"] = "Alter";
+  labels[labels == "Policy duration"] = "Laufzeit";
+  labels[labels == "Premium period"] = "Pr?mienzahlung";
+  labels[labels == "Deferral period"] = "Aufschub";
+  labels[labels == "Guaranteed payments"] = "Garantiezeit";
 
   labels[labels == "time"] = "ZP t";
   labels[labels == "Comment"] = "Bemerkung";
-  labels[labels == "Type"] = "Art";
+  labels[labels == "type"] = "Art";
 
 
   labels
@@ -187,6 +214,552 @@ setInsuranceValuesLabels = function(vals) {
   dimnames(vals) = lapply(dimnames(vals), labelsReplace);
   vals
 }
+
+tableName = function(...) {
+  gsub('[^A-Za-z0-9_]', '', paste0(...))
+}
+
+
+exportBlockID = function(wb, sheet, id, cols, rows, styles = c()) {
+  writeData(wb, sheet, x = id, xy = c(cols[1], rows[1]))
+  addStyle(wb, sheet, style = styles$blockID, rows = rows, cols = cols, stack = TRUE);
+}
+
+getContractBlockValues = function(contract) {
+  values = data.frame(
+      "ID"                  = contract$Parameters$ContractData$id,
+      "Tariff"              = contract$tarif$tarif,
+      "Sum insured"         = contract$Parameters$ContractData$sumInsured,
+      "Mortality table"     = contract$Parameters$ActuarialBases$mortalityTable@name,
+      i                     = contract$Parameters$ActuarialBases$i,
+      "YOB"                 = contract$Parameters$ContractData$YOB,
+      "Age"                 = contract$Parameters$ContractData$age,
+      "Technical Age"       = contract$Parameters$ContractData$technicalAge,
+      "Policy duration"     = contract$Parameters$ContractData$policyPeriod,
+      "Premium period"      = contract$Parameters$ContractData$premiumPeriod,
+      "Deferral period"     = contract$Parameters$ContractData$deferralPeriod,
+      "Guaranteed payments" = contract$Parameters$ContractData$guaranteed,
+      stringsAsFactors = FALSE, check.names = FALSE
+    )
+  # Append all values from sub-blocks, one per line in the data.frame
+  for (b in contract$blocks) {
+    values = bind_rows(values, getContractBlockValues(b))
+  }
+  values
+}
+
+getContractBlockPremiums = function(contract) {
+  values = NULL
+  if (!is.null(contract$Values$premiums)){
+    values = bind_cols(
+      data.frame(
+        "ID"                  = contract$Parameters$ContractData$id,
+        stringsAsFactors = FALSE, check.names = FALSE
+      ),
+      data.frame(t(contract$Values$premiums), stringsAsFactors = FALSE, check.names = FALSE)
+    )
+  }
+  # Append all values from sub-blocks, one per line in the data.frame
+  for (b in contract$blocks) {
+    values = bind_rows(values, getContractBlockPremiums(b))
+  }
+  values
+}
+
+exportLoadingsTable = function(wb, sheet, contract, crow, ccol, styles = styles, seprows = 3, tariffs.handled = c()) {
+  tarifname = contract$tarif$tarif
+  if (!(tarifname %in% tariffs.handled)) {
+    # TODO: Detect cost structures overridden at contract-level! => Currently only the default tariff costs are printed!
+    costtable = as.data.frame.table(setInsuranceValuesLabels(contract$Parameters$Costs) )
+    colnames(costtable) = c("Kostenart", "Basis", "Periode", "Kostensatz");
+    costtable = costtable[costtable[,"Kostensatz"] != 0.0000,]
+    cap = sprintf("Kosten (Tarif %s)", tarifname)
+    writeValuesTable(wb, sheet, costtable, crow = crow, ccol = 1, tableName = tableName("Kosten_", tarifname), styles = styles, caption = cap);
+    # writeDataTable(wb, sheet, costtable, startCol = 1, startRow = crow + 1, colNames = TRUE, rowNames = FALSE,
+    # tableStyle = "tableStyleMedium3", headerStyle = styles$tableHeader);
+    addStyle(wb, sheet, style = styles$cost0, rows = (crow + 2):(crow + dim(costtable)[[1]] + 1), cols = 4, stack = TRUE);
+    crow = crow + dim(costtable)[[1]] + 3;
+    tariffs.handled = c(tariffs.handled, tarifname)
+  }
+
+  for (b in contract$blocks) {
+    values = exportLoadingsTable(wb = wb, sheet = sheet, contract = b, crow = crow, ccol = ccol, styles = styles, seprows = seprows, tariffs.handled = tariffs.handled)
+    crow = values$crow
+    tariffs.handled = values$tariffs.handled
+  }
+  list(crow = crow, tariffs.handled = tariffs.handled)
+}
+
+
+
+
+exportContractDataTable = function(wb, sheet, contract, ccol = 1, crow = 1, styles = c()) {
+  contractValues = getContractBlockValues(contract)
+  contractPremiums = getContractBlockPremiums(contract)
+  # Some types of tables don't need the birth year -> leave it out rather than throwing an error on opening in Excel!
+  # if (is.null(values["YOB"])) values["YOB"] = NULL;
+
+  # General Contract data ####
+  # TODO!
+  crow = 1;
+  writeData(wb, sheet, matrix(c(
+    "Tarif:", contract$tarif$tarif,
+    "Tarifname:", contract$tarif$name,
+    "Description:", contract$tarif$desc
+  ), 3, 2, byrow = TRUE), startCol = 1, startRow = 1, colNames = FALSE, rowNames = FALSE);
+  mergeCells(wb, sheet, cols = 2:10, rows = 1);
+  mergeCells(wb, sheet, cols = 2:10, rows = 2);
+  mergeCells(wb, sheet, cols = 2:10, rows = 3);
+  addStyle(wb, sheet, style = styles$wrap, rows = 3, cols = 2:10, stack = TRUE);
+  addStyle(wb, sheet, style = createStyle(valign = "top"), rows = 1:3, cols = 1:10, gridExpand = TRUE, stack = TRUE);
+
+  crow = crow + 4;
+
+  # Values (parameters, premiums, etc.) of all blocks   ####
+  tmp = contractValues %>%
+    select(
+      Vertragsteil = ID, Tarif = Tariff, `Sum insured`,
+      `Mortality table`, i, Age, `Policy duration`, `Premium period`,
+      `Deferral period`, `Guaranteed payments`)
+  writeValuesTable(wb, sheet, values = setInsuranceValuesLabels(tmp),
+                   caption = "Basisdaten der Vertragsteile", crow = crow, ccol = 1,
+                   tableName = "BlocksBasicData", styles = styles)
+  crow = crow + NROW(tmp) + 2 + 2 # 2 rows for caption/table header, 2 rows padding
+
+  # Unit Premiums ####
+  tmp = contractPremiums %>%
+    select(Vertragsteil = ID, unit.net, unit.Zillmer, unit.gross)
+  writeValuesTable(wb, sheet, values = setInsuranceValuesLabels(tmp),
+                   caption = "Prämiensätze (auf VS 1)", crow = crow, ccol = 1,
+                   tableName = "UnitPremiums", styles = styles, valueStyle = styles$unitpremiums)
+  crow = crow + NROW(tmp) + 2 + 2 # 2 rows for caption/table header, 2 rows padding
+
+  # Yearly Premiums ####
+  tmp = contractPremiums %>%
+    select(Vertragsteil = ID, net, Zillmer, gross, written_yearly)
+  writeValuesTable(wb, sheet, values = setInsuranceValuesLabels(tmp),
+                   caption = "Jahresprämien", crow = crow, ccol = 1,
+                   tableName = "YearlyPremiums", styles = styles, valueStyle = styles$currency0)
+  crow = crow + NROW(tmp) + 2 + 2 # 2 rows for caption/table header, 2 rows padding
+
+  # Written Premiums ####
+  tmp = contractPremiums %>%
+    select(Vertragsteil = ID, written, unitcost, written_beforetax, tax)
+  writeValuesTable(wb, sheet, values = setInsuranceValuesLabels(tmp),
+                   caption = "Prämien (pro Zahlungsweise)", crow = crow, ccol = 1,
+                   tableName = "WrittenPremiums", styles = styles, valueStyle = styles$currency0)
+  crow = crow + NROW(tmp) + 2 + 2 # 2 rows for caption/table header, 2 rows padding
+
+
+  # Cost structure #######
+  crow.history = crow
+
+  vals = exportLoadingsTable(wb = wb, sheet = sheet, contract = contract, crow = crow, ccol = 1, styles = styles, seprows = 3)
+  crow = vals$crow
+
+  # costtable = as.data.frame.table(setInsuranceValuesLabels(contract$Parameters$Costs) )
+  # colnames(costtable) = c("Kostenart", "Basis", "Periode", "Kostensatz");
+  # costtable = costtable[costtable[,"Kostensatz"] != 0.0000,]
+  # writeValuesTable(wb, sheet, costtable, crow = crow, ccol = 1, tableName = "Kosten", styles = styles, caption = "Kosten");
+  # # writeDataTable(wb, sheet, costtable, startCol = 1, startRow = crow + 1, colNames = TRUE, rowNames = FALSE,
+  # # tableStyle = "tableStyleMedium3", headerStyle = styles$tableHeader);
+  # addStyle(wb, sheet, style = styles$cost0, rows = (crow + 2):(crow + dim(costtable)[[1]] + 1), cols = 4, stack = TRUE);
+  # crow = crow + dim(costtable)[[1]] + 3;
+
+  # Contract history
+  # time=t, comment=sprintf("Premium waiver at time %d", t), type = "PremiumWaiver"
+  histtime = unlist(lapply(contract$history, function(xl) xl$time));
+  histcomment = unlist(lapply(contract$history, function(xl) xl$comment));
+  histtype = unlist(lapply(contract$history, function(xl) xl$type));
+  writeValuesTable(wb, sheet, setInsuranceValuesLabels(data.frame(time = histtime, Comment = histcomment, type = histtype)),
+                   crow = crow.history, ccol = 6, tableName = "Vertragshistorie", styles = styles,
+                   caption = "Vertragshistorie");
+  crow.history = crow.history + dim(histtime)[[1]] + 3;
+
+
+}
+
+exportBasicDataTable = function(wb, sheet, contract, ccol = 1, crow = 1, styles = c(), seprows = 5, freeze = TRUE) {
+  id = contract$Parameters$ContractData$id
+  nrrow = contract$Values$int$l
+
+  blockid.row = crow
+  crow = crow + 2
+  endrow = (crow + 1 + nrrow)
+  if (freeze) {
+    freezePane(wb, sheet, firstActiveRow = crow + 2, firstActiveCol = ccol + 2)
+  }
+
+  qp = contract$Values$transitionProbabilities[1:nrrow,]; # extract the probabilities once, will be needed in
+  cl = ccol
+
+  tbl = qp[,"age", drop = FALSE];
+  writeDataTable(wb, sheet, setInsuranceValuesLabels(tbl),
+                 startRow = crow + 1, startCol = cl, colNames = TRUE, rowNames = TRUE,
+                 tableStyle = "tableStyleMedium3", withFilter = FALSE, headerStyle = styles$tableHeader);
+  addStyle(wb, sheet, style = styles$center, rows = (crow + 2):endrow, cols = cl:(cl + 1), gridExpand = TRUE, stack = TRUE);
+  cl = cl + dim(tbl)[[2]] + 2;
+
+  cl.table = cl - 1;
+  cl = cl + writeValuesTable(
+    wb, sheet, as.data.frame(setInsuranceValuesLabels(contract$Values$basicData)),
+    crow = crow, ccol = cl, tableName = tableName("Grunddaten_", id), styles = styles,
+    caption = "Vertragsgrunddaten im Zeitverlauf") + 1;
+
+  # Change InterestRate column to percent format
+  # Change premiumPayment column to single-digit column
+  # Change period columnts to normal numbers
+  cnames = colnames(contract$Values$basicData);
+
+  r = (crow + 2):endrow;
+  addStyle(wb, sheet, style = styles$rate, rows = r, cols = grep("^InterestRate$", cnames) + cl.table, gridExpand = TRUE, stack = TRUE);
+  addStyle(wb, sheet, style = styles$digit, rows = r,
+           cols = grep("^(PremiumPayment|PolicyDuration|PremiumPeriod)$", cnames) + cl.table,
+           gridExpand = TRUE, stack = TRUE);
+  addStyle(wb, sheet, style = styles$currency0, rows = r, cols = grep("^(SumInsured|Premiums)$", cnames) + cl.table, gridExpand = TRUE, stack = TRUE);
+
+  exportBlockID(wb, sheet, id = id, rows = blockid.row, cols = ccol:cl, styles = styles)
+  crow = endrow + seprows
+
+  for (b in contract$blocks) {
+    crow = exportBasicDataTable(
+      wb = wb, sheet = sheet, contract = b,
+      ccol = ccol, crow = crow, styles = styles, seprows = seprows, freeze = FALSE)
+  }
+  crow
+}
+
+exportReserveTable = function(wb, sheet, contract, ccol = 1, crow = 1, styles = c(), seprows = 5, freeze = TRUE) {
+  id = contract$Parameters$ContractData$id
+  nrrow = contract$Values$int$l
+
+  blockid.row = crow
+  crow = crow + 2
+
+  if (freeze) {
+    freezePane(wb, sheet, firstActiveRow = crow + 2, firstActiveCol = ccol + 2)
+  }
+  qp = contract$Values$transitionProbabilities[1:nrrow,]; # extract the probabilities once, will be needed in
+  cl = ccol
+
+  cl = cl + writeAgeQTable(wb, sheet, probs = qp, crow = crow, ccol = cl, styles = styles);
+  cl = cl + writeValuesTable(
+    wb, sheet, as.data.frame(setInsuranceValuesLabels(contract$Values$reserves)),
+    crow = crow, ccol = cl, tableName = tableName("Reserves_", id), styles = styles,
+    caption = "Reserven", valueStyle = styles$currency0) + 1;
+
+  oldccol = cl
+  cl = cl + writeValuesTable(
+    wb, sheet, as.data.frame(setInsuranceValuesLabels(contract$Values$reservesBalanceSheet)),
+    crow = crow, ccol = cl, tableName = tableName("Bilanzreserve_", id), styles = styles,
+    caption = "Bilanzreserve", valueStyle = styles$currency0) + 1;
+
+  endrow = (crow + 1 + nrrow)
+  addStyle(wb, sheet, style = createStyle(numFmt = "0.0##"), cols = oldccol,
+           rows = (crow + 2):endrow, gridExpand = TRUE, stack = TRUE);
+
+  exportBlockID(wb, sheet, id = id, rows = blockid.row, cols = ccol:cl, styles = styles)
+  crow = endrow + seprows
+
+  for (b in contract$blocks) {
+    crow = exportReserveTable(
+      wb = wb, sheet = sheet, contract = b,
+      ccol = ccol, crow = crow, styles = styles, seprows = seprows, freeze = FALSE)
+  }
+  crow
+}
+
+exportProfitParticipationTable = function(wb, sheet, contract, ccol = 1, crow = 1, styles = c(), seprows = 5, freeze = TRUE) {
+  id = contract$Parameters$ContractData$id
+  nrrow = contract$Values$int$l
+
+  blockid.row = crow
+  crow = crow + 2
+
+  if (freeze) {
+    freezePane(wb, sheet, firstActiveRow = crow + 2, firstActiveCol = ccol + 2)
+  }
+  qp = contract$Values$transitionProbabilities[1:contract$Values$int$l,]; # extract the probabilities once, will be needed in
+  cl = ccol
+
+  cl = cl + writeAgeQTable(wb, sheet, probs = qp, crow = crow, ccol = cl, styles = styles);
+  ccol.table = cl - 1;
+  cl = cl + writeValuesTable(wb, sheet, as.data.frame(setInsuranceValuesLabels(contract$Values$profitParticipation)),
+                               crow = crow, ccol = cl, tableName = tableName("ProfitParticipation_", id), styles = styles,
+                               # caption = "Gewinnbeteiligung",
+                               valueStyle = styles$currency0) + 1;
+
+  cnames = colnames(contract$Values$profitParticipation);
+  # Make sure "terminalBonusRate" is NOT matched! Need to use a negative lookahead..
+  baseCols = grep("^(?!terminal).*Base$", cnames, perl = TRUE);
+  rateCols = grep("^(?!terminal).*(Interest|Rate)$", cnames, perl = TRUE);
+  profitCols = grep(".*Profit$", cnames);
+  terminalBonusCols = grep("^terminal.*", cnames);
+  deathCols = grep("^death.*", cnames);
+  surrenderCols = grep("^surrender.*", cnames);
+  premiumWaiverCols = grep("^premiumWaiver.*", cnames);
+
+  endrow = (crow + 1 + nrrow)
+
+  # Rates are displayed in %:
+  addStyle(wb, sheet, style = styles$rate, rows = (crow + 2):endrow, cols = rateCols + ccol.table, gridExpand = TRUE, stack = TRUE);
+
+  # Add table headers for the various sections:
+  if (length(baseCols) > 0) {
+    writeTableCaption(wb, sheet, "Basisgrößen", rows = crow, cols = baseCols + ccol.table, style = styles$header);
+  }
+  if (length(rateCols) > 0) {
+    writeTableCaption(wb, sheet, "Gewinnbeteiligungssätze", rows = crow, cols = rateCols + ccol.table, style = styles$header);
+  }
+  if (length(profitCols) > 0) {
+    writeTableCaption(wb, sheet, "GB Zuweisungen", rows = crow, cols = profitCols + ccol.table, style = styles$header);
+  }
+  if (length(terminalBonusCols) > 0) {
+    writeTableCaption(wb, sheet, "Schlussgewinn", rows = crow, cols = terminalBonusCols + ccol.table, style = styles$header);
+  }
+  if (length(deathCols) > 0) {
+    writeTableCaption(wb, sheet, "Todesfallleistung", rows = crow, cols = deathCols + ccol.table, style = styles$header);
+  }
+  if (length(surrenderCols) > 0) {
+    writeTableCaption(wb, sheet, "Rückkauf", rows = crow, cols = surrenderCols + ccol.table, style = styles$header);
+  }
+  if (length(premiumWaiverCols) > 0) {
+    writeTableCaption(wb, sheet, "Prämienfreistellung", rows = crow, cols = premiumWaiverCols + ccol.table, style = styles$header);
+  }
+
+  exportBlockID(wb, sheet, id = id, rows = blockid.row, cols = ccol:cl, styles = styles)
+  crow = endrow + seprows
+
+  for (b in contract$blocks) {
+    crow = exportProfitParticipationTable(
+      wb = wb, sheet = sheet, contract = b,
+      ccol = ccol, crow = crow, styles = styles, seprows = seprows, freeze = FALSE)
+  }
+  crow
+}
+
+exportPremiumCompositionTable = function(wb, sheet, contract, ccol = 1, crow = 1, styles = c(), seprows = 5, freeze = TRUE) {
+  id = contract$Parameters$ContractData$id
+  nrrow = contract$Values$int$l
+
+  blockid.row = crow
+  crow = crow + 2
+
+  if (freeze) {
+    freezePane(wb, sheet, firstActiveRow = crow + 2, firstActiveCol = ccol + 2)
+  }
+  qp = contract$Values$transitionProbabilities[1:nrrow,]; # extract the probabilities once, will be needed in
+  cl = ccol
+
+  cl = cl + writeAgeQTable(wb, sheet, probs = qp, crow = crow, ccol = cl, styles = styles);
+  cl = cl + writeValuesTable(
+    wb, sheet, as.data.frame(setInsuranceValuesLabels(contract$Values$premiumComposition)),
+    crow = crow, ccol = cl, tableName = tableName("Premium_Decomposition_", id), styles = styles,
+    caption = "Prämienzerlegung", valueStyle = styles$currency0) + 1;
+
+  crow = crow + nrrow + 4;
+
+  cl = ccol
+  cl = cl + writeAgeQTable(wb, sheet, probs = qp, crow = crow, ccol = cl, styles = styles);
+  cl = cl + writeValuesTable(
+    wb, sheet, as.data.frame(setInsuranceValuesLabels(contract$Values$premiumCompositionSums)),
+    crow = crow, ccol = cl, tableName = tableName("Premium_DecompositionSums_", id), styles = styles,
+    caption = "Prämienzerlegung (Summe zukünftiger Prämien)", valueStyle = styles$currency0) + 1;
+
+  crow = crow + nrrow + 4;
+
+  cl = ccol
+  cl = cl + writeAgeQTable(wb, sheet, probs = qp, crow = crow, ccol = cl, styles = styles);
+  cl = cl + writeValuesTable(
+    wb, sheet, as.data.frame(setInsuranceValuesLabels(contract$Values$premiumCompositionPV)),
+    crow = crow, ccol = cl, tableName = tableName("Premium_DecompositionPV_", id), styles = styles,
+    caption = "Prämienzerlegung(Barwerte zukünftiger Prämien)", valueStyle = styles$currency0) + 1;
+
+  endrow = (crow + 1 + nrrow)
+
+  # Insert a separator line (with minimum height and dark background)
+  addStyle(wb, sheet, style = styles$separator, rows = (endrow + 2), cols = ccol:cl, gridExpand = TRUE, stack = TRUE)
+
+
+  exportBlockID(wb, sheet, id = id, rows = blockid.row, cols = ccol:cl, styles = styles)
+  crow = endrow + 2 + seprows
+
+  for (b in contract$blocks) {
+    crow = exportPremiumCompositionTable(
+      wb = wb, sheet = sheet, contract = b,
+      ccol = ccol, crow = crow, styles = styles, seprows = seprows, freeze = FALSE)
+  }
+  crow
+}
+
+exportAbsPVTable = function(wb, sheet, contract, ccol = 1, crow = 1, styles = c(), seprows = 5, freeze = TRUE) {
+  id = contract$Parameters$ContractData$id
+  nrrow = contract$Values$int$l
+
+  blockid.row = crow
+  crow = crow + 2
+  endrow = (crow + 1 + nrrow)
+
+  if (freeze) {
+    freezePane(wb, sheet, firstActiveRow = crow + 2, firstActiveCol = ccol + 2)
+  }
+  qp = contract$Values$transitionProbabilities[1:nrrow,]; # extract the probabilities once, will be needed in
+  cl = ccol
+
+  cl = cl + writeAgeQTable(wb, sheet, probs = qp, crow = crow, ccol = cl, styles = styles);
+  cl = cl + writeValuesTable(
+    wb, sheet, as.data.frame(setInsuranceValuesLabels(contract$Values$absPresentValues)),
+    crow = crow, ccol = cl, tableName = tableName("PVabsolute_", id), styles = styles,
+    caption = "abs. Leistungs- und Kostenbarwerte", valueStyle = styles$currency0) + 1;
+
+  exportBlockID(wb, sheet, id = id, rows = blockid.row, cols = ccol:cl, styles = styles)
+  crow = endrow + seprows
+
+  for (b in contract$blocks) {
+    crow = exportAbsPVTable(
+      wb = wb, sheet = sheet, contract = b,
+      ccol = ccol, crow = crow, styles = styles, seprows = seprows, freeze = FALSE)
+  }
+  crow
+}
+
+exportAbsCFTable = function(wb, sheet, contract, ccol = 1, crow = 1, styles = c(), seprows = 5, freeze = TRUE) {
+  id = contract$Parameters$ContractData$id
+  nrrow = contract$Values$int$l
+
+  blockid.row = crow
+  crow = crow + 2
+  endrow = (crow + 1 + nrrow)
+
+  if (freeze) {
+    freezePane(wb, sheet, firstActiveRow = crow + 2, firstActiveCol = ccol + 2)
+  }
+  qp = contract$Values$transitionProbabilities[1:nrrow,]; # extract the probabilities once, will be needed in
+  cl = ccol
+
+  cl = cl + writeAgeQTable(wb, sheet, probs = qp, crow = crow, ccol = cl, styles = styles);
+  cl = cl + writeValuesTable(
+    wb, sheet, as.data.frame(setInsuranceValuesLabels(contract$Values$absCashFlows)),
+    crow = crow, ccol = cl, tableName = tableName("CFabsolute_", id), styles = styles,
+    caption = "abs. Leistungs- und Kostencashflows", valueStyle = styles$currency0) + 1;
+
+  exportBlockID(wb, sheet, id = id, rows = blockid.row, cols = ccol:cl, styles = styles)
+  crow = endrow + seprows
+
+  for (b in contract$blocks) {
+    crow = exportAbsCFTable(
+      wb = wb, sheet = sheet, contract = b,
+      ccol = ccol, crow = crow, styles = styles, seprows = seprows, freeze = FALSE)
+  }
+  crow
+}
+
+exportPVTable = function(wb, sheet, contract, ccol = 1, crow = 1, styles = c(), seprows = 5, freeze = TRUE) {
+  if (!is.null(contract$Values$presentValues)) {
+    id = contract$Parameters$ContractData$id
+    nrrow = contract$Values$int$l
+
+    blockid.row = crow
+    crow = crow + 2
+    if (freeze) {
+      freezePane(wb, sheet, firstActiveRow = crow + 2 + 6, firstActiveCol = ccol + 2)
+    }
+
+    # Time the premium was last calculated (i.e. access the present values at that time rather than 0 in the formulas for the premium)
+    tPrem = contract$Values$int$premiumCalculationTime
+
+    qp = contract$Values$transitionProbabilities[1:nrrow,]; # extract the probabilities once, will be needed in
+    costPV = as.data.frame(contract$tarif$costValuesAsMatrix(setInsuranceValuesLabels(contract$Values$presentValuesCosts)));
+    cl = ccol
+
+    # We add six lines before the present values to show the coefficients for the premium calculation
+    cl = cl + writeAgeQTable(wb, sheet, probs = qp, crow = crow + 6, ccol = cl, styles = styles);
+
+    # Store the start/end columns of the coefficients, since we need them later in the formula for the premiums!
+    w1 = writePremiumCoefficients(wb, sheet, contract$Values$premiumCoefficients, type = "benefits", crow = crow, ccol = cl - 2, tarif = contract$tarif);
+    area.premiumcoeff = paste0(int2col(cl), "%d:", int2col(cl + w1 - 1), "%d");
+    area.premiumvals  = paste0("$", int2col(cl), "$", crow + 6 + 2 + tPrem, ":$", int2col(cl + w1 - 1), "$", crow + 6 + 2 + tPrem);
+    cl = cl + writeValuesTable(wb, sheet, as.data.frame(setInsuranceValuesLabels(contract$Values$presentValues)),
+                                  crow = crow + 6, ccol = cl, tableName = tableName("PresentValues_Benefits_", id), styles = styles,
+                                  caption = "Leistungsbarwerte", valueStyle = styles$pv0) + 1;
+
+    w2 = writePremiumCoefficients(wb, sheet, contract$Values$premiumCoefficients, type = "costs", crow = crow, ccol = cl - 2, tarif = contract$tarif);
+    area.costcoeff = paste0(int2col(cl), "%d:", int2col(cl + w2 - 1), "%d");
+    area.costvals  = paste0("$", int2col(cl), "$", crow + 6 + 2 + tPrem, ":$", int2col(cl + w2 - 1), "$", crow + 6 + 2 + tPrem);
+    cl = cl + writeValuesTable(wb, sheet, as.data.frame(costPV),
+                               crow = crow + 6, ccol = cl, tableName = tableName("PresentValues_Costs_", id), styles = styles,
+                               caption = "Kostenbarwerte", valueStyle = styles$cost0) + 1;
+
+    # Now print out the formulas for premium calculation into the columns 2 and 3:
+    writeData(wb, sheet, as.data.frame(c("Nettoprämie", contract$Values$premiums[["net"]],"Zillmerprämie", contract$Values$premiums[["Zillmer"]], "Bruttoprämie", contract$Values$premiums[["gross"]])), startCol = ccol, startRow = crow, colNames = FALSE, borders = "rows");
+    for (i in 0:5) {
+      writeFormula(wb, sheet, paste0("SUMPRODUCT(", sprintf(area.premiumcoeff, crow + i, crow + i), ", ", area.premiumvals, ") + SUMPRODUCT(", sprintf(area.costcoeff, crow + i, crow + i), ", ", area.costvals, ")"), startCol = ccol + 2, startRow = crow + i);
+      addStyle(wb, sheet, style = styles$pv0, rows = crow + i, cols = ccol + 2, stack = TRUE);
+    }
+    for (i in c(0,2,4)) {
+      writeFormula(wb, sheet, paste0(int2col(3), crow + i, "/", int2col(ccol + 2), crow + i + 1), startCol = ccol + 1, startRow = crow + i);
+      addStyle(wb, sheet, style = styles$pv0, rows = crow + i, cols = ccol + 1, stack = TRUE);
+    }
+    for (i in c(1,3,5)) {
+      writeFormula(wb, sheet, paste0(int2col(2), crow + i - 1, "*", contract$Parameters$ContractData$sumInsured), startCol = ccol + 1, startRow = crow + i);
+      addStyle(wb, sheet, style = styles$currency0, rows = crow + i, cols = ccol:(ccol + 1), stack = TRUE, gridExpand = TRUE);
+    }
+
+
+    endrow = (crow + 6 + 1 + nrrow)
+    exportBlockID(wb, sheet, id = id, rows = blockid.row, cols = ccol:cl, styles = styles)
+    crow = endrow + seprows
+  }
+
+  for (b in contract$blocks) {
+    crow = exportPVTable(
+      wb = wb, sheet = sheet, contract = b,
+      ccol = ccol, crow = crow, styles = styles, seprows = seprows, freeze = FALSE)
+  }
+  crow
+}
+
+exportCFTable = function(wb, sheet, contract, ccol = 1, crow = 1, styles = c(), seprows = 5, freeze = TRUE) {
+  # Write out only if the contract has unit cash flows (i.e. it is a leave contract block without children on its own!)
+  if (!is.null(contract$Values$cashFlows)) {
+    id = contract$Parameters$ContractData$id
+    nrrow = contract$Values$int$l
+
+    blockid.row = crow
+    crow = crow + 2
+    endrow = (crow + 1 + nrrow)
+
+    if (freeze) {
+      freezePane(wb, sheet, firstActiveRow = crow + 2, firstActiveCol = ccol + 2)
+    }
+    qp = contract$Values$transitionProbabilities[1:nrrow,]; # extract the probabilities once, will be needed in
+    cl = ccol
+
+    cl = cl + writeAgeQTable(wb, sheet, probs = qp, crow = crow, ccol = cl, styles = styles);
+    cl = cl + writeValuesTable(
+      wb, sheet, setInsuranceValuesLabels(contract$Values$cashFlows),
+      crow = crow, ccol = cl, tableName = tableName("CF_", id), styles = styles,
+      caption = "Leistungscashflows", valueStyle = styles$hide0) + 1;
+    costCF = as.data.frame(contract$tarif$costValuesAsMatrix(setInsuranceValuesLabels(contract$Values$cashFlowsCosts)));
+    cl = cl + writeValuesTable(
+      wb, sheet, costCF,
+      crow = crow, ccol = cl, tableName = tableName("CFcosts_", id), styles = styles,
+      caption = "Kostencashflows", valueStyle = styles$cost0) + 1;
+
+    exportBlockID(wb, sheet, id = id, rows = blockid.row, cols = ccol:cl, styles = styles)
+    crow = endrow + seprows
+  }
+
+  for (b in contract$blocks) {
+    crow = exportCFTable(
+      wb = wb, sheet = sheet, contract = b,
+      ccol = ccol, crow = crow, styles = styles, seprows = seprows, freeze = FALSE)
+  }
+  crow
+}
+
+
+
 
 
 ############################################################################### #
@@ -203,18 +776,20 @@ exportInsuranceContract.xlsx = function(contract, filename) {
   # TODO: argument checking for contract and filename
 
   ###
-  nrrows = dim(contract$Values$cashFlows)[[1]]; # Some vectors are longer(e.g. qx), so determine the max nr or rows
+  nrrows = contract$Values$int$l; # Some vectors are longer(e.g. qx), so determine the max nr or rows
   qp = contract$Values$transitionProbabilities[1:nrrows,]; # extract the probabilities once, will be needed in every sheet
 
   ############################################### #
   # Style information                          ####
   ############################################### #
   styles = list(
+    blockID = createStyle(border = "Bottom", borderColour = "#ab6310", fgFill = "#d0d0d0", halign = "left", textDecoration = "bold", fontSize = 14),
     header = createStyle(border = "TopBottomLeftRight", borderColour = "#DA9694", borderStyle = "medium",
                          fgFill = "#C0504D", fontColour = "#FFFFFF",
                          halign = "center", valign = "center", textDecoration = "bold"),
-    tableHeader = createStyle(#border = "TopLeftRight", borderColour = "#DA9694", borderstyle = "medium",
-                              #bgFill = "#C0504D", fontColour = "#FFFFFF",
+    tableHeader = createStyle(#border = "To2pLeftRight", borderColour = "#DA9694", borderstyle = "medium",
+                              #bgFill = "#2C0504D", fontColour = "#FFFFFF",
+                              fgFill = "#E0E0E0",
                               halign = "center", valign = "center", textDecoration = "bold"),
     hide0 = createStyle(numFmt = "General; General; \"\""),
     currency0 = createStyle(numFmt = "[$€-C07] #,##0.00;[red]-[$€-C07] #,##0.00;\"\""),
@@ -224,7 +799,9 @@ exportInsuranceContract.xlsx = function(contract, filename) {
     rate = createStyle(numFmt = "0.00####%"),
     digit = createStyle(numFmt = "0;-0;\"\""),
     wrap = createStyle(wrapText = TRUE),
-    center = createStyle(halign = "center", valign = "center")
+    center = createStyle(halign = "center", valign = "center"),
+    separator = createStyle(fgFill = "#000000"),
+    unitpremiums = createStyle(numFmt = "0.00000%; -0.00000%;")
   );
 
   ############################################### #
@@ -232,79 +809,17 @@ exportInsuranceContract.xlsx = function(contract, filename) {
   ############################################### #
   wb = openxlsx::createWorkbook();
 
-  # Print out general Contract and Tariff information, including results
-  sheet = "Tarifinformationen"
-  addWorksheet(wb, sheet);
-  crow = 1;
-  writeData(wb, sheet, matrix(c(
-    "Tarif:", contract$tarif$tarif,
-    "Tarifname:", contract$tarif$name,
-    "Description:", contract$tarif$desc
-  ), 3, 2, byrow = TRUE), startCol = 1, startRow = 1, colNames = FALSE, rowNames = FALSE);
-  mergeCells(wb, sheet, cols = 2:10, rows = 1);
-  mergeCells(wb, sheet, cols = 2:10, rows = 2);
-  mergeCells(wb, sheet, cols = 2:10, rows = 3);
-  addStyle(wb, sheet, style = styles$wrap, rows = 3, cols = 2:10, stack = TRUE);
-  addStyle(wb, sheet, style = createStyle(valign = "top"), rows = 1:3, cols = 1:10, gridExpand = TRUE, stack = TRUE);
-  setColWidths(wb, sheet, cols = 1:50, widths = "auto", ignoreMergedCells = TRUE);
-
-  crow = crow + 4;
 
   ############################################### #
   # Basic parameters                           ####
   ############################################### #
-  values = c(
-    "Sum insured"         = contract$Parameters$ContractData$sumInsured,
-    "Mortality table"     = contract$Parameters$ActuarialBases$mortalityTable@name,
-    "YOB"                 = contract$Parameters$ContractData$YOB,
-    "Age"                 = contract$Parameters$ContractData$age,
-    "Technical Age"       = contract$Parameters$ContractData$technicalAge,
-    "Policy duration"     = contract$Parameters$ContractData$policyPeriod,
-    "Premium period"      = contract$Parameters$ContractData$premiumPeriod,
-    "Deferral period"     = contract$Parameters$ContractData$deferralPeriod,
-    "Guaranteed payments" = contract$Parameters$ContractData$guaranteed,
-    i                     = contract$Parameters$ActuarialBases$i
-  );
-  # Some types of tables don't need the birth year -> leave it out rather than throwing an error on opening in Excel!
-  if (is.null(values["YOB"])) values["YOB"] = NULL;
 
-  writeData(wb, sheet, "Basisdaten des Vertrags und Tarifs", startCol = 1, startRow = crow);
-  mergeCells(wb, sheet, cols = 1:length(values), rows = crow:crow);
-  writeDataTable(wb, sheet, setInsuranceValuesLabels(as.data.frame(t(values))),
-                 startCol = 1, startRow = crow + 1, colNames = TRUE, rowNames = FALSE,
-                 tableStyle = "tableStyleMedium3", withFilter = FALSE, headerStyle = styles$tableHeader);
-
-  crow = crow + 4;
-
-  # Premiums
-  writeData(wb, sheet, "Prämien", startCol = 1, startRow = crow);
-  mergeCells(wb, sheet, cols = 1:length(contract$Values$premiums), rows = crow:crow);
-  writeDataTable(wb, sheet, setInsuranceValuesLabels(as.data.frame(t(contract$Values$premiums))),
-                 startCol = 1, startRow = crow + 1, colNames = TRUE, rowNames = FALSE,
-                 tableStyle = "tableStyleMedium3", withFilter = FALSE, headerStyle = styles$tableHeader);
-  crow = crow + 4;
-
-  # Cost structure:
-  costtable = as.data.frame.table(setInsuranceValuesLabels(contract$Parameters$Costs) )
-  colnames(costtable) = c("Kostenart", "Basis", "Periode", "Kostensatz");
-  costtable = costtable[costtable[,"Kostensatz"] != 0.0000,]
-  writeValuesTable(wb, sheet, costtable, crow = crow, ccol = 1, tableName = "Kosten", styles = styles, caption = "Kosten");
-  # writeDataTable(wb, sheet, costtable, startCol = 1, startRow = crow + 1, colNames = TRUE, rowNames = FALSE,
-                 # tableStyle = "tableStyleMedium3", headerStyle = styles$tableHeader);
-  addStyle(wb, sheet, style = styles$cost0, rows = (crow + 2):(crow + dim(costtable)[[1]] + 1), cols = 4, stack = TRUE);
-  setColWidths(wb, sheet, cols = 1:50, widths = "auto", ignoreMergedCells = TRUE)
-  crow = crow + dim(costtable)[[1]] + 3;
-
-  # Contract history
-  # time=t, comment=sprintf("Premium waiver at time %d", t), type = "PremiumWaiver"
-  histtime = unlist(lapply(contract$history, function(xl) xl$time));
-  histcomment = unlist(lapply(contract$history, function(xl) xl$comment));
-  histtype = unlist(lapply(contract$history, function(xl) xl$type));
-  writeValuesTable(wb, sheet, setInsuranceValuesLabels(data.frame(time = histtime, Comment = histcomment, type = histtype)),
-                   crow = crow, ccol = 1, tableName = "Vertragshistorie", styles = styles,
-                   caption = "Vertragshistorie");
-  crow = crow + dim(histtime)[[1]] + 3;
-
+  # Print out general Contract and Tariff information, including results
+  sheet = "Tarifinformationen"
+  addValuesWorksheet(wb, sheet);
+  exportContractDataTable(
+    wb, sheet = sheet, contract = contract,
+    ccol = 1, crow = 1, styles = styles)
 
 
   ################################################# #
@@ -312,38 +827,10 @@ exportInsuranceContract.xlsx = function(contract, filename) {
   ################################################# #
 
   sheet = "Basisdaten";
-  addWorksheet(wb, sheet);
-
-  # Age, death and survival probabilities
-  ccol = 1;
-  crow = 4;
-  tbl = qp[,"age", drop = FALSE];
-  writeDataTable(wb, sheet, setInsuranceValuesLabels(tbl),
-                 startRow = crow + 1, startCol = ccol, colNames = TRUE, rowNames = TRUE,
-                 tableStyle = "tableStyleMedium3", withFilter = FALSE, headerStyle = styles$tableHeader);
-  freezePane(wb, sheet, firstActiveRow = crow + 2, firstActiveCol = ccol + 2)
-  addStyle(wb, sheet, style = styles$center, rows = (crow + 2):(crow + 1 + dim(tbl)[[1]]), cols = ccol:(ccol + 1), gridExpand = TRUE, stack = TRUE);
-  ccol = ccol + dim(tbl)[[2]] + 2;
-
-  ccol.table = ccol - 1;
-  ccol = ccol + writeValuesTable(wb, sheet, as.data.frame(setInsuranceValuesLabels(contract$Values$basicData)),
-                                 crow = crow, ccol = ccol, tableName = "Grunddaten", styles = styles,
-                                 caption = "Vertragsgrunddaten im Zeitverlauf") + 1;
-  setColWidths(wb, sheet, cols = 1:50, widths = "auto", ignoreMergedCells = TRUE)
-
-  # Change InterestRate column to percent format
-  # Change premiumPayment column to single-digit column
-  # Change period columnts to normal numbers
-  nrrow = dim(contract$Values$basicData)[[1]];
-  cnames = colnames(contract$Values$basicData);
-
-  r = (crow + 2):(crow + nrrow + 1);
-  addStyle(wb, sheet, style = styles$rate, rows = r, cols = grep("^InterestRate$", cnames) + ccol.table, gridExpand = TRUE, stack = TRUE);
-  addStyle(wb, sheet, style = styles$digit, rows = r,
-           cols = grep("^(PremiumPayment|PolicyDuration|PremiumPeriod)$", cnames) + ccol.table,
-           gridExpand = TRUE, stack = TRUE);
-  addStyle(wb, sheet, style = styles$currency0, rows = r, cols = grep("^(SumInsured|Premiums)$", cnames) + ccol.table, gridExpand = TRUE, stack = TRUE);
-
+  addValuesWorksheet(wb, sheet);
+  exportBasicDataTable(
+    wb = wb, sheet = sheet, contract = contract,
+    ccol = 1, crow = 4, styles = styles)
 
 
   ############################################### #
@@ -351,24 +838,10 @@ exportInsuranceContract.xlsx = function(contract, filename) {
   ############################################### #
 
   sheet = "Reserven";
-  addWorksheet(wb, sheet);
-
-  # Age, death and survival probabilities
-  ccol = 1;
-  crow = 4;
-
-  ccol = ccol + writeAgeQTable(wb, sheet, probs = qp, crow = crow, ccol = 1, styles = styles);
-  ccol = ccol + writeValuesTable(wb, sheet, as.data.frame(setInsuranceValuesLabels(contract$Values$reserves)),
-                                 crow = crow, ccol = ccol, tableName = "Reserves", styles = styles,
-                                 caption = "Reserven", valueStyle = styles$currency0) + 1;
-
-  oldccol = ccol
-  ccol = ccol + writeValuesTable(wb, sheet, as.data.frame(setInsuranceValuesLabels(contract$Values$reservesBalanceSheet)),
-                                 crow = crow, ccol = ccol, tableName = "Bilanzreserve", styles = styles,
-                                 caption = "Bilanzreserve", valueStyle = styles$currency0) + 1;
-  addStyle(wb, sheet, style = createStyle(numFmt = "0.0##"), cols = oldccol, rows = (crow + 2):(crow + 1 + dim(contract$Values$reservesBalanceSheet)[[1]]), gridExpand = TRUE, stack = TRUE);
-
-  setColWidths(wb, sheet, cols = 1:50, widths = "auto", ignoreMergedCells = TRUE)
+  addValuesWorksheet(wb, sheet);
+  exportReserveTable(
+    wb = wb, sheet = sheet, contract = contract,
+    ccol = 1, crow = 4, styles = styles)
 
 
   ################################################ #
@@ -376,173 +849,57 @@ exportInsuranceContract.xlsx = function(contract, filename) {
   ################################################ #
 
   if (!is.null(contract$Values$profitParticipation)) {
-  sheet = "Gewinnbeteiligung";
-  addWorksheet(wb, sheet);
-
-  # Age, death and survival probabilities
-  ccol = 1;
-  crow = 4;
-
-  ccol = ccol + writeAgeQTable(wb, sheet, probs = qp, crow = crow, ccol = 1, styles = styles);
-  ccol.table = ccol - 1;
-  ccol = ccol + writeValuesTable(wb, sheet, as.data.frame(setInsuranceValuesLabels(contract$Values$profitParticipation)),
-                                 crow = crow, ccol = ccol, tableName = "ProfitParticipation", styles = styles,
-                                 # caption = "Gewinnbeteiligung",
-                                 valueStyle = styles$currency0) + 1;
-
-  nrrow = dim(contract$Values$profitParticipation)[[1]];
-
-  cnames = colnames(contract$Values$profitParticipation);
-  # Make sure "terminalBonusRate" is NOT matched! Need to use a negative lookahead..
-  baseCols = grep("^(?!terminal).*Base$", cnames, perl = TRUE);
-  rateCols = grep("^(?!terminal).*(Interest|Rate)$", cnames, perl = TRUE);
-  profitCols = grep(".*Profit$", cnames);
-  terminalBonusCols = grep("^terminal.*", cnames);
-  deathCols = grep("^death.*", cnames);
-  surrenderCols = grep("^surrender.*", cnames);
-  premiumWaiverCols = grep("^premiumWaiver.*", cnames);
-
-  # Rates are displayed in %:
-  addStyle(wb, sheet, style = styles$rate, rows = (crow + 2):(crow + nrrow + 1), cols = rateCols + ccol.table, gridExpand = TRUE, stack = TRUE);
-
-  # Add table headers for the various sections:
-  if (length(baseCols) > 0) {
-      writeTableCaption(wb, sheet, "Basisgrößen", rows = crow, cols = baseCols + ccol.table, style = styles$header);
-  }
-  if (length(rateCols) > 0) {
-      writeTableCaption(wb, sheet, "Gewinnbeteiligungssätze", rows = crow, cols = rateCols + ccol.table, style = styles$header);
-  }
-  if (length(profitCols) > 0) {
-      writeTableCaption(wb, sheet, "GB Zuweisungen", rows = crow, cols = profitCols + ccol.table, style = styles$header);
-  }
-  if (length(terminalBonusCols) > 0) {
-      writeTableCaption(wb, sheet, "Schlussgewinn", rows = crow, cols = terminalBonusCols + ccol.table, style = styles$header);
-  }
-  if (length(deathCols) > 0) {
-      writeTableCaption(wb, sheet, "Todesfallleistung", rows = crow, cols = deathCols + ccol.table, style = styles$header);
-  }
-  if (length(surrenderCols) > 0) {
-      writeTableCaption(wb, sheet, "Rückkauf", rows = crow, cols = surrenderCols + ccol.table, style = styles$header);
-  }
-  if (length(premiumWaiverCols) > 0) {
-      writeTableCaption(wb, sheet, "Prämienfreistellung", rows = crow, cols = premiumWaiverCols + ccol.table, style = styles$header);
+    sheet = "Gewinnbeteiligung";
+    addValuesWorksheet(wb, sheet);
+    exportProfitParticipationTable(
+      wb = wb, sheet = sheet, contract = contract,
+      ccol = 1, crow = 4, styles = styles)
   }
 
-  setColWidths(wb, sheet, cols = 1:50, widths = "auto", ignoreMergedCells = TRUE)
-
-  }
 
   ############################################### #
   # Print out premium decomposition            ####
   ############################################### #
 
-  # Age, death and survival probabilities
-  crow = 4;
   sheet = "Prämienzerlegung";
-  addWorksheet(wb, sheet);
+  addValuesWorksheet(wb, sheet);
+  exportPremiumCompositionTable(
+    wb = wb, sheet = sheet, contract = contract,
+    ccol = 1, crow = 4, styles = styles)
 
-  crow = crow + dim(qp)[[1]] + 4;
-  ccol = 1 + writeAgeQTable(wb, sheet, probs = qp, crow = crow, ccol = 1, styles = styles);
-  ccol = ccol + writeValuesTable(wb, sheet, as.data.frame(setInsuranceValuesLabels(contract$Values$premiumCompositionSums)),
-                                 crow = crow, ccol = ccol, tableName = "Premium_DecompositionSums", styles = styles,
-                                 caption = "Prämienzerlegung(Summe zukünftiger Prämien)", valueStyle = styles$currency0) + 1;
-
-  crow = crow + dim(qp)[[1]] + 4;
-  ccol = 1 + writeAgeQTable(wb, sheet, probs = qp, crow = crow, ccol = 1, styles = styles);
-  ccol = ccol + writeValuesTable(wb, sheet, as.data.frame(setInsuranceValuesLabels(contract$Values$premiumCompositionPV)),
-                                 crow = crow, ccol = ccol, tableName = "Premium_DecompositionPV", styles = styles,
-                                 caption = "Prämienzerlegung(Barwerte zukünftiger Prämien)", valueStyle = styles$currency0) + 1;
-
-  # Write out the absolute premium decomposition last, because that one freezes the pane
-  crow = 4;
-  ccol = 1 + writeAgeQTable(wb, sheet, probs = qp, crow = crow, ccol = 1, styles = styles);
-  ccol = ccol + writeValuesTable(wb, sheet, as.data.frame(setInsuranceValuesLabels(contract$Values$premiumComposition)),
-                                 crow = crow, ccol = ccol, tableName = "Premium_Decomposition", styles = styles,
-                                 caption = "Prämienzerlegung", valueStyle = styles$currency0) + 1;
-
-  setColWidths(wb, sheet, cols = 1:50, widths = "auto", ignoreMergedCells = TRUE)
 
   ################################################ #
   # Print out absolute values of present values ####
   ################################################ #
 
   sheet = "abs.Barwerte";
-  addWorksheet(wb, sheet);
-
-    # Age, death and survival probabilities
-  ccol = 1;
-  crow = 4;
-  ccol = ccol + writeAgeQTable(wb, sheet, probs = qp, crow = crow, ccol = 1, styles = styles);
-
-  ccol = ccol + writeValuesTable(wb, sheet, as.data.frame(setInsuranceValuesLabels(contract$Values$absPresentValues)),
-                                 crow = crow, ccol = ccol, tableName = "PresentValues_absolute", styles = styles,
-                                 caption = "abs. Leistungs- und Kostenbarwerte", valueStyle = styles$currency0) + 1;
-  setColWidths(wb, sheet, cols = 1:50, widths = "auto", ignoreMergedCells = TRUE)
+  addValuesWorksheet(wb, sheet);
+  exportAbsPVTable(
+    wb = wb, sheet = sheet, contract = contract,
+    ccol = 1, crow = 4,styles = styles)
 
 
   ############################################### #
   # Print out absolute values for cash flows   ####
   ############################################### #
 
-  # Age, death and survival probabilities
-  ccol = 1;
-  crow = 4;
   sheet = "abs.Cash-Flows";
-  addWorksheet(wb, sheet);
-  ccol = ccol + writeAgeQTable(wb, sheet, probs = qp, crow = crow, ccol = 1, styles = styles);
-  ccol = ccol + writeValuesTable(wb, sheet, as.data.frame(setInsuranceValuesLabels(contract$Values$absCashFlows)),
-                                 crow = crow, ccol = ccol, tableName = "CashFlows_absolute", styles = styles,
-                                 caption = "abs. Leistungs- und Kostencashflows", valueStyle = styles$currency0) + 1;
-  setColWidths(wb, sheet, cols = 1:50, widths = "auto", ignoreMergedCells = TRUE)
+  addValuesWorksheet(wb, sheet);
+  exportAbsCFTable(
+    wb = wb, sheet = sheet, contract = contract,
+    ccol = 1, crow = 4, styles = styles)
 
 
   ############################################### #
   # Print out present values                   ####
   ############################################### #
 
+  # TODO-blocks
   sheet = "Barwerte";
-  addWorksheet(wb, sheet);
-
-    # Age, death and survival probabilities
-  costPV = as.data.frame(contract$tarif$costValuesAsMatrix(setInsuranceValuesLabels(contract$Values$presentValuesCosts)));
-  ccol = 1;
-  crow = 4;
-  # We add six lines before the present values to show the coefficients for the premium calculation
-  ccol = ccol + writeAgeQTable(wb, sheet, probs = qp, crow = crow + 6, ccol = 1, styles = styles);
-
-  # Time the premium was last calculated (i.e. access the present values at that time rather than 0 in the formulas for the premium)
-  tPrem = contract$Values$int$premiumCalculationTime
-
-  # Store the start/end columns of the coefficients, since we need them later in the formula for the premiums!
-  w1 = writePremiumCoefficients(wb, sheet, contract$Values$premiumCoefficients, type = "benefits", crow = crow, ccol = ccol - 2, tarif = contract$tarif);
-  area.premiumcoeff = paste0(int2col(ccol), "%d:", int2col(ccol + w1 - 1), "%d");
-  area.premiumvals  = paste0("$", int2col(ccol), "$", crow + 6 + 2 + tPrem, ":$", int2col(ccol + w1 - 1), "$", crow + 6 + 2 + tPrem);
-  ccol = ccol + writeValuesTable(wb, sheet, as.data.frame(setInsuranceValuesLabels(contract$Values$presentValues)),
-                                 crow = crow + 6, ccol = ccol, tableName = "PresentValues_Benefits", styles = styles,
-                                 caption = "Leistungsbarwerte", valueStyle = styles$pv0) + 1;
-
-  w2 = writePremiumCoefficients(wb, sheet, contract$Values$premiumCoefficients, type = "costs", crow = crow, ccol = ccol - 2, tarif = contract$tarif);
-  area.costcoeff = paste0(int2col(ccol), "%d:", int2col(ccol + w2 - 1), "%d");
-  area.costvals  = paste0("$", int2col(ccol), "$", crow + 6 + 2 + tPrem, ":$", int2col(ccol + w2 - 1), "$", crow + 6 + 2 + tPrem);
-  ccol = ccol + writeValuesTable(wb, sheet, as.data.frame(costPV),
-                                 crow = crow + 6, ccol = ccol, tableName = "PresentValues_Costs", styles = styles,
-                                 caption = "Kostenbarwerte", valueStyle = styles$cost0) + 1;
-
-  # Now print out the formulas for premium calculation into the columns 2 and 3:
-  writeData(wb, sheet, as.data.frame(c("Nettoprämie", contract$Values$premiums[["net"]],"Zillmerprämie", contract$Values$premiums[["Zillmer"]], "Bruttoprämie", contract$Values$premiums[["gross"]])), startCol = 1, startRow = crow, colNames = FALSE, borders = "rows");
-  for (i in 0:5) {
-    writeFormula(wb, sheet, paste0("SUMPRODUCT(", sprintf(area.premiumcoeff, crow + i, crow + i), ", ", area.premiumvals, ") + SUMPRODUCT(", sprintf(area.costcoeff, crow + i, crow + i), ", ", area.costvals, ")"), startCol = 3, startRow = crow + i);
-    addStyle(wb, sheet, style = styles$pv0, rows = crow + i, cols = 3, stack = TRUE);
-  }
-  for (i in c(0,2,4)) {
-    writeFormula(wb, sheet, paste0(int2col(3), crow + i, "/", int2col(3), crow + i + 1), startCol = 2, startRow = crow + i);
-    addStyle(wb, sheet, style = styles$pv0, rows = crow + i, cols = 2, stack = TRUE);
-  }
-  for (i in c(1,3,5)) {
-    writeFormula(wb, sheet, paste0(int2col(2), crow + i - 1, "*", contract$Parameters$ContractData$sumInsured), startCol = 2, startRow = crow + i);
-    addStyle(wb, sheet, style = styles$currency0, rows = crow + i, cols = 1:2, stack = TRUE, gridExpand = TRUE);
-  }
-  setColWidths(wb, sheet, cols = 1:50, widths = "auto", ignoreMergedCells = TRUE)
+  addValuesWorksheet(wb, sheet);
+  exportPVTable(
+    wb = wb, sheet = sheet, contract = contract,
+    ccol = 1, crow = 4,styles = styles)
 
 
   ############################################## #
@@ -550,22 +907,17 @@ exportInsuranceContract.xlsx = function(contract, filename) {
   ############################################## #
 
   sheet = "Cash-Flows";
-  addWorksheet(wb, sheet);
-
-  # Age, death and survival probabilities
-  costCF = as.data.frame(contract$tarif$costValuesAsMatrix(setInsuranceValuesLabels(contract$Values$cashFlowsCosts)));
-  ccol = 1;
-  crow = 4;
-  ccol = ccol + writeAgeQTable(wb, sheet, probs = qp, crow = crow, ccol = 1, styles = styles);
-  ccol = ccol + writeValuesTable(wb, sheet, setInsuranceValuesLabels(contract$Values$cashFlows),
-                                 crow = crow, ccol = ccol, tableName = "CashFlows_Benefits", styles = styles,
-                                 caption = "Leistungscashflows", valueStyle = styles$hide0) + 1;
-  ccol = ccol + writeValuesTable(wb, sheet, costCF,
-                                 crow = crow, ccol = ccol, tableName = "CashFlows_Costs", styles = styles,
-                                 caption = "Kostencashflows", valueStyle = styles$cost0) + 1;
-  setColWidths(wb, sheet, cols = 1:50, widths = "auto", ignoreMergedCells = TRUE)
+  addValuesWorksheet(wb, sheet);
+  exportCFTable(
+    wb = wb, sheet = sheet, contract = contract,
+    ccol = 1, crow = 4, styles = styles)
 
 
+
+
+  ############################################## #
+  # Save file                                 ####
+  ############################################## #
 
   openxlsx::saveWorkbook(wb, filename, overwrite = TRUE)
 
