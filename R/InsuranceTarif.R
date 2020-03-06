@@ -583,13 +583,21 @@ InsuranceTarif = R6Class(
     premiumCalculation = function(params, values, start = 0) {
       loadings = params$Loadings;
       sumInsured = params$ContractData$sumInsured
-      values$premiums = c("unit.net" = 0, "unit.Zillmer" = 0, "unit.gross" = 0, "net" = 0, "Zillmer" = 0, "gross" = 0, "written" = 0);
+      values$premiums = c(
+        "unit.net" = 0, "unit.Zillmer" = 0, "unit.gross" = 0,
+        "net" = 0, "Zillmer" = 0, "gross" = 0,
+        "unitcost" = 0, "written_yearly" = 0,
+        "written_beforetax" = 0, "tax" = 0, "written" = 0);
       coefficients = list("gross" = c(), "Zillmer" = c(), "net" = c());
 
       # Get the present values of the premiums, claims and costs at time 'start' (where the premium is to be calculated)
       t = as.character(start)
       pv = values$presentValues[t,]
       pvCost = values$presentValuesCosts[t,,]
+
+      if (pv[["premiums"]] == 0) {
+        return(list("premiums" = values$premiums, "coefficients" = coefficients))
+      }
 
 
       # net, gross and Zillmer premiums are calculated from the present values using the coefficients on each present value as described in the formulas document
@@ -666,7 +674,8 @@ InsuranceTarif = R6Class(
 
       # Net, Zillmer and Gross reserves
       resNet = values$absPresentValues[,"benefitsAndRefund"] * securityFactor - values$premiums[["net"]] * values$absPresentValues[,"premiums.unit"];
-      BWZcorr = values$absPresentValues[t, "Zillmer"] / values$absPresentValues[t, "premiums"] * values$absPresentValues[,"premiums"];
+      BWZcorr = ifelse(values$absPresentValues[t, "premiums"] == 0, 0,
+                       values$absPresentValues[t, "Zillmer"] / values$absPresentValues[t, "premiums"]) * values$absPresentValues[,"premiums"];
       resZ = resNet - BWZcorr;
 
       resAdeq = values$absPresentValues[,"benefitsAndRefund"] * securityFactor +
@@ -674,7 +683,9 @@ InsuranceTarif = R6Class(
         values$premiums[["gross"]] * values$absPresentValues[,"premiums.unit"];
 
       #values$premiums[["Zillmer"]] * values$absPresentValues[,"premiums"];
-      resGamma = values$absPresentValues[,"gamma"] - values$absPresentValues[t, "gamma"] / values$absPresentValues[t, "premiums"] * values$absPresentValues[,"premiums"]
+      resGamma = values$absPresentValues[,"gamma"] -
+        ifelse(values$absPresentValues[t, "premiums"] == 0, 0,
+               values$absPresentValues[t, "gamma"] / values$absPresentValues[t, "premiums"]) * values$absPresentValues[,"premiums"]
 
       advanceProfitParticipation = 0;
       if (!is.null(ppScheme)) {
@@ -683,19 +694,24 @@ InsuranceTarif = R6Class(
       resConversion = (resZ + resGamma) * (1 - advanceProfitParticipation);
 
       # Alpha refund: Distribute alpha-costs to 5 years (or if shorter, the policy period), always starting at time 'start':
-      r = min(params$ContractData$policyPeriod - start, 5);
-      ZillmerSoFar = Reduce("+", values$absCashFlows$Zillmer, accumulate = TRUE);
-      ZillmerTotal = sum(values$absCashFlows$Zillmer);
-      len = length(ZillmerSoFar);
-      if (params$Features$alphaRefundLinear) {
-        ZillmerVerteilungCoeff = pad0((0:r)/r, len, 1, start = start);
+      # If alphaRefunded==TRUE, don't refund a second time!
+      if (params$ContractState$alphaRefunded) {
+        alphaRefund = 0
       } else {
-        q = self$getTransitionProbabilities(params);
-        # vector of all ä_{x+t, r-t}
-        pvAlphaTmp = calculatePVSurvival(q = pad0(q$q, len), advance = pad0(rep(1,r), len), v = 1/(1 + params$ActuarialBases$i), start = start);
-        ZillmerVerteilungCoeff = (1 - pvAlphaTmp/pvAlphaTmp[[1]]);
+        r = min(params$ContractData$policyPeriod - start, 5);
+        ZillmerSoFar = Reduce("+", values$absCashFlows$Zillmer, accumulate = TRUE);
+        ZillmerTotal = sum(values$absCashFlows$Zillmer);
+        len = length(ZillmerSoFar);
+        if (params$Features$alphaRefundLinear) {
+          ZillmerVerteilungCoeff = pad0((0:r)/r, len, 1, start = start);
+        } else {
+          q = self$getTransitionProbabilities(params);
+          # vector of all ä_{x+t, r-t}
+          pvAlphaTmp = calculatePVSurvival(q = pad0(q$q, len), advance = pad0(rep(1,r), len), v = 1/(1 + params$ActuarialBases$i), start = start);
+          ZillmerVerteilungCoeff = (1 - pvAlphaTmp/pvAlphaTmp[[1]]);
+        }
+        alphaRefund = ZillmerSoFar - ZillmerVerteilungCoeff * ZillmerTotal;
       }
-      alphaRefund = ZillmerSoFar - ZillmerVerteilungCoeff * ZillmerTotal;
 
       # Reduction Reserve: Reserve used for contract modifications:
       resReduction = pmax(0, resZ + resGamma + alphaRefund) # V_{x,n}^{Rkf}
