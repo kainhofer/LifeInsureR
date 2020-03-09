@@ -77,7 +77,7 @@ InsuranceContract.Values = list(
     premiumComposition = NULL
 );
 
-
+# InsuranceContract.ParameterDefault #######################################
 #' Default parameters for the InsuranceContract class. A new contract will be
 #' pre-filled with these values, and values passed in the constructor (or with
 #' other setter functions) will override these values.

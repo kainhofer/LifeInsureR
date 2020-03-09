@@ -10,6 +10,7 @@ NULL
 TariffTypeEnum = objectProperties::setSingleEnum("TariffType", levels = c("annuity", "wholelife", "endowment", "pureendowment", "terme-fix", "dread-disease", "endowment + dread-disease"))
 
 
+############ Class InsuranceTarif ###########################################
 #' Base class for Insurance Tarifs, providing calculation functions to the contract
 #'
 #' This is a base class for holding contract-independent values and
@@ -22,6 +23,8 @@ TariffTypeEnum = objectProperties::setSingleEnum("TariffType", levels = c("annui
 #' @export
 InsuranceTarif = R6Class(
   "InsuranceTarif",
+
+  ######################### PUBLIC METHODS ##################################
   public  = list(
     name  = "Insurance Contract Type",
     tarif = NULL,
