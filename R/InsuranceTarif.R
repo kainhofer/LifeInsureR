@@ -106,8 +106,13 @@ InsuranceTarif = R6Class(
         i = rep(0, length(q));
       }
       i = pad0(i, length(q));
-      # TODO: Implement case where invalidity/disease does NOT end the contract!
-      df = data.frame(age = ages, q = q, i = i, p = 1 - q - i, row.names = ages - age)
+      # invalidity/disease does NOT end the contract if flag is set!
+      if (params$ActuarialBases$invalidityEndsContract) {
+        p = 1 - q - i
+      } else {
+        p = 1 - q
+      }
+      df = data.frame(age = ages, q = q, i = i, p = p, row.names = ages - age)
       df
     },
 

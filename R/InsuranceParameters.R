@@ -119,6 +119,7 @@ InsuranceContract.ParameterDefaults = list(
     ActuarialBases = list(
         mortalityTable = NULL,
         invalidityTable = NULL,
+        invalidityEndsContract = FALSE,         # Whether a claim for disease ends the contract or not
         i = 0.00,                               # guaranteed interest rate
         balanceSheetDate = as.Date("1900-12-31"),  # Balance sheet date (for the calculation of the balance sheet reserves, year is irrelevant)
         balanceSheetMethod = "30/360",
