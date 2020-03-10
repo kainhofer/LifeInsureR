@@ -96,7 +96,7 @@ InsuranceContract.ParameterDefaults = list(
         deferralPeriod = 0,                     # Aufschubzeit bei Leibrenten
         guaranteedPeriod = 0,                   # Garantiezeit bei Leibrenten
         contractClosing = NULL,                 # Contract closing date (day/month is relevant for balance sheet reserves)
-        blockStart = 0,                         # When the current tariff block starts (main block starts a 0, dynamic increases start leter!)
+        blockStart = 0,                         # When the current tariff block starts (main block starts a 0, dynamic increases start later!), only used by the parent block (i.e. t=0 of child is aligned with t=blockStart of parent)
 
         premiumPayments = "in advance",         # Prämienzahlungsweise (vor-/nachschüssig)
         benefitPayments = "in advance",         # Leistungszahlungsweise (vor-/nachschüssig)

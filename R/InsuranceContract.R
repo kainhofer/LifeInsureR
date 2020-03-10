@@ -70,7 +70,7 @@ InsuranceContract = R6Class(
             }
 
             private$consolidateContractData(tarif = tarif, ...);
-            self$calculateContract(calculate = calculate, start = self$Parameters$ContractData$blockStart);
+            self$calculateContract(calculate = calculate);
 
             invisible(self)
         },
@@ -93,13 +93,14 @@ InsuranceContract = R6Class(
             invisible(self)
         },
 
-        addBlock = function(blockID = NULL, block = NULL, t = 0, comment = comment, ...) {
+        addBlock = function(id = NULL, block = NULL, t = block$Values$int$blockStart, comment = comment, ...) {
             if (missing(block) || is.null(block) || !is(block, "InsuranceContract")) {
                 # Create a block with the same tariff and parameters as the main contract, but allow overriding params with the ... arguments
-                block = InsuranceContract$new(...)
+                block = InsuranceContract$new(id = id, ...)
             }
+            # declare as child of 'self', store the time offset to the parent contract
             block$parent = self
-            block$Values$int$startsAt = t
+            block$Parameters$ContractData$blockStart = t
 
             if (length(self$blocks) == 0) {
                 main = self$clone()
@@ -108,12 +109,12 @@ InsuranceContract = R6Class(
                 self$Parameters$ContractData$id = "Gesamt"
             }
 
-            if (missing(blockID) || is.null(blockID)) {
-                blockID = paste0("block", length(self$blocks) + 1)
+            if (missing(id) || is.null(id)) {
+                id = paste0("block", length(self$blocks) + 1)
             }
-            self$blocks[[blockID]] = block
+            self$blocks[[id]] = block
             # recalculate the whole contract by consolidating values from each block
-            self$consolidateBlocks(start = t)
+            self$consolidateBlocks(valuesFrom = t)
 
             self$addHistorySnapshot(time = t, comment = comment,
                                     type = "Dynamics", params = self$Parameters, values = self$Values);
@@ -150,49 +151,50 @@ InsuranceContract = R6Class(
             }
 
             params$t = t
-            params$blockID = id
             params$id = id
             params$comment = sprintf("Dynamic increase at time %d to sum %d", t, NewSumInsured)
             do.call(self$addBlock, params)
         },
 
-        calculateContract = function(calculate = "all", start = 0, preservePastPV = TRUE, recalculatePremiums = TRUE, recalculatePremiumSum = TRUE, history_comment = NULL, history_type = "Contract") {
+        calculateContract = function(calculate = "all", valuesFrom = 0, premiumCalculationTime = 0, preservePastPV = TRUE, recalculatePremiums = TRUE, recalculatePremiumSum = TRUE, history_comment = NULL, history_type = "Contract") {
             if (!is.null(self$blocks)) {
-                .args = as.list(match.call()[-1])
                 for (b in self$blocks) {
+                    .args = as.list(match.call()[-1])
+                    # correctly shift the valuesFrom by each block's blockStart parameter
+                    .args$valuesFrom = max(0, .args$valuesFrom - b$Parameters$ContractData$blockStart)
                     do.call(b$calculateContract, .args)
                 }
             }
-            self$Values$int = private$determineInternalValues(start = start)
+            self$Values$int = private$determineInternalValues()
             self$Values$transitionProbabilities = mergeValues(
               starting = self$Values$transitionProbabilities,
-              ending = private$determineTransitionProbabilities(start = start),
-              t = start)
+              ending = private$determineTransitionProbabilities(),
+              t = valuesFrom)
             if (calculate == "probabilities") return(invisible(self));
 
             self$Values$cashFlowsBasic = mergeValues(
                 starting = self$Values$cashFlowsBasic,
-                ending = private$determineCashFlowsBasic(start = start),
-                t = start);
+                ending = private$determineCashFlowsBasic(),
+                t = valuesFrom);
             self$Values$cashFlows = mergeValues(
                 starting = self$Values$cashFlows,
-                ending = private$determineCashFlows(start = start),
-                t = start);
+                ending = private$determineCashFlows(),
+                t = valuesFrom);
 
             if (recalculatePremiumSum) {
                 # Premium waiver: Premium sum is not affected by premium waivers, i.e. everything depending on the premium sum uses the original premium sum!
-                self$Values$unitPremiumSum = private$determinePremiumSum(start = start);
+                self$Values$unitPremiumSum = private$determinePremiumSum();
             }
             self$Values$cashFlowsCosts = mergeValues3D(
                 starting = self$Values$cashFlowsCosts,
-                ending = private$determineCashFlowsCosts(start = start),
-                t = start);
+                ending = private$determineCashFlowsCosts(),
+                t = valuesFrom);
             if (calculate == "cashflows") return(invisible(self));
 
 
             # Shall we re-calculate PV or preserve the old ones???
-            pv = private$calculatePresentValues(start = start)
-            pvCost = private$calculatePresentValuesCosts(start = start)
+            pv = private$calculatePresentValues()
+            pvCost = private$calculatePresentValuesCosts()
             oldPV = self$Values$presentValues
             if (preservePastPV) {
                 # Preserve past present values, i.e. the PV represents the PV
@@ -206,8 +208,8 @@ InsuranceContract = R6Class(
                 if (!is.null(self$Values$presentValues)) {
                     self$Values$presentValues = self$Values$presentValues[,1:NCOL(pv)]
                 }
-                self$Values$presentValues = mergeValues(starting = self$Values$presentValues, ending = pv, t = start)
-                self$Values$presentValuesCosts = mergeValues3D(starting = self$Values$presentValuesCosts, ending = pvCost, t = start)
+                self$Values$presentValues = mergeValues(starting = self$Values$presentValues, ending = pv, t = valuesFrom)
+                self$Values$presentValuesCosts = mergeValues3D(starting = self$Values$presentValuesCosts, ending = pvCost, t = valuesFrom)
             } else {
                 # Recalculate present value for times before start, i.e. make all PV consistent with the current cash flows
                 self$Values$presentValues = pv
@@ -217,42 +219,44 @@ InsuranceContract = R6Class(
 
             # the premiumCalculation function returns the premiums AND the cofficients,
             # so we have to extract the coefficients and store them in a separate variable
-            res = private$calculatePremiums(start = start);
-            self$Values$premiumCoefficients = res[["coefficients"]];
-            # TODO: Store premiums in a data.frame???
-            self$Values$premiums = res[["premiums"]]
-            self$Values$int$premiumCalculationTime = start
+            if (recalculatePremiums) {
+                res = private$calculatePremiums(premiumCalculationTime = premiumCalculationTime);
+                self$Values$premiumCoefficients = res[["coefficients"]];
+                # TODO: Store premiums in a data.frame, including the time they are calculated???
+                self$Values$premiums = res[["premiums"]]
+                self$Values$int$premiumCalculationTime = premiumCalculationTime
+            }
             if (calculate == "premiums") return(invisible(self));
 
             # Update the cash flows and present values with the values of the premium
-            pvAllBenefits = private$calculatePresentValuesBenefits(start = start)
+            pvAllBenefits = private$calculatePresentValuesBenefits()
             if (preservePastPV) {
-                self$Values$presentValues = mergeValues(starting = oldPV, ending = cbind(pv, pvAllBenefits), t = start)
+                self$Values$presentValues = mergeValues(starting = oldPV, ending = cbind(pv, pvAllBenefits), t = valuesFrom)
             } else {
                 self$Values$presentValues = cbind(pv, pvAllBenefits)
             }
 
-            self$Values$absCashFlows       = mergeValues(starting = self$Values$absCashFlows,       ending = private$calculateAbsCashFlows(start = start), t = start);
-            self$Values$absPresentValues   = mergeValues(starting = self$Values$absPresentValues,   ending = private$calculateAbsPresentValues(start = start), t = start);
+            self$Values$absCashFlows       = mergeValues(starting = self$Values$absCashFlows,       ending = private$calculateAbsCashFlows(), t = valuesFrom);
+            self$Values$absPresentValues   = mergeValues(starting = self$Values$absPresentValues,   ending = private$calculateAbsPresentValues(), t = valuesFrom);
             if (calculate == "absvalues") return(invisible(self));
 
-            self$Values$reserves           = mergeValues(starting = self$Values$reserves,           ending = private$calculateReserves(start = start), t = start);
-            self$Values$reservesBalanceSheet = mergeValues(starting = self$Values$reservesBalanceSheet,ending = private$calculateReservesBalanceSheet(start = start), t = start);
+            self$Values$reserves           = mergeValues(starting = self$Values$reserves,           ending = private$calculateReserves(), t = valuesFrom);
+            self$Values$reservesBalanceSheet = mergeValues(starting = self$Values$reservesBalanceSheet,ending = private$calculateReservesBalanceSheet(), t = valuesFrom);
             if (calculate == "reserves") return(invisible(self));
-            self$Values$premiumComposition = mergeValues(starting = self$Values$premiumComposition, ending = private$premiumAnalysis(start = start), t = start);
-            self$Values$premiumCompositionSums = mergeValues(starting = self$Values$premiumCompositionSums, ending = private$premiumCompositionSums(start = start), t = start);
-            self$Values$premiumCompositionPV = mergeValues(starting = self$Values$premiumCompositionPV, ending = private$premiumCompositionPV(start = start), t = start);
-            self$Values$basicData          = mergeValues(starting = self$Values$basicData,          ending = private$getBasicDataTimeseries(start = start), t = start);
+            self$Values$premiumComposition = mergeValues(starting = self$Values$premiumComposition, ending = private$premiumAnalysis(), t = valuesFrom);
+            self$Values$premiumCompositionSums = mergeValues(starting = self$Values$premiumCompositionSums, ending = private$premiumCompositionSums(), t = valuesFrom);
+            self$Values$premiumCompositionPV = mergeValues(starting = self$Values$premiumCompositionPV, ending = private$premiumCompositionPV(), t = valuesFrom);
+            self$Values$basicData          = mergeValues(starting = self$Values$basicData,          ending = private$getBasicDataTimeseries(), t = valuesFrom);
             if (calculate == "premiumcomposition") return(invisible(self));
 
-            private$profitParticipation(start = start); # TODO-start
+            private$profitParticipation();
             if (calculate == "profitparticipation") return(invisible(self));
 
             self$addHistorySnapshot(
-                time    = start,
+                time    = valuesFrom,
                 comment = ifelse(is.null(history_comment),
-                                 ifelse(start == 0, "Initial contract values", paste("Contract recalculation at time ", start)),
-                                 history_comment),,
+                                 ifelse(valuesFrom == 0, "Initial contract values", paste("Contract recalculation at time", premiumCalculationTime)),
+                                 history_comment),
                 type    = history_type,
                 params  = self$Parameters,
                 values  = self$Values
@@ -261,11 +265,12 @@ InsuranceContract = R6Class(
 
             invisible(self)
         },
-        consolidateBlocks = function(start = 0) {
+        consolidateBlocks = function(valuesFrom = 0) {
             # First, Re-calculate all children that have children on their own
             for (b in self$blocks) {
                 if (length(b$blocks) > 0) {
-                    b$consolidateBlocks(start = start)
+                    # correctly shift the valuesFrom by each block's blockStart parameter
+                    b$consolidateBlocks(valuesFrom = max(0, valuesFrom - b$Parameters$ContractData$blockStart))
                 }
             }
 
@@ -297,12 +302,12 @@ InsuranceContract = R6Class(
             consolidateField = function(field) {
                 vals = NULL
                 if (length(self$blocks) == 0) {
-                    vals = padArray(self$Values[[field]], pad = self$Values$int$startsAt)
+                    vals = self$Values[[field]]
                 }
                 for (b in self$blocks) {
-                    vals = sumPaddedArrays(arr1 = vals, arr2 = b$Values[[field]], pad2 = b$Values$int$startsAt)
+                    vals = sumPaddedArrays(arr1 = vals, arr2 = b$Values[[field]], pad2 = b$Parameters$ContractData$blockStart)
                 }
-                mergeValues(starting = self$Values[[field]],   ending = vals, t = start);
+                mergeValues(starting = self$Values[[field]],   ending = vals, t = valuesFrom);
             }
 
 
@@ -337,7 +342,7 @@ InsuranceContract = R6Class(
 
         # Premium Waiver: Stop all premium payments at time t
         # the SumInsured is determined from the available
-        premiumWaiverNew = function(t) {
+        premiumWaiver = function(t) {
             newSumInsured = self$Values$reserves[[toString(t), "PremiumFreeSumInsured"]];
             self$Parameters$ContractState$premiumWaiver = TRUE;
             self$Parameters$ContractState$surrenderPenalty = FALSE; # Surrender penalty has already been applied, don't apply a second time
@@ -346,7 +351,8 @@ InsuranceContract = R6Class(
             self$Parameters$ContractData$sumInsured = newSumInsured;
 
             self$calculateContract(
-                start = t,
+                valuesFrom = t,
+                premiumCalculationTime = t,
                 preservePastPV = TRUE, recalculatePremiums = TRUE, recalculatePremiumSum = FALSE,
                 history_comment = sprintf("Premium waiver at time %d", t), history_type = "PremiumWaiver")
 
@@ -357,7 +363,7 @@ InsuranceContract = R6Class(
 
         # Premium Waiver: Stop all premium payments at time t
         # the SumInsured is determined from the available
-        premiumWaiver = function(t) {
+        premiumWaiverOLD = function(t) {
             newSumInsured = self$Values$reserves[[toString(t), "PremiumFreeSumInsured"]];
             self$Parameters$ContractState$premiumWaiver = TRUE;
             self$Parameters$ContractState$surrenderPenalty = FALSE; # Surrender penalty has already been applied, don't apply a second time
@@ -506,57 +512,57 @@ InsuranceContract = R6Class(
             self$tarif$getCostValues(costs, params = self$Parameters)
         },
 
-        determineInternalValues = function(start = 0) {
-            self$tarif$getInternalValues(params = self$Parameters, start = start);
+        determineInternalValues = function(...) {
+            self$tarif$getInternalValues(params = self$Parameters, ...);
         },
 
-        determineTransitionProbabilities = function(start = 0) {
-            self$tarif$getTransitionProbabilities(params = self$Parameters, values = self$Values, start = start);
+        determineTransitionProbabilities = function(...) {
+            self$tarif$getTransitionProbabilities(params = self$Parameters, values = self$Values, ...);
         },
-        determineCashFlowsBasic = function(start = 0) {
-            self$tarif$getBasicCashFlows(params = self$Parameters, values = self$Values, start = start);
+        determineCashFlowsBasic = function(...) {
+            self$tarif$getBasicCashFlows(params = self$Parameters, values = self$Values, ...);
         },
-        determineCashFlows = function(start = 0) {
-            self$tarif$getCashFlows(params = self$Parameters, values = self$Values, start = start);
+        determineCashFlows = function(...) {
+            self$tarif$getCashFlows(params = self$Parameters, values = self$Values, ...);
         },
-        determinePremiumSum = function(start = 0) {
+        determinePremiumSum = function(...) {
             sum(self$Values$cashFlows$premiums_advance + self$Values$cashFlows$premiums_arrears);
         },
-        determineCashFlowsCosts = function(start = 0) {
-            self$tarif$getCashFlowsCosts(params = self$Parameters, values = self$Values, start = start);
+        determineCashFlowsCosts = function(...) {
+            self$tarif$getCashFlowsCosts(params = self$Parameters, values = self$Values, ...);
         },
-        calculatePresentValues = function(start = 0) {
-            self$tarif$presentValueCashFlows(params = self$Parameters, values = self$Values, start = start);
+        calculatePresentValues = function(...) {
+            self$tarif$presentValueCashFlows(params = self$Parameters, values = self$Values, ...);
         },
-        calculatePresentValuesCosts = function(start = 0) {
-            self$tarif$presentValueCashFlowsCosts(params = self$Parameters, values = self$Values, start = start);
+        calculatePresentValuesCosts = function(...) {
+            self$tarif$presentValueCashFlowsCosts(params = self$Parameters, values = self$Values, ...);
         },
-        calculatePremiums = function(start = 0) {
-            self$tarif$premiumCalculation(params = self$Parameters, values = self$Values, start = start);
+        calculatePremiums = function(...) {
+            self$tarif$premiumCalculation(params = self$Parameters, values = self$Values, ...);
         },
-        calculatePresentValuesBenefits = function(start = 0) {
-            self$tarif$presentValueBenefits(params = self$Parameters, values = self$Values, start = start);
+        calculatePresentValuesBenefits = function(...) {
+            self$tarif$presentValueBenefits(params = self$Parameters, values = self$Values, ...);
         },
-        calculateAbsCashFlows = function(start = 0) {
-            self$tarif$getAbsCashFlows(params = self$Parameters, values = self$Values, start = start);
+        calculateAbsCashFlows = function(...) {
+            self$tarif$getAbsCashFlows(params = self$Parameters, values = self$Values, ...);
         },
-        calculateAbsPresentValues = function(start = 0) {
-            self$tarif$getAbsPresentValues(params = self$Parameters, values = self$Values, start = start);
+        calculateAbsPresentValues = function(...) {
+            self$tarif$getAbsPresentValues(params = self$Parameters, values = self$Values, ...);
         },
-        calculateReserves = function(start = 0) {
-            self$tarif$reserveCalculation(params = self$Parameters, values = self$Values, start = start);
+        calculateReserves = function(...) {
+            self$tarif$reserveCalculation(params = self$Parameters, values = self$Values, ...);
         },
-        calculateReservesBalanceSheet = function(start = 0) {
-            self$tarif$reserveCalculationBalanceSheet(params = self$Parameters, values = self$Values, start = start);
+        calculateReservesBalanceSheet = function(...) {
+            self$tarif$reserveCalculationBalanceSheet(params = self$Parameters, values = self$Values, ...);
         },
-        premiumAnalysis = function(start = 0) {
-            self$tarif$premiumDecomposition(params = self$Parameters, values = self$Values, start = start);
+        premiumAnalysis = function(...) {
+            self$tarif$premiumDecomposition(params = self$Parameters, values = self$Values, ...);
         },
-        premiumCompositionSums = function(start = 0) {
-            self$tarif$calculateFutureSums(self$Values$premiumComposition, start = start);
+        premiumCompositionSums = function(...) {
+            self$tarif$calculateFutureSums(self$Values$premiumComposition, ...);
         },
-        premiumCompositionPV = function(start = 0) {
-            self$tarif$calculatePresentValues(self$Values$premiumComposition, params = self$Parameters, start = start);
+        premiumCompositionPV = function(...) {
+            self$tarif$calculatePresentValues(self$Values$premiumComposition, params = self$Parameters, ...);
         },
 
         profitParticipation = function(...) {
@@ -575,11 +581,11 @@ InsuranceContract = R6Class(
         },
 
 
-        getBasicDataTimeseries = function(start = 0) {
-            self$tarif$getBasicDataTimeseries(params = self$Parameters, values = self$Values, start = start);
+        getBasicDataTimeseries = function(...) {
+            self$tarif$getBasicDataTimeseries(params = self$Parameters, values = self$Values, ...);
         },
 
         dummy.private = NULL
     )
 )
-# InsuranceContract$debug("premiumWaiver")
+

@@ -69,23 +69,28 @@ contract.Bsp = InsuranceContract$
     contractClosing = as.Date("2020-07-01"),
     id = "Hauptvertrag"
   )$
-  addDynamics(t = 5, NewSumInsured = 200000, id = "Dynamik 1", i = 0.00)$
+  addDynamics(t = 5, NewSumInsured = 200000, id = "Dynamik 1", i = 0.05, age = 70)$
   addDynamics(t = 10, NewSumInsured = 250000, id = "Dynamik 2", i = 0.01);
 # exportInsuranceContractExample(contract.Bsp, t = 5);
 # showVmGlgExamples(contract.Bsp, t = 10)
+#
+# exportInsuranceContract.xlsx(contract.Bsp, filename = "BEISPIEL_Contract.xlsx")
+#
+#
+# contract.Bsp$Values$cashFlowsBasic
+# contract.Bsp$Values$cashFlows
+# contract.Bsp$Values$cashFlowsCosts
+# contract.Bsp$Values$presentValues
+# # contract.U17_3J$Values$presentValuesCosts
+# contract.Bsp$Values$premiumSum
+# contract.Bsp$Values$premiums
+# contract.Bsp$Values$premiumComposition
+# contract.Bsp$Values$reserves
 
-exportInsuranceContract.xlsx(contract.Bsp, filename = "BEISPIEL_Contract.xlsx")
 
-
-contract.Bsp$Values$cashFlowsBasic
-contract.Bsp$Values$cashFlows
-contract.Bsp$Values$cashFlowsCosts
-contract.Bsp$Values$presentValues
-# contract.U17_3J$Values$presentValuesCosts
-contract.Bsp$Values$premiumSum
-contract.Bsp$Values$premiums
-contract.Bsp$Values$premiumComposition
-contract.Bsp$Values$reserves
+################################################################### #
+# Testing premium waivers                                        ####
+################################################################### #
 
 
 contract.Bsp.waiver = InsuranceContract$
@@ -97,6 +102,7 @@ contract.Bsp.waiver = InsuranceContract$
     contractClosing = as.Date("2020-07-01"),
     id = "Hauptvertrag"
   )$premiumWaiver(t = 5)
+exportInsuranceContract.xlsx(contract.Bsp.waiver, filename = "BEISPIEL_Contract_PrfALT.xlsx")
 
 contract.Bsp.waiverNew = InsuranceContract$
   new(
@@ -107,6 +113,7 @@ contract.Bsp.waiverNew = InsuranceContract$
     contractClosing = as.Date("2020-07-01"),
     id = "Hauptvertrag"
   )$premiumWaiverNew(t = 5)
+exportInsuranceContract.xlsx(contract.Bsp.waiverNew, filename = "BEISPIEL_Contract_PrfNEU.xlsx")
 
 contract.Bsp.waiver$Values$cashFlowsBasic == contract.Bsp.waiverNew$Values$cashFlowsBasic
 contract.Bsp.waiver$Values$cashFlows == contract.Bsp.waiverNew$Values$cashFlows
