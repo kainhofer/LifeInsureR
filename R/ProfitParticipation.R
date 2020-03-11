@@ -31,32 +31,32 @@ ProfitParticipation = R6Class(
         # Calculation bases for the various types of profit
         # Can / shall be overridden in child classes that use other bases!
         #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-        getInterestProfitBase   = profPart.base.meanContractualReserve,
-        getRiskProfitBase       = profPart.base.ZillmerRiskPremium,
-        getExpenseProfitBase    = profPart.base.sumInsured,
-        getSumProfitBase        = profPart.base.sumInsured,
-
+        getInterestProfitBase   = PP.base.meanContractualReserve,
+        getRiskProfitBase       = PP.base.ZillmerRiskPremium,
+        getExpenseProfitBase    = PP.base.sumInsured,
+        getSumProfitBase        = PP.base.sumInsured,
+        getTerminalBonusBase    = PP.base.sumInsured,
+        
         #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         # Profit rates for the various types of profit
         # Can / shall be overridden in child classes that use other schemes!
         #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-        getInterestProfitRate   = profPart.rate.interestProfit,
-        getRiskProfitRate       = profPart.rate.riskProfit,
-        getExpenseProfitRate    = profPart.rate.expenseProfit,
-        getSumProfitRate        = profPart.rate.sumProfit,
+        getInterestProfitRate   = PP.rate.interestProfit,
+        getRiskProfitRate       = PP.rate.riskProfit,
+        getExpenseProfitRate    = PP.rate.expenseProfit,
+        getSumProfitRate        = PP.rate.sumProfit,
+        getTerminalBonusRate    = PP.rate.terminalBonus,
+        
+        getInterestOnProfits    = PP.rate.totalInterest,
 
-        getInterestOnProfits    = profPart.rate.totalInterest,
 
 
+        calculateInterestProfit = PP.calculate.RateOnBase,
+        calculateRiskProfit     = PP.calculate.RateOnBase,
+        calculateExpenseProfit  = PP.calculate.RateOnBase,
+        calculateSumProfit      = PP.calculate.RateOnBase,
 
-        calculateInterestProfit = profPart.calculate.RateOnBase,
-        calculateRiskProfit     = profPart.calculate.RateOnBase,
-        calculateExpenseProfit  = profPart.calculate.RateOnBase,
-        calculateSumProfit      = profPart.calculate.RateOnBase,
-
-        getTerminalBonusBase    = profPart.base.sumInsured,
-        getTerminalBonusRate    = profPart.rate.terminalBonus,
-        calculateTerminalBonus  = profPart.calculate.RateOnBase,
+        calculateTerminalBonus  = PP.calculate.RateOnBase,
         getTerminalBonusReserves = function(profits, rates, terminalBonus, terminalBonusAccount, params, values) {
             n = length(terminalBonusAccount)
             terminalBonusAccount * 1/(1.07) ^ ((n - 1):0)
@@ -68,13 +68,13 @@ ProfitParticipation = R6Class(
         # Can / shall be overridden in child classes that use other bases!
         #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-        calculateSurvivalBenefit      = profPart.benefit.ProfitPlusTerminalBonusReserve,
-        calculateDeathBenefitAccrued  = profPart.benefit.ProfitPlusGuaranteedInterest,
-        calculateDeathBenefitTerminal = profPart.benefit.TerminalBonus5YearsProRata,
-        calculateSurrenderBenefitAccrued = profPart.benefit.ProfitPlusHalfGuaranteedInterest,
-        calculateSurrenderBenefitTerminal = profPart.benefit.TerminalBonus5YearsProRata,
-        calculatePremiumWaiverBenefitAccrued = profPart.benefit.Profit,
-        calculatePremiumWaiverBenefitTerminal = profPart.benefit.TerminalBonus5YearsProRata,
+        calculateSurvivalBenefit      = PP.benefit.ProfitPlusTerminalBonusReserve,
+        calculateDeathBenefitAccrued  = PP.benefit.ProfitPlusGuaranteedInterest,
+        calculateDeathBenefitTerminal = PP.benefit.TerminalBonus5YearsProRata,
+        calculateSurrenderBenefitAccrued = PP.benefit.ProfitPlusHalfGuaranteedInterest,
+        calculateSurrenderBenefitTerminal = PP.benefit.TerminalBonus5YearsProRata,
+        calculatePremiumWaiverBenefitAccrued = PP.benefit.Profit,
+        calculatePremiumWaiverBenefitTerminal = PP.benefit.TerminalBonus5YearsProRata,
 
 
         dummy = 0

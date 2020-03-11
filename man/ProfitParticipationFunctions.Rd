@@ -2,100 +2,98 @@
 % Please edit documentation in R/ProfitParticipation_Functions.R
 \name{ProfitParticipationFunctions}
 \alias{ProfitParticipationFunctions}
-\alias{profPart.base.PreviousZillmerReserve}
-\alias{profPart.base.ZillmerReserveT2}
-\alias{profPart.base.contractualReserve}
-\alias{profPart.base.meanContractualReserve}
-\alias{profPart.base.ZillmerRiskPremium}
-\alias{profPart.base.sumInsured}
-\alias{profPart.rate.interestProfit}
-\alias{profPart.rate.riskProfit}
-\alias{profPart.rate.expenseProfit}
-\alias{profPart.rate.sumProfit}
-\alias{profPart.rate.terminalBonus}
-\alias{profPart.rate.terminalBonusFundRatio}
-\alias{profPart.rate.interestProfitPlusGuarantee}
-\alias{profPart.rate.totalInterest}
-\alias{profPart.rate.totalInterest2}
-\alias{profPart.rate.interestProfit2}
-\alias{profPart.calculate.RateOnBase}
-\alias{profPart.calculate.RatePlusGuaranteeOnBase}
-\alias{profPart.calculate.RateOnBaseSGFFactor}
-\alias{profPart.benefit.ProfitPlusTerminalBonusReserve}
-\alias{profPart.benefit.Profit}
-\alias{profPart.benefit.ProfitPlusGuaranteedInterest}
-\alias{profPart.benefit.ProfitPlusTotalInterest}
-\alias{profPart.benefit.ProfitPlusHalfTotalInterest}
-\alias{profPart.benefit.ProfitPlusHalfGuaranteedInterest}
-\alias{profPart.benefit.ProfitPlusInterestMinGuaranteeTotal}
-\alias{profPart.benefit.ProfitPlusHalfInterestMinGuaranteeTotal}
-\alias{profPart.benefit.TerminalBonus5YearsProRata}
+\alias{PP.base.NULL}
+\alias{PP.base.PreviousZillmerReserve}
+\alias{PP.base.ZillmerReserveT2}
+\alias{PP.base.contractualReserve}
+\alias{PP.base.meanContractualReserve}
+\alias{PP.base.ZillmerRiskPremium}
+\alias{PP.base.sumInsured}
+\alias{PP.rate.interestProfit}
+\alias{PP.rate.riskProfit}
+\alias{PP.rate.expenseProfit}
+\alias{PP.rate.sumProfit}
+\alias{PP.rate.terminalBonus}
+\alias{PP.rate.terminalBonusFundRatio}
+\alias{PP.rate.interestProfitPlusGuarantee}
+\alias{PP.rate.totalInterest}
+\alias{PP.rate.totalInterest2}
+\alias{PP.rate.interestProfit2}
+\alias{PP.calculate.RateOnBase}
+\alias{PP.calculate.RatePlusGuaranteeOnBase}
+\alias{PP.calculate.RateOnBaseSGFFactor}
+\alias{PP.benefit.ProfitPlusTerminalBonusReserve}
+\alias{PP.benefit.Profit}
+\alias{PP.benefit.ProfitPlusGuaranteedInterest}
+\alias{PP.benefit.ProfitPlusTotalInterest}
+\alias{PP.benefit.ProfitPlusHalfTotalInterest}
+\alias{PP.benefit.ProfitPlusHalfGuaranteedInterest}
+\alias{PP.benefit.ProfitPlusInterestMinGuaranteeTotal}
+\alias{PP.benefit.ProfitPlusHalfInterestMinGuaranteeTotal}
+\alias{PP.benefit.TerminalBonus5YearsProRata}
 \title{Helper functions for profit participation}
 \usage{
-profPart.base.PreviousZillmerReserve(rates, params, values, ...)
+PP.base.NULL(rates, params, values, ...)
 
-profPart.base.ZillmerReserveT2(rates, params, values, ...)
+PP.base.PreviousZillmerReserve(rates, params, values, ...)
 
-profPart.base.contractualReserve(rates, params, values, ...)
+PP.base.ZillmerReserveT2(rates, params, values, ...)
 
-profPart.base.meanContractualReserve(rates, params, values, ...)
+PP.base.contractualReserve(rates, params, values, ...)
 
-profPart.base.ZillmerRiskPremium(rates, params, values, ...)
+PP.base.meanContractualReserve(rates, params, values, ...)
 
-profPart.base.sumInsured(rates, params, values, ...)
+PP.base.ZillmerRiskPremium(rates, params, values, ...)
 
-profPart.rate.interestProfit(rates, params, values, ...)
+PP.base.sumInsured(rates, params, values, ...)
 
-profPart.rate.riskProfit(rates, params, values, ...)
+PP.rate.interestProfit(rates, params, values, ...)
 
-profPart.rate.expenseProfit(rates, params, values, ...)
+PP.rate.riskProfit(rates, params, values, ...)
 
-profPart.rate.sumProfit(rates, params, values, ...)
+PP.rate.expenseProfit(rates, params, values, ...)
 
-profPart.rate.terminalBonus(rates, params, values, ...)
+PP.rate.sumProfit(rates, params, values, ...)
 
-profPart.rate.terminalBonusFundRatio(rates, params, values, ...)
+PP.rate.terminalBonus(rates, params, values, ...)
 
-profPart.rate.interestProfitPlusGuarantee(rates, params, values, ...)
+PP.rate.terminalBonusFundRatio(rates, params, values, ...)
 
-profPart.rate.totalInterest(rates, params, values, ...)
+PP.rate.interestProfitPlusGuarantee(rates, params, values, ...)
 
-profPart.rate.totalInterest2(rates, params, values, ...)
+PP.rate.totalInterest(rates, params, values, ...)
 
-profPart.rate.interestProfit2(rates, params, values, ...)
+PP.rate.totalInterest2(rates, params, values, ...)
 
-profPart.calculate.RateOnBase(base, rate, waiting, rates, params, values,
-  ...)
+PP.rate.interestProfit2(rates, params, values, ...)
 
-profPart.calculate.RatePlusGuaranteeOnBase(base, rate, waiting, rates,
-  params, values, ...)
+PP.calculate.RateOnBase(base, rate, waiting, rates, params, values, ...)
 
-profPart.calculate.RateOnBaseSGFFactor(base, rate, waiting, rates, params,
+PP.calculate.RatePlusGuaranteeOnBase(base, rate, waiting, rates, params,
   values, ...)
 
-profPart.benefit.ProfitPlusTerminalBonusReserve(profits, rates, params,
+PP.calculate.RateOnBaseSGFFactor(base, rate, waiting, rates, params,
+  values, ...)
+
+PP.benefit.ProfitPlusTerminalBonusReserve(profits, rates, params, values)
+
+PP.benefit.Profit(profits, rates, params, values)
+
+PP.benefit.ProfitPlusGuaranteedInterest(profits, rates, params, values)
+
+PP.benefit.ProfitPlusTotalInterest(profits, rates, params, values)
+
+PP.benefit.ProfitPlusHalfTotalInterest(profits, rates, params, values)
+
+PP.benefit.ProfitPlusHalfGuaranteedInterest(profits, rates, params, values)
+
+PP.benefit.ProfitPlusInterestMinGuaranteeTotal(profits, rates, params,
   values)
 
-profPart.benefit.Profit(profits, rates, params, values)
-
-profPart.benefit.ProfitPlusGuaranteedInterest(profits, rates, params,
+PP.benefit.ProfitPlusHalfInterestMinGuaranteeTotal(profits, rates, params,
   values)
 
-profPart.benefit.ProfitPlusTotalInterest(profits, rates, params, values)
-
-profPart.benefit.ProfitPlusHalfTotalInterest(profits, rates, params,
-  values)
-
-profPart.benefit.ProfitPlusHalfGuaranteedInterest(profits, rates, params,
-  values)
-
-profPart.benefit.ProfitPlusInterestMinGuaranteeTotal(profits, rates,
-  params, values)
-
-profPart.benefit.ProfitPlusHalfInterestMinGuaranteeTotal(profits, rates,
-  params, values)
-
-profPart.benefit.TerminalBonus5YearsProRata(profits, rates, params, values)
+PP.benefit.TerminalBonus5YearsProRata(profits, rates, params, values)
 }
 \description{
 Various helper functions for the \code{ProfitParticipation} class that
@@ -104,60 +102,62 @@ the rates and how the assigned profit is calculated.
 }
 \section{Functions}{
 \itemize{
-\item \code{profPart.base.PreviousZillmerReserve}: Basis for profit: Previous Zillmer reserve (no administration cost reserve)
+\item \code{PP.base.NULL}: Basis for profit: NONE (i.e. always returns 0)
 
-\item \code{profPart.base.ZillmerReserveT2}: Basis for profit: Zillmer reserve (no administration cost reserve) at time t-2
+\item \code{PP.base.PreviousZillmerReserve}: Basis for profit: Previous Zillmer reserve (no administration cost reserve)
 
-\item \code{profPart.base.contractualReserve}: Basis for profit: Contractual reserve (including administration costs) at time t
+\item \code{PP.base.ZillmerReserveT2}: Basis for profit: Zillmer reserve (no administration cost reserve) at time t-2
 
-\item \code{profPart.base.meanContractualReserve}: Basis for profit: Contractual reserve (including administration costs) averaged over t and t-1
+\item \code{PP.base.contractualReserve}: Basis for profit: Contractual reserve (including administration costs) at time t
 
-\item \code{profPart.base.ZillmerRiskPremium}: Basis for risk/mortality profit: Zillmer Risk Premium of the past year
+\item \code{PP.base.meanContractualReserve}: Basis for profit: Contractual reserve (including administration costs) averaged over t and t-1
 
-\item \code{profPart.base.sumInsured}: Basis for expense/sum profit: sum insured
+\item \code{PP.base.ZillmerRiskPremium}: Basis for risk/mortality profit: Zillmer Risk Premium of the past year
 
-\item \code{profPart.rate.interestProfit}: Returns the array of interest profit rates (keyed by year)
+\item \code{PP.base.sumInsured}: Basis for expense/sum profit: sum insured
 
-\item \code{profPart.rate.riskProfit}: Returns the array of risk profit rates (keyed by year)
+\item \code{PP.rate.interestProfit}: Returns the array of interest profit rates (keyed by year)
 
-\item \code{profPart.rate.expenseProfit}: Returns the array of expense profit rates (keyed by year)
+\item \code{PP.rate.riskProfit}: Returns the array of risk profit rates (keyed by year)
 
-\item \code{profPart.rate.sumProfit}: Returns the array of sum profit rates (keyed by year)
+\item \code{PP.rate.expenseProfit}: Returns the array of expense profit rates (keyed by year)
 
-\item \code{profPart.rate.terminalBonus}: Returns the array of terminal bonus rates (keyed by year)
+\item \code{PP.rate.sumProfit}: Returns the array of sum profit rates (keyed by year)
 
-\item \code{profPart.rate.terminalBonusFundRatio}: Returns the array of terminal bonus rates (keyed by year) as the terminal bonus fund ratio
+\item \code{PP.rate.terminalBonus}: Returns the array of terminal bonus rates (keyed by year)
 
-\item \code{profPart.rate.interestProfitPlusGuarantee}: Rate for interest on past profits: total interest rate
+\item \code{PP.rate.terminalBonusFundRatio}: Returns the array of terminal bonus rates (keyed by year) as the terminal bonus fund ratio
 
-\item \code{profPart.rate.totalInterest}: Rate for interest on past profits: total interest rate
+\item \code{PP.rate.interestProfitPlusGuarantee}: Rate for interest on past profits: total interest rate
 
-\item \code{profPart.rate.totalInterest2}: Rate for interest on past profits: second total interest rate
+\item \code{PP.rate.totalInterest}: Rate for interest on past profits: total interest rate
 
-\item \code{profPart.rate.interestProfit2}: Rate for interest on past profits: second interest profit rate (not including guaranteed interest), keyed by year
+\item \code{PP.rate.totalInterest2}: Rate for interest on past profits: second total interest rate
 
-\item \code{profPart.calculate.RateOnBase}: Calculate profit by a simple rate applied on the basis (with an optional waiting vector of values 0 or 1)
+\item \code{PP.rate.interestProfit2}: Rate for interest on past profits: second interest profit rate (not including guaranteed interest), keyed by year
 
-\item \code{profPart.calculate.RatePlusGuaranteeOnBase}: Calculate profit by a rate + guaranteed interest applied on the basis (with an optional waiting vector of values 0 or 1)
+\item \code{PP.calculate.RateOnBase}: Calculate profit by a simple rate applied on the basis (with an optional waiting vector of values 0 or 1)
 
-\item \code{profPart.calculate.RateOnBaseSGFFactor}: Calculate profit by a simple rate applied on the basis (with only (1-SGFFactor) put into profit participation, and an optional waiting vector of values 0 or 1)
+\item \code{PP.calculate.RatePlusGuaranteeOnBase}: Calculate profit by a rate + guaranteed interest applied on the basis (with an optional waiting vector of values 0 or 1)
 
-\item \code{profPart.benefit.ProfitPlusTerminalBonusReserve}: Calculate survival benefit as total profit amount plus the terminal bonus reserve
+\item \code{PP.calculate.RateOnBaseSGFFactor}: Calculate profit by a simple rate applied on the basis (with only (1-SGFFactor) put into profit participation, and an optional waiting vector of values 0 or 1)
 
-\item \code{profPart.benefit.Profit}: Calculate benefit as total profit accrued so far
+\item \code{PP.benefit.ProfitPlusTerminalBonusReserve}: Calculate survival benefit as total profit amount plus the terminal bonus reserve
 
-\item \code{profPart.benefit.ProfitPlusGuaranteedInterest}: Calculate accrued death benefit as total profit with (guaranteed) interest for one year
+\item \code{PP.benefit.Profit}: Calculate benefit as total profit accrued so far
 
-\item \code{profPart.benefit.ProfitPlusTotalInterest}: Calculate accrued death benefit as total profit with total interest (interest on profit rate) for one year
+\item \code{PP.benefit.ProfitPlusGuaranteedInterest}: Calculate accrued death benefit as total profit with (guaranteed) interest for one year
 
-\item \code{profPart.benefit.ProfitPlusHalfTotalInterest}: Calculate accrued benefit as total profit with total interest (interest on profit rate) for half a year
+\item \code{PP.benefit.ProfitPlusTotalInterest}: Calculate accrued death benefit as total profit with total interest (interest on profit rate) for one year
 
-\item \code{profPart.benefit.ProfitPlusHalfGuaranteedInterest}: Calculate death benefit as total profit with (guaranteed) interest for one year
+\item \code{PP.benefit.ProfitPlusHalfTotalInterest}: Calculate accrued benefit as total profit with total interest (interest on profit rate) for half a year
 
-\item \code{profPart.benefit.ProfitPlusInterestMinGuaranteeTotal}: Calculate accrued benefit as total profit with interest for one year (min of guarantee and total interest)
+\item \code{PP.benefit.ProfitPlusHalfGuaranteedInterest}: Calculate death benefit as total profit with (guaranteed) interest for one year
 
-\item \code{profPart.benefit.ProfitPlusHalfInterestMinGuaranteeTotal}: Calculate accrued benefit as total profit with interest for half a year (min of guarantee and total interest)
+\item \code{PP.benefit.ProfitPlusInterestMinGuaranteeTotal}: Calculate accrued benefit as total profit with interest for one year (min of guarantee and total interest)
 
-\item \code{profPart.benefit.TerminalBonus5YearsProRata}: Calculate benefit from terminal bonus as 1/n parts of the terminal bonus reserve during the last 5 years
+\item \code{PP.benefit.ProfitPlusHalfInterestMinGuaranteeTotal}: Calculate accrued benefit as total profit with interest for half a year (min of guarantee and total interest)
+
+\item \code{PP.benefit.TerminalBonus5YearsProRata}: Calculate benefit from terminal bonus as 1/n parts of the terminal bonus reserve during the last 5 years
 }}
 
