@@ -85,70 +85,77 @@ PP.base.sumInsured = function(rates, params, values, ...) {
 #' @describeIn ProfitParticipationFunctions
 #' Returns the array of interest profit rates (keyed by year)
 #' @export
-PP.rate.interestProfit = function(rates, params, values, ...) {
+PP.rate.interestProfit = function(rates, ...) {
     rates$interestProfitRate
 };
 
 #' @describeIn ProfitParticipationFunctions
 #' Returns the array of risk profit rates (keyed by year)
 #' @export
-PP.rate.riskProfit = function(rates, params, values, ...) {
+PP.rate.riskProfit = function(rates, ...) {
     rates$mortalityProfitRate
 };
 #' @describeIn ProfitParticipationFunctions
 #' Returns the array of expense profit rates (keyed by year)
 #' @export
-PP.rate.expenseProfit = function(rates, params, values, ...) {
+PP.rate.expenseProfit = function(rates, ...) {
     rates$expenseProfitRate
 };
 
 #' @describeIn ProfitParticipationFunctions
 #' Returns the array of sum profit rates (keyed by year)
 #' @export
-PP.rate.sumProfit = function(rates, params, values, ...) {
+PP.rate.sumProfit = function(rates, ...) {
     rates$sumProfitRate
 };
 
 #' @describeIn ProfitParticipationFunctions
 #' Returns the array of terminal bonus rates (keyed by year)
 #' @export
-PP.rate.terminalBonus = function(rates, params, values, ...) {
+PP.rate.terminalBonus = function(rates, ...) {
     rates$terminalBonusRate
 };
 
 #' @describeIn ProfitParticipationFunctions
 #' Returns the array of terminal bonus rates (keyed by year) as the terminal bonus fund ratio
 #' @export
-PP.rate.terminalBonusFundRatio = function(rates, params, values, ...) {
+PP.rate.terminalBonusFundRatio = function(rates, ...) {
     rates$terminalBonusFundRatio
 };
 
 
 #' @describeIn ProfitParticipationFunctions
-#' Rate for interest on past profits: total interest rate
+#' Rate for interest on past profits: total credited rate, but at least the guarantee
 #' @export
-PP.rate.interestProfitPlusGuarantee = function(rates, params, values, ...) {
-    rates$totalInterest + rates$guaranteedInterest
+PP.rate.interestProfitPlusGuarantee = function(rates, ...) {
+  rates$interestProfitRate + rates$guaranteedInterest
+};
+
+#' @describeIn ProfitParticipationFunctions
+#' Rate for interest on past profits: total creditedrate2, but at least the guarantee
+#' @export
+PP.rate.interestProfit2PlusGuarantee = function(rates, ...) {
+  rates$interestProfitRate2 + rates$guaranteedInterest
 };
 
 #' @describeIn ProfitParticipationFunctions
 #' Rate for interest on past profits: total interest rate
 #' @export
-PP.rate.totalInterest = function(rates, params, values, ...) {
+PP.rate.totalInterest = function(rates, ...) {
     rates$totalInterest
 };
 
 #' @describeIn ProfitParticipationFunctions
 #' Rate for interest on past profits: second total interest rate
 #' @export
-PP.rate.totalInterest2 = function(rates, params, values, ...) {
+PP.rate.totalInterest2 = function(rates, ...) {
     rates$totalInterest2
 };
 
 #' @describeIn ProfitParticipationFunctions
 #' Rate for interest on past profits: second interest profit rate (not including guaranteed interest), keyed by year
 #' @export
-PP.rate.interestProfit2 = function(rates, params, values, ...) {
+PP.rate.interestProfit2 = function(rates, ...) {
     rates$interestProfitRate2
 };
 
@@ -197,21 +204,21 @@ PP.calculate.RateOnBaseSGFFactor = function(base, rate, waiting, rates, params, 
 #' @describeIn ProfitParticipationFunctions
 #' Calculate survival benefit as total profit amount plus the terminal bonus reserve
 #' @export
-PP.benefit.ProfitPlusTerminalBonusReserve = function(profits, rates, params, values) {
+PP.benefit.ProfitPlusTerminalBonusReserve = function(profits, ...) {
     profits[,"totalProfit"] + profits[,"terminalBonusReserve"]
 };
 
 #' @describeIn ProfitParticipationFunctions
 #' Calculate benefit as total profit accrued so far
 #' @export
-PP.benefit.Profit = function(profits, rates, params, values) {
+PP.benefit.Profit = function(profits, ...) {
     profits[,"totalProfit"]
 };
 
 #' @describeIn ProfitParticipationFunctions
 #' Calculate accrued death benefit as total profit with (guaranteed) interest for one year
 #' @export
-PP.benefit.ProfitPlusGuaranteedInterest = function(profits, rates, params, values) {
+PP.benefit.ProfitPlusGuaranteedInterest = function(profits, rates, ...) {
     profits[,"totalProfit"] * (1 + rates$guaranteedInterest)
 };
 
@@ -225,35 +232,35 @@ PP.benefit.ProfitPlusTotalInterest = function(profits, rates, params, values) {
 #' @describeIn ProfitParticipationFunctions
 #' Calculate accrued benefit as total profit with total interest (interest on profit rate) for half a year
 #' @export
-PP.benefit.ProfitPlusHalfTotalInterest = function(profits, rates, params, values) {
+PP.benefit.ProfitPlusHalfTotalInterest = function(profits, ...) {
     profits[,"totalProfit"] * (1 + profits[,"interestOnProfitRate"]/2)
 };
 
 #' @describeIn ProfitParticipationFunctions
 #' Calculate death benefit as total profit with (guaranteed) interest for one year
 #' @export
-PP.benefit.ProfitPlusHalfGuaranteedInterest = function(profits, rates, params, values) {
+PP.benefit.ProfitPlusHalfGuaranteedInterest = function(profits, rates, ...) {
     profits[,"totalProfit"] * (1 + rates$guaranteedInterest/2)
 };
 
 #' @describeIn ProfitParticipationFunctions
 #' Calculate accrued benefit as total profit with interest for one year (min of guarantee and total interest)
 #' @export
-PP.benefit.ProfitPlusInterestMinGuaranteeTotal = function(profits, rates, params, values) {
+PP.benefit.ProfitPlusInterestMinGuaranteeTotal = function(profits, rates, ...) {
     profits[,"totalProfit"] * (1 + pmin(rates$guaranteedInterest, rates$totalInterest))
 };
 
 #' @describeIn ProfitParticipationFunctions
 #' Calculate accrued benefit as total profit with interest for half a year (min of guarantee and total interest)
 #' @export
-PP.benefit.ProfitPlusHalfInterestMinGuaranteeTotal = function(profits, rates, params, values) {
+PP.benefit.ProfitPlusHalfInterestMinGuaranteeTotal = function(profits, rates, ...) {
     profits[,"totalProfit"] * (1 + pmin(rates$guaranteedInterest, rates$totalInterest)/2)
 };
 
 #' @describeIn ProfitParticipationFunctions
 #' Calculate benefit from terminal bonus as 1/n parts of the terminal bonus reserve during the last 5 years
 #' @export
-PP.benefit.TerminalBonus5YearsProRata = function(profits, rates, params, values) {
+PP.benefit.TerminalBonus5YearsProRata = function(profits, params, ...) {
     n = params$ContractData$policyPeriod;
     profits[, "terminalBonusReserve"] * (0:n)/n * ((0:n) >= max(10, n - 5))
 };
