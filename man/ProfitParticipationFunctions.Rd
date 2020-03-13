@@ -6,6 +6,7 @@
 \alias{PP.base.PreviousZillmerReserve}
 \alias{PP.base.ZillmerReserveT2}
 \alias{PP.base.contractualReserve}
+\alias{PP.base.previousContractualReserve}
 \alias{PP.base.meanContractualReserve}
 \alias{PP.base.ZillmerRiskPremium}
 \alias{PP.base.sumInsured}
@@ -16,10 +17,12 @@
 \alias{PP.rate.terminalBonus}
 \alias{PP.rate.terminalBonusFundRatio}
 \alias{PP.rate.interestProfitPlusGuarantee}
+\alias{PP.rate.interestProfit2PlusGuarantee}
 \alias{PP.rate.totalInterest}
 \alias{PP.rate.totalInterest2}
 \alias{PP.rate.interestProfit2}
 \alias{PP.calculate.RateOnBase}
+\alias{PP.calculate.RateOnBaseMin0}
 \alias{PP.calculate.RatePlusGuaranteeOnBase}
 \alias{PP.calculate.RateOnBaseSGFFactor}
 \alias{PP.benefit.ProfitPlusTerminalBonusReserve}
@@ -41,33 +44,40 @@ PP.base.ZillmerReserveT2(rates, params, values, ...)
 
 PP.base.contractualReserve(rates, params, values, ...)
 
+PP.base.previousContractualReserve(rates, params, values, ...)
+
 PP.base.meanContractualReserve(rates, params, values, ...)
 
 PP.base.ZillmerRiskPremium(rates, params, values, ...)
 
 PP.base.sumInsured(rates, params, values, ...)
 
-PP.rate.interestProfit(rates, params, values, ...)
+PP.rate.interestProfit(rates, ...)
 
-PP.rate.riskProfit(rates, params, values, ...)
+PP.rate.riskProfit(rates, ...)
 
-PP.rate.expenseProfit(rates, params, values, ...)
+PP.rate.expenseProfit(rates, ...)
 
-PP.rate.sumProfit(rates, params, values, ...)
+PP.rate.sumProfit(rates, ...)
 
-PP.rate.terminalBonus(rates, params, values, ...)
+PP.rate.terminalBonus(rates, ...)
 
-PP.rate.terminalBonusFundRatio(rates, params, values, ...)
+PP.rate.terminalBonusFundRatio(rates, ...)
 
-PP.rate.interestProfitPlusGuarantee(rates, params, values, ...)
+PP.rate.interestProfitPlusGuarantee(rates, ...)
 
-PP.rate.totalInterest(rates, params, values, ...)
+PP.rate.interestProfit2PlusGuarantee(rates, ...)
 
-PP.rate.totalInterest2(rates, params, values, ...)
+PP.rate.totalInterest(rates, ...)
 
-PP.rate.interestProfit2(rates, params, values, ...)
+PP.rate.totalInterest2(rates, ...)
+
+PP.rate.interestProfit2(rates, ...)
 
 PP.calculate.RateOnBase(base, rate, waiting, rates, params, values, ...)
+
+PP.calculate.RateOnBaseMin0(base, rate, waiting, rates, params, values,
+  ...)
 
 PP.calculate.RatePlusGuaranteeOnBase(base, rate, waiting, rates, params,
   values, ...)
@@ -75,25 +85,23 @@ PP.calculate.RatePlusGuaranteeOnBase(base, rate, waiting, rates, params,
 PP.calculate.RateOnBaseSGFFactor(base, rate, waiting, rates, params,
   values, ...)
 
-PP.benefit.ProfitPlusTerminalBonusReserve(profits, rates, params, values)
+PP.benefit.ProfitPlusTerminalBonusReserve(profits, ...)
 
-PP.benefit.Profit(profits, rates, params, values)
+PP.benefit.Profit(profits, ...)
 
-PP.benefit.ProfitPlusGuaranteedInterest(profits, rates, params, values)
+PP.benefit.ProfitPlusGuaranteedInterest(profits, rates, ...)
 
 PP.benefit.ProfitPlusTotalInterest(profits, rates, params, values)
 
-PP.benefit.ProfitPlusHalfTotalInterest(profits, rates, params, values)
+PP.benefit.ProfitPlusHalfTotalInterest(profits, ...)
 
-PP.benefit.ProfitPlusHalfGuaranteedInterest(profits, rates, params, values)
+PP.benefit.ProfitPlusHalfGuaranteedInterest(profits, rates, ...)
 
-PP.benefit.ProfitPlusInterestMinGuaranteeTotal(profits, rates, params,
-  values)
+PP.benefit.ProfitPlusInterestMinGuaranteeTotal(profits, rates, ...)
 
-PP.benefit.ProfitPlusHalfInterestMinGuaranteeTotal(profits, rates, params,
-  values)
+PP.benefit.ProfitPlusHalfInterestMinGuaranteeTotal(profits, rates, ...)
 
-PP.benefit.TerminalBonus5YearsProRata(profits, rates, params, values)
+PP.benefit.TerminalBonus5YearsProRata(profits, params, ...)
 }
 \description{
 Various helper functions for the \code{ProfitParticipation} class that
@@ -109,6 +117,8 @@ the rates and how the assigned profit is calculated.
 \item \code{PP.base.ZillmerReserveT2}: Basis for profit: Zillmer reserve (no administration cost reserve) at time t-2
 
 \item \code{PP.base.contractualReserve}: Basis for profit: Contractual reserve (including administration costs) at time t
+
+\item \code{PP.base.previousContractualReserve}: Basis for profit: Contractual reserve (including administration costs) at time t-1
 
 \item \code{PP.base.meanContractualReserve}: Basis for profit: Contractual reserve (including administration costs) averaged over t and t-1
 
@@ -128,7 +138,9 @@ the rates and how the assigned profit is calculated.
 
 \item \code{PP.rate.terminalBonusFundRatio}: Returns the array of terminal bonus rates (keyed by year) as the terminal bonus fund ratio
 
-\item \code{PP.rate.interestProfitPlusGuarantee}: Rate for interest on past profits: total interest rate
+\item \code{PP.rate.interestProfitPlusGuarantee}: Rate for interest on past profits: total credited rate, but at least the guarantee
+
+\item \code{PP.rate.interestProfit2PlusGuarantee}: Rate for interest on past profits: total creditedrate2, but at least the guarantee
 
 \item \code{PP.rate.totalInterest}: Rate for interest on past profits: total interest rate
 
@@ -137,6 +149,8 @@ the rates and how the assigned profit is calculated.
 \item \code{PP.rate.interestProfit2}: Rate for interest on past profits: second interest profit rate (not including guaranteed interest), keyed by year
 
 \item \code{PP.calculate.RateOnBase}: Calculate profit by a simple rate applied on the basis (with an optional waiting vector of values 0 or 1)
+
+\item \code{PP.calculate.RateOnBaseMin0}: Calculate profit by a simple rate applied on the basis (with an optional waiting vector of values 0 or 1), bound below by 0
 
 \item \code{PP.calculate.RatePlusGuaranteeOnBase}: Calculate profit by a rate + guaranteed interest applied on the basis (with an optional waiting vector of values 0 or 1)
 

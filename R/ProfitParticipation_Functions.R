@@ -12,6 +12,13 @@ NULL
 #' @name ProfitParticipationFunctions
 NULL
 
+shiftBy = function(rate, n = 1) {
+  nm = names(rate)
+  res = c(rep(0, n), head(rate, -n))
+  names(res) = nm
+  res
+  
+}
 
 ##########################################################################m##
 # Calculation bases for the various types of profit                      ####  
@@ -28,28 +35,29 @@ PP.base.NULL = function(rates, params, values, ...) {
 #' Basis for profit: Previous Zillmer reserve (no administration cost reserve)
 #' @export
 PP.base.PreviousZillmerReserve = function(rates, params, values, ...) {
-    nm = names(values$reserves[,"Zillmer"])
-    res = c(0, head(values$reserves[,"Zillmer"], -1))
-    names(res) = nm
-    res
-};
+    shiftBy(values$reserves[,"Zillmer"], n = 1)
+}
 
 #' @describeIn ProfitParticipationFunctions
 #' Basis for profit: Zillmer reserve (no administration cost reserve) at time t-2
 #' @export
 PP.base.ZillmerReserveT2 = function(rates, params, values, ...) {
-    nm = names(values$reserves[,"Zillmer"])
-    res = c(0, 0, head(values$reserves[,"Zillmer"], -2))
-    names(res) = nm
-    res
-};
+    shiftBy(values$reserves[,"Zillmer"], n = 2)
+}
 
 #' @describeIn ProfitParticipationFunctions
 #' Basis for profit: Contractual reserve (including administration costs) at time t
 #' @export
 PP.base.contractualReserve = function(rates, params, values, ...) {
-    pmax(0, values$reserves[,"contractual"])
+  pmax(0, values$reserves[,"contractual"])
 };
+
+#' @describeIn ProfitParticipationFunctions
+#' Basis for profit: Contractual reserve (including administration costs) at time t-1
+#' @export
+PP.base.previousContractualReserve = function(rates, params, values, ...) {
+  shiftBy(values$reserves[,"contractual"], n = 1)
+}
 
 #' @describeIn ProfitParticipationFunctions
 #' Basis for profit: Contractual reserve (including administration costs) averaged over t and t-1
@@ -65,7 +73,7 @@ PP.base.meanContractualReserve = function(rates, params, values, ...) {
 PP.base.ZillmerRiskPremium = function(rates, params, values, ...) {
     # The risk premium of t=0 is used to determine the risk profit at time
     # t=1, so shift the whole vector!
-    c(0, head(values$premiumComposition[,"Zillmer.risk"], -1))
+    shiftBy(values$premiumComposition[,"Zillmer.risk"], n = 1)
 };
 
 #' @describeIn ProfitParticipationFunctions
@@ -178,6 +186,13 @@ getTerminalBonusReserves = function(profits, rates, terminalBonus, terminalBonus
 #' @export
 PP.calculate.RateOnBase = function(base, rate, waiting, rates, params, values, ...) {
     base * rate * waiting
+};
+
+#' @describeIn ProfitParticipationFunctions
+#' Calculate profit by a simple rate applied on the basis (with an optional waiting vector of values 0 or 1), bound below by 0
+#' @export
+PP.calculate.RateOnBaseMin0 = function(base, rate, waiting, rates, params, values, ...) {
+    pmax(0, base * rate * waiting)
 };
 
 #' @describeIn ProfitParticipationFunctions

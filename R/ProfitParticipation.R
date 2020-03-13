@@ -254,9 +254,9 @@ ProfitParticipation = R6Class(
         sumRate      = self$Functions$getSumProfitRate(rates = rates, params = params, values = values);
 
         intProfit     = self$Functions$calculateInterestProfit(base = intBase, rate = intRate, waiting = waitingFactor, rates = rates, params = params, values = values);
-        riskProfit    = self$Functions$calculateInterestProfit(base = riskBase, rate = riskRate, waiting = waitingFactor, rates = rates, params = params, values = values);
-        expenseProfit = self$Functions$calculateInterestProfit(base = expenseBase, rate = expenseRate, waiting = waitingFactor, rates = rates, params = params, values = values);
-        sumProfit     = self$Functions$calculateInterestProfit(base = sumBase, rate = sumRate, waiting = waitingFactor, rates = rates, params = params, values = values);
+        riskProfit    = self$Functions$calculateRiskProfit(base = riskBase, rate = riskRate, waiting = waitingFactor, rates = rates, params = params, values = values);
+        expenseProfit = self$Functions$calculateExpenseProfit(base = expenseBase, rate = expenseRate, waiting = waitingFactor, rates = rates, params = params, values = values);
+        sumProfit     = self$Functions$calculateSumProfit(base = sumBase, rate = sumRate, waiting = waitingFactor, rates = rates, params = params, values = values);
 
         interestOnProfitRate = self$Functions$getInterestOnProfits(rates = rates, params = params, values = values);
 
