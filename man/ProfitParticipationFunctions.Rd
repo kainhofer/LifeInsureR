@@ -10,12 +10,13 @@
 \alias{PP.base.meanContractualReserve}
 \alias{PP.base.ZillmerRiskPremium}
 \alias{PP.base.sumInsured}
+\alias{PP.base.totalProfitAssignment}
 \alias{PP.rate.interestProfit}
 \alias{PP.rate.riskProfit}
 \alias{PP.rate.expenseProfit}
 \alias{PP.rate.sumProfit}
 \alias{PP.rate.terminalBonus}
-\alias{PP.rate.terminalBonusFundRatio}
+\alias{PP.rate.terminalBonusFund}
 \alias{PP.rate.interestProfitPlusGuarantee}
 \alias{PP.rate.interestProfit2PlusGuarantee}
 \alias{PP.rate.totalInterest}
@@ -33,7 +34,10 @@
 \alias{PP.benefit.ProfitPlusHalfGuaranteedInterest}
 \alias{PP.benefit.ProfitPlusInterestMinGuaranteeTotal}
 \alias{PP.benefit.ProfitPlusHalfInterestMinGuaranteeTotal}
+\alias{PP.benefit.ProfitGuaranteeSupporting}
 \alias{PP.benefit.TerminalBonus5YearsProRata}
+\alias{PP.benefit.TerminalBonus5Years}
+\alias{PP.benefit.TerminalBonus}
 \title{Helper functions for profit participation}
 \usage{
 PP.base.NULL(rates, params, values, ...)
@@ -52,6 +56,8 @@ PP.base.ZillmerRiskPremium(rates, params, values, ...)
 
 PP.base.sumInsured(rates, params, values, ...)
 
+PP.base.totalProfitAssignment(res, ...)
+
 PP.rate.interestProfit(rates, ...)
 
 PP.rate.riskProfit(rates, ...)
@@ -62,7 +68,7 @@ PP.rate.sumProfit(rates, ...)
 
 PP.rate.terminalBonus(rates, ...)
 
-PP.rate.terminalBonusFundRatio(rates, ...)
+PP.rate.terminalBonusFund(rates, ...)
 
 PP.rate.interestProfitPlusGuarantee(rates, ...)
 
@@ -101,7 +107,13 @@ PP.benefit.ProfitPlusInterestMinGuaranteeTotal(profits, rates, ...)
 
 PP.benefit.ProfitPlusHalfInterestMinGuaranteeTotal(profits, rates, ...)
 
+PP.benefit.ProfitGuaranteeSupporting(profits, rates, params, values, ...)
+
 PP.benefit.TerminalBonus5YearsProRata(profits, params, ...)
+
+PP.benefit.TerminalBonus5Years(profits, params, ...)
+
+PP.benefit.TerminalBonus(profits, params, ...)
 }
 \description{
 Various helper functions for the \code{ProfitParticipation} class that
@@ -126,6 +138,8 @@ the rates and how the assigned profit is calculated.
 
 \item \code{PP.base.sumInsured}: Basis for expense/sum profit: sum insured
 
+\item \code{PP.base.totalProfitAssignment}: Basis for Terminal Bonus Fund Assignment: total profit assignment of the year
+
 \item \code{PP.rate.interestProfit}: Returns the array of interest profit rates (keyed by year)
 
 \item \code{PP.rate.riskProfit}: Returns the array of risk profit rates (keyed by year)
@@ -136,7 +150,7 @@ the rates and how the assigned profit is calculated.
 
 \item \code{PP.rate.terminalBonus}: Returns the array of terminal bonus rates (keyed by year)
 
-\item \code{PP.rate.terminalBonusFundRatio}: Returns the array of terminal bonus rates (keyed by year) as the terminal bonus fund ratio
+\item \code{PP.rate.terminalBonusFund}: Returns the array of terminal bonus rates (keyed by year) as the terminal bonus fund ratio
 
 \item \code{PP.rate.interestProfitPlusGuarantee}: Rate for interest on past profits: total credited rate, but at least the guarantee
 
@@ -172,6 +186,12 @@ the rates and how the assigned profit is calculated.
 
 \item \code{PP.benefit.ProfitPlusHalfInterestMinGuaranteeTotal}: Calculate accrued benefit as total profit with interest for half a year (min of guarantee and total interest)
 
+\item \code{PP.benefit.ProfitGuaranteeSupporting}: Calculate accrued benefit as regular profit, but used to cover initial Zillmerization
+
 \item \code{PP.benefit.TerminalBonus5YearsProRata}: Calculate benefit from terminal bonus as 1/n parts of the terminal bonus reserve during the last 5 years
+
+\item \code{PP.benefit.TerminalBonus5Years}: Terminal bonus is only paid out during the last 5 years of the contract (but never during the first 10 year)
+
+\item \code{PP.benefit.TerminalBonus}: Calculate benefit from terminal bonus (full bonus), either old-style terminal bonus reserve or Terminal Bonus Fund (TBF)
 }}
 

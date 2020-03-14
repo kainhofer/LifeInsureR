@@ -162,7 +162,7 @@ InsuranceContract.ParameterDefaults = list(
         expenseProfitRate = NULL,
         sumProfitRate = NULL,
         terminalBonusRate = NULL,
-        terminalBonusQuote = 0,
+        terminalBonusFundRate = NULL,
 
         profitParticipationScheme = NULL,      # Gewinnbeteiligungssystem (object of class Profit Participation)
         profitComponents = c("interest", "risk", "expense", "sum", "terminal"),

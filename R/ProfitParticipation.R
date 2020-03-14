@@ -36,7 +36,8 @@ ProfitParticipation = R6Class(
         getExpenseProfitBase    = PP.base.sumInsured,
         getSumProfitBase        = PP.base.sumInsured,
         getTerminalBonusBase    = PP.base.sumInsured,
-        
+        getTerminalBonusFundBase = PP.base.totalProfitAssignment,
+
         #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         # Profit rates for the various types of profit
         # Can / shall be overridden in child classes that use other schemes!
@@ -46,7 +47,9 @@ ProfitParticipation = R6Class(
         getExpenseProfitRate    = PP.rate.expenseProfit,
         getSumProfitRate        = PP.rate.sumProfit,
         getTerminalBonusRate    = PP.rate.terminalBonus,
-        
+        getTerminalBonusFundRate= PP.rate.terminalBonusFund,
+
+
         getInterestOnProfits    = PP.rate.totalInterest,
 
 
@@ -61,6 +64,7 @@ ProfitParticipation = R6Class(
             n = length(terminalBonusAccount)
             terminalBonusAccount * 1/(1.07) ^ ((n - 1):0)
         },
+        calculateTerminalBonusFund = PP.calculate.RateOnBase,
 
         #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         # Calculations of the assigned profit amounts, based on the bases and
@@ -144,7 +148,7 @@ ProfitParticipation = R6Class(
         #       profitRates
         # 2) Contract can override individual rates (either for calendar years or contract years):
         #       guaranteedInterest, interestProfitRate, totalInterest, mortalityProfitRate,
-        #       expenseProfitRate, sumProfitRate, terminalBonusRate, terminalBonusFundRatio
+        #       expenseProfitRate, sumProfitRate, terminalBonusRate, terminalBonusFundRate
         # 3) Explicit function arguments (either for calendar years or contract years).
         # 4) Any missing values will be taken from the last given year
         startYear = year(params$ContractData$contractClosing);
@@ -156,7 +160,7 @@ ProfitParticipation = R6Class(
             "guaranteedInterest", "interestProfitRate", "totalInterest", "interestProfitRate2", "totalInterest2",
             "mortalityProfitRate", "expenseProfitRate", "expenseProfitRate_premiumfree",
             "sumProfitRate",
-            "terminalBonusRate", "terminalBonusFundRatio")
+            "terminalBonusRate", "terminalBonusFundRate")
         rates = data.frame(matrix(ncol = length(columns), nrow = length(years), dimnames = list(years = years, rates = columns)))
         rates$year = years;
 
@@ -240,7 +244,6 @@ ProfitParticipation = R6Class(
         } else {
             waitingFactor = 1;
         }
-
         rates        = self$setupRates(params = params, values = values, ...)
 
         intBase      = self$Functions$getInterestProfitBase(rates = rates, params = params, values = values);
@@ -289,6 +292,7 @@ ProfitParticipation = R6Class(
 
             totalProfit = c(0)
         );
+        # res = self$Functions$calculateInterestOnProfit(base = sumBase, rate = sumRate, waiting = waitingFactor, rates = rates, params = params, values = values);
         prev = 0;
         for (i in 1:nrow(res)) {
             res[i,"interestOnProfit"] = res[i,"interestOnProfitRate"] * prev;
@@ -297,7 +301,7 @@ ProfitParticipation = R6Class(
             prev = res[i,"totalProfit"];
         }
 
-
+        #### OLD Terminal bonus (not through terminal bonus fund, i.e. part of ongoing profits, but in addition) ####
         #### Terminal Bonus calculations (might depend on the individual profit assignments calculated above!
         #### => TODO: Pass the current profit calculation inside the values!)
         terminalBase = self$Functions$getTerminalBonusBase(res, rates = rates, params = params, values = values);
@@ -313,6 +317,22 @@ ProfitParticipation = R6Class(
             terminalBonus = c(terminalBonus),
             terminalBonusAccount = c(terminalBonusAccount),
             terminalBonusReserve = c(terminalBonusReserves)
+        )
+
+        #### NEW Terminal bonus fund (part of regular profits, but not paid out on surrender, reserved as part of the free RfB) ####
+        TBFBase = self$Functions$getTerminalBonusFundBase(res, rates = rates, params = params, values = values);
+        TBFRate = self$Functions$getTerminalBonusFundRate(res, rates = rates, params = params, values = values);
+        TBFBonus = self$Functions$calculateTerminalBonusFund(res, base = TBFBase, rate = TBFRate, waiting = waitingFactor, rates = rates, params = params, values = values);
+        regularBonus = res[,"totalProfitAssignment"] - TBFBonus
+
+        res = cbind(
+          res,
+          TBFBase = c(TBFBase),
+          TBFRate = c(TBFRate),
+          TBFAssignment = c(TBFBonus),
+          regularBonusAssignment = regularBonus,
+          TBF = cumsum(TBFBonus),
+          regularBonus = cumsum(regularBonus)
         )
 
 
@@ -362,10 +382,15 @@ ProfitParticipation = R6Class(
             toremove = c(toremove, grep("^sum", cnames));
         }
         if (!"terminal" %in% params$ProfitParticipation$profitComponents) {
-            toremove = c(toremove,
-                grep("^terminal", cnames),
-                grep("^.*TerminalBonus$", cnames)
-            );
+          toremove = c(toremove,
+                       grep("^terminal", cnames),
+                       grep("^.*TerminalBonus$", cnames)
+          );
+        }
+        if (!"TBF" %in% params$ProfitParticipation$profitComponents) {
+          toremove = c(toremove,
+                       grep("^TBF", cnames)
+          );
         }
         if (length(toremove) > 0) {
             res = res[,-toremove]
