@@ -407,6 +407,17 @@ InsuranceContract = R6Class(
             invisible(self)
         },
 
+        # Calculate one profit scenario and return all values
+        profitScenario = function(...) {
+            private$calculateProfitParticipation(...)
+        },
+
+        # Calculate one profit scenario and store it in the contract (e.g. to be exported to Excel), this function can be chained!
+        addProfitScenario = function(id, ...) {
+            self$Values$profitScenarios[id] = self$profitScenario(...)
+            invisible(self)
+        },
+
         dummy.public = NULL
     ),
 
@@ -570,7 +581,7 @@ InsuranceContract = R6Class(
 
         profitParticipation = function(...) {
             self$Values$profitParticipation = private$calculateProfitParticipation(...);
-            self$Values$reservesInclProfit = private$calculateReservesWithProfit(...);
+            self$Values$reservesAfterProfit = private$calculateReservesAfterProfit(...);
 
             # For convenience, return the profit participation table:
             self$Values$profitParticipation
@@ -579,8 +590,8 @@ InsuranceContract = R6Class(
         calculateProfitParticipation = function(...) {
             self$tarif$calculateProfitParticipation(params = self$Parameters, values = self$Values, ...);
         },
-        calculateReservesWithProfit = function(...) {
-            self$tarif$reservesWithProfit(params = self$Parameters, values = self$Values, ...);
+        calculateReservesAfterProfit = function(...) {
+            self$tarif$reservesAfterProfit(params = self$Parameters, values = self$Values, ...);
         },
 
 

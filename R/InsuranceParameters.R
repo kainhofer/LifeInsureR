@@ -74,7 +74,9 @@ InsuranceContract.Values = list(
     reserves = NULL,
     reservesBalanceSheet = NULL,
 
-    premiumComposition = NULL
+    premiumComposition = NULL,
+
+    profitParticipation = list()
 );
 
 # InsuranceContract.ParameterDefault #######################################

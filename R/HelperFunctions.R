@@ -336,3 +336,34 @@ fallbackFields = function(fields, valuelist) {
 # extractProfitRates = function(rates, )
 #' @export
 rollingmean = function(x) (tail(x, -1) + head(x, -1))/2
+
+
+######################################################################=#
+# Functions for handling sub-contract blocks                        ####
+
+# Helper functions to prepend/append rows to the arrays and sum them up
+padArray = function(arr = NULL, pad = 0, len = 0) {
+  padEnd = max(0, len - pad - NROW(arr)) # if len is too short, return an array containing at least the arr
+  nrcols = ifelse(is.null(arr), 0, NCOL(arr))
+  rbind(
+    array(0, dim = c(pad, nrcols)) %>% `colnames<-`(colnames(arr)),
+    arr,
+    array(0, dim = c(padEnd, nrcols)) %>% `colnames<-`(colnames(arr))
+  ) %>% `colnames<-`(colnames(arr))
+}
+
+sumPaddedArrays = function(arr1 = NULL, arr2 = NULL, pad1 = 0, pad2 = 0) {
+  newlen = max(pad1 + NROW(arr1), pad2 + NROW(arr2))
+  if (is.null(arr2)) {
+    padArray(arr1, pad = pad1, len = newlen)
+  } else if (is.null(arr1)) {
+    padArray(arr2, pad = pad2, len = newlen)
+  } else {
+    # First prepend trailing zero rows according to pad1/pad2:
+    arr1 = padArray(arr1, pad = pad1, len = newlen)
+    arr2 = padArray(arr2, pad = pad2, len = newlen)
+
+    # arr1 and arr2 now should have the same dimensions => sum them up
+    arr1 + arr2
+  }
+}
