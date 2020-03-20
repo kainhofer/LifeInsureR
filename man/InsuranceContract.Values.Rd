@@ -4,7 +4,7 @@
 \name{InsuranceContract.Values}
 \alias{InsuranceContract.Values}
 \title{Data structure (filled only with NULL) for insurance contract class member values.}
-\format{An object of class \code{list} of length 15.}
+\format{An object of class \code{list} of length 16.}
 \usage{
 InsuranceContract.Values
 }

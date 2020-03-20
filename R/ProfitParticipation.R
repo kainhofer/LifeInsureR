@@ -25,6 +25,9 @@ ProfitParticipation = R6Class(
     name  = "Name des Gewinnplans",
     Parameters = InsuranceContract.ParameterStructure$ProfitParticipation,
 
+    ########################################################################m#
+    # Function blocks (modular) to determine bases, rates and calculation ####
+    ########################################################################m#
     Functions = list(
 
         #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -60,7 +63,7 @@ ProfitParticipation = R6Class(
         calculateSumProfit      = PP.calculate.RateOnBase,
 
         calculateTerminalBonus  = PP.calculate.RateOnBase,
-        getTerminalBonusReserves = function(profits, rates, terminalBonus, terminalBonusAccount, params, values) {
+        getTerminalBonusReserve = function(profits, rates, terminalBonus, terminalBonusAccount, params, values) {
             n = length(terminalBonusAccount)
             terminalBonusAccount * 1/(1.07) ^ ((n - 1):0)
         },
@@ -114,9 +117,9 @@ ProfitParticipation = R6Class(
     },
 
 
-    ############################################################################
-    # Advance Profit Participation
-    ############################################################################
+    ##########################################################################m#
+    # Advance Profit Participation                                          ####
+    ##########################################################################m#
 
     getAdvanceProfitParticipation = function(params, values, ...) {
         "@function getAdvanceProfitParticipation"
@@ -133,14 +136,14 @@ ProfitParticipation = R6Class(
     },
 
 
-    ############################################################################
-    # Traditional Profit participation:
-    #   - Interest profit
-    #   - Risk profit
-    #   - Expense profit
-    #   - Sum profit
-    #   - Terminal bonus
-    ############################################################################
+    ##########################################################################m#
+    # Traditional Profit participation:                                     ####
+    #   - Interest profit                                                   ##m#
+    #   - Risk profit                                                       ##m#
+    #   - Expense profit                                                    ##m#
+    #   - Sum profit                                                        ##m#
+    #   - Terminal bonus                                                    ##m#
+    ##########################################################################m#
 
 
     setupRates = function(params, values, ...) {
@@ -237,7 +240,7 @@ ProfitParticipation = R6Class(
 
 
 
-    getProfitParticipation = function(params, values, ...) {
+    getProfitParticipation = function(calculateFrom = 0, profitScenario = NULL, params, values, ...) {
         waiting      = valueOrFunction(params$ProfitParticipation$waitingPeriod, params = params, values = values);
         if (is.numeric(waiting) && waiting > 0) {
             waitingFactor = c(rep(0, waiting + 1), rep(1, params$ContractData$policyPeriod - waiting));
@@ -292,9 +295,16 @@ ProfitParticipation = R6Class(
 
             totalProfit = c(0)
         );
+        # Use only newly calculated values starting at 'calculateFrom', but use old values up to that moment (might be a contract change with a completely different profit participation system before!)
+        res = mergeValues(starting = profitScenario[,colnames(res)], ending = res, t = calculateFrom);
+
         # res = self$Functions$calculateInterestOnProfit(base = sumBase, rate = sumRate, waiting = waitingFactor, rates = rates, params = params, values = values);
-        prev = 0;
-        for (i in 1:nrow(res)) {
+        if (calculateFrom > 0 && !is.null(profitScenario)) {
+          prev = profitScenario[calculateFrom - 1, "totalProfit"]
+        } else {
+          prev = 0;
+        }
+        for (i in (calculateFrom + 1):nrow(res)) {
             res[i,"interestOnProfit"] = res[i,"interestOnProfitRate"] * prev;
             res[i,"totalProfitAssignment"] = res[i, "componentsProfit"] + res[i,"interestOnProfit"];
             res[i,"totalProfit"] = prev + res[i,"totalProfitAssignment"];
@@ -306,33 +316,64 @@ ProfitParticipation = R6Class(
         #### => TODO: Pass the current profit calculation inside the values!)
         terminalBase = self$Functions$getTerminalBonusBase(res, rates = rates, params = params, values = values);
         terminalRate = self$Functions$getTerminalBonusRate(res, rates = rates, params = params, values = values);
-        terminalBonus = self$Functions$calculateTerminalBonus(res, base = terminalBase, rate = terminalRate, waiting = waitingFactor, rates = rates, params = params, values = values); # TODO: Add the AF(v) factor!
-        terminalBonusAccount = cumsum(terminalBonus); # TODO: Generalize! Not every scheme uses a cumulative account!
-        terminalBonusReserves = self$Functions$getTerminalBonusReserves(res, rates = rates, terminalBonus, terminalBonusAccount, params = params, values = values)
+        terminalBonus = self$Functions$calculateTerminalBonus(res, base = terminalBase, rate = terminalRate, calculateFrom = calculateFrom, waiting = waitingFactor, rates = rates, params = params, values = values); # TODO: Add the AF(v) factor!
+        res1 = cbind(
+          terminalBase,
+          terminalRate,
+          terminalBonus
+        )
+        res1 = mergeValues(starting = profitScenario[,colnames(res1)], ending = res1, t = calculateFrom)
+        if (calculateFrom == 0) {
+          terminalBonusAccount = cumsum(terminalBonus); # TODO: Generalize! Not every scheme uses a cumulative account!
+        } else {
+          past = profitScenario[1:calculateFrom, "terminalBonusAccount"]
+          # Preserve values up to calculateFrom, start from the last known value at calculateFrom-1 and sum all further contributions:
+          terminalBonusAccount = c(head(past, -1), cumsum(c(tail(past,1), tail(terminalBonus, -calculateFrom))))
+        }
+        terminalBonusReserve = self$Functions$getTerminalBonusReserve(res, rates = rates, terminalBonus, terminalBonusAccount, params = params, values = values)
+        res2 = cbind(terminalBonusAccount, terminalBonusReserve)
         res = cbind(
             res,
             # Terminal Bonus values
-            terminalBase = c(terminalBase),
-            terminalBonusRate = c(terminalRate),
-            terminalBonus = c(terminalBonus),
-            terminalBonusAccount = c(terminalBonusAccount),
-            terminalBonusReserve = c(terminalBonusReserves)
+            res1,
+            mergeValues(starting = profitScenario[,colnames(res2)], ending = res2, t = calculateFrom)
         )
 
         #### NEW Terminal bonus fund (part of regular profits, but not paid out on surrender, reserved as part of the free RfB) ####
         TBFBase = self$Functions$getTerminalBonusFundBase(res, rates = rates, params = params, values = values);
         TBFRate = self$Functions$getTerminalBonusFundRate(res, rates = rates, params = params, values = values);
-        TBFBonus = self$Functions$calculateTerminalBonusFund(res, base = TBFBase, rate = TBFRate, waiting = waitingFactor, rates = rates, params = params, values = values);
-        regularBonus = res[,"totalProfitAssignment"] - TBFBonus
+        TBFBonusAssignment = self$Functions$calculateTerminalBonusFund(res, base = TBFBase, rate = TBFRate, calculateFrom = calculateFrom, waiting = waitingFactor, rates = rates, params = params, values = values);
+        regularBonusAssignment = res[,"totalProfitAssignment"] - TBFBonusAssignment
+        res1 = cbind(
+          TBFBase,
+          TBFRate,
+          TBFBonusAssignment,
+          regularBonusAssignment
+        )
+        res1 = mergeValues(starting = profitScenario[,colnames(res1)], ending = res1, t = calculateFrom)
+
+        # Calcula TBF and regular bonus as cumulative usm of the assignments starting at t=calculateFrom plus the previous value!
+        if (calculateFrom == 0) {
+          TBF = cumsum(TBFBonusAssignment)
+          regularBonus = cumsum(regularBonusAssignment)
+        } else {
+          past = profitScenario[1:calculateFrom, "TBF"]
+          # Preserve values up to calculateFrom, start from the last known value at calculateFrom-1 and sum all further contributions:
+          TBF = c(head(past, -1), cumsum(c(tail(past,1), tail(TBFBonusAssignment, -calculateFrom))))
+          past = profitScenario[1:calculateFrom, "regularBonus"]
+          regularBonus = c(head(past, -1), cumsum(c(tail(past,1), tail(regularBonusAssignment, -calculateFrom))))
+        }
+        res2 = cbind(
+          TBF,
+          regularBonus
+        )
+        res2 = mergeValues(starting = profitScenario[,colnames(res2)], ending = res2, t = calculateFrom)
+
 
         res = cbind(
           res,
-          TBFBase = c(TBFBase),
-          TBFRate = c(TBFRate),
-          TBFAssignment = c(TBFBonus),
-          regularBonusAssignment = regularBonus,
-          TBF = cumsum(TBFBonus),
-          regularBonus = cumsum(regularBonus)
+          res1,
+          res2
         )
 
 
@@ -347,22 +388,28 @@ ProfitParticipation = R6Class(
         premiumWaiverAccrued  = self$Functions$calculatePremiumWaiverBenefitAccrued(res, rates = rates, params = params, values = values);
         premiumWaiverTerminalBonus = self$Functions$calculatePremiumWaiverBenefitTerminal(res, rates = rates, params = params, values = values);
 
+        res1 = cbind(
+          survival = survival,
+
+          deathAccrued = deathAccrued,
+          deathTerminalBonus = deathTerminalBonus,
+          death = deathAccrued + deathTerminalBonus,
+
+          surrenderAccrued  = surrenderAccrued,
+          surrenderTerminalBonus = surrenderTerminalBonus,
+          surrender      = surrenderAccrued + surrenderTerminalBonus,
+
+          premiumWaiverAccrued  = premiumWaiverAccrued,
+          premiumWaiverTerminalBonus = premiumWaiverTerminalBonus,
+          premiumWaiver  = premiumWaiverAccrued + premiumWaiverTerminalBonus
+        )
+        # Preserve values up to time t=calculateFrom of the old scenario values
+        res1 = mergeValues(starting = profitScenario[,colnames(res1)], ending = res1, t = calculateFrom)
+
+
         res = cbind(
             res,
-
-            survival = survival,
-
-            deathAccrued = deathAccrued,
-            deathTerminalBonus = deathTerminalBonus,
-            death = deathAccrued + deathTerminalBonus,
-
-            surrenderAccrued  = surrenderAccrued,
-            surrenderTerminalBonus = surrenderTerminalBonus,
-            surrender      = surrenderAccrued + surrenderTerminalBonus,
-
-            premiumWaiverAccrued  = premiumWaiverAccrued,
-            premiumWaiverTerminalBonus = premiumWaiverTerminalBonus,
-            premiumWaiver  = premiumWaiverAccrued + premiumWaiverTerminalBonus
+            res1
         );
 
         # Clean the huge dataframe by removing columns that refer to profit

@@ -174,7 +174,7 @@ PP.rate.interestProfit2 = function(rates, ...) {
 
 
 # TODO
-getTerminalBonusReserves = function(profits, rates, terminalBonus, terminalBonusAccount, params, values, ...) {
+getTerminalBonusReserve = function(profits, rates, terminalBonus, terminalBonusAccount, params, values, ...) {
   n = length(terminalBonusAccount)
   terminalBonusAccount * 1/(1.07) ^ ((n - 1):0)
 };

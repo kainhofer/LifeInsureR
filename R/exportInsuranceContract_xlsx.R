@@ -473,7 +473,6 @@ exportReserveTable = function(wb, sheet, contract, ccol = 1, crow = 1, styles = 
 exportProfitParticipationTable = function(wb, sheet, contract, ccol = 1, crow = 1, styles = c(), seprows = 5, freeze = TRUE) {
   id = contract$Parameters$ContractData$id
   nrrow = contract$Values$int$l
-
   blockid.row = crow
   crow = crow + 2
 
@@ -481,60 +480,70 @@ exportProfitParticipationTable = function(wb, sheet, contract, ccol = 1, crow = 
     freezePane(wb, sheet, firstActiveRow = crow + 2, firstActiveCol = ccol + 2)
   }
   qp = contract$Values$transitionProbabilities[1:contract$Values$int$l,]; # extract the probabilities once, will be needed in
-  cl = ccol
 
-  cl = cl + writeAgeQTable(wb, sheet, probs = qp, crow = crow, ccol = cl, styles = styles);
-  ccol.table = cl - 1;
-  cl = cl + writeValuesTable(wb, sheet, as.data.frame(setInsuranceValuesLabels(contract$Values$profitParticipation)),
-                               crow = crow, ccol = cl, tableName = tableName("ProfitParticipation_", id), styles = styles,
-                               # caption = "Gewinnbeteiligung",
+  for (s in names(contract$Values$profitScenarios)) {
+    cl = ccol
+    sc = contract$Values$profitScenarios[[s]]
+    writeData(wb = wb, sheet = sheet, x = s, startRow = crow, startCol = ccol)
+    addStyle(wb = wb, sheet = sheet, rows = crow, cols = ccol, style = styles$scenarioID, stack = TRUE)
+    cl = cl + writeAgeQTable(wb, sheet, probs = qp, crow = crow, ccol = cl, styles = styles);
+    ccol.table = cl - 1;
+    cl = cl + writeValuesTable(wb, sheet, as.data.frame(setInsuranceValuesLabels(sc)),
+                               crow = crow, ccol = cl, # tableName = tableName("ProfitParticipation_", id, "_", s),
+                               styles = styles,
+                               # caption = s,
                                valueStyle = styles$currency0) + 1;
 
-  cnames = colnames(contract$Values$profitParticipation);
-  # Make sure "terminalBonusRate" is NOT matched! Need to use a negative lookahead..
-  baseCols = grep("^(?!terminal).*Base$", cnames, perl = TRUE);
-  rateCols = grep("^(?!terminal).*(Interest|Rate)$", cnames, perl = TRUE);
-  profitCols = grep(".*Profit$", cnames);
-  terminalBonusCols = grep("^terminal.*", cnames);
-  deathCols = grep("^death.*", cnames);
-  surrenderCols = grep("^surrender.*", cnames);
-  premiumWaiverCols = grep("^premiumWaiver.*", cnames);
+    cnames = colnames(sc);
+    # Make sure "terminalBonusRate" is NOT matched! Need to use a negative lookahead..
+    baseCols = grep("^(?!terminal|TBF).*Base$", cnames, perl = TRUE);
+    rateCols = grep("^(?!terminal|TBF).*(Interest|Rate)$", cnames, perl = TRUE);
+    profitCols = grep(".*Profit$", cnames);
+    terminalBonusCols = grep("^terminal.*", cnames);
+    TBFCols = grep("^TBF.*", cnames);
+    deathCols = grep("^death.*", cnames);
+    surrenderCols = grep("^surrender.*", cnames);
+    premiumWaiverCols = grep("^premiumWaiver.*", cnames);
 
-  endrow = (crow + 1 + nrrow)
+    endrow = (crow + 1 + nrrow)
 
-  # Rates are displayed in %:
-  addStyle(wb, sheet, style = styles$rate, rows = (crow + 2):endrow, cols = rateCols + ccol.table, gridExpand = TRUE, stack = TRUE);
+    # Rates are displayed in %:
+    addStyle(wb, sheet, style = styles$rate, rows = (crow + 2):endrow, cols = rateCols + ccol.table, gridExpand = TRUE, stack = TRUE);
 
-  # Add table headers for the various sections:
-  if (length(baseCols) > 0) {
-    writeTableCaption(wb, sheet, "BasisgrÃ¶ÃŸen", rows = crow, cols = baseCols + ccol.table, style = styles$header);
-  }
-  if (length(rateCols) > 0) {
-    writeTableCaption(wb, sheet, "GewinnbeteiligungssÃ¤tze", rows = crow, cols = rateCols + ccol.table, style = styles$header);
-  }
-  if (length(profitCols) > 0) {
-    writeTableCaption(wb, sheet, "GB Zuweisungen", rows = crow, cols = profitCols + ccol.table, style = styles$header);
-  }
-  if (length(terminalBonusCols) > 0) {
-    writeTableCaption(wb, sheet, "Schlussgewinn", rows = crow, cols = terminalBonusCols + ccol.table, style = styles$header);
-  }
-  if (length(deathCols) > 0) {
-    writeTableCaption(wb, sheet, "Todesfallleistung", rows = crow, cols = deathCols + ccol.table, style = styles$header);
-  }
-  if (length(surrenderCols) > 0) {
-    writeTableCaption(wb, sheet, "RÃ¼ckkauf", rows = crow, cols = surrenderCols + ccol.table, style = styles$header);
-  }
-  if (length(premiumWaiverCols) > 0) {
-    writeTableCaption(wb, sheet, "PrÃ¤mienfreistellung", rows = crow, cols = premiumWaiverCols + ccol.table, style = styles$header);
-  }
+    # Add table headers for the various sections:
+    if (length(baseCols) > 0) {
+      writeTableCaption(wb, sheet, "Basisgrößen", rows = crow, cols = baseCols + ccol.table, style = styles$header);
+    }
+    if (length(rateCols) > 0) {
+      writeTableCaption(wb, sheet, "Gewinnbeteiligungssätze", rows = crow, cols = rateCols + ccol.table, style = styles$header);
+    }
+    if (length(profitCols) > 0) {
+      writeTableCaption(wb, sheet, "GB Zuweisungen", rows = crow, cols = profitCols + ccol.table, style = styles$header);
+    }
+    if (length(terminalBonusCols) > 0) {
+      writeTableCaption(wb, sheet, "Schlussgewinn", rows = crow, cols = terminalBonusCols + ccol.table, style = styles$header);
+    }
+    if (length(TBFCols) > 0) {
+      writeTableCaption(wb, sheet, "Schlussgewinnfonds", rows = crow, cols = TBFCols + ccol.table, style = styles$header);
+    }
+    if (length(deathCols) > 0) {
+      writeTableCaption(wb, sheet, "Todesfallleistung", rows = crow, cols = deathCols + ccol.table, style = styles$header);
+    }
+    if (length(surrenderCols) > 0) {
+      writeTableCaption(wb, sheet, "Rückkauf", rows = crow, cols = surrenderCols + ccol.table, style = styles$header);
+    }
+    if (length(premiumWaiverCols) > 0) {
+      writeTableCaption(wb, sheet, "Prämienfreistellung", rows = crow, cols = premiumWaiverCols + ccol.table, style = styles$header);
+    }
 
-  exportBlockID(wb, sheet, id = id, rows = blockid.row, cols = ccol:cl, styles = styles)
-  crow = endrow + seprows
+    exportBlockID(wb, sheet, id = id, rows = blockid.row, cols = ccol:cl, styles = styles)
+    crow = endrow + seprows
+  }
 
   for (b in contract$blocks) {
     crow = exportProfitParticipationTable(
       wb = wb, sheet = sheet, contract = b,
-      ccol = ccol, crow = crow, styles = styles, seprows = seprows, freeze = FALSE)
+      ccol = ccol, crow = crow + seprows, styles = styles, seprows = seprows, freeze = FALSE)
   }
   crow
 }
@@ -785,6 +794,7 @@ exportInsuranceContract.xlsx = function(contract, filename) {
   ############################################### #
   styles = list(
     blockID = createStyle(border = "Bottom", borderColour = "#ab6310", fgFill = "#d0d0d0", halign = "left", textDecoration = "bold", fontSize = 14),
+    scenarioID = createStyle(halign = "left", textDecoration = "bold", fontSize = 14),
     header = createStyle(border = "TopBottomLeftRight", borderColour = "#DA9694", borderStyle = "medium",
                          fgFill = "#C0504D", fontColour = "#FFFFFF",
                          halign = "center", valign = "center", textDecoration = "bold"),

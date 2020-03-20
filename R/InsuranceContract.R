@@ -41,8 +41,8 @@ InsuranceContract = R6Class(
 
         #### The code:
 
-        initialize = function(tarif, parent = NULL, calculate = "all", ...) {
-            private$initParams = c(list(tarif = tarif, parent = parent, calculate = calculate), list(...))
+        initialize = function(tarif, parent = NULL, calculate = "all", profitid = "default", ...) {
+            private$initParams = c(list(tarif = tarif, parent = parent, calculate = calculate, profitid = profitid), list(...))
             self$tarif = tarif;
             self$parent = parent;
 
@@ -67,10 +67,12 @@ InsuranceContract = R6Class(
                 self$Parameters$ProfitParticipation = fallbackFields(
                     self$Parameters$ProfitParticipation,
                     ppScheme$Parameters);
+                self$Parameters$ProfitParticipation$scenarios[[profitid]] = list()
             }
 
             private$consolidateContractData(tarif = tarif, ...);
             self$calculateContract(calculate = calculate);
+
 
             invisible(self)
         },
@@ -252,7 +254,7 @@ InsuranceContract = R6Class(
             self$Values$basicData          = mergeValues(starting = self$Values$basicData,          ending = private$getBasicDataTimeseries(), t = valuesFrom);
             if (calculate == "premiumcomposition") return(invisible(self));
 
-            private$profitParticipation();
+            private$profitParticipation(calculateFrom = valuesFrom);
             if (calculate == "profitparticipation") return(invisible(self));
 
             self$addHistorySnapshot(
@@ -414,7 +416,26 @@ InsuranceContract = R6Class(
 
         # Calculate one profit scenario and store it in the contract (e.g. to be exported to Excel), this function can be chained!
         addProfitScenario = function(id, ...) {
-            self$Values$profitScenarios[id] = self$profitScenario(...)
+            .args = as.list(match.call()[-1])
+            self$Parameters$ProfitParticipation$scenarios[[id]] = list(...)
+            if (length(self$blocks) > 0) {
+                vals = NULL
+                for (b in self$blocks) {
+                    # TODO: shift the profit rates by b$Parameters$ContractData$blockStart
+                    do.call(b$addProfitScenario, .args)
+                    vals = sumPaddedArrays(arr1 = vals, arr2 = b$Values$profitScenarios[[id]], pad2 = b$Parameters$ContractData$blockStart)
+                    # TODO: consolidate reserves after profit!
+                }
+                # Consolidate all child blocks
+                self$Values$profitScenarios[[id]] = vals
+            } else {
+                # profitParticipation will assign the values to Values$profitScenarios[[id]] and Values$reservesAfterProfit[[id]]
+                # private$profitParticipation(id = id, ...)
+                pp = private$calculateProfitParticipation(...)
+                self$Values$profitScenarios[[id]] = pp
+                self$Values$reservesAfterProfit[[id]] = private$calculateReservesAfterProfit(profitScenario = pp, ...)
+            }
+
             invisible(self)
         },
 
@@ -580,18 +601,34 @@ InsuranceContract = R6Class(
         },
 
         profitParticipation = function(...) {
-            self$Values$profitParticipation = private$calculateProfitParticipation(...);
-            self$Values$reservesAfterProfit = private$calculateReservesAfterProfit(...);
+            scens = self$Parameters$ProfitParticipation$scenarios
+            lapply(seq_along(scens), function(x) {
+                nm = names(scens)[x]
+                scn = NULL
+                if (!is.null(self$Values$profitScenarios) && length(self$Values$profitScenarios) >= x) {
+                    scn = self$Values$profitScenarios[[x]]
+                }
+                pp = do.call(private$calculateProfitParticipation, c(list(profitScenario = scn, ...), scens[x]))
+                res = do.call(private$calculateReservesAfterProfit, c(list(profitScenario = pp, ...), scens[x]))
+                if (nm != "" && !is.null(nm)) {
+                    self$Values$profitScenarios[[nm]] = pp
+                    self$Values$reservesAfterProfit[[nm]] = res
+                } else {
+                    self$Values$profitScenarios[[x]] = pp
+                    self$Values$reservesAfterProfit[[x]] = res
+                }
+            })
 
             # For convenience, return the profit participation table:
-            self$Values$profitParticipation
+            # (self$Values$reservesAfterProfit was also changed, but is not returned!)
+            self$Values$profitScenarios
         },
 
         calculateProfitParticipation = function(...) {
             self$tarif$calculateProfitParticipation(params = self$Parameters, values = self$Values, ...);
         },
-        calculateReservesAfterProfit = function(...) {
-            self$tarif$reservesAfterProfit(params = self$Parameters, values = self$Values, ...);
+        calculateReservesAfterProfit = function(profitScenario, ...) {
+            self$tarif$reservesAfterProfit(profitScenario = profitScenario, params = self$Parameters, values = self$Values, ...);
         },
 
 

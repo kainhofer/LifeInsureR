@@ -169,7 +169,9 @@ InsuranceContract.ParameterDefaults = list(
         profitParticipationScheme = NULL,      # Gewinnbeteiligungssystem (object of class Profit Participation)
         profitComponents = c("interest", "risk", "expense", "sum", "terminal"),
         profitClass = NULL,
-        profitRates = NULL                     # General, company-wide profit rates, key columns are year and profitClass
+        profitRates = NULL,                     # General, company-wide profit rates, key columns are year and profitClass
+
+        scenarios = list()                      # profit participation scenarios (list of overridden parameters for each scenario)
     ),
 
     Hooks = list(

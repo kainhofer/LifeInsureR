@@ -811,14 +811,14 @@ InsuranceTarif = R6Class(
       res
     },
 
-    calculateProfitParticipation = function(params, values, ...) {
+    calculateProfitParticipation = function(params, ...) {
         ppScheme = params$ProfitParticipation$profitParticipationScheme;
         if (!is.null(ppScheme)) {
-            ppScheme$getProfitParticipation(params = params, values = values, ...)
+            ppScheme$getProfitParticipation(params = params, ...)
         }
     },
 
-    reservesAfterProfit = function(params, values, ...) {
+    reservesAfterProfit = function(profitScenario, params, values, ...) {
         # TODO
     },
 
