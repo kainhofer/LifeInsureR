@@ -512,10 +512,10 @@ exportProfitParticipationTable = function(wb, sheet, contract, ccol = 1, crow = 
 
     # Add table headers for the various sections:
     if (length(baseCols) > 0) {
-      writeTableCaption(wb, sheet, "Basisgrˆﬂen", rows = crow, cols = baseCols + ccol.table, style = styles$header);
+      writeTableCaption(wb, sheet, "Basisgr√∂√üen", rows = crow, cols = baseCols + ccol.table, style = styles$header);
     }
     if (length(rateCols) > 0) {
-      writeTableCaption(wb, sheet, "Gewinnbeteiligungss‰tze", rows = crow, cols = rateCols + ccol.table, style = styles$header);
+      writeTableCaption(wb, sheet, "Gewinnbeteiligungss√§tze", rows = crow, cols = rateCols + ccol.table, style = styles$header);
     }
     if (length(profitCols) > 0) {
       writeTableCaption(wb, sheet, "GB Zuweisungen", rows = crow, cols = profitCols + ccol.table, style = styles$header);
@@ -530,10 +530,10 @@ exportProfitParticipationTable = function(wb, sheet, contract, ccol = 1, crow = 
       writeTableCaption(wb, sheet, "Todesfallleistung", rows = crow, cols = deathCols + ccol.table, style = styles$header);
     }
     if (length(surrenderCols) > 0) {
-      writeTableCaption(wb, sheet, "R¸ckkauf", rows = crow, cols = surrenderCols + ccol.table, style = styles$header);
+      writeTableCaption(wb, sheet, "R√ºckkauf", rows = crow, cols = surrenderCols + ccol.table, style = styles$header);
     }
     if (length(premiumWaiverCols) > 0) {
-      writeTableCaption(wb, sheet, "Pr‰mienfreistellung", rows = crow, cols = premiumWaiverCols + ccol.table, style = styles$header);
+      writeTableCaption(wb, sheet, "Pr√§mienfreistellung", rows = crow, cols = premiumWaiverCols + ccol.table, style = styles$header);
     }
 
     exportBlockID(wb, sheet, id = id, rows = blockid.row, cols = ccol:cl, styles = styles)
