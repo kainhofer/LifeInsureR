@@ -4,8 +4,7 @@
 \alias{showVmGlgExamples}
 \title{Display insurance contract calculation example}
 \usage{
-showVmGlgExamples(contract, prf = 10, t = 10, t_prf = 12,
-  file = "", ...)
+showVmGlgExamples(contract, prf = 10, t = 10, t_prf = 12, file = "", ...)
 }
 \arguments{
 \item{contract}{The insurance contract to calculate and show}

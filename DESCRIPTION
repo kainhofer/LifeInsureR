@@ -2,8 +2,8 @@ Package: LifeInsuranceContracts
 Type: Package
 Version: 0.1
 Date: 2016-05-07
-Title: A framework for general life insurance contracts, including profit
-    participation, contract changes etc.
+Title: A framework for general, traditional life insurance contracts, including profit
+    participation and contract changes
 Description: R6 classes to model traditional life insurance
     contracts like annuities, whole life insurances or endowments. All relevant
     quantities like premium decomposition, reserves and benefits over the whole
@@ -23,9 +23,10 @@ Imports:
     dplyr,
     scales,
     stringr,
-    methods
+    methods,
+    rlang
 License: GPL (>= 2)
-RoxygenNote: 6.1.1
+RoxygenNote: 7.1.1
 Collate:
     'HelperFunctions.R'
     'InsuranceParameters.R'

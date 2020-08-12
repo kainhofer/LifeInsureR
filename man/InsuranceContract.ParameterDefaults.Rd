@@ -6,7 +6,9 @@
 \title{Default parameters for the InsuranceContract class. A new contract will be
 pre-filled with these values, and values passed in the constructor (or with
 other setter functions) will override these values.}
-\format{An object of class \code{list} of length 8.}
+\format{
+An object of class \code{list} of length 8.
+}
 \usage{
 InsuranceContract.ParameterDefaults
 }

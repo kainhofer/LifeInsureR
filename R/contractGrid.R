@@ -22,11 +22,11 @@ contractGrid = function(axes = list(age = seq(20, 60, 10), policyPeriod = seq(5,
 }
 
 #' @export
-makeContractGridDimname.InsuranceTarif = function(tarif) { tarif$name }
+makeContractGridDimname.InsuranceTarif = function(value) { value$name }
 #' @export
-makeContractGridDimname.R6 = function(tarif) { tarif$name }
+makeContractGridDimname.R6 = function(value) { value$name }
 #' @export
-makeContractGridDimname.mortalityTable = function(table) { table@name }
+makeContractGridDimname.mortalityTable = function(value) { value@name }
 #' @export
 makeContractGridDimname.numeric = function(value) { value }
 #' @export

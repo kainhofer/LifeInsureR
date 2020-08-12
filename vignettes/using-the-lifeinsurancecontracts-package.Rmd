@@ -13,7 +13,7 @@ output:
         fig_width: 7
         fig_height: 5
 vignette: >
-  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteIndexEntry{Using the LifeInsuranceContracts Package}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---

@@ -8,8 +8,12 @@ This function will return the full InsuranceContract objects, so apply can
 later be used to extract premiums, reserves and other values to display in
 a grid.}
 \usage{
-contractGrid(axes = list(age = seq(20, 60, 10), policyPeriod = seq(5, 35,
-  5)), YOB = NULL, observationYear = NULL, ...)
+contractGrid(
+  axes = list(age = seq(20, 60, 10), policyPeriod = seq(5, 35, 5)),
+  YOB = NULL,
+  observationYear = NULL,
+  ...
+)
 }
 \description{
 Create a multi-dimensional grid of InsuranceContract objects, where the axes

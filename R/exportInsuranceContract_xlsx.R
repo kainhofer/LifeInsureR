@@ -62,8 +62,8 @@ writeValuesTable = function(wb, sheet, values, caption = NULL, crow = 1, ccol = 
 
 writePremiumCoefficients = function(wb, sheet, values, tarif = NULL, type = "benefits", crow = crow, ccol = ccol) {
   writeData(wb, sheet, matrix(c(
-    "Nettoprämie", "", "Zillmerprämie", "", "Bruttoprämie", "",
-    "rel. zu VS", "rel. zu Prämie", "rel. zu VS", "rel. zu Prämie", "rel. zu VS", "rel. zu Prämie"), 6, 2
+    "Nettopr\\u00e4mie", "", "Zillmerpr\\u00e4mie", "", "Bruttopr\\u00e4mie", "",
+    "rel. zu VS", "rel. zu Pr\\u00e4mie", "rel. zu VS", "rel. zu Pr\\u00e4mie", "rel. zu VS", "rel. zu Pr\\u00e4mie"), 6, 2
   ), startCol = ccol, startRow = crow, colNames = FALSE, borders = "rows", borderColour = "gray5", borderStyle = "thin");
   mergeCells(wb, sheet, cols = ccol, rows = crow:(crow + 1));
   mergeCells(wb, sheet, cols = ccol, rows = (crow + 2):(crow + 3));
@@ -114,11 +114,11 @@ labelsReplace = function(labels) {
   labels[labels == "written_beforetax"] = "vor Steuer";
 
   # Kosten
-  labels[labels == "alpha"] = intToUtf8(0x03B1); #"α";
+  labels[labels == "alpha"] = "\u03b1";
   labels[labels == "Zillmer"] = "Zill.";
-  labels[labels == "beta"] = intToUtf8(0x03B2);#"β";
-  labels[labels == "gamma"] = intToUtf8(0x03B3);
-  labels[labels == "gamma_nopremiums"] = paste(intToUtf8(0x03B3), "prf.");
+  labels[labels == "beta"] = "\u03b2";
+  labels[labels == "gamma"] = "\u03b3";
+  labels[labels == "gamma_nopremiums"] = "\u03b3 prf.";
   labels[labels == "unitcosts"] = "StkK";
 
   # Kosten-Basen
@@ -129,15 +129,15 @@ labelsReplace = function(labels) {
   labels[labels == "Constant"] = "";
 
   # Cash Flows
-  labels[labels == "premiums_advance"] = "Präm. vorsch.";
-  labels[labels == "premiums_arrears"] = "Präm. nachsch.";
+  labels[labels == "premiums_advance"] = "Pr\\u00e4m. vorsch.";
+  labels[labels == "premiums_arrears"] = "Pr\\u00e4m. nachsch.";
   labels[labels == "guaranteed_advance"] = "Gar. vorsch.";
   labels[labels == "guaranteed_arrears"] = "Gar. nachsch.";
   labels[labels == "survival_advance"] = "Erl. vorsch.";
   labels[labels == "survival_arrears"] = "Erl. nachsch.";
 
   # Barwerte
-  labels[labels == "premiums"] = "Präm.";
+  labels[labels == "premiums"] = "Pr\\u00e4m.";
   labels[labels == "guaranteed"] = "Gar.";
   labels[labels == "survival"] = "Erl.";
   labels[labels == "death_SumInsured"] = "Abl. VS";
@@ -156,43 +156,43 @@ labelsReplace = function(labels) {
   labels[labels == "PremiumFree"] = "Pr.Fr."
   labels[labels == "PolicyPeriod"] = "LZ"
 
-  # Rückstellungen
+  # R\\u00fcckstellungen
   labels[labels == "adequate"] = "ausr.";
   labels[labels == "contractual"] = "vertragl.";
   labels[labels == "conversion"] = "Umrechn.";
-  labels[labels == "alphaRefund"] = paste0(intToUtf8(0x03B1), "-Rücktrag"); # "α-Rücktrag";
-  labels[labels == "reduction"] = "Sparpr.für DK";
+  labels[labels == "alphaRefund"] = "\u03b1-R\\u00fccktrag";
+  labels[labels == "reduction"] = "Sparpr.f\\u00fcr DK";
   labels[labels == "PremiumsPaid"] = "Pr.Summe";
-  labels[labels == "Surrender"] = "Rückkauf";
+  labels[labels == "Surrender"] = "R\\u00fcckkauf";
   labels[labels == "PremiumFreeSumInsured"] = "Prf.VS";
   labels[labels == "Balance Sheet Reserve"] = "Bilanzreserve"
 
-  # Prämienzerlegung
+  # Pr\\u00e4mienzerlegung
   labels[labels == "charged"] = "verrechnet"
   labels[labels == "tax"] = "VSt."
   labels[labels == "loading.frequency"] = "UJZ"
-  labels[labels == "rebate.premium"] = "Präm.Rab."
+  labels[labels == "rebate.premium"] = "Pr\\u00e4m.Rab."
   labels[labels == "rebate.partner"] = "Partn.Rab."
   labels[labels == "unitcosts"] = "StkK"
   labels[labels == "profit.advance"] = "Vw.GB"
   labels[labels == "rebate.sum"] = "Summenrab."
-  labels[labels == "charge.noMedicalExam"] = "o.ärztl.U."
+  labels[labels == "charge.noMedicalExam"] = "o.\\u00e4rztl.U."
   labels[labels == "gross"] = "Brutto"
-  labels[labels == "alpha.noZillmer"] = paste0(intToUtf8(0x03B1), "(ungez.)");# "α(ungez.)";
-  labels[labels == "alpha.Zillmer"] = paste0(intToUtf8(0x03B1), "(gezill.)"); # "α(gezill.)";
+  labels[labels == "alpha.noZillmer"] = "\u03b1 (ungez.)";
+  labels[labels == "alpha.Zillmer"] = "\u03b1 (gezill.)";
   labels[labels == "net"] = "Netto";
   labels[labels == "risk"] = "Risikopr.";
   labels[labels == "savings"] = "Sparpr.";
   labels[labels == "Zillmer.risk"] = "gez.Risikopr.";
   labels[labels == "Zillmer.savings"] = "gez.Sparpr.";
   labels[labels == "Zillmer.amortization"] = "gez.AK-Tilgung";
-  labels[labels == "Zillmer.savings.real"] = "Sparpr.für DK";
+  labels[labels == "Zillmer.savings.real"] = "Sparpr.f\\u00fcr DK";
 
   # Vertragseigenschaften
   labels[labels == "InterestRate"] = "i";
   labels[labels == "PolicyDuration"] = "LZ";
-  labels[labels == "PremiumPayment"] = "Prämienzhlg.";
-  labels[labels == "Premiums"] = "Prämien";
+  labels[labels == "PremiumPayment"] = "Pr\\u00e4mienzhlg.";
+  labels[labels == "Premiums"] = "Pr\\u00e4mien";
   labels[labels == "age"] = "Alter";
   labels[labels == "Sum insured"] = "Vers.summe";
   labels[labels == "Mortality table"] = "Sterbetafel";
@@ -294,6 +294,7 @@ exportLoadingsTable = function(wb, sheet, contract, crow, ccol, styles = styles,
 
 
 
+#' @importFrom rlang .data
 exportContractDataTable = function(wb, sheet, contract, ccol = 1, crow = 1, styles = c()) {
   contractValues = getContractBlockValues(contract)
   contractPremiums = getContractBlockPremiums(contract)
@@ -319,9 +320,9 @@ exportContractDataTable = function(wb, sheet, contract, ccol = 1, crow = 1, styl
   # Values (parameters, premiums, etc.) of all blocks   ####
   tmp = contractValues %>%
     select(
-      Vertragsteil = ID, Tarif = Tariff, `Sum insured`,
-      `Mortality table`, i, Age, `Policy duration`, `Premium period`,
-      `Deferral period`, `Guaranteed payments`)
+      Vertragsteil = .data$ID, Tarif = .data$Tariff, .data$`Sum insured`,
+      .data$`Mortality table`, .data$i, .data$Age, .data$`Policy duration`, .data$`Premium period`,
+      .data$`Deferral period`, .data$`Guaranteed payments`)
   writeValuesTable(wb, sheet, values = setInsuranceValuesLabels(tmp),
                    caption = "Basisdaten der Vertragsteile", crow = crow, ccol = 1,
                    tableName = "BlocksBasicData", styles = styles)
@@ -329,25 +330,25 @@ exportContractDataTable = function(wb, sheet, contract, ccol = 1, crow = 1, styl
 
   # Unit Premiums ####
   tmp = contractPremiums %>%
-    select(Vertragsteil = ID, unit.net, unit.Zillmer, unit.gross)
+    select(Vertragsteil = .data$ID, .data$unit.net, .data$unit.Zillmer, .data$unit.gross)
   writeValuesTable(wb, sheet, values = setInsuranceValuesLabels(tmp),
-                   caption = "Prämiensätze (auf VS 1)", crow = crow, ccol = 1,
+                   caption = "Pr\\u00e4miens\\u00e4tze (auf VS 1)", crow = crow, ccol = 1,
                    tableName = "UnitPremiums", styles = styles, valueStyle = styles$unitpremiums)
   crow = crow + NROW(tmp) + 2 + 2 # 2 rows for caption/table header, 2 rows padding
 
   # Yearly Premiums ####
   tmp = contractPremiums %>%
-    select(Vertragsteil = ID, net, Zillmer, gross, written_yearly)
+    select(Vertragsteil = .data$ID, .data$net, .data$Zillmer, .data$gross, .data$written_yearly)
   writeValuesTable(wb, sheet, values = setInsuranceValuesLabels(tmp),
-                   caption = "Jahresprämien", crow = crow, ccol = 1,
+                   caption = "Jahrespr\\u00e4mien", crow = crow, ccol = 1,
                    tableName = "YearlyPremiums", styles = styles, valueStyle = styles$currency0)
   crow = crow + NROW(tmp) + 2 + 2 # 2 rows for caption/table header, 2 rows padding
 
   # Written Premiums ####
   tmp = contractPremiums %>%
-    select(Vertragsteil = ID, written, unitcost, written_beforetax, tax)
+    select(Vertragsteil = .data$ID, .data$written, .data$unitcost, .data$written_beforetax, .data$tax)
   writeValuesTable(wb, sheet, values = setInsuranceValuesLabels(tmp),
-                   caption = "Prämien (pro Zahlungsweise)", crow = crow, ccol = 1,
+                   caption = "Pr\\u00e4mien (pro Zahlungsweise)", crow = crow, ccol = 1,
                    tableName = "WrittenPremiums", styles = styles, valueStyle = styles$currency0)
   crow = crow + NROW(tmp) + 2 + 2 # 2 rows for caption/table header, 2 rows padding
 
@@ -512,10 +513,10 @@ exportProfitParticipationTable = function(wb, sheet, contract, ccol = 1, crow = 
 
     # Add table headers for the various sections:
     if (length(baseCols) > 0) {
-      writeTableCaption(wb, sheet, "Basisgrößen", rows = crow, cols = baseCols + ccol.table, style = styles$header);
+      writeTableCaption(wb, sheet, "Basisgr\\u00f6\\u00dfen", rows = crow, cols = baseCols + ccol.table, style = styles$header);
     }
     if (length(rateCols) > 0) {
-      writeTableCaption(wb, sheet, "Gewinnbeteiligungssätze", rows = crow, cols = rateCols + ccol.table, style = styles$header);
+      writeTableCaption(wb, sheet, "Gewinnbeteiligungss\\u00e4tze", rows = crow, cols = rateCols + ccol.table, style = styles$header);
     }
     if (length(profitCols) > 0) {
       writeTableCaption(wb, sheet, "GB Zuweisungen", rows = crow, cols = profitCols + ccol.table, style = styles$header);
@@ -530,10 +531,11 @@ exportProfitParticipationTable = function(wb, sheet, contract, ccol = 1, crow = 
       writeTableCaption(wb, sheet, "Todesfallleistung", rows = crow, cols = deathCols + ccol.table, style = styles$header);
     }
     if (length(surrenderCols) > 0) {
-      writeTableCaption(wb, sheet, "Rückkauf", rows = crow, cols = surrenderCols + ccol.table, style = styles$header);
+
+            writeTableCaption(wb, sheet, "R\\u00fcckkauf", rows = crow, cols = surrenderCols + ccol.table, style = styles$header);
     }
     if (length(premiumWaiverCols) > 0) {
-      writeTableCaption(wb, sheet, "Prämienfreistellung", rows = crow, cols = premiumWaiverCols + ccol.table, style = styles$header);
+      writeTableCaption(wb, sheet, "Pr\\u00e4mienfreistellung", rows = crow, cols = premiumWaiverCols + ccol.table, style = styles$header);
     }
 
     exportBlockID(wb, sheet, id = id, rows = blockid.row, cols = ccol:cl, styles = styles)
@@ -565,7 +567,7 @@ exportPremiumCompositionTable = function(wb, sheet, contract, ccol = 1, crow = 1
   cl = cl + writeValuesTable(
     wb, sheet, as.data.frame(setInsuranceValuesLabels(contract$Values$premiumComposition)),
     crow = crow, ccol = cl, tableName = tableName("Premium_Decomposition_", id), styles = styles,
-    caption = "Prämienzerlegung", valueStyle = styles$currency0) + 1;
+    caption = "Pr\\u00e4mienzerlegung", valueStyle = styles$currency0) + 1;
 
   crow = crow + nrrow + 4;
 
@@ -574,7 +576,7 @@ exportPremiumCompositionTable = function(wb, sheet, contract, ccol = 1, crow = 1
   cl = cl + writeValuesTable(
     wb, sheet, as.data.frame(setInsuranceValuesLabels(contract$Values$premiumCompositionSums)),
     crow = crow, ccol = cl, tableName = tableName("Premium_DecompositionSums_", id), styles = styles,
-    caption = "Prämienzerlegung (Summe zukünftiger Prämien)", valueStyle = styles$currency0) + 1;
+    caption = "Pr\\u00e4mienzerlegung (Summe zuk\\u00fcnftiger Pr\\u00e4mien)", valueStyle = styles$currency0) + 1;
 
   crow = crow + nrrow + 4;
 
@@ -583,7 +585,7 @@ exportPremiumCompositionTable = function(wb, sheet, contract, ccol = 1, crow = 1
   cl = cl + writeValuesTable(
     wb, sheet, as.data.frame(setInsuranceValuesLabels(contract$Values$premiumCompositionPV)),
     crow = crow, ccol = cl, tableName = tableName("Premium_DecompositionPV_", id), styles = styles,
-    caption = "Prämienzerlegung(Barwerte zukünftiger Prämien)", valueStyle = styles$currency0) + 1;
+    caption = "Pr\\u00e4mienzerlegung(Barwerte zuk\\u00fcnftiger Pr\\u00e4mien)", valueStyle = styles$currency0) + 1;
 
   endrow = (crow + 1 + nrrow)
 
@@ -701,7 +703,7 @@ exportPVTable = function(wb, sheet, contract, ccol = 1, crow = 1, styles = c(), 
                                caption = "Kostenbarwerte", valueStyle = styles$cost0) + 1;
 
     # Now print out the formulas for premium calculation into the columns 2 and 3:
-    writeData(wb, sheet, as.data.frame(c("Nettoprämie", contract$Values$premiums[["net"]],"Zillmerprämie", contract$Values$premiums[["Zillmer"]], "Bruttoprämie", contract$Values$premiums[["gross"]])), startCol = ccol, startRow = crow, colNames = FALSE, borders = "rows");
+    writeData(wb, sheet, as.data.frame(c("Nettopr\\u00e4mie", contract$Values$premiums[["net"]],"Zillmerpr\\u00e4mie", contract$Values$premiums[["Zillmer"]], "Bruttopr\\u00e4mie", contract$Values$premiums[["gross"]])), startCol = ccol, startRow = crow, colNames = FALSE, borders = "rows");
     for (i in 0:5) {
       writeFormula(wb, sheet, paste0("SUMPRODUCT(", sprintf(area.premiumcoeff, crow + i, crow + i), ", ", area.premiumvals, ") + SUMPRODUCT(", sprintf(area.costcoeff, crow + i, crow + i), ", ", area.costvals, ")"), startCol = ccol + 2, startRow = crow + i);
       addStyle(wb, sheet, style = styles$pv0, rows = crow + i, cols = ccol + 2, stack = TRUE);
@@ -803,7 +805,7 @@ exportInsuranceContract.xlsx = function(contract, filename) {
                               fgFill = "#E0E0E0",
                               halign = "center", valign = "center", textDecoration = "bold"),
     hide0 = createStyle(numFmt = "General; General; \"\""),
-    currency0 = createStyle(numFmt = "[$€-C07] #,##0.00;[red]-[$€-C07] #,##0.00;\"\""),
+    currency0 = createStyle(numFmt = "[$\u20ac C07] #,##0.00;[red]-[$\u20ac-C07] #,##0.00;\"\""),
     cost0 = createStyle(numFmt = "0.0##%; 0.0##%; \"\""),
     pv0 = createStyle(numFmt = "0.00000;-0.00000;\"\""),
     qx = createStyle(numFmt = "0.000000"),
@@ -872,7 +874,7 @@ exportInsuranceContract.xlsx = function(contract, filename) {
   # Print out premium decomposition            ####
   ############################################### #
 
-  sheet = "Prämienzerlegung";
+  sheet = "Pr\\u00e4mienzerlegung";
   addValuesWorksheet(wb, sheet);
   exportPremiumCompositionTable(
     wb = wb, sheet = sheet, contract = contract,

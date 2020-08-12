@@ -4,9 +4,11 @@
 \alias{InsuranceContract.ParametersFill}
 \title{InsuranceContract.ParametersFill}
 \usage{
-
-  InsuranceContract.ParametersFill(params = InsuranceContract.ParameterStructure,
-  costs = NULL, ...)
+InsuranceContract.ParametersFill(
+  params = InsuranceContract.ParameterStructure,
+  costs = NULL,
+  ...
+)
 }
 \arguments{
 \item{params}{Initial values of the insurance contract parameters. (default: empty parameter structure)}

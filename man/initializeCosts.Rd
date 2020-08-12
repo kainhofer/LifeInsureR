@@ -8,8 +8,17 @@
     Period:   once, PremiumPeriod, PremiumFree, PolicyPeriod
 TODO: gamma an Erlebensleistungen?}
 \usage{
-initializeCosts(costs, alpha, Zillmer, beta, gamma, gamma.paidUp,
-  gamma.premiumfree, unitcosts, unitcosts.PolicyPeriod)
+initializeCosts(
+  costs,
+  alpha,
+  Zillmer,
+  beta,
+  gamma,
+  gamma.paidUp,
+  gamma.premiumfree,
+  unitcosts,
+  unitcosts.PolicyPeriod
+)
 }
 \description{
 Initialize a cost matrix with dimensions: [CostType, Basis, Period], with:

@@ -82,14 +82,27 @@ PP.rate.interestProfit2(rates, ...)
 
 PP.calculate.RateOnBase(base, rate, waiting, rates, params, values, ...)
 
-PP.calculate.RateOnBaseMin0(base, rate, waiting, rates, params, values,
-  ...)
+PP.calculate.RateOnBaseMin0(base, rate, waiting, rates, params, values, ...)
 
-PP.calculate.RatePlusGuaranteeOnBase(base, rate, waiting, rates, params,
-  values, ...)
+PP.calculate.RatePlusGuaranteeOnBase(
+  base,
+  rate,
+  waiting,
+  rates,
+  params,
+  values,
+  ...
+)
 
-PP.calculate.RateOnBaseSGFFactor(base, rate, waiting, rates, params,
-  values, ...)
+PP.calculate.RateOnBaseSGFFactor(
+  base,
+  rate,
+  waiting,
+  rates,
+  params,
+  values,
+  ...
+)
 
 PP.benefit.ProfitPlusTerminalBonusReserve(profits, ...)
 
