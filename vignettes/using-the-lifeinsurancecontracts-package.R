@@ -1,4 +1,4 @@
-## ----echo = FALSE, message=FALSE-----------------------------------------
+## ----echo = FALSE, message=FALSE----------------------------------------------
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 library(pander)
 library(LifeInsuranceContracts)
@@ -85,10 +85,10 @@ pandoc.listRK <- function(...)
 
 
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 str(InsuranceContract.ParameterDefaults)
 
-## ---- results="asis"-----------------------------------------------------
+## ---- results="asis"----------------------------------------------------------
 
 #pandoc.listRK(InsuranceContract.ParameterDefaults)
 

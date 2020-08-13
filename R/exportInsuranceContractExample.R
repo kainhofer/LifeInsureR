@@ -1,4 +1,4 @@
-#' @include showVmGlgExamples.R exportInsuranceContract_xlsx.R InsuranceContract.R
+#' @include showVmGlgExamples.R exportInsuranceContract_xlsx.R InsuranceContract.R InsuranceTarif.R
 #'
 #' @import stringr
 NULL

@@ -10,29 +10,128 @@ NULL
 TariffTypeEnum = objectProperties::setSingleEnum("TariffType", levels = c("annuity", "wholelife", "endowment", "pureendowment", "terme-fix", "dread-disease", "endowment + dread-disease"))
 
 
-############ Class InsuranceTarif ###########################################
-#' Base class for Insurance Tarifs, providing calculation functions to the contract
+############# Class InsuranceTarif ###########################################
+#' Base class for traditional Insurance Tarifs (with fixed guarantee, profit sharing and no unit-linked component)
 #'
-#' This is a base class for holding contract-independent values and
+#' @description The class \code{InsuranceTarif} provides the code and general framework to
+#' implement contract-independent functionality of a life insurance product.
+#'
+#' @details This is a base class for holding contract-independent values and
 #' providing methods to calculate cash flows, premiums, etc. Objects of this
 #' class do NOT contain contract-specific values like age, death probabilities,
 #' premiums, reserves, etc. Rather, they are the calculation kernels that will
 #' be called by the \code{\link{InsuranceContract}} objects to make the actual,
 #' tariff-specific calculations.
 #'
+#' Most methods of this class are not meant to be called manually, but are supposed
+#' to be called by the InsuranceContract object with contract-specific information.
+#' The only methods that are typically sued for defining an insurance tariff are
+#' the constructor [InsuranceTarif@initialize] and the cloning method
+#' [InsuranceTarif@createModification]. All other methods should never be called
+#' manually.
+#'
+#' However, as overriding private methods is not possible in an R6 class, all the
+#' methods need to be public to allow overriding them in derived classes.
+#'
+# # Parameters for the constructors
+#' @param name The unique name / ID of the tariff
+#' @param type An enum specifying the main characteristics of the tarif. See [tariffType]
+#' @param tarif The tariff's public name. See [InsuranceTarif@tarif]
+#' @param desc A short human-readable description. See [InsuranceTarif@desc]
+# # General parameters for (almost) all function
+#' @param params Contract-specific, full set of parameters of the contract (merged parameters of the defaults, the tariff, the profit participation scheme and the contract)
+#' @param values Contract values calculated so far (in the \code{contract$Values} list) then this method is called by the contract object
+#'
+#' @param premiumCalculationTime The time when the premiums should be
+#'        (re-)calculated according to the equivalence principle. A time 0
+#'        means the initial premium calculation at contract closing, later
+#'        premium calculation times can be used to re-calculate the new
+#'        premium after a contract change (possibly including an existing reserve)
+#'
+#' @examples
+#' # Define an insurance tariff for 10-year endowments, using a guaranteed interest
+#' # rate of 1% and the Austrian population mortality table of the census 2011.
+#' # Premiums are paid monthly in advance during the whole contract period.
+#' mortalityTables.load("Austria_Census")
+#' # Cost structure:
+#' #   - 4% up-front acquisition costs (of premium sum)
+#' #   - 1% collection cost of each premium paid
+#' #   - 1%o yearly administration cost (of the sum insured) as long as premiums are paid
+#' #   - 2%o yearly administration cost for paid-up contracts
+#' #   - 10 Euro yearly unit costs (as long as premiums are paid)
+#' costs.endw = initializeCosts(alpha = 0.04, beta = 0.01, gamma = 0.001, gamma.paidUp = 0.002, gamma.premiumfree = 0.002, unitcosts = 10)
+#'
+#' endowment.AT1 = InsuranceTarif$new(
+#'     name = "Endow AT 1%", type = "endowment", tarif = "Austrian Endowment",
+#'     desc = "An endowment for Austrian insured with 1% interest and no profit participation",
+#'     ContractPeriod = 10,
+#'     i = 0.01, mortalityTable = mort.AT.census.2011.unisex,
+#'     costs = costs.endw, premiumFrequency = 12)
+#'
+#' # The instantiation of the actual contract will provide the contract specific
+#' # information and immediately calculate all further values:
+#' ctr.end.AT1 = InsuranceContract$new(tarif = endowment.AT1, contractClosing = as.Date("2020-07-01"), age = 42)
+#'
+#' # All values for the contract are already calculated during construction and stored in teh ctr.end.AT1$Values list:
+#' ctr.end.AT1$Values$basicData
+#' ctr.end.AT1$Values$transitionProbabilities
+#' ctr.end.AT1$Values$cashFlowsCosts
+#' ctr.end.AT1$Values$presentValues
+#' ctr.end.AT1$Values$premiums
+#' ctr.end.AT1$Values$reserves
+#' ctr.end.AT1$Values$premiumComposition
+#' # etc.
 #' @export
 InsuranceTarif = R6Class(
   "InsuranceTarif",
 
   ######################### PUBLIC METHODS ##################################
   public  = list(
+    #' @field name The tariff's unique name. Will also be used as the key for exported data.
     name  = "Insurance Contract Type",
+    #' @field tarif The tariff's public name (typically a product name), not necessarily unique.
     tarif = NULL,
+    #' @field desc A short human-readable description of the tariff and its main features.
     desc  = NULL,
-    tariffType = TariffTypeEnum("wholelife"), # possible values: annuity, wholelife, endowment, pureendowment, terme-fix
+    #' @field tariffType An enum specifying the main characteristics of the tarif. Possible values are:
+    #' \description{
+    #'   \item{annuity}{Whole life or term annuity (periodic survival benefits) with flexible payouts (constand, increasing, decreasing, arbitrary, etc.)}
+    #'   \item{wholelife}{A whole or term life insurance with only death benefits. The benefit can be constant, increasing, decreasing, described by a function, etc.}
+    #'   \item{endowment}{An  endowment with death and survival benefits, potentially with different benefits.}
+    #'   \item{pureendowment}{A pure endowment with only a survival benefit at the end of the contract. Optionally, in case of death, all or part of the premiums paid may be refunded.}
+    #'   \item{terme-fix}{A terme-fix insurance with a fixed payout at the end of the contract, even if the insured dies before that time. Premiums are paid until death of the insured.}
+    #'   \item{dread-disease}{A dread-disease insurance, which pays in case of a severe illness (typically heart attacks, cancer, strokes, etc.), but not in case of death.}
+    #'   \item{endowment + dread-disease}{A combination of an endowment and a temporary dread-disease insurance. Benefits occur either on death, severe illness or survival, whichever comes first.}
+    #' }
+    tariffType = ("wholelife"), # possible values: annuity, wholelife, endowment, pureendowment, terme-fix
 
+    #' @field Parameters A data structure (nested list) containing all relevant parameters describing a contract, its underlying tariff, the profit participation scheme etc. See \seealso{InsuranceContract.ParameterStructure} for all fields.
     Parameters = InsuranceContract.ParameterStructure,
 
+    #' @description Initialize a new tariff object
+    #' @details The constructor function defines a tariff and generates the corresponding data structure, which can then be used with the [InsuranceContract] class to define an actual contract using the tariff.
+    #' The arguments passed to this function will be stored inside the \code{Parameters} field of the class, inside one of the lists sublists. The parameters are stacked from different layers (higher levels override default values from lower layers):
+    #'
+    #' * InsuranceContract object (parameters passed directly to the individual contract)
+    #' * ProfitParticipation object (parameters for profit participation, passed to the definition of the profit plan, which is used for the tarif definition or the contract)
+    #' * InsuranceTarif object (parameters passed to the definition of the tariff that was used for the contract)
+    #' * Defaults taken from [InsuranceContract.ParameterStructure]
+    #'
+    #' The general implementation of this parameter layering means that (a) a tariff
+    #' can already provide default values for contracts (e.g. a default maturity,
+    #' default sum insured, etc) and (b) individual contracts can override all
+    #' parameters defined with the underlying tariff. In particular the latter
+    #' feature has many use-cases in prototyping: E.g. when you have a tariff
+    #' with a guaranteed interest rate of 1\% and a certain mortality table,
+    #' one can immediately instantiate a contract with an updated interest rate
+    #' or mortality table for comparison. There is no need to re-implement a
+    #' tariff for such comparisons, as long as only parameters are changed.
+    #'
+    #' @param ... Parameters for the [InsuranceContract.ParametersStructure],
+    #'            defining the characteristics of the tariff.
+    #' @examples
+    #' mortalityTables.load("Austria_Annuities_AVOe2005R")
+    #' tarif.male = InsuranceTarif$new(name = "Annuity Males", type = "annuity", i = 0.01, mortalityTable = AVOe2005R.male)
     initialize = function(name = NULL, type = "wholelife", tarif = "Generic Tarif", desc = "Description of tarif", ...) {
       if (!missing(name))           self$name = name;
       if (!missing(type))           self$tariffType = type;
@@ -52,6 +151,24 @@ InsuranceTarif = R6Class(
       self$Parameters = InsuranceContract.ParametersFallback(self$Parameters, InsuranceContract.ParameterDefaults, ppParameters = FALSE);
     },
 
+    #' @description create a copy of a tariff with certain parameters changed
+    #' @details This method \code{createModification} returns a copy of the tariff
+    #' with all given arguments changed in the tariff's [InsuranceTarif@Parametrers]
+    #' parameter list.
+    #'
+    #' As InsuranceTarif is a R6 class with reference logic, simply assigning
+    #' the option to a new variable does not create a copy, but reference the
+    #' original tariff object. To create an actual copy, one needs to call this
+    #' method, which first clones the whole object and then adjusts all parameters
+    #' to the values passed to this method.
+    #'
+    #' @param tariffType An enum specifying the main characteristics of the tarif. See [tariffType]
+    #' @param ... Parameters for the [InsuranceContract.ParametersStructure],
+    #'            defining the characteristics of the tariff.
+    #' @examples
+    #' mortalityTables.load("Austria_Annuities_AVOe2005R")
+    #' tarif.male = InsuranceTarif$new(name = "Annuity Males", type = "annuity", i = 0.01, mortalityTable = AVOe2005R.male)
+    #' tarif.unisex = tarif.male@createModification(name = "Annuity unisex", mortalityTable = AVOe2005R.unisex)
     createModification = function(name  = NULL, tarif = NULL, desc  = NULL, tariffType = NULL, ...) {
       cloned = self$clone();
       if (!missing(name))       cloned$name = name;
@@ -63,15 +180,25 @@ InsuranceTarif = R6Class(
       cloned
     },
 
-    # Retrieve the default Parameters for this tariff (can be overridden for each contract)
+    #' @description Retrieve the parameters for this tariff (can be overridden for each contract)
+    #'
+    #' @examples
+    #' tarif.male = InsuranceTarif$new(name = "Annuity Males", type = "annuity", i = 0.01, mortalityTable = AVOe2005R.male)
+    #' tarif.male@getParameters()
     getParameters = function() {
       self$Parameters
     },
 
-    # Get some internal parameters cached (length of data.frames, policy periods cut at max.age, etc.)
+    #' @description Get some internal parameters cached (length of data.frames, policy periods cut at max.age, etc.)
+    #'
+    #' @details This methos is not meant to be called explicitly, but rather used
+    #' by the InsuranceContract class. It returns a list of maturities and ages
+    #' relevant for the contract-specific calculations
+    #'
+    #' @param ... currently unused
     getInternalValues = function(params, ...) {
       age = params$ContractData$technicalAge
-      maxAge = getOmega(params$ActuarialBases$mortalityTable)
+      maxAge = MortalityTables::getOmega(params$ActuarialBases$mortalityTable)
       policyPeriod = params$ContractData$policyPeriod
       list(
         l = min(maxAge - age, policyPeriod) + 1,
@@ -81,6 +208,10 @@ InsuranceTarif = R6Class(
     },
 
 
+    #' @description Calculate the contract-relevant age(s) given a certain parameter data structure (contract-specific values)
+    #'
+    #' @details This method is not meant to be called explicitly, but rather used
+    #' by the InsuranceContract class. It returns the relevant ages during the whole contract period
     getAges = function(params) {
       ages = ages(params$ActuarialBases$mortalityTable, YOB = params$ContractData$YOB);
       age = params$ContractData$technicalAge;
@@ -90,15 +221,17 @@ InsuranceTarif = R6Class(
       ages
     },
 
+    #' @description Calculate the transition probabilities from the contract-specific parameters passed as \code{params} and the already-calculated contract values \code{values}
+    #' @details Not to be called directly, but implicitly by the [InsuranceContract] object.
     getTransitionProbabilities = function(params, values) {
       age = params$ContractData$technicalAge;
       ages = self$getAges(params);
-      q = deathProbabilities(params$ActuarialBases$mortalityTable, YOB = params$ContractData$YOB, ageDifferences = params$ContractData$ageDifferences);
+      q = MortalityTables::deathProbabilities(params$ActuarialBases$mortalityTable, YOB = params$ContractData$YOB, ageDifferences = params$ContractData$ageDifferences);
       if (age > 0) {
         q    = q[-age:-1];
       }
       if (!is.null(params$ActuarialBases$invalidityTable)) {
-        i = deathProbabilities(params$ActuarialBases$invalidityTable, YOB = params$ContractData$YOB, ageDifferences = params$ContractData$ageDifferences);
+        i = MortalityTables::deathProbabilities(params$ActuarialBases$invalidityTable, YOB = params$ContractData$YOB, ageDifferences = params$ContractData$ageDifferences);
         if (age > 0) {
           i    = i[-age:-1];
         }
@@ -116,15 +249,24 @@ InsuranceTarif = R6Class(
       df
     },
 
+    #' @description Obtain the cost structure from the cost parameter and the given paremeter set
+    #' @details Not to be called directly, but implicitly by the [InsuranceContract] object.
+    #' The cost parameter can be either an array of costs (generated by [initializeCosts()])
+    #' or a function with parameters \code{param} and \code{values}(=NULL) returning
+    #' an array of the required dimensions. This function makes sures that the
+    #' latter function is actually evaluated.
+    #' @param costs The cost parameter passed to the tarif definition or the contract (either an array of the form returned by [initializeCosts()] or a function(params, values) returning such an array)
     getCostValues = function(costs, params) {
         valueOrFunction(costs, params = params, values = NULL)
     },
 
-    # Get the unit premium cash flow for the whole contract period.
-    #   - For constant premiums it will be rep(1, premiumPeriod),
-    #   - for single premiums it will be c(1, 0, 0, ...),
-    #   - for increasing premiums it will be (1+increase)^(0:(premiumPeriod-1))
-    # and 0 after the premium period
+    #' @description Returns the unit premium cash flow for the whole contract period.
+    #'   - For constant premiums it will be rep(1, premiumPeriod),
+    #'   - for single premiums it will be c(1, 0, 0, ...),
+    #'   - for increasing premiums it will be (1+increase)^(0:(premiumPeriod-1))
+    #' and 0 after the premium period
+    #' @details Not to be called directly, but implicitly by the [InsuranceContract] object.
+    #' @param len The desired length of the returned data frame (the number of contract periods desire)
     getPremiumCF = function(len, params, values) {
       premPeriod = min(params$ContractData$premiumPeriod, params$ContractData$policyPeriod, len);
       if (is.null(params$ContractData$premiumIncrease)) {
@@ -142,10 +284,13 @@ InsuranceTarif = R6Class(
       }
     },
 
-    # Get the unit annuity cash flow (guaranteed and contingent) for the whole annuity payment period (after potential deferral period)
-    #   - For constant annuity it will be rep(1, annuityPeriod),
-    #   - for increasing annuities it will be (1+increase)^(0:(premiumPeriod-1))
-    # and 0 after the premium period
+    #' @description Returns the unit annuity cash flow (guaranteed and contingent) for
+    #'     the whole annuity payment period (after potential deferral period)
+    #'   - For constant annuity it will be rep(1, annuityPeriod),
+    #'   - for increasing annuities it will be (1+increase)^(0:(premiumPeriod-1))
+    #' and 0 after the premium period
+    #' @details Not to be called directly, but implicitly by the [InsuranceContract] object.
+    #' @param len The desired length of the returned data frame (the number of contract periods desire)
     getAnnuityCF = function(len, params, values) {
       annuityPeriod = min(params$ContractData$policyPeriod - params$ContractData$deferralPeriod, len);
       if (is.null(params$ContractData$annuityIncrease)) {
@@ -164,9 +309,11 @@ InsuranceTarif = R6Class(
       }
     },
 
-    # Get the unit death cash flow for the whole protection period (after potential deferral period!)
-    #   - For constant death benefit it will be rep(1, policyPeriod),
-    #   - for linearly decreasing sum insured it will be (policyPeriod:0)/policyPeriod
+    #' @description Returns the unit death cash flow for the whole protection period (after potential deferral period!)
+    #'   - For constant death benefit it will be rep(1, policyPeriod),
+    #'   - for linearly decreasing sum insured it will be (policyPeriod:0)/policyPeriod
+    #' @details Not to be called directly, but implicitly by the [InsuranceContract] object.
+    #' @param len The desired length of the returned data frame (the number of contract periods desire)
     getDeathCF = function(len, params, values) {
       period = params$ContractData$policyPeriod - params$ContractData$deferralPeriod;
       if (is.null(params$ContractData$deathBenefit)) {
@@ -185,6 +332,9 @@ InsuranceTarif = R6Class(
       }
     },
 
+    #' @description Returns the basic (unit) cash flows associated with the type of insurance
+    #' given in the [InsuranceContract@tariffType] field
+    #' @details Not to be called directly, but implicitly by the [InsuranceContract] object.
     getBasicCashFlows = function(params, values) {
       deferralPeriod = params$ContractData$deferralPeriod;
       guaranteedPeriod = params$ContractData$guaranteedPeriod;
@@ -248,6 +398,8 @@ InsuranceTarif = R6Class(
       cf
     },
 
+    #' @description Returns the cash flows for the contract given the parameters
+    #' @details Not to be called directly, but implicitly by the [InsuranceContract] object.
     getCashFlows = function(params, values) {
       age = params$ContractData$technicalAge;
 
@@ -308,6 +460,8 @@ InsuranceTarif = R6Class(
       applyHook(params$Hooks$adjustCashFlows, cf, params, values)
     },
 
+    #' @description Returns the cost cash flows of the contract given the contract and tariff parameters
+    #' @details Not to be called directly, but implicitly by the [InsuranceContract] object.
     getCashFlowsCosts = function(params, values) {
       dm = dim(params$Costs);
       dmnames = dimnames(params$Costs);
@@ -337,6 +491,9 @@ InsuranceTarif = R6Class(
       applyHook(params$Hooks$adjustCashFlowsCosts, cf, params, values)
     },
 
+    #' @description Returns the present values of the cash flows of the contract (cash flows already calculated and stored in the \code{cashFlows} data.frame)
+    #' @details Not to be called directly, but implicitly by the [InsuranceContract] object.
+    #' @param cashFlows data.frame of cash flows calculated by a call to [InsuranceTarif@getCashFlows()]
     presentValueCashFlows = function(cashFlows, params, values) {
 
       qq = self$getTransitionProbabilities(params);
@@ -394,6 +551,8 @@ InsuranceTarif = R6Class(
       pv
     },
 
+    #' @description Calculates the present values of the cost cash flows of the contract (cost cash flows alreay calculated by [InsuranceTarif@getCashFlowsCosts()] and stored in the \code{values} list
+    #' @details Not to be called directly, but implicitly by the [InsuranceContract] object.
     presentValueCashFlowsCosts = function(params, values) {
       len = values$int$l;
       q = self$getTransitionProbabilities(params);
@@ -404,7 +563,11 @@ InsuranceTarif = R6Class(
       pvc
     },
 
-    # Cost values (CF, present values, etc.) are an Tx5x3 matrix => convert to Tx15 matrix (alpha | Zillmer | beta | gamma)
+    #' @description Convert the cost values array to a tx15 matrix
+    #' @details Not to be called directly, but implicitly by the [InsuranceContract] object.
+    #' Convert the array containing cost values like cashflows, present
+    #' values, etc. (objects of dimension tx5x3) to a matrix with dimensions (tx15)
+    #' @param costValues The cost data structure (array of size tx5x3) to be converted to a matrix
     costValuesAsMatrix = function(costValues) {
       dm = dim(costValues);
       nm = dimnames(costValues);
@@ -416,6 +579,13 @@ InsuranceTarif = R6Class(
       res
     },
 
+    #' @description Calculate the cash flows in monetary terms of the insurance contract
+    #' @details Once the premiums of the insurance contracts are calculated, all
+    #' cash flows can also be expressed in absolute terms. This function
+    #' calculates these time series in monetary terms, once the premiums
+    #' are calculated by the previous functions of this class.
+    #'
+    #' This method is NOT to be called directly, but implicitly by the [InsuranceContract] object.
     getAbsCashFlows = function(params, values) {
 
         # TODO: Set up a nice list with coefficients for each type of cashflow,
@@ -452,6 +622,12 @@ InsuranceTarif = R6Class(
       cbind(values$cashFlows, values$cashFlowsCosts)
     },
 
+    #' @description Calculate the absolute present value time series of the insurance contract
+    #' @details Once the premiums of the insurance contracts are calculated, all
+    #' present values can also be expressed in absolute terms. This function
+    #' calculates these time series in monetary terms, once the premiums and the unit-benefit present values are calculated by the previous functions of this classe.
+    #'
+    #' This method is NOT to be called directly, but implicitly by the [InsuranceContract] object.
     getAbsPresentValues = function(params, values) {
       pv = values$presentValues;
 
@@ -474,6 +650,14 @@ InsuranceTarif = R6Class(
     },
 
 
+    #' @description Calculate the absolute present value time series of the benefits of the insurance contract
+    #' @details Once the premiums of the insurance contracts are calculated, all
+    #' present values can also be expressed in absolute terms. This function
+    #' calculates these time series of the benefits present values in monetary
+    #' terms, once the premiums and the unit-benefit present values are calculated
+    #'  by the previous functions of this classe.
+    #'
+    #' This method is NOT to be called directly, but implicitly by the [InsuranceContract] object.
     presentValueBenefits = function(params, values) {
       # TODO: Here we don't use the securityLoading parameter => Shall it be used or are these values to be understood without additional security loading?
       benefits    = values$presentValues[,"survival"] +
@@ -495,9 +679,19 @@ InsuranceTarif = R6Class(
         benefitsCosts)
     },
 
-    # When getPremiumCoefficients is called, the values$premiums array has NOT been filled! Instead,
-    # some of the premium fields (all required for the current calculation) have
-    # been set in the passed "premiums" argument.
+    #' @description Calculate the linear coefficients of the premium calculation formula for the insurance contract
+    #' @details Not to be called directly, but implicitly by the [InsuranceContract] object.
+    #' When \code{getPremiumCoefficients} is called, the \code{values$premiums}
+    #' array has NOT yet been filled! Instead, all premiums already calculated
+    #' (and required for the premium coefficients) are passed in the \code{premiums}
+    #' argument.
+    #'
+    #' @param type The premium that is supposed to be calculated ("gross", "Zillmer", "net")
+    #' @param coeffBenefits (empty) data structure of the benefit coefficients. The actual values have no meaning, this parameter is only used to derive the required dimensions
+    #' @param coeffCosts (empty) data structure of the cost coefficients. The actual values have no meaning, this parameter is only used to derive the required dimensions
+    #' @param premiums The premium components that have already been calculated
+    #'         (e.g. for net and Zillmer, the gross premium has already been
+    #'         calculated to allow modelling the premium refund)
     getPremiumCoefficients = function(type = "gross", coeffBenefits, coeffCosts, premiums, params, values, premiumCalculationTime = values$int$premiumCalculationTime) {
       # Merge a possibly passed loadings override with the defaults of this class:
       securityLoading = valueOrFunction(params$Loadings$security, params = params, values = values);
@@ -567,6 +761,8 @@ InsuranceTarif = R6Class(
       coeff
     },
 
+    #' @description Calculate the premiums of the InsuranceContract given the parameters, present values and premium cofficients already calculated and stored in the \code{params} and \code{values} lists.
+    #' @details Not to be called directly, but implicitly by the [InsuranceContract] object.
     premiumCalculation = function(params, values, premiumCalculationTime = values$int$premiumCalculationTime) {
       loadings = params$Loadings;
       sumInsured = params$ContractData$sumInsured
@@ -654,6 +850,8 @@ InsuranceTarif = R6Class(
       list("premiums" = values$premiums, "coefficients" = coefficients)
     },
 
+    #' @description Calculate the reserves of the InsuranceContract given the parameters, present values and premiums already calculated and stored in the \code{params} and \code{values} lists.
+    #' @details Not to be called directly, but implicitly by the [InsuranceContract] object.
     reserveCalculation = function(params, values) {
       t = "0"
       securityFactor = (1 + valueOrFunction(params$Loadings$security, params = params, values = values));
@@ -753,6 +951,9 @@ InsuranceTarif = R6Class(
       )
     },
 
+    #' @description Calculate the (linear) interpolation factors for the balance sheet reserve (Dec. 31) between the yearly contract clowing dates
+    #' @details Not to be called directly, but implicitly by the [InsuranceContract] object.
+    #' @param years how many years to calculate (for some usances, the factor is different in leap years!)
     getBalanceSheetReserveFactor = function(params, years = 1) {
       balanceDate = params$ActuarialBases$balanceSheetDate
       year(balanceDate) = year(params$ContractData$contractClosing);
@@ -775,6 +976,10 @@ InsuranceTarif = R6Class(
       baf
     },
 
+    #' @description Calculate the reserves for the balance sheets at Dec. 31 of each
+    #'              year by interpolation from the contract values calculated for
+    #'              the yearly reference date of the contract
+    #' @details Not to be called directly, but implicitly by the [InsuranceContract] object.
     reserveCalculationBalanceSheet = function(params, values) {
       reserves = values$reserves;
       years = length(reserves[,"Zillmer"]);
@@ -811,6 +1016,10 @@ InsuranceTarif = R6Class(
       res
     },
 
+    #' @description Calculate the profit participation given the contract parameters and the already calculated reserves of the contract.
+    #' @details Not to be called directly, but implicitly by the [InsuranceContract] object.
+    #' @param ... Additional parameters for the profit participation calculation, passed
+    #'            through to the profit participation scheme's [ProfitParticipation$getProfitParticipation()]
     calculateProfitParticipation = function(params, ...) {
         ppScheme = params$ProfitParticipation$profitParticipationScheme;
         if (!is.null(ppScheme)) {
@@ -818,11 +1027,17 @@ InsuranceTarif = R6Class(
         }
     },
 
+    #' @description Calculate the reserves after profit participation for the given profit scenario
+    #' @details Not to be called directly, but implicitly by the [InsuranceContract] object.
+    #' @param profitScenario The ID of the profit scenario for which to calculate the reserves
+    #' @param ... TODO
     reservesAfterProfit = function(profitScenario, params, values, ...) {
         # TODO
     },
 
 
+    #' @description Return the time series of the basic contract
+    #' @details Not to be called directly, but implicitly by the [InsuranceContract] object.
     getBasicDataTimeseries = function(params, values) {
         res = cbind(
             "PremiumPayment" = values$premiumComposition[, "charged"] > 0,
@@ -836,6 +1051,9 @@ InsuranceTarif = R6Class(
         res
     },
 
+    #' @description Calculate the time series of the premium decomposition of the contract
+    #' @details Not to be called directly, but implicitly by the [InsuranceContract] object.
+    #'          All premiums, reserves and present values have already been calculated.
     premiumDecomposition = function(params, values) {
       loadings   = params$Loadings;
       sumInsured = params$ContractData$sumInsured;
@@ -1008,10 +1226,17 @@ InsuranceTarif = R6Class(
       res
     },
 
+
+    #' @description Generic function to calculate future sums of the values
+    #' @param values The time series, for which future sums at all times are desired
+    #' @param ... currently unused
     calculateFutureSums = function(values, ...) {
       rcumsum = function(vec) rev(cumsum(rev(vec)))
       apply(values, 2, rcumsum)
     },
+    #' @description Calculate all present values for a given time series. The mortalities are taken from the contract's parameters.
+    #' @param values The time series, for which future present values at all times are desired
+    #' @param ... currently unused
     calculatePresentValues = function(values, params) {
       len = dim(values)[1];
       q = self$getTransitionProbabilities(params);
@@ -1022,7 +1247,7 @@ InsuranceTarif = R6Class(
 
 
 
-    # Dummy to allow commas
+    #' @field dummy Dummy field to allow commas after the previous method
     dummy = 0
   )
 )

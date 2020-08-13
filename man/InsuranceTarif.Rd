@@ -2,14 +2,110 @@
 % Please edit documentation in R/InsuranceTarif.R
 \name{InsuranceTarif}
 \alias{InsuranceTarif}
-\title{Base class for Insurance Tarifs, providing calculation functions to the contract}
+\title{Base class for traditional Insurance Tarifs (with fixed guarantee, profit sharing and no unit-linked component)}
 \description{
+The class \code{InsuranceTarif} provides the code and general framework to
+implement contract-independent functionality of a life insurance product.
+}
+\details{
 This is a base class for holding contract-independent values and
 providing methods to calculate cash flows, premiums, etc. Objects of this
 class do NOT contain contract-specific values like age, death probabilities,
 premiums, reserves, etc. Rather, they are the calculation kernels that will
 be called by the \code{\link{InsuranceContract}} objects to make the actual,
 tariff-specific calculations.
+
+Most methods of this class are not meant to be called manually, but are supposed
+to be called by the InsuranceContract object with contract-specific information.
+The only methods that are typically sued for defining an insurance tariff are
+the constructor [InsuranceTarif@initialize] and the cloning method
+[InsuranceTarif@createModification]. All other methods should never be called
+manually.
+
+However, as overriding private methods is not possible in an R6 class, all the
+methods need to be public to allow overriding them in derived classes.
+}
+\examples{
+# Define an insurance tariff for 10-year endowments, using a guaranteed interest
+# rate of 1\% and the Austrian population mortality table of the census 2011.
+# Premiums are paid monthly in advance during the whole contract period.
+mortalityTables.load("Austria_Census")
+# Cost structure:
+#   - 4\% up-front acquisition costs (of premium sum)
+#   - 1\% collection cost of each premium paid
+#   - 1\%o yearly administration cost (of the sum insured) as long as premiums are paid
+#   - 2\%o yearly administration cost for paid-up contracts
+#   - 10 Euro yearly unit costs (as long as premiums are paid)
+costs.endw = initializeCosts(alpha = 0.04, beta = 0.01, gamma = 0.001, gamma.paidUp = 0.002, gamma.premiumfree = 0.002, unitcosts = 10)
+
+endowment.AT1 = InsuranceTarif$new(
+    name = "Endow AT 1\%", type = "endowment", tarif = "Austrian Endowment",
+    desc = "An endowment for Austrian insured with 1\% interest and no profit participation",
+    ContractPeriod = 10,
+    i = 0.01, mortalityTable = mort.AT.census.2011.unisex,
+    costs = costs.endw, premiumFrequency = 12)
+
+# The instantiation of the actual contract will provide the contract specific
+# information and immediately calculate all further values:
+ctr.end.AT1 = InsuranceContract$new(tarif = endowment.AT1, contractClosing = as.Date("2020-07-01"), age = 42)
+
+# All values for the contract are already calculated during construction and stored in teh ctr.end.AT1$Values list:
+ctr.end.AT1$Values$basicData
+ctr.end.AT1$Values$transitionProbabilities
+ctr.end.AT1$Values$cashFlowsCosts
+ctr.end.AT1$Values$presentValues
+ctr.end.AT1$Values$premiums
+ctr.end.AT1$Values$reserves
+ctr.end.AT1$Values$premiumComposition
+# etc.
+
+## ------------------------------------------------
+## Method `InsuranceTarif$new`
+## ------------------------------------------------
+
+mortalityTables.load("Austria_Annuities_AVOe2005R")
+tarif.male = InsuranceTarif$new(name = "Annuity Males", type = "annuity", i = 0.01, mortalityTable = AVOe2005R.male)
+
+## ------------------------------------------------
+## Method `InsuranceTarif$createModification`
+## ------------------------------------------------
+
+mortalityTables.load("Austria_Annuities_AVOe2005R")
+tarif.male = InsuranceTarif$new(name = "Annuity Males", type = "annuity", i = 0.01, mortalityTable = AVOe2005R.male)
+tarif.unisex = tarif.male@createModification(name = "Annuity unisex", mortalityTable = AVOe2005R.unisex)
+
+## ------------------------------------------------
+## Method `InsuranceTarif$getParameters`
+## ------------------------------------------------
+
+tarif.male = InsuranceTarif$new(name = "Annuity Males", type = "annuity", i = 0.01, mortalityTable = AVOe2005R.male)
+tarif.male@getParameters()
+}
+\section{Public fields}{
+\if{html}{\out{<div class="r6-fields">}}
+\describe{
+\item{\code{name}}{The tariff's unique name. Will also be used as the key for exported data.}
+
+\item{\code{tarif}}{The tariff's public name (typically a product name), not necessarily unique.}
+
+\item{\code{desc}}{A short human-readable description of the tariff and its main features.}
+
+\item{\code{tariffType}}{An enum specifying the main characteristics of the tarif. Possible values are:
+\description{
+  \item{annuity}{Whole life or term annuity (periodic survival benefits) with flexible payouts (constand, increasing, decreasing, arbitrary, etc.)}
+  \item{wholelife}{A whole or term life insurance with only death benefits. The benefit can be constant, increasing, decreasing, described by a function, etc.}
+  \item{endowment}{An  endowment with death and survival benefits, potentially with different benefits.}
+  \item{pureendowment}{A pure endowment with only a survival benefit at the end of the contract. Optionally, in case of death, all or part of the premiums paid may be refunded.}
+  \item{terme-fix}{A terme-fix insurance with a fixed payout at the end of the contract, even if the insured dies before that time. Premiums are paid until death of the insured.}
+  \item{dread-disease}{A dread-disease insurance, which pays in case of a severe illness (typically heart attacks, cancer, strokes, etc.), but not in case of death.}
+  \item{endowment + dread-disease}{A combination of an endowment and a temporary dread-disease insurance. Benefits occur either on death, severe illness or survival, whichever comes first.}
+}}
+
+\item{\code{Parameters}}{A data structure (nested list) containing all relevant parameters describing a contract, its underlying tariff, the profit participation scheme etc. See \seealso{InsuranceContract.ParameterStructure} for all fields.}
+
+\item{\code{dummy}}{Dummy field to allow commas after the previous method}
+}
+\if{html}{\out{</div>}}
 }
 \section{Methods}{
 \subsection{Public methods}{
@@ -51,6 +147,7 @@ tariff-specific calculations.
 \if{html}{\out{<a id="method-new"></a>}}
 \if{latex}{\out{\hypertarget{method-new}{}}}
 \subsection{Method \code{new()}}{
+Initialize a new tariff object
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{InsuranceTarif$new(
   name = NULL,
@@ -61,11 +158,57 @@ tariff-specific calculations.
 )}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{name}}{The unique name / ID of the tariff}
+
+\item{\code{type}}{An enum specifying the main characteristics of the tarif. See [tariffType]}
+
+\item{\code{tarif}}{The tariff's public name. See [InsuranceTarif@tarif]}
+
+\item{\code{desc}}{A short human-readable description. See [InsuranceTarif@desc]}
+
+\item{\code{...}}{Parameters for the [InsuranceContract.ParametersStructure],
+defining the characteristics of the tariff.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Details}{
+The constructor function defines a tariff and generates the corresponding data structure, which can then be used with the [InsuranceContract] class to define an actual contract using the tariff.
+The arguments passed to this function will be stored inside the \code{Parameters} field of the class, inside one of the lists sublists. The parameters are stacked from different layers (higher levels override default values from lower layers):
+
+* InsuranceContract object (parameters passed directly to the individual contract)
+* ProfitParticipation object (parameters for profit participation, passed to the definition of the profit plan, which is used for the tarif definition or the contract)
+* InsuranceTarif object (parameters passed to the definition of the tariff that was used for the contract)
+* Defaults taken from [InsuranceContract.ParameterStructure]
+
+The general implementation of this parameter layering means that (a) a tariff
+can already provide default values for contracts (e.g. a default maturity,
+default sum insured, etc) and (b) individual contracts can override all
+parameters defined with the underlying tariff. In particular the latter
+feature has many use-cases in prototyping: E.g. when you have a tariff
+with a guaranteed interest rate of 1\% and a certain mortality table,
+one can immediately instantiate a contract with an updated interest rate
+or mortality table for comparison. There is no need to re-implement a
+tariff for such comparisons, as long as only parameters are changed.
+}
+
+\subsection{Examples}{
+\if{html}{\out{<div class="r example copy">}}
+\preformatted{mortalityTables.load("Austria_Annuities_AVOe2005R")
+tarif.male = InsuranceTarif$new(name = "Annuity Males", type = "annuity", i = 0.01, mortalityTable = AVOe2005R.male)
+}
+\if{html}{\out{</div>}}
+
+}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-createModification"></a>}}
 \if{latex}{\out{\hypertarget{method-createModification}{}}}
 \subsection{Method \code{createModification()}}{
+create a copy of a tariff with certain parameters changed
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{InsuranceTarif$createModification(
   name = NULL,
@@ -76,13 +219,61 @@ tariff-specific calculations.
 )}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{name}}{The unique name / ID of the tariff}
+
+\item{\code{tarif}}{The tariff's public name. See [InsuranceTarif@tarif]}
+
+\item{\code{desc}}{A short human-readable description. See [InsuranceTarif@desc]}
+
+\item{\code{tariffType}}{An enum specifying the main characteristics of the tarif. See [tariffType]}
+
+\item{\code{...}}{Parameters for the [InsuranceContract.ParametersStructure],
+defining the characteristics of the tariff.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Details}{
+This method \code{createModification} returns a copy of the tariff
+with all given arguments changed in the tariff's [InsuranceTarif@Parametrers]
+parameter list.
+
+As InsuranceTarif is a R6 class with reference logic, simply assigning
+the option to a new variable does not create a copy, but reference the
+original tariff object. To create an actual copy, one needs to call this
+method, which first clones the whole object and then adjusts all parameters
+to the values passed to this method.
+}
+
+\subsection{Examples}{
+\if{html}{\out{<div class="r example copy">}}
+\preformatted{mortalityTables.load("Austria_Annuities_AVOe2005R")
+tarif.male = InsuranceTarif$new(name = "Annuity Males", type = "annuity", i = 0.01, mortalityTable = AVOe2005R.male)
+tarif.unisex = tarif.male@createModification(name = "Annuity unisex", mortalityTable = AVOe2005R.unisex)
+}
+\if{html}{\out{</div>}}
+
+}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-getParameters"></a>}}
 \if{latex}{\out{\hypertarget{method-getParameters}{}}}
 \subsection{Method \code{getParameters()}}{
+Retrieve the parameters for this tariff (can be overridden for each contract)
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{InsuranceTarif$getParameters()}\if{html}{\out{</div>}}
+}
+
+\subsection{Examples}{
+\if{html}{\out{<div class="r example copy">}}
+\preformatted{tarif.male = InsuranceTarif$new(name = "Annuity Males", type = "annuity", i = 0.01, mortalityTable = AVOe2005R.male)
+tarif.male@getParameters()
+}
+\if{html}{\out{</div>}}
+
 }
 
 }
@@ -90,8 +281,24 @@ tariff-specific calculations.
 \if{html}{\out{<a id="method-getInternalValues"></a>}}
 \if{latex}{\out{\hypertarget{method-getInternalValues}{}}}
 \subsection{Method \code{getInternalValues()}}{
+Get some internal parameters cached (length of data.frames, policy periods cut at max.age, etc.)
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{InsuranceTarif$getInternalValues(params, ...)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{params}}{Contract-specific, full set of parameters of the contract (merged parameters of the defaults, the tariff, the profit participation scheme and the contract)}
+
+\item{\code{...}}{currently unused}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Details}{
+This methos is not meant to be called explicitly, but rather used
+by the InsuranceContract class. It returns a list of maturities and ages
+relevant for the contract-specific calculations
 }
 
 }
@@ -99,8 +306,21 @@ tariff-specific calculations.
 \if{html}{\out{<a id="method-getAges"></a>}}
 \if{latex}{\out{\hypertarget{method-getAges}{}}}
 \subsection{Method \code{getAges()}}{
+Calculate the contract-relevant age(s) given a certain parameter data structure (contract-specific values)
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{InsuranceTarif$getAges(params)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{params}}{Contract-specific, full set of parameters of the contract (merged parameters of the defaults, the tariff, the profit participation scheme and the contract)}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Details}{
+This method is not meant to be called explicitly, but rather used
+by the InsuranceContract class. It returns the relevant ages during the whole contract period
 }
 
 }
@@ -108,8 +328,22 @@ tariff-specific calculations.
 \if{html}{\out{<a id="method-getTransitionProbabilities"></a>}}
 \if{latex}{\out{\hypertarget{method-getTransitionProbabilities}{}}}
 \subsection{Method \code{getTransitionProbabilities()}}{
+Calculate the transition probabilities from the contract-specific parameters passed as \code{params} and the already-calculated contract values \code{values}
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{InsuranceTarif$getTransitionProbabilities(params, values)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{params}}{Contract-specific, full set of parameters of the contract (merged parameters of the defaults, the tariff, the profit participation scheme and the contract)}
+
+\item{\code{values}}{Contract values calculated so far (in the \code{contract$Values} list) then this method is called by the contract object}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Details}{
+Not to be called directly, but implicitly by the [InsuranceContract] object.
 }
 
 }
@@ -117,8 +351,26 @@ tariff-specific calculations.
 \if{html}{\out{<a id="method-getCostValues"></a>}}
 \if{latex}{\out{\hypertarget{method-getCostValues}{}}}
 \subsection{Method \code{getCostValues()}}{
+Obtain the cost structure from the cost parameter and the given paremeter set
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{InsuranceTarif$getCostValues(costs, params)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{costs}}{The cost parameter passed to the tarif definition or the contract (either an array of the form returned by [initializeCosts()] or a function(params, values) returning such an array)}
+
+\item{\code{params}}{Contract-specific, full set of parameters of the contract (merged parameters of the defaults, the tariff, the profit participation scheme and the contract)}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Details}{
+Not to be called directly, but implicitly by the [InsuranceContract] object.
+The cost parameter can be either an array of costs (generated by [initializeCosts()])
+or a function with parameters \code{param} and \code{values}(=NULL) returning
+an array of the required dimensions. This function makes sures that the
+latter function is actually evaluated.
 }
 
 }
@@ -126,8 +378,28 @@ tariff-specific calculations.
 \if{html}{\out{<a id="method-getPremiumCF"></a>}}
 \if{latex}{\out{\hypertarget{method-getPremiumCF}{}}}
 \subsection{Method \code{getPremiumCF()}}{
+Returns the unit premium cash flow for the whole contract period.
+  - For constant premiums it will be rep(1, premiumPeriod),
+  - for single premiums it will be c(1, 0, 0, ...),
+  - for increasing premiums it will be (1+increase)^(0:(premiumPeriod-1))
+and 0 after the premium period
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{InsuranceTarif$getPremiumCF(len, params, values)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{len}}{The desired length of the returned data frame (the number of contract periods desire)}
+
+\item{\code{params}}{Contract-specific, full set of parameters of the contract (merged parameters of the defaults, the tariff, the profit participation scheme and the contract)}
+
+\item{\code{values}}{Contract values calculated so far (in the \code{contract$Values} list) then this method is called by the contract object}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Details}{
+Not to be called directly, but implicitly by the [InsuranceContract] object.
 }
 
 }
@@ -135,8 +407,28 @@ tariff-specific calculations.
 \if{html}{\out{<a id="method-getAnnuityCF"></a>}}
 \if{latex}{\out{\hypertarget{method-getAnnuityCF}{}}}
 \subsection{Method \code{getAnnuityCF()}}{
+Returns the unit annuity cash flow (guaranteed and contingent) for
+    the whole annuity payment period (after potential deferral period)
+  - For constant annuity it will be rep(1, annuityPeriod),
+  - for increasing annuities it will be (1+increase)^(0:(premiumPeriod-1))
+and 0 after the premium period
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{InsuranceTarif$getAnnuityCF(len, params, values)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{len}}{The desired length of the returned data frame (the number of contract periods desire)}
+
+\item{\code{params}}{Contract-specific, full set of parameters of the contract (merged parameters of the defaults, the tariff, the profit participation scheme and the contract)}
+
+\item{\code{values}}{Contract values calculated so far (in the \code{contract$Values} list) then this method is called by the contract object}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Details}{
+Not to be called directly, but implicitly by the [InsuranceContract] object.
 }
 
 }
@@ -144,8 +436,26 @@ tariff-specific calculations.
 \if{html}{\out{<a id="method-getDeathCF"></a>}}
 \if{latex}{\out{\hypertarget{method-getDeathCF}{}}}
 \subsection{Method \code{getDeathCF()}}{
+Returns the unit death cash flow for the whole protection period (after potential deferral period!)
+  - For constant death benefit it will be rep(1, policyPeriod),
+  - for linearly decreasing sum insured it will be (policyPeriod:0)/policyPeriod
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{InsuranceTarif$getDeathCF(len, params, values)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{len}}{The desired length of the returned data frame (the number of contract periods desire)}
+
+\item{\code{params}}{Contract-specific, full set of parameters of the contract (merged parameters of the defaults, the tariff, the profit participation scheme and the contract)}
+
+\item{\code{values}}{Contract values calculated so far (in the \code{contract$Values} list) then this method is called by the contract object}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Details}{
+Not to be called directly, but implicitly by the [InsuranceContract] object.
 }
 
 }
@@ -153,8 +463,23 @@ tariff-specific calculations.
 \if{html}{\out{<a id="method-getBasicCashFlows"></a>}}
 \if{latex}{\out{\hypertarget{method-getBasicCashFlows}{}}}
 \subsection{Method \code{getBasicCashFlows()}}{
+Returns the basic (unit) cash flows associated with the type of insurance
+given in the [InsuranceContract@tariffType] field
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{InsuranceTarif$getBasicCashFlows(params, values)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{params}}{Contract-specific, full set of parameters of the contract (merged parameters of the defaults, the tariff, the profit participation scheme and the contract)}
+
+\item{\code{values}}{Contract values calculated so far (in the \code{contract$Values} list) then this method is called by the contract object}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Details}{
+Not to be called directly, but implicitly by the [InsuranceContract] object.
 }
 
 }
@@ -162,8 +487,22 @@ tariff-specific calculations.
 \if{html}{\out{<a id="method-getCashFlows"></a>}}
 \if{latex}{\out{\hypertarget{method-getCashFlows}{}}}
 \subsection{Method \code{getCashFlows()}}{
+Returns the cash flows for the contract given the parameters
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{InsuranceTarif$getCashFlows(params, values)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{params}}{Contract-specific, full set of parameters of the contract (merged parameters of the defaults, the tariff, the profit participation scheme and the contract)}
+
+\item{\code{values}}{Contract values calculated so far (in the \code{contract$Values} list) then this method is called by the contract object}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Details}{
+Not to be called directly, but implicitly by the [InsuranceContract] object.
 }
 
 }
@@ -171,8 +510,22 @@ tariff-specific calculations.
 \if{html}{\out{<a id="method-getCashFlowsCosts"></a>}}
 \if{latex}{\out{\hypertarget{method-getCashFlowsCosts}{}}}
 \subsection{Method \code{getCashFlowsCosts()}}{
+Returns the cost cash flows of the contract given the contract and tariff parameters
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{InsuranceTarif$getCashFlowsCosts(params, values)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{params}}{Contract-specific, full set of parameters of the contract (merged parameters of the defaults, the tariff, the profit participation scheme and the contract)}
+
+\item{\code{values}}{Contract values calculated so far (in the \code{contract$Values} list) then this method is called by the contract object}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Details}{
+Not to be called directly, but implicitly by the [InsuranceContract] object.
 }
 
 }
@@ -180,8 +533,24 @@ tariff-specific calculations.
 \if{html}{\out{<a id="method-presentValueCashFlows"></a>}}
 \if{latex}{\out{\hypertarget{method-presentValueCashFlows}{}}}
 \subsection{Method \code{presentValueCashFlows()}}{
+Returns the present values of the cash flows of the contract (cash flows already calculated and stored in the \code{cashFlows} data.frame)
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{InsuranceTarif$presentValueCashFlows(cashFlows, params, values)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{cashFlows}}{data.frame of cash flows calculated by a call to [InsuranceTarif@getCashFlows()]}
+
+\item{\code{params}}{Contract-specific, full set of parameters of the contract (merged parameters of the defaults, the tariff, the profit participation scheme and the contract)}
+
+\item{\code{values}}{Contract values calculated so far (in the \code{contract$Values} list) then this method is called by the contract object}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Details}{
+Not to be called directly, but implicitly by the [InsuranceContract] object.
 }
 
 }
@@ -189,8 +558,22 @@ tariff-specific calculations.
 \if{html}{\out{<a id="method-presentValueCashFlowsCosts"></a>}}
 \if{latex}{\out{\hypertarget{method-presentValueCashFlowsCosts}{}}}
 \subsection{Method \code{presentValueCashFlowsCosts()}}{
+Calculates the present values of the cost cash flows of the contract (cost cash flows alreay calculated by [InsuranceTarif@getCashFlowsCosts()] and stored in the \code{values} list
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{InsuranceTarif$presentValueCashFlowsCosts(params, values)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{params}}{Contract-specific, full set of parameters of the contract (merged parameters of the defaults, the tariff, the profit participation scheme and the contract)}
+
+\item{\code{values}}{Contract values calculated so far (in the \code{contract$Values} list) then this method is called by the contract object}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Details}{
+Not to be called directly, but implicitly by the [InsuranceContract] object.
 }
 
 }
@@ -198,8 +581,22 @@ tariff-specific calculations.
 \if{html}{\out{<a id="method-costValuesAsMatrix"></a>}}
 \if{latex}{\out{\hypertarget{method-costValuesAsMatrix}{}}}
 \subsection{Method \code{costValuesAsMatrix()}}{
+Convert the cost values array to a tx15 matrix
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{InsuranceTarif$costValuesAsMatrix(costValues)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{costValues}}{The cost data structure (array of size tx5x3) to be converted to a matrix}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Details}{
+Not to be called directly, but implicitly by the [InsuranceContract] object.
+Convert the array containing cost values like cashflows, present
+values, etc. (objects of dimension tx5x3) to a matrix with dimensions (tx15)
 }
 
 }
@@ -207,8 +604,27 @@ tariff-specific calculations.
 \if{html}{\out{<a id="method-getAbsCashFlows"></a>}}
 \if{latex}{\out{\hypertarget{method-getAbsCashFlows}{}}}
 \subsection{Method \code{getAbsCashFlows()}}{
+Calculate the cash flows in monetary terms of the insurance contract
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{InsuranceTarif$getAbsCashFlows(params, values)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{params}}{Contract-specific, full set of parameters of the contract (merged parameters of the defaults, the tariff, the profit participation scheme and the contract)}
+
+\item{\code{values}}{Contract values calculated so far (in the \code{contract$Values} list) then this method is called by the contract object}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Details}{
+Once the premiums of the insurance contracts are calculated, all
+cash flows can also be expressed in absolute terms. This function
+calculates these time series in monetary terms, once the premiums
+are calculated by the previous functions of this class.
+
+This method is NOT to be called directly, but implicitly by the [InsuranceContract] object.
 }
 
 }
@@ -216,8 +632,26 @@ tariff-specific calculations.
 \if{html}{\out{<a id="method-getAbsPresentValues"></a>}}
 \if{latex}{\out{\hypertarget{method-getAbsPresentValues}{}}}
 \subsection{Method \code{getAbsPresentValues()}}{
+Calculate the absolute present value time series of the insurance contract
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{InsuranceTarif$getAbsPresentValues(params, values)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{params}}{Contract-specific, full set of parameters of the contract (merged parameters of the defaults, the tariff, the profit participation scheme and the contract)}
+
+\item{\code{values}}{Contract values calculated so far (in the \code{contract$Values} list) then this method is called by the contract object}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Details}{
+Once the premiums of the insurance contracts are calculated, all
+present values can also be expressed in absolute terms. This function
+calculates these time series in monetary terms, once the premiums and the unit-benefit present values are calculated by the previous functions of this classe.
+
+This method is NOT to be called directly, but implicitly by the [InsuranceContract] object.
 }
 
 }
@@ -225,8 +659,28 @@ tariff-specific calculations.
 \if{html}{\out{<a id="method-presentValueBenefits"></a>}}
 \if{latex}{\out{\hypertarget{method-presentValueBenefits}{}}}
 \subsection{Method \code{presentValueBenefits()}}{
+Calculate the absolute present value time series of the benefits of the insurance contract
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{InsuranceTarif$presentValueBenefits(params, values)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{params}}{Contract-specific, full set of parameters of the contract (merged parameters of the defaults, the tariff, the profit participation scheme and the contract)}
+
+\item{\code{values}}{Contract values calculated so far (in the \code{contract$Values} list) then this method is called by the contract object}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Details}{
+Once the premiums of the insurance contracts are calculated, all
+present values can also be expressed in absolute terms. This function
+calculates these time series of the benefits present values in monetary
+terms, once the premiums and the unit-benefit present values are calculated
+ by the previous functions of this classe.
+
+This method is NOT to be called directly, but implicitly by the [InsuranceContract] object.
 }
 
 }
@@ -234,6 +688,7 @@ tariff-specific calculations.
 \if{html}{\out{<a id="method-getPremiumCoefficients"></a>}}
 \if{latex}{\out{\hypertarget{method-getPremiumCoefficients}{}}}
 \subsection{Method \code{getPremiumCoefficients()}}{
+Calculate the linear coefficients of the premium calculation formula for the insurance contract
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{InsuranceTarif$getPremiumCoefficients(
   type = "gross",
@@ -246,11 +701,45 @@ tariff-specific calculations.
 )}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{type}}{The premium that is supposed to be calculated ("gross", "Zillmer", "net")}
+
+\item{\code{coeffBenefits}}{(empty) data structure of the benefit coefficients. The actual values have no meaning, this parameter is only used to derive the required dimensions}
+
+\item{\code{coeffCosts}}{(empty) data structure of the cost coefficients. The actual values have no meaning, this parameter is only used to derive the required dimensions}
+
+\item{\code{premiums}}{The premium components that have already been calculated
+(e.g. for net and Zillmer, the gross premium has already been
+calculated to allow modelling the premium refund)}
+
+\item{\code{params}}{Contract-specific, full set of parameters of the contract (merged parameters of the defaults, the tariff, the profit participation scheme and the contract)}
+
+\item{\code{values}}{Contract values calculated so far (in the \code{contract$Values} list) then this method is called by the contract object}
+
+\item{\code{premiumCalculationTime}}{The time when the premiums should be
+(re-)calculated according to the equivalence principle. A time 0
+means the initial premium calculation at contract closing, later
+premium calculation times can be used to re-calculate the new
+premium after a contract change (possibly including an existing reserve)}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Details}{
+Not to be called directly, but implicitly by the [InsuranceContract] object.
+When \code{getPremiumCoefficients} is called, the \code{values$premiums}
+array has NOT yet been filled! Instead, all premiums already calculated
+(and required for the premium coefficients) are passed in the \code{premiums}
+argument.
+}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-premiumCalculation"></a>}}
 \if{latex}{\out{\hypertarget{method-premiumCalculation}{}}}
 \subsection{Method \code{premiumCalculation()}}{
+Calculate the premiums of the InsuranceContract given the parameters, present values and premium cofficients already calculated and stored in the \code{params} and \code{values} lists.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{InsuranceTarif$premiumCalculation(
   params,
@@ -259,13 +748,46 @@ tariff-specific calculations.
 )}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{params}}{Contract-specific, full set of parameters of the contract (merged parameters of the defaults, the tariff, the profit participation scheme and the contract)}
+
+\item{\code{values}}{Contract values calculated so far (in the \code{contract$Values} list) then this method is called by the contract object}
+
+\item{\code{premiumCalculationTime}}{The time when the premiums should be
+(re-)calculated according to the equivalence principle. A time 0
+means the initial premium calculation at contract closing, later
+premium calculation times can be used to re-calculate the new
+premium after a contract change (possibly including an existing reserve)}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Details}{
+Not to be called directly, but implicitly by the [InsuranceContract] object.
+}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-reserveCalculation"></a>}}
 \if{latex}{\out{\hypertarget{method-reserveCalculation}{}}}
 \subsection{Method \code{reserveCalculation()}}{
+Calculate the reserves of the InsuranceContract given the parameters, present values and premiums already calculated and stored in the \code{params} and \code{values} lists.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{InsuranceTarif$reserveCalculation(params, values)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{params}}{Contract-specific, full set of parameters of the contract (merged parameters of the defaults, the tariff, the profit participation scheme and the contract)}
+
+\item{\code{values}}{Contract values calculated so far (in the \code{contract$Values} list) then this method is called by the contract object}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Details}{
+Not to be called directly, but implicitly by the [InsuranceContract] object.
 }
 
 }
@@ -273,8 +795,22 @@ tariff-specific calculations.
 \if{html}{\out{<a id="method-getBalanceSheetReserveFactor"></a>}}
 \if{latex}{\out{\hypertarget{method-getBalanceSheetReserveFactor}{}}}
 \subsection{Method \code{getBalanceSheetReserveFactor()}}{
+Calculate the (linear) interpolation factors for the balance sheet reserve (Dec. 31) between the yearly contract clowing dates
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{InsuranceTarif$getBalanceSheetReserveFactor(params, years = 1)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{params}}{Contract-specific, full set of parameters of the contract (merged parameters of the defaults, the tariff, the profit participation scheme and the contract)}
+
+\item{\code{years}}{how many years to calculate (for some usances, the factor is different in leap years!)}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Details}{
+Not to be called directly, but implicitly by the [InsuranceContract] object.
 }
 
 }
@@ -282,8 +818,24 @@ tariff-specific calculations.
 \if{html}{\out{<a id="method-reserveCalculationBalanceSheet"></a>}}
 \if{latex}{\out{\hypertarget{method-reserveCalculationBalanceSheet}{}}}
 \subsection{Method \code{reserveCalculationBalanceSheet()}}{
+Calculate the reserves for the balance sheets at Dec. 31 of each
+             year by interpolation from the contract values calculated for
+             the yearly reference date of the contract
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{InsuranceTarif$reserveCalculationBalanceSheet(params, values)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{params}}{Contract-specific, full set of parameters of the contract (merged parameters of the defaults, the tariff, the profit participation scheme and the contract)}
+
+\item{\code{values}}{Contract values calculated so far (in the \code{contract$Values} list) then this method is called by the contract object}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Details}{
+Not to be called directly, but implicitly by the [InsuranceContract] object.
 }
 
 }
@@ -291,8 +843,23 @@ tariff-specific calculations.
 \if{html}{\out{<a id="method-calculateProfitParticipation"></a>}}
 \if{latex}{\out{\hypertarget{method-calculateProfitParticipation}{}}}
 \subsection{Method \code{calculateProfitParticipation()}}{
+Calculate the profit participation given the contract parameters and the already calculated reserves of the contract.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{InsuranceTarif$calculateProfitParticipation(params, ...)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{params}}{Contract-specific, full set of parameters of the contract (merged parameters of the defaults, the tariff, the profit participation scheme and the contract)}
+
+\item{\code{...}}{Additional parameters for the profit participation calculation, passed
+through to the profit participation scheme's [ProfitParticipation$getProfitParticipation()]}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Details}{
+Not to be called directly, but implicitly by the [InsuranceContract] object.
 }
 
 }
@@ -300,8 +867,26 @@ tariff-specific calculations.
 \if{html}{\out{<a id="method-reservesAfterProfit"></a>}}
 \if{latex}{\out{\hypertarget{method-reservesAfterProfit}{}}}
 \subsection{Method \code{reservesAfterProfit()}}{
+Calculate the reserves after profit participation for the given profit scenario
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{InsuranceTarif$reservesAfterProfit(profitScenario, params, values, ...)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{profitScenario}}{The ID of the profit scenario for which to calculate the reserves}
+
+\item{\code{params}}{Contract-specific, full set of parameters of the contract (merged parameters of the defaults, the tariff, the profit participation scheme and the contract)}
+
+\item{\code{values}}{Contract values calculated so far (in the \code{contract$Values} list) then this method is called by the contract object}
+
+\item{\code{...}}{TODO}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Details}{
+Not to be called directly, but implicitly by the [InsuranceContract] object.
 }
 
 }
@@ -309,8 +894,22 @@ tariff-specific calculations.
 \if{html}{\out{<a id="method-getBasicDataTimeseries"></a>}}
 \if{latex}{\out{\hypertarget{method-getBasicDataTimeseries}{}}}
 \subsection{Method \code{getBasicDataTimeseries()}}{
+Return the time series of the basic contract
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{InsuranceTarif$getBasicDataTimeseries(params, values)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{params}}{Contract-specific, full set of parameters of the contract (merged parameters of the defaults, the tariff, the profit participation scheme and the contract)}
+
+\item{\code{values}}{Contract values calculated so far (in the \code{contract$Values} list) then this method is called by the contract object}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Details}{
+Not to be called directly, but implicitly by the [InsuranceContract] object.
 }
 
 }
@@ -318,8 +917,23 @@ tariff-specific calculations.
 \if{html}{\out{<a id="method-premiumDecomposition"></a>}}
 \if{latex}{\out{\hypertarget{method-premiumDecomposition}{}}}
 \subsection{Method \code{premiumDecomposition()}}{
+Calculate the time series of the premium decomposition of the contract
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{InsuranceTarif$premiumDecomposition(params, values)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{params}}{Contract-specific, full set of parameters of the contract (merged parameters of the defaults, the tariff, the profit participation scheme and the contract)}
+
+\item{\code{values}}{Contract values calculated so far (in the \code{contract$Values} list) then this method is called by the contract object}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Details}{
+Not to be called directly, but implicitly by the [InsuranceContract] object.
+         All premiums, reserves and present values have already been calculated.
 }
 
 }
@@ -327,19 +941,41 @@ tariff-specific calculations.
 \if{html}{\out{<a id="method-calculateFutureSums"></a>}}
 \if{latex}{\out{\hypertarget{method-calculateFutureSums}{}}}
 \subsection{Method \code{calculateFutureSums()}}{
+Generic function to calculate future sums of the values
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{InsuranceTarif$calculateFutureSums(values, ...)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{values}}{The time series, for which future sums at all times are desired}
+
+\item{\code{...}}{currently unused}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-calculatePresentValues"></a>}}
 \if{latex}{\out{\hypertarget{method-calculatePresentValues}{}}}
 \subsection{Method \code{calculatePresentValues()}}{
+Calculate all present values for a given time series. The mortalities are taken from the contract's parameters.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{InsuranceTarif$calculatePresentValues(values, params)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{values}}{The time series, for which future present values at all times are desired}
+
+\item{\code{params}}{Contract-specific, full set of parameters of the contract (merged parameters of the defaults, the tariff, the profit participation scheme and the contract)}
+
+\item{\code{...}}{currently unused}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-clone"></a>}}
