@@ -35,7 +35,7 @@ NULL
 #' showVmGlgExamples(contract, file = "annuity-example.txt")
 #'
 #' @export
-showVmGlgExamples = function(contract, prf=10, t=10, t_prf=12, file="", ...) {
+showVmGlgExamples = function(contract, prf = 10, t = 10, t_prf = 12, file = "", ...) {
 
     has.prf = prf < contract$Parameters$ContractData$premiumPeriod;
 

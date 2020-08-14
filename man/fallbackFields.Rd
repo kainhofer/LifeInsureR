@@ -2,9 +2,16 @@
 % Please edit documentation in R/HelperFunctions.R
 \name{fallbackFields}
 \alias{fallbackFields}
-\title{fallbackFields(fields, fallback)}
+\title{Replace all missing values in fields (either missing or NA) with
+their corresponding values from fallback. Members in fallback that are missing
+in fields are inserted}
 \usage{
 fallbackFields(fields, valuelist)
+}
+\arguments{
+\item{fields}{existing list}
+
+\item{valuelist}{list of fields to replace in \code{fields}. Only keys that are missing in \code{fields} are added, no existing fields in \code{fields} are overwritten}
 }
 \description{
 Replace all missing values in fields (either missing or NA) with

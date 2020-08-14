@@ -3,6 +3,11 @@
 #' This function will return the full InsuranceContract objects, so apply can
 #' later be used to extract premiums, reserves and other values to display in
 #' a grid.
+#'
+#' @param axes List of paramters spanning the dimensions of the grid.
+#' @param YOB optional year of bith. If missing, the \code{observationYear} and the contract's age
+#' @param observationYear The observation year, for which the grid shall be calculated. If given, the YOB is calculated from it, otherwise the contract's YOB is used
+#' @param ... Additional parameters to be passed to [InsuranceContract$new]
 #' @export
 contractGrid = function(axes = list(age = seq(20, 60, 10), policyPeriod = seq(5, 35, 5)), YOB = NULL, observationYear = NULL, ...) {
 
@@ -33,8 +38,12 @@ makeContractGridDimname.numeric = function(value) { value }
 makeContractGridDimname.double = function(value) { value }
 #' @export
 makeContractGridDimname.default = function(value) { value }
+#' Generate a dimension label for the object passed as \code{value}, to be used in [contractGrid]
+#' @param value the value along the axis, for which a name should be generated
 #' @export
 makeContractGridDimname = function(value) { UseMethod("makeContractGridDimname", value) }
+#' Generate proper dimnames for all exntries of the axes of a [contractGrid]
+#' @param axes the axes with all names, for which a name should be generated
 #' @export
 makeContractGridDimnames = function(axes) {
     lapply(axes, function(axis) { lapply(axis, makeContractGridDimname); } )
@@ -45,6 +54,12 @@ makeContractGridDimnames = function(axes) {
 #' This function will return the full InsuranceContract objects, so apply can
 #' later be used to extract premiums, reserves and other values to display in
 #' a grid.
+#'
+#' @param contractGrid (optional) existing contract grid from which to derive
+#' premiums. If not given, [contractGrid] is called with all parameters, so
+#' \code{...} should contain an \code{axes} argument in that case.
+#' @param premium The type of premium to derive (key of the \code{contract$Values$premiums} list.
+#' @param ... Arguments pass on to [contractGrid] if no conract grid is given.
 #' @export
 contractGridPremium = function(contractGrid = NULL, premium="written", ...) {
     if (missing(contractGrid) || is.null(contractGrid)) {

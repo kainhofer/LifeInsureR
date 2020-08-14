@@ -282,7 +282,14 @@ fillNAgaps <- function(x, firstBack=FALSE) {
 }
 
 
-
+#' If \code{val} is a function, evaluate it, otherwise return \code{val}
+#' @param val Function or value
+#' @param ... Argument passed to \code{val} if it is a function
+#' @examples
+#' valueOrFunction(3) # returns 3
+#' valueOrFunction(`+`, 1, 2) # also returns 3
+#' A = `+`
+#' valueOrFunction(A, 1, 2)
 #' @export
 valueOrFunction = function(val, ...) {
   if (is.function(val)) {
@@ -292,6 +299,14 @@ valueOrFunction = function(val, ...) {
   }
 }
 
+#' If \code{hook} is a function, apply it to \code{val}, otherwise return \code{val} unchanged
+#' @param hook (optional) function to apply to \code{val} and the other parameters
+#' @param val The value to which the hook is applied (ifgiven)
+#' @param ... optional parameters passed to the hook function (if it is a function)
+#' @examples
+#' applyHook(NULL, 3) # returns 3 unchanged
+#' applyHook(function(x) 2*x, 3) # applies the function, returns 6
+#' applyHook(`+`, 3, 1) # returns 4
 #' @export
 applyHook = function(hook, val, ...) {
   if (is.function(hook)) {
@@ -305,12 +320,13 @@ applyHook = function(hook, val, ...) {
 
 
 
-#' fillFields(fields, valuelist)
-#'
 #' Overwrite all existing fields in the first argument with
 #' values given in valuelist. Members of valuelist that are not yet in
 #' fields are ignored. This allows a huge valuelist to be used to fill
 #' fields in multiple lists with given structure.
+#'
+#' @param fields existing list
+#' @param valuelist list of fields to replace in \code{fields}. Only keys that exist in \code{fields} are overwritten, no new fields are added to \code{fields}
 #'
 #' @export
 fillFields = function(fields, valuelist) {
@@ -319,11 +335,11 @@ fillFields = function(fields, valuelist) {
   fields
 }
 
-#' fallbackFields(fields, fallback)
-#'
 #' Replace all missing values in fields (either missing or NA) with
 #' their corresponding values from fallback. Members in fallback that are missing
 #' in fields are inserted
+#' @param fields existing list
+#' @param valuelist list of fields to replace in \code{fields}. Only keys that are missing in \code{fields} are added, no existing fields in \code{fields} are overwritten
 #' @export
 fallbackFields = function(fields, valuelist) {
   keepFields = !sapply(fields, is.null);
@@ -333,7 +349,10 @@ fallbackFields = function(fields, valuelist) {
   fields
 }
 
-# extractProfitRates = function(rates, )
+#' Calculate the rolling mean of length 2
+#' @param x vector of values, for which the rolling mean is calculated
+#' @examples
+#' rollingmean(1:10)
 #' @export
 rollingmean = function(x) (tail(x, -1) + head(x, -1))/2
 

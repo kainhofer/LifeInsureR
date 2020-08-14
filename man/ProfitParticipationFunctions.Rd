@@ -128,6 +128,16 @@ PP.benefit.TerminalBonus5Years(profits, params, ...)
 
 PP.benefit.TerminalBonus(profits, params, ...)
 }
+\arguments{
+\item{rates}{data.frame of profit rates}
+
+\item{params}{Contract-specific, full set of parameters of the contract
+(merged parameters of the defaults, the tariff, the profit participation
+scheme and the contract)}
+
+\item{values}{Contract values calculated so far (guaranteed component of the
+insurance contract, including cash flows, premiums, reserves etc.).}
+}
 \description{
 Various helper functions for the \code{ProfitParticipation} class that
 provide the building blocks for the individual components of profit participation,

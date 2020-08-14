@@ -4,9 +4,94 @@
 \alias{ProfitParticipation}
 \title{Base Class for Profit Participation Schemes}
 \description{
-base class for Profit Participation schemes  (holding contract-independent values and
+Base Class for Profit Participation Schemes
+
+Base Class for Profit Participation Schemes
+}
+\details{
+Base class for Profit Participation schemes  (holding contract-independent values and
 providing methods to calculate the profit participation values from the given
 reserves).
+
+The profit participation object is typically not used directly, but rather
+defined once and then passed on to an \link{InsuranceTarif} or \link{InsuranceContract}
+object, where it will be used internally when profit participation is
+calculated.
+
+This class provides the technical implementation of a profit plan for traditional
+life insurance contracts with a guaranteed component (calculated before the
+profit scheme comes into play) and a discretionary profit on top.
+
+This function is called when a new profit participation scheme
+is created with a call to \code{ProfitParticipation$new(...)}. Possible
+parameters to the \code{new}-Call are all parameters from the
+\link{InsuranceContract.ParameterStructure$ProfitParticipation} parameter
+structure (which are understood as template values that can be overridden
+per contract or even per profit participation scenario) and the components
+of the \link{Functions} list defining the functions to calculate the individual
+components of the profit participation (rates, calculation bases, calculation, benefits)
+
+This method \code{createModification} returns a copy of the profit scheme
+with all given arguments changed in the schmes's \link{ProfitParticipation@Parameters}
+parameter list.
+
+As ProfitParticipation is a R6 class with reference logic, simply assigning
+the object to a new variable does not create a copy, but references the
+original profit scheme object. To create an actual copy, one needs to call this
+method, which first clones the whole object and then adjusts all parameters
+to the values passed to this method.
+
+The \link{InsuranceContract}'s param structure \link{InsuranceContract.ParameterStructure}
+contains the field \code{params$ProfitParticipation$advanceProfitParticipation},
+which can either be numeric rate for advance profit participation, or
+a function with signature \code{function(params, values, ...)} that
+returns the advance profit participation rate when called with the
+contract's parameters and the values calculated so far (cash flows and premiums)
+
+The \link{InsuranceContract}'s param structure \link{InsuranceContract.ParameterStructure}
+contains the field \code{params$ProfitParticipation$advanceProfitParticipationInclUnitCost},
+which can either be numeric rate for advance profit participation, or
+a function with signature \code{function(params, values, ...)} that
+returns the advance profit participation rate when called with the
+contract's parameters and the values calculated so far (cash flows and premiums)
+
+This function provides an easy way to modify the whole set of
+profit rates after their initial setup. Possible applications are waiting
+periods, which can be implemented once for all rates rather than inside
+each individual calculation period.
+}
+\section{Public fields}{
+\if{html}{\out{<div class="r6-fields">}}
+\describe{
+\item{\code{name}}{The human-readable name of the profit plan.}
+
+\item{\code{Parameters}}{Parameter template for profit-participation-specific
+parameters, i.e. the \code{ProfitParticipation} element of the
+\link{InsuranceContract.ParameterStructure} data structure.
+
+All elements defined in the profit scheme can be overriden per contract
+in the call to \code{[InsuranceContract]$new} or even in the explicit
+call to \link{InsuranceContract$profitScenario} or \link{InsuranceContract$addProfitScenario}.}
+
+\item{\code{Functions}}{list of functions defined to calculate the individual
+components. For each of the profit components
+\itemize{
+\item interest profit
+\item risk profit
+\item expense profit
+\item sum profit
+\item terminal bonus
+\item terminal bonus fund
+}
+a rate,  a profit base and a calculation function can be defined, by assigning one of the pre-defined
+\link{ProfitParticipationFunctions} or proving your own function with signature
+\code{function(rates, params, values, ...)}. Additionally, for each of the
+benefit types (survival, death, surrender, premium waiver) a function can
+be provided to calculate the benefit stemming from profit participation.}
+
+\item{\code{dummy}}{Dummy to allow commas in the previous method}
+}
+\if{html}{\out{</div>}}
 }
 \section{Methods}{
 \subsection{Public methods}{
@@ -28,33 +113,64 @@ reserves).
 \if{html}{\out{<a id="method-new"></a>}}
 \if{latex}{\out{\hypertarget{method-new}{}}}
 \subsection{Method \code{new()}}{
+Create a new profit participation scheme
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ProfitParticipation$new(name = NULL, ...)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{name}}{The name of the profit scheme (typicall the name of the profit plan and its version)}
+
+\item{\code{...}}{profit participation parameters to be stored in
+\link{Parameters} or calculation functions to be stored in \link{Functions}}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-setParameters"></a>}}
 \if{latex}{\out{\hypertarget{method-setParameters}{}}}
 \subsection{Method \code{setParameters()}}{
+Store all passed parameters in the \link{Parameters} field
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ProfitParticipation$setParameters(...)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{...}}{any of the named fields defined in
+\link{InsuranceContract.ParameterStructure$ProfitParticipation}. All other
+arguments will be ignored}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-setFunctions"></a>}}
 \if{latex}{\out{\hypertarget{method-setFunctions}{}}}
 \subsection{Method \code{setFunctions()}}{
+Store all passed functions in the \link{Functions} field
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ProfitParticipation$setFunctions(...)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{...}}{any of the functions defined in the \link{Functions} field. All other
+arguments will be ignored}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-setFallbackParameters"></a>}}
 \if{latex}{\out{\hypertarget{method-setFallbackParameters}{}}}
 \subsection{Method \code{setFallbackParameters()}}{
+Fill all missing parameters with the default fall-back values
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ProfitParticipation$setFallbackParameters()}\if{html}{\out{</div>}}
 }
@@ -64,24 +180,58 @@ reserves).
 \if{html}{\out{<a id="method-createModification"></a>}}
 \if{latex}{\out{\hypertarget{method-createModification}{}}}
 \subsection{Method \code{createModification()}}{
+create a copy of a profit scheme with certain parameters changed
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ProfitParticipation$createModification(name = NULL, ...)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{name}}{The new name for the cloned \link{ProfitParticipation} object}
+
+\item{\code{...}}{Parameters for the \link{InsuranceContract.ParametersStructure},
+defining the characteristics of the tariff.}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-getAdvanceProfitParticipation"></a>}}
 \if{latex}{\out{\hypertarget{method-getAdvanceProfitParticipation}{}}}
 \subsection{Method \code{getAdvanceProfitParticipation()}}{
+Calculate and return the advance profit participation (to be
+applied on the actuarial gross premium)
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ProfitParticipation$getAdvanceProfitParticipation(params, values, ...)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{params}}{Contract-specific, full set of parameters of the contract
+(merged parameters of the defaults, the tariff, the profit participation
+scheme and the contract)}
+
+\item{\code{values}}{Contract values calculated so far (guaranteed component of the
+insurance contract, including cash flows, premiums, reserves etc.).}
+
+\item{\code{...}}{optional parameters, to be passed to the advanceProfitParticipation
+field of the parameter structure (if that is a function)}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+Return either one numerical value (constant for the whole premium payment period)
+of a vector of numerical values for the whole contract period
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-getAdvanceProfitParticipationAfterUnitCosts"></a>}}
 \if{latex}{\out{\hypertarget{method-getAdvanceProfitParticipationAfterUnitCosts}{}}}
 \subsection{Method \code{getAdvanceProfitParticipationAfterUnitCosts()}}{
+Calculate and return the advance profit participation (to be
+applied after unit costs are added to the gross premium)
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ProfitParticipation$getAdvanceProfitParticipationAfterUnitCosts(
   params,
@@ -90,29 +240,81 @@ reserves).
 )}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{params}}{Contract-specific, full set of parameters of the contract
+(merged parameters of the defaults, the tariff, the profit participation
+scheme and the contract)}
+
+\item{\code{values}}{Contract values calculated so far (guaranteed component of the
+insurance contract, including cash flows, premiums, reserves etc.).}
+
+\item{\code{...}}{optional parameters, to be passed to the advanceProfitParticipationInclUnitCost
+field of the parameter structure (if that is a function)}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+Return either one numerical value (constant for the whole premium payment period)
+of a vector of numerical values for the whole contract period
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-setupRates"></a>}}
 \if{latex}{\out{\hypertarget{method-setupRates}{}}}
 \subsection{Method \code{setupRates()}}{
+Set up the data.frame containing the profit participation rates
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ProfitParticipation$setupRates(params, values, ...)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{params}}{Contract-specific, full set of parameters of the contract
+(merged parameters of the defaults, the tariff, the profit participation
+scheme and the contract)}
+
+\item{\code{values}}{Contract values calculated so far (guaranteed component of the
+insurance contract, including cash flows, premiums, reserves etc.).}
+
+\item{\code{...}}{additional parameters passed to the profit calculation functions
+stored in the \link{Functions} field.}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-adjustRates"></a>}}
 \if{latex}{\out{\hypertarget{method-adjustRates}{}}}
 \subsection{Method \code{adjustRates()}}{
+Adjust the data.frame of profit participation rates after their setup
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ProfitParticipation$adjustRates(rates, params, values)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{rates}}{data.frame of profit paticipation rates}
+
+\item{\code{params}}{Contract-specific, full set of parameters of the contract
+(merged parameters of the defaults, the tariff, the profit participation
+scheme and the contract)}
+
+\item{\code{values}}{Contract values calculated so far (guaranteed component of the
+insurance contract, including cash flows, premiums, reserves etc.).}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-getProfitParticipation"></a>}}
 \if{latex}{\out{\hypertarget{method-getProfitParticipation}{}}}
 \subsection{Method \code{getProfitParticipation()}}{
+Calculation the full time series of profit participation for
+the given contract values
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ProfitParticipation$getProfitParticipation(
   calculateFrom = 0,
@@ -123,6 +325,30 @@ reserves).
 )}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{calculateFrom}}{The time from which to start calculating the profit
+participation. When a contract is changed at some time t (possibly even
+changing the profit scheme), all future profit participation needs to be
+re-calculated from that time on, without changing past profit participation.
+All values before \code{calculateFrom} will not be calculated.}
+
+\item{\code{profitScenario}}{profit participation values from a previous calculation
+(NULL if profit calculation is to be calculated from the contract inception).
+Values before \code{calculateFrom} will be used from this data.frame.}
+
+\item{\code{params}}{Contract-specific, full set of parameters of the contract
+(merged parameters of the defaults, the tariff, the profit participation
+scheme and the contract)}
+
+\item{\code{values}}{Contract values calculated so far (guaranteed component of the
+insurance contract, including cash flows, premiums, reserves etc.).}
+
+\item{\code{...}}{additional parameters to be passed to \link{setupRates}}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-clone"></a>}}

@@ -1,12 +1,32 @@
 #' @include HelperFunctions.R
 NULL
 
-
-#' Initialize a cost matrix with dimensions: [CostType, Basis, Period], with:
-#'     CostType: alpha, Zillmer, beta, gamma, gamma_nopremiums, unitcosts
-#'     Basis:    SumInsured, SumPremiums, GrossPremium, NetPremium, Constant
-#'     Period:   once, PremiumPeriod, PremiumFree, PolicyPeriod
-#' TODO: gamma an Erlebensleistungen?
+#' Initialize a data structure for the definition of [InsuranceTarif] costs
+#'
+#' Initialize a cost matrix with dimensions: {CostType, Basis, Period}, where:
+#' \describe{
+#'     \item{CostType:}{alpha, Zillmer, beta, gamma, gamma_nopremiums, unitcosts}
+#'     \item{Basis:}{SumInsured, SumPremiums, GrossPremium, NetPremium, Constant}
+#'     \item{Period:}{once, PremiumPeriod, PremiumFree, PolicyPeriod}
+#' }
+#' This cost structure can then be modified for non-standard costs.
+#' The main purpose of this structure is to be passed to [InsuranceContract] or
+#' [InsuranceTarif] definitions.
+# TODO: gamma an Erlebensleistungen?
+#'
+#' @param costs (optional) existing cost structure to duplicate / use as a starting point
+#' @param alpha Alpha costs (charged once, relative to sum of premiums)
+#' @param Zillmer Zillmer costs (charged once, relative to sum of premiums)
+#' @param beta Collection costs (charged on each gross premium, relative to gross premium)
+#' @param gamma Administration costs while premiums are paid (relative to sum insured)
+#' @param gamma.paidUp Administration costs for paid-up contracts (relative to sum insured)
+#' @param gamma.premiumfree Administration costs for planned premium-free period (reltaive to sum insured)
+#' @param unitcosts Unit costs (absolute monetary amount, during premium period)
+#' @param unitcosts.PolicyPeriod Unit costs (absolute monetary amount, during full contract period)
+#'
+#' @examples
+#' # empty cost structure (only 0 costs)
+#' initializeCosts()
 #' @export
 initializeCosts = function(costs, alpha, Zillmer, beta, gamma, gamma.paidUp, gamma.premiumfree, unitcosts, unitcosts.PolicyPeriod) {
     if (missing(costs)) {
@@ -83,6 +103,9 @@ InsuranceContract.Values = list(
 #' Default parameters for the InsuranceContract class. A new contract will be
 #' pre-filled with these values, and values passed in the constructor (or with
 #' other setter functions) will override these values.
+#'
+#' @examples
+#' InsuranceContract.ParameterDefaults
 #' @export
 InsuranceContract.ParameterDefaults = list(
     ContractData = list(
@@ -207,7 +230,7 @@ InsuranceContract.ParameterStructure$Loadings["premiumFrequencyLoading"] = list(
 #'                  initial parameters provided in \code{params}.
 #'
 #' @export
-InsuranceContract.ParametersFill = function(params=InsuranceContract.ParameterStructure, costs=NULL, ...) {
+InsuranceContract.ParametersFill = function(params = InsuranceContract.ParameterStructure, costs = NULL, ...) {
     # params = InsuranceContract.ParameterStructure;
     params$ContractData = fillFields(params$ContractData, list(...));
     params$ContractState = fillFields(params$ContractState, list(...));

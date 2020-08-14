@@ -2,11 +2,7 @@
 % Please edit documentation in R/InsuranceParameters.R
 \name{initializeCosts}
 \alias{initializeCosts}
-\title{Initialize a cost matrix with dimensions: [CostType, Basis, Period], with:
-    CostType: alpha, Zillmer, beta, gamma, gamma_nopremiums, unitcosts
-    Basis:    SumInsured, SumPremiums, GrossPremium, NetPremium, Constant
-    Period:   once, PremiumPeriod, PremiumFree, PolicyPeriod
-TODO: gamma an Erlebensleistungen?}
+\title{Initialize a data structure for the definition of \link{InsuranceTarif} costs}
 \usage{
 initializeCosts(
   costs,
@@ -20,10 +16,37 @@ initializeCosts(
   unitcosts.PolicyPeriod
 )
 }
+\arguments{
+\item{costs}{(optional) existing cost structure to duplicate / use as a starting point}
+
+\item{alpha}{Alpha costs (charged once, relative to sum of premiums)}
+
+\item{Zillmer}{Zillmer costs (charged once, relative to sum of premiums)}
+
+\item{beta}{Collection costs (charged on each gross premium, relative to gross premium)}
+
+\item{gamma}{Administration costs while premiums are paid (relative to sum insured)}
+
+\item{gamma.paidUp}{Administration costs for paid-up contracts (relative to sum insured)}
+
+\item{gamma.premiumfree}{Administration costs for planned premium-free period (reltaive to sum insured)}
+
+\item{unitcosts}{Unit costs (absolute monetary amount, during premium period)}
+
+\item{unitcosts.PolicyPeriod}{Unit costs (absolute monetary amount, during full contract period)}
+}
 \description{
-Initialize a cost matrix with dimensions: [CostType, Basis, Period], with:
-    CostType: alpha, Zillmer, beta, gamma, gamma_nopremiums, unitcosts
-    Basis:    SumInsured, SumPremiums, GrossPremium, NetPremium, Constant
-    Period:   once, PremiumPeriod, PremiumFree, PolicyPeriod
-TODO: gamma an Erlebensleistungen?
+Initialize a cost matrix with dimensions: {CostType, Basis, Period}, where:
+\describe{
+\item{CostType:}{alpha, Zillmer, beta, gamma, gamma_nopremiums, unitcosts}
+\item{Basis:}{SumInsured, SumPremiums, GrossPremium, NetPremium, Constant}
+\item{Period:}{once, PremiumPeriod, PremiumFree, PolicyPeriod}
+}
+This cost structure can then be modified for non-standard costs.
+The main purpose of this structure is to be passed to \link{InsuranceContract} or
+\link{InsuranceTariff} definitions.
+}
+\examples{
+# empty cost structure (only 0 costs)
+initializeCosts()
 }

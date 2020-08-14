@@ -15,6 +15,15 @@ contractGrid(
   ...
 )
 }
+\arguments{
+\item{axes}{List of paramters spanning the dimensions of the grid.}
+
+\item{YOB}{optional year of bith. If missing, the \code{observationYear} and the contract's age}
+
+\item{observationYear}{The observation year, for which the grid shall be calculated. If given, the YOB is calculated from it, otherwise the contract's YOB is used}
+
+\item{...}{Additional parameters to be passed to \link{InsuranceContract$new}}
+}
 \description{
 Create a multi-dimensional grid of InsuranceContract objects, where the axes
 ranges are given with the axes argument.

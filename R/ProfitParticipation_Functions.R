@@ -10,6 +10,12 @@ NULL
 #' the rates and how the assigned profit is calculated.
 #'
 #' @name ProfitParticipationFunctions
+#' @param rates data.frame of profit rates
+#' @param params Contract-specific, full set of parameters of the contract
+#'      (merged parameters of the defaults, the tariff, the profit participation
+#'      scheme and the contract)
+#' @param values Contract values calculated so far (guaranteed component of the
+#'     insurance contract, including cash flows, premiums, reserves etc.).
 NULL
 
 shiftBy = function(rate, n = 1) {

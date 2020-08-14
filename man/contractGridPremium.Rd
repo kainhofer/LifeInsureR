@@ -10,6 +10,15 @@ a grid.}
 \usage{
 contractGridPremium(contractGrid = NULL, premium = "written", ...)
 }
+\arguments{
+\item{contractGrid}{(optional) existing contract grid from which to derive
+premiums. If not given, \link{contractGrid} is called with all parameters, so
+\code{...} should contain an \code{axes} argument in that case.}
+
+\item{premium}{The type of premium to derive (key of the \code{contract$Values$premiums} list.}
+
+\item{...}{Arguments pass on to \link{contractGrid} if no conract grid is given.}
+}
 \description{
 Create a multi-dimensional grid of premiums for insurance contracts, where the axes
 ranges are given with the axes argument.

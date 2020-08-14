@@ -29,11 +29,13 @@ required by the Austrian regulation).
 }
 \details{
 Three output files are generated:
-  - [DATE]_[TARIFF]_Example.xlsx: Full history/timeseries
-  - [DATE]_[TARIFF]_Example_PremiumWaiver_t10.xlsx: Full history/timeseries
-                after a premium waiver at the given time \code{prf}
-  - [DATE]_[TARIFF]_Examples_VmGlg.txt: Example calculation required for the
-                Austrian regulation (LV-VMGLV)
+\itemize{
+\item \link{DATE}_\link{TARIFF}_Example.xlsx: Full history/timeseries
+\item \link{DATE}_\link{TARIFF}_Example_PremiumWaiver_t10.xlsx: Full history/timeseries
+after a premium waiver at the given time \code{prf}
+\item \link{DATE}_\link{TARIFF}_Examples_VmGlg.txt: Example calculation required for the
+Austrian regulation (LV-VMGLV)
+}
 }
 \examples{
 library("MortalityTables")
