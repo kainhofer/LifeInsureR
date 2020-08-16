@@ -25,6 +25,7 @@ as required by the Austrian regulation (LV-VMGLV, "LV
 Versicherungsmathematische Grundlagen Verordnung").
 }
 \examples{
+library(MortalityTables)
 mortalityTables.load("Austria_Annuities_AVOe2005R")
 # A trivial deferred annuity tariff with no costs:
 tariff = InsuranceTarif$new(name="Test Annuity", type="annuity",

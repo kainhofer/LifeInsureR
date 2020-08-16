@@ -10,22 +10,30 @@ NULL
 #' required by the Austrian regulation).
 #'
 #' Three output files are generated:
-#'   - [DATE]_[TARIFF]_Example.xlsx: Full history/timeseries
-#'   - [DATE]_[TARIFF]_Example_PremiumWaiver_t10.xlsx: Full history/timeseries
+#'   - {DATE}_{TARIFF}_Example.xlsx: Full history/timeseries
+#'   - {DATE}_{TARIFF}_Example_PremiumWaiver_t10.xlsx: Full history/timeseries
 #'                 after a premium waiver at the given time \code{prf}
-#'   - [DATE]_[TARIFF]_Examples_VmGlg.txt: Example calculation required for the
+#'   - {DATE}_{TARIFF}_Examples_VmGlg.txt: Example calculation required for the
 #'                 Austrian regulation (LV-VMGLV)
 #'
 #' @param contract The \code{\link{InsuranceContract}} object to be exported
 #' @param prf The time of the premium waiver
 #' @param outdir The output directory (the file names are not configurable)
+#' @param basename The base output filename (sans .xlsx). If missing, a name of
+#'       the form 2020-08-01_TARIFNAME_EXTRANAME_RZ0.01_x35_YoB1977_LZ45_PrZ20_VS100000
+#'       is used. If given, the main contract without modification will be
+#'       exported to basename.xlsx, while the example with premium waiver will be
+#'       exported to basename_PremiumWaiver_t10.xlsx and the text file containing
+#'       the examples required by the LV-VMGV is exported to basename_VmGlg.txt.
+#' @param extraname If basename is not given, this allows a suffix to distinguish
+#'       multiple exports.
 #' @param ... Further parameters (passed on to \code{\link{showVmGlgExamples}})
 #'
 #' @examples
 #' library("MortalityTables")
 #' mortalityTables.load("Austria_Annuities_AVOe2005R")
 #' # A trivial deferred annuity tariff with no costs:
-#' tariff = InsuranceTarif$new(name="Test Annuity", type="annuity",
+#' tariff = InsuranceTarif$new(name="Test Annuity", type="annuity", tarif = "Annuity 1A",
 #'     mortalityTable = AVOe2005R.unisex, i=0.01)
 #' contract = InsuranceContract$new(
 #'     tariff,

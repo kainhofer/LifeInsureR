@@ -2,7 +2,7 @@
 % Please edit documentation in R/contractGrid.R
 \name{makeContractGridDimname}
 \alias{makeContractGridDimname}
-\title{Generate a dimension label for the object passed as \code{value}, to be used in \link{contactGrid}}
+\title{Generate a dimension label for the object passed as \code{value}, to be used in \link{contractGrid}}
 \usage{
 makeContractGridDimname(value)
 }
@@ -10,5 +10,5 @@ makeContractGridDimname(value)
 \item{value}{the value along the axis, for which a name should be generated}
 }
 \description{
-Generate a dimension label for the object passed as \code{value}, to be used in \link{contactGrid}
+Generate a dimension label for the object passed as \code{value}, to be used in \link{contractGrid}
 }

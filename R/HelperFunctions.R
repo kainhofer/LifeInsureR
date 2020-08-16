@@ -4,8 +4,25 @@
 #' @importFrom methods new
 #'
 
+# @name PaymentTimeSingleEnum
+# @description Enum to describe when a benefit or premium payment is due (in advance or in arrears)
+# @details Currently, only two values are allowed;
+# * "in advance"
+# * "in arrears
+#
+# @export
 PaymentTimeEnum = objectProperties::setSingleEnum("PaymentTime", levels = c("in advance", "in arrears"))
 #PaymentCountEnum = objectProperties::setSingleEnum(PaymentCount, levels = c(1,2,3))
+
+# @name SexSingleEnum
+# @description Enum to describe possble sexes in an insurance contract or tariff.
+# @details
+# Currently, only possible values are allowed;
+# * "unisex"
+# * "male"
+# * "female"
+#
+# @export
 SexEnum = objectProperties::setSingleEnum("Sex", levels = c("unisex", "male", "female"))
 
 
@@ -37,14 +54,24 @@ deathBenefit.linearDecreasing = function(len, params, values) {
 #' This can be used with the \code{deathBenefit} parameter for insurance
 #' contracts, but should not be called directly.
 #'
-#' @param len The desired length of the Cash flow vector (can be shorter than
-#'            the policyPeriod, if q_x=1 before the end of the contract, e.g.
-#'            for life-long insurances)
-#' @param params The full parameter set of the insurance contract (including
-#'               all inherited values from the tariff and the profit participation)
-#' @param values The values calculated from the insurance contract so far
+#' This function is a mere generator function, which takes the interest rate and
+#' generates a function that describes a decreasing annuity.
 #'
-#' @export
+#' The generated function has the following parameters:
+#' \describe{
+#'     \item{len}{The desired length of the Cash flow vector (can be shorter than
+#'            the policyPeriod, if q_x=1 before the end of the contract, e.g.
+#'            for life-long insurances)}
+#'     \item{params}{The full parameter set of the insurance contract (including
+#'               all inherited values from the tariff and the profit participation)}
+#'     \item{values}{The values calculated from the insurance contract so far}
+#' }
+#'
+#'
+#' @param interest The interest rate of the loan, which is underlying the insurance.
+#'
+#'
+#'@export
 deathBenefit.annuityDecreasing = function(interest) {
     function(len, params, values) {
         protectionPeriod = params$ContractData$policyPeriod - params$ContractData$deferralPeriod;
@@ -212,6 +239,27 @@ correctionPaymentFrequency = function(i, m = 1, order = 0) {
   list(alpha = alpha, beta = beta);
 }
 
+#' Pad a vector with 0 to a desired length
+#'
+#' @param v the vector to pad with 0
+#' @param l the desired (resulting) length of the vector
+#' @param value the value to pad with (if padding is needed). Default to 0, but
+#'     can be overridden to pad with any other value.
+#' @param start the first \code{start} values are always set to 0 (default is 0),
+#'     the vector \code{v} starts only after these leading zeroes. The number of
+#'     leading zeroes counts towards the desired length
+#'
+#' @return returns the vector \code{v} padded to length \code{l} with value \code{value} (default 0).
+#'
+#' @examples
+#' pad0(1:5, 7)   # Pad to length 7 with zeroes
+#' pad0(1:5, 3)   # no padding, but cut at length 3
+#'
+#' # 3 leading zeroes, then the vector start (10 elements of vector, no additional padding needed):
+#' pad0(1:10, 13, start = 3)
+#'
+#' # padding with value other than zero:
+#' pad0(1:5, 7, value = "pad")
 #' @export
 pad0 = function(v, l, value = 0, start = 0) {
   # 3 cases: desired length<=start => only 0
@@ -228,6 +276,13 @@ pad0 = function(v, l, value = 0, start = 0) {
 }
 
 #' Set all entries of the given vector to 0 up until index 'start'
+#' @param v the vector to modify
+#' @param start how many leading elements to zero out
+#'
+#' @return the vector \code{v} with the first \code{start} elements replaced by 0.
+#'
+#' @examples
+#' head0(1:10, 3)
 #' @export
 head0 = function(v, start = 0) {
   if (start == 0) {
@@ -237,15 +292,44 @@ head0 = function(v, start = 0) {
   }
 }
 
+#' Pad the vector \code{v} to length \code{l} by repeating the last entry of the
+#' vector.
+#'
+#' This function callc [pad0()] with the last element of the vector as padding value
+#'
+#' @param v the vector to pad by repeating the last element
+#' @param l the desired (resulting) length of the vector
+#' @param start the first \code{start} values are always set to 0 (default is 0),
+#'     the vector \code{v} starts only after these leading zeroes. The number of
+#'     leading zeroes counts towards the desired length
+#'
+#' @examples
+#' padLast(1:5, 7) # 5 is repeated twice
+#' padLast(1:5, 3) # no padding needed
+#'
 #' @export
 padLast = function(v, l, start = 0) {
     pad0(v, l, value = tail(v, n = 1), start = start)
 }
 
-#' Taken from the R Cookbook:
+#' Replace all \code{NA} entries of a vector with the previous non-NA value
+#'
+#' Sometimes one has a vector with some gaps (\code{NA}) values, which cause
+#' problems for several numeric functions. This function \code{fillNAgaps} fills
+#' these missing values by inserting the last preceeding non-NA-value. Leading
+#' NA values (at the start of the vector will not be modified). If the
+#' argument \code{firstBack = TRUE}, leading \code{NA}-values are replaced by
+#' the first non-NA value.
+#' Trailing NAs are always replaced by the last previous NA-value.
+#'
+#' This code was taken from the R Cookbook:
 #' http://www.cookbook-r.com/Manipulating_data/Filling_in_NAs_with_last_non-NA_value/
 #' LICENSE (from that page): The R code is freely available for use without any restrictions.
 #' In other words: you may reuse the R code for any purpose (and under any license).
+#'
+#' @param x The vector where NA-values should be filled by repeating the last preceeding non-NA value
+#' @param firstBack if \code{TRUE}, leading NAs are replaced by the first non-NA
+#'     value in the vector, otherwise leading NAs are left untouched.
 #'
 #' @export
 fillNAgaps <- function(x, firstBack=FALSE) {

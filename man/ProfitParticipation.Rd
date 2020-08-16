@@ -28,11 +28,11 @@ parameters to the \code{new}-Call are all parameters from the
 \link{InsuranceContract.ParameterStructure$ProfitParticipation} parameter
 structure (which are understood as template values that can be overridden
 per contract or even per profit participation scenario) and the components
-of the \link{Functions} list defining the functions to calculate the individual
+of the \link{ProfitParticipation$Functions} list defining the functions to calculate the individual
 components of the profit participation (rates, calculation bases, calculation, benefits)
 
 This method \code{createModification} returns a copy of the profit scheme
-with all given arguments changed in the schmes's \link{ProfitParticipation@Parameters}
+with all given arguments changed in the schmes's \link{ProfitParticipation$Parameters}
 parameter list.
 
 As ProfitParticipation is a R6 class with reference logic, simply assigning
@@ -124,7 +124,7 @@ Create a new profit participation scheme
 \item{\code{name}}{The name of the profit scheme (typicall the name of the profit plan and its version)}
 
 \item{\code{...}}{profit participation parameters to be stored in
-\link{Parameters} or calculation functions to be stored in \link{Functions}}
+\link{ProfitParticipation$Parameters} or calculation functions to be stored in \link{ProfitParticipation$Functions}}
 }
 \if{html}{\out{</div>}}
 }

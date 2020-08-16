@@ -6,6 +6,17 @@
 \usage{
 head0(v, start = 0)
 }
+\arguments{
+\item{v}{the vector to modify}
+
+\item{start}{how many leading elements to zero out}
+}
+\value{
+the vector \code{v} with the first \code{start} elements replaced by 0.
+}
 \description{
 Set all entries of the given vector to 0 up until index 'start'
+}
+\examples{
+head0(1:10, 3)
 }

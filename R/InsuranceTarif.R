@@ -6,7 +6,31 @@
 #' @importFrom objectProperties setSingleEnum
 NULL
 
-
+#' An enum specifying the main characteristics of the tarif.
+#' Possible values are:
+#' \describe{
+#'   \item{annuity}{Whole life or term annuity (periodic survival benefits)
+#'        with flexible payouts (constand, increasing, decreasing, arbitrary,
+#'        etc.)}
+#'   \item{wholelife}{A whole or term life insurance with only death benefits.
+#'        The benefit can be constant, increasing, decreasing, described by
+#'        a function, etc.}
+#'   \item{endowment}{An  endowment with death and survival benefits,
+#'        potentially with different benefits.}
+#'   \item{pureendowment}{A pure endowment with only a survival benefit at
+#'        the end of the contract. Optionally, in case of death, all or part
+#'        of the premiums paid may be refunded.}
+#'   \item{terme-fix}{A terme-fix insurance with a fixed payout at the end
+#'        of the contract, even if the insured dies before that time.
+#'        Premiums are paid until death of the insured.}
+#'   \item{dread-disease}{A dread-disease insurance, which pays in case of
+#'        a severe illness (typically heart attacks, cancer, strokes, etc.),
+#'        but not in case of death.}
+#'   \item{endowment + dread-disease}{A combination of an endowment and a
+#'        temporary dread-disease insurance. Benefits occur either on death,
+#'        severe illness or survival, whichever comes first.}
+#' }
+#' @export
 TariffTypeEnum = objectProperties::setSingleEnum(
   "TariffType",
   levels = c(
@@ -37,8 +61,8 @@ TariffTypeEnum = objectProperties::setSingleEnum(
 #'
 #' Most methods of this class are not meant to be called manually, but are supposed
 #' to be called by the InsuranceContract object with contract-specific information.
-#' The only methods that are typically sued for defining an insurance tariff are
-#' the constructor [InsuranceTarif$initialize()] and the cloning method
+#' The only methods that are typically used for defining an insurance tariff are
+#' the constructor [InsuranceTarif$new()] and the cloning method
 #' [InsuranceTarif$createModification()]. All other methods should never be called
 #' manually.
 #'
@@ -47,7 +71,7 @@ TariffTypeEnum = objectProperties::setSingleEnum(
 #'
 # # Parameters for the constructors
 #' @param name The unique name / ID of the tariff
-#' @param type An enum specifying the main characteristics of the tarif. See [tariffType]
+#' @param type An enum specifying the main characteristics of the tarif. See [TariffTypeEnum]
 #' @param tarif The tariff's public name. See [InsuranceTarif$tarif]
 #' @param desc A short human-readable description. See [InsuranceTarif$desc]
 # # General parameters for (almost) all function
@@ -173,7 +197,7 @@ InsuranceTarif = R6Class(
     #' or mortality table for comparison. There is no need to re-implement a
     #' tariff for such comparisons, as long as only parameters are changed.
     #'
-    #' @param ... Parameters for the [InsuranceContract.ParametersStructure],
+    #' @param ... Parameters for the [InsuranceContract.Parameterstructure],
     #'            defining the characteristics of the tariff.
     #' @import MortalityTables
     #' @examples
@@ -397,7 +421,7 @@ InsuranceTarif = R6Class(
     },
 
     #' @description Returns the basic (unit) cash flows associated with the type
-    #' of insurance given in the [InsuranceContract@tariffType] field
+    #' of insurance given in the [InsuranceTarif$tariffType] field
     #' @details Not to be called directly, but implicitly by the [InsuranceContract] object.
     getBasicCashFlows = function(params, values) {
       deferralPeriod = params$ContractData$deferralPeriod;

@@ -20,6 +20,16 @@ exportInsuranceContractExample(
 
 \item{outdir}{The output directory (the file names are not configurable)}
 
+\item{basename}{The base output filename (sans .xlsx). If missing, a name of
+the form 2020-08-01_TARIFNAME_EXTRANAME_RZ0.01_x35_YoB1977_LZ45_PrZ20_VS100000
+is used. If given, the main contract without modification will be
+exported to basename.xlsx, while the example with premium waiver will be
+exported to basename_PremiumWaiver_t10.xlsx and the text file containing
+the examples required by the LV-VMGV is exported to basename_VmGlg.txt.}
+
+\item{extraname}{If basename is not given, this allows a suffix to distinguish
+multiple exports.}
+
 \item{...}{Further parameters (passed on to \code{\link{showVmGlgExamples}})}
 }
 \description{
@@ -30,10 +40,10 @@ required by the Austrian regulation).
 \details{
 Three output files are generated:
 \itemize{
-\item \link{DATE}_\link{TARIFF}_Example.xlsx: Full history/timeseries
-\item \link{DATE}_\link{TARIFF}_Example_PremiumWaiver_t10.xlsx: Full history/timeseries
+\item {DATE}_{TARIFF}_Example.xlsx: Full history/timeseries
+\item {DATE}_{TARIFF}_Example_PremiumWaiver_t10.xlsx: Full history/timeseries
 after a premium waiver at the given time \code{prf}
-\item \link{DATE}_\link{TARIFF}_Examples_VmGlg.txt: Example calculation required for the
+\item {DATE}_{TARIFF}_Examples_VmGlg.txt: Example calculation required for the
 Austrian regulation (LV-VMGLV)
 }
 }
@@ -41,7 +51,7 @@ Austrian regulation (LV-VMGLV)
 library("MortalityTables")
 mortalityTables.load("Austria_Annuities_AVOe2005R")
 # A trivial deferred annuity tariff with no costs:
-tariff = InsuranceTarif$new(name="Test Annuity", type="annuity",
+tariff = InsuranceTarif$new(name="Test Annuity", type="annuity", tarif = "Annuity 1A",
     mortalityTable = AVOe2005R.unisex, i=0.01)
 contract = InsuranceContract$new(
     tariff,

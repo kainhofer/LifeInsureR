@@ -28,7 +28,7 @@ stored in \code{contract$Values}.
 library("MortalityTables")
 mortalityTables.load("Austria_Annuities_AVOe2005R")
 # A trivial deferred annuity tariff with no costs:
-tariff = InsuranceTarif$new(name="Test Annuity", type="annuity",
+tariff = InsuranceTarif$new(name = "Test Annuity", type = "annuity", tarif = "Annuity 1A",
     mortalityTable = AVOe2005R.unisex, i=0.01)
 contract = InsuranceContract$new(
     tariff,

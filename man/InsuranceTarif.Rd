@@ -19,9 +19,9 @@ tariff-specific calculations.
 
 Most methods of this class are not meant to be called manually, but are supposed
 to be called by the InsuranceContract object with contract-specific information.
-The only methods that are typically sued for defining an insurance tariff are
-the constructor \link{InsuranceTarif@initialize} and the cloning method
-\link{InsuranceTarif$createModification}. All other methods should never be called
+The only methods that are typically used for defining an insurance tariff are
+the constructor \code{\link[=InsuranceTarif$new]{InsuranceTarif$new()}} and the cloning method
+\code{\link[=InsuranceTarif$createModification]{InsuranceTarif$createModification()}}. All other methods should never be called
 manually.
 
 However, as overriding private methods is not possible in an R6 class, all the
@@ -189,13 +189,13 @@ Initialize a new tariff object
 \describe{
 \item{\code{name}}{The unique name / ID of the tariff}
 
-\item{\code{type}}{An enum specifying the main characteristics of the tarif. See \link{tariffType}}
+\item{\code{type}}{An enum specifying the main characteristics of the tarif. See \link{TariffTypeEnum}}
 
-\item{\code{tarif}}{The tariff's public name. See \link{InsuranceTarif@tarif}}
+\item{\code{tarif}}{The tariff's public name. See \link{InsuranceTarif$tarif}}
 
-\item{\code{desc}}{A short human-readable description. See \link{InsuranceTarif@desc}}
+\item{\code{desc}}{A short human-readable description. See \link{InsuranceTarif$desc}}
 
-\item{\code{...}}{Parameters for the \link{InsuranceContract.ParametersStructure},
+\item{\code{...}}{Parameters for the \link{InsuranceContract.Parameterstructure},
 defining the characteristics of the tariff.}
 }
 \if{html}{\out{</div>}}
@@ -262,9 +262,9 @@ create a copy of a tariff with certain parameters changed
 \describe{
 \item{\code{name}}{The unique name / ID of the tariff}
 
-\item{\code{tarif}}{The tariff's public name. See \link{InsuranceTarif@tarif}}
+\item{\code{tarif}}{The tariff's public name. See \link{InsuranceTarif$tarif}}
 
-\item{\code{desc}}{A short human-readable description. See \link{InsuranceTarif@desc}}
+\item{\code{desc}}{A short human-readable description. See \link{InsuranceTarif$desc}}
 
 \item{\code{tariffType}}{An enum specifying the main characteristics of the tarif.
 See \link{tariffType}}
@@ -276,7 +276,7 @@ defining the characteristics of the tariff.}
 }
 \subsection{Details}{
 This method \code{createModification} returns a copy of the tariff
-with all given arguments changed in the tariff's \link{InsuranceTarif@Parametrers}
+with all given arguments changed in the tariff's \link{InsuranceTarif$Parameters}
 parameter list.
 
 As InsuranceTarif is a R6 class with reference logic, simply assigning
@@ -540,7 +540,7 @@ Not to be called directly, but implicitly by the \link{InsuranceContract} object
 \if{latex}{\out{\hypertarget{method-getBasicCashFlows}{}}}
 \subsection{Method \code{getBasicCashFlows()}}{
 Returns the basic (unit) cash flows associated with the type
-of insurance given in the \link{InsuranceContract@tariffType} field
+of insurance given in the \link{InsuranceTarif$tariffType} field
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{InsuranceTarif$getBasicCashFlows(params, values)}\if{html}{\out{</div>}}
 }
@@ -628,7 +628,7 @@ Returns the present values of the cash flows of the contract
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{cashFlows}}{data.frame of cash flows calculated by a call to \code{\link[=InsuranceTarif@getCashFlows]{InsuranceTarif@getCashFlows()}}}
+\item{\code{cashFlows}}{data.frame of cash flows calculated by a call to \code{\link[=InsuranceTarif$getCashFlows]{InsuranceTarif$getCashFlows()}}}
 
 \item{\code{params}}{Contract-specific, full set of parameters of the contract
 (merged parameters of the defaults, the tariff, the profit participation
@@ -649,7 +649,7 @@ Not to be called directly, but implicitly by the \link{InsuranceContract} object
 \if{latex}{\out{\hypertarget{method-presentValueCashFlowsCosts}{}}}
 \subsection{Method \code{presentValueCashFlowsCosts()}}{
 Calculates the present values of the cost cash flows of the
-contract (cost cash flows alreay calculated by \code{\link[=InsuranceTarif@getCashFlowsCosts]{InsuranceTarif@getCashFlowsCosts()}}
+contract (cost cash flows alreay calculated by \code{\link[=InsuranceTarif$getCashFlowsCosts]{InsuranceTarif$getCashFlowsCosts()}}
 and stored in the \code{values} list
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{InsuranceTarif$presentValueCashFlowsCosts(params, values)}\if{html}{\out{</div>}}

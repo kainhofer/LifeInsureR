@@ -44,7 +44,7 @@ Initialize a cost matrix with dimensions: {CostType, Basis, Period}, where:
 }
 This cost structure can then be modified for non-standard costs.
 The main purpose of this structure is to be passed to \link{InsuranceContract} or
-\link{InsuranceTariff} definitions.
+\link{InsuranceTarif} definitions.
 }
 \examples{
 # empty cost structure (only 0 costs)
