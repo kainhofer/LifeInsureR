@@ -22,6 +22,7 @@
 \alias{PP.rate.totalInterest}
 \alias{PP.rate.totalInterest2}
 \alias{PP.rate.interestProfit2}
+\alias{getTerminalBonusReserve}
 \alias{PP.calculate.RateOnBase}
 \alias{PP.calculate.RateOnBaseMin0}
 \alias{PP.calculate.RatePlusGuaranteeOnBase}
@@ -80,6 +81,16 @@ PP.rate.totalInterest2(rates, ...)
 
 PP.rate.interestProfit2(rates, ...)
 
+getTerminalBonusReserve(
+  profits,
+  rates,
+  terminalBonus,
+  terminalBonusAccount,
+  params,
+  values,
+  ...
+)
+
 PP.calculate.RateOnBase(base, rate, waiting, rates, params, values, ...)
 
 PP.calculate.RateOnBaseMin0(base, rate, waiting, rates, params, values, ...)
@@ -137,6 +148,23 @@ scheme and the contract)}
 
 \item{values}{Contract values calculated so far (guaranteed component of the
 insurance contract, including cash flows, premiums, reserves etc.).}
+
+\item{...}{Other values that might be used for the calculation (currently unused)}
+
+\item{res}{the data.frame of reserves.}
+
+\item{profits}{The data.frame of profits assigned}
+
+\item{terminalBonus}{The terminal bonus calculated}
+
+\item{terminalBonusAccount}{The terminal bonus account (like a bank account,
+where terminal bonuses are accrued, potentiall discounted from the maturity)}
+
+\item{base}{The profit calculation base, on which the rate is to be applied}
+
+\item{rate}{The profit participation rate}
+
+\item{waiting}{A possible waiting period}
 }
 \description{
 Various helper functions for the \code{ProfitParticipation} class that
@@ -184,6 +212,8 @@ the rates and how the assigned profit is calculated.
 \item \code{PP.rate.totalInterest2}: Rate for interest on past profits: second total interest rate
 
 \item \code{PP.rate.interestProfit2}: Rate for interest on past profits: second interest profit rate (not including guaranteed interest), keyed by year
+
+\item \code{getTerminalBonusReserve}: Calculate the terminal bonus reserve.
 
 \item \code{PP.calculate.RateOnBase}: Calculate profit by a simple rate applied on the basis (with an optional waiting vector of values 0 or 1)
 

@@ -6,6 +6,13 @@ NULL
 # Shut up the package checker:
 # if (getRversion() >= "2.15.1")  utils::globalVariables(c("profitClass"))
 
+#' Filter the whole data.frame of profit rates for the given profit classes
+#'
+#' This is a rather trivial helper function, which just calls [dplyr::filter()].
+#'
+#' @param rates data.frame containing all profit rates for multiple profit classes
+#' @param classes the profit classes, for which rates should be extracted
+#'
 #' @export
 filterProfitRates = function(rates, classes) {
     dplyr::filter(.data = rates, .data$profitClass %in% classes)

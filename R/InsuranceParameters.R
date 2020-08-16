@@ -489,6 +489,8 @@ InsuranceContract.ParametersFill = function(params = InsuranceContract.Parameter
 #'               will be filled with the corresponding entry from \code{fallback}.
 #' @param fallback Fallback values that will be used when the corresponding
 #'                 entry in \code{params} is NULL.
+#' @param ppParameters Whether profit participation parameters should also be
+#'                     filled (default is TRUE)
 #'
 #' @export
 InsuranceContract.ParametersFallback = function(params, fallback, ppParameters = TRUE) {

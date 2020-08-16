@@ -16,6 +16,11 @@ NULL
 #'      scheme and the contract)
 #' @param values Contract values calculated so far (guaranteed component of the
 #'     insurance contract, including cash flows, premiums, reserves etc.).
+#' @param ... Other values that might be used for the calculation (currently unused)
+#'
+#' @param base The profit calculation base, on which the rate is to be applied
+#' @param rate The profit participation rate
+#' @param waiting A possible waiting period
 NULL
 
 shiftBy = function(rate, n = 1) {
@@ -91,6 +96,8 @@ PP.base.sumInsured = function(rates, params, values, ...) {
 
 #' @describeIn ProfitParticipationFunctions
 #' Basis for Terminal Bonus Fund Assignment: total profit assignment of the year
+#'
+#' @param res the data.frame of reserves.
 #' @export
 PP.base.totalProfitAssignment = function(res, ...) {
   res[,"totalProfitAssignment"]
@@ -180,6 +187,13 @@ PP.rate.interestProfit2 = function(rates, ...) {
 
 
 # TODO
+#' @describeIn ProfitParticipationFunctions
+#'
+#' Calculate the terminal bonus reserve.
+#' @param profits The data.frame of profits assigned
+#' @param terminalBonus The terminal bonus calculated
+#' @param terminalBonusAccount The terminal bonus account (like a bank account,
+#'        where terminal bonuses are accrued, potentiall discounted from the maturity)
 getTerminalBonusReserve = function(profits, rates, terminalBonus, terminalBonusAccount, params, values, ...) {
   n = length(terminalBonusAccount)
   terminalBonusAccount * 1/(1.07) ^ ((n - 1):0)

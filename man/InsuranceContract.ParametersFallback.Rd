@@ -12,6 +12,9 @@ will be filled with the corresponding entry from \code{fallback}.}
 
 \item{fallback}{Fallback values that will be used when the corresponding
 entry in \code{params} is NULL.}
+
+\item{ppParameters}{Whether profit participation parameters should also be
+filled (default is TRUE)}
 }
 \description{
 Provide default values for the insurance contract parameters if any of the
