@@ -51,7 +51,7 @@ with the real age)}
 insured for contracts with multiple insured (i.e. joint-lives)}
 \item{\code{$sex}}{Sex of the insured, to allow gender-specific prixing
 (e.g. different mortalities or age modification), default="unisex",
-Type is \link{SexSingleEnum}}
+Type is \link{SexEnum}}
 \item{\code{$policyPeriod}}{Policy Duration (in years)}
 \item{\code{$premiumPeriod}}{Premium payment period (in year), for
 single-premium contracts, \code{premiumPeriod = 1}. Default is
@@ -79,11 +79,11 @@ The main block starts a 0, dynamic increases start later! This
 value is only used by the parent block (i.e. $t=0$ of the child
 is aligned with $t=blockStart$ of the parent block.}
 \item{\code{$premiumPayments}}{Whether premiums are paid in advance
-(default) or arrears. Value is of type \link{PaymentTimeSingleEnum}
+(default) or arrears. Value is of type \link{PaymentTimeEnum}
 with possible values "in advance" and 'in arrears"}
 \item{\code{$benefitPayments}}{Whether recurring benefits (e.g. annuities)
 are paid in advance (default) or arrears. Value is of type
-\link{PaymentTimeSingleEnum} with possible values "in advance" and
+\link{PaymentTimeEnum} with possible values "in advance" and
 "in arrears"}
 \item{\code{$premiumFrequency}}{Number of premium payments per year, default is 1.}
 \item{\code{$benefitFrequency}}{Number of benefit payments per year, default is 1.}\preformatted{\\item\{\code{$widowProportion}\}\{For annuities with a widow transition,

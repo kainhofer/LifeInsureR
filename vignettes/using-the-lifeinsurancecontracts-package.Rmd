@@ -12,6 +12,7 @@ output:
         toc_depth: 3
         fig_width: 7
         fig_height: 5
+        number_sections: true
 vignette: >
   %\VignetteIndexEntry{Using the LifeInsuranceContracts Package}
   %\VignetteEngine{knitr::rmarkdown}
@@ -21,8 +22,18 @@ vignette: >
 
 ```{r echo = FALSE, message=FALSE}
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
-library(pander)
+library(knitr)
+library(kableExtra)
 library(LifeInsuranceContracts)
+library(dplyr)
+options(scipen=5)
+
+library(pander)
+
+panderOptions('round', 2)
+panderOptions('digits', 12)
+panderOptions('keep.trailing.zeros', TRUE)
+panderOptions('table.split.table', 120)
 
 
 ## Modified pandoc.list function that also works with NULL entries in the lists:
@@ -109,12 +120,353 @@ pandoc.listRK <- function(...)
 
 The LifeInsuranceContracts package provides a full-featured framework to model classical life insurance contracts (non-unit linked). Mathematically, a general life insurance contracts can be defined using death and survival (and disability) benefit vectors to define the cash flows and calculate all premiums and reserves recursively. This powerful approach is taken by the LifeInsuranceContracts package to provide the most flexible contract modelling framework in R.
 
+# General Overview of the Concepts
 
-## Contract/Tariff parameter structure an default values
+An insurance contract is described by three different objects;
+
+* [InsuranceContract]: The object describing the actual contract with all 
+  contract-specific parameters (age, maturity, sum insured, etc.).
+* [InsuranceTarif]: The general (contract-independent) description of the
+  insurance product (benefits, present values / reserves, premium calculation,
+  premium waivers, surrender value, reserve calculation, premium decomposition).
+  It does not store any values (only tarif-provided default values for the 
+  insurance contract), but provides all calculation functions. The implementation
+  is based on a general approach using cash flows (depending on the type of 
+  insurance). Once the cash flows (survival, death and guaranteed) are defined
+  for all time steps, all further calculations are idential for all different 
+  kinds of life insurance.
+* [ProfitParticipation]: For contracts with profit sharing mechanisms, this
+  object describes the profit participation (like the [InsuranceTarif] object
+  describes the guaranteed payments) and us used by the [InsuranceContract] 
+  object.
+
+While this might at first seem a bit complicated, it allows for very generic
+implementations of life insurance products and contracts.
+
+
+# A simple example: Term life insurance
+
+To understand how the package implements life insurance contracts, let us look
+at a simple example:
+
+## Tarif description
+
+Term Life Insurance 
+
+* Public product name '**DeathPlus - Short Term Life Insurance**', Internal ID '**L71-U**'
+* Only **death benefits**, no survival benefits
+* **Mortality table**: Austrian 2010/12 census table unisex (mixed 65:35 from the male:female tables)
+* **Guaranteed interest rate**: 0.5%
+* Default contract duration: 5 years (to keep the example short)
+* **Regular premium** payments (constant premiums) during the whole contract
+<!-- * premiums paid more often than once a year in advance get the following surcharge: -->
+<!--     * yearly premiums: 0% surcharge -->
+<!--     * half-yearly premiums: 1% surcharge -->
+<!--     * quarterly premiums: 1.5% surcharge -->
+<!--     * monthly premiums: 2% surcharge -->
+
+**Costs**:
+
+* Aquisition costs: 5\% of the total premium sum
+* Administration cost: 1% of the sum insured per year (both during premium payments as well as for paid-up contracts)
+* Unit costs: 10 Euro per year (fixed) during premium payments
+* Tax: 4% insurance tax (default)
+
+Surrender Value:
+
+* Reserve minus 10% surrender penalty, also applied on premium waiver
+
+
+## Tariff implementation as an InsuranceTarif object
+
+```{r SimpleExampleRiskTarif}
+library(magrittr)
+library(MortalityTables)
+library(LifeInsuranceContracts)
+mortalityTables.load("Austria_Census")
+
+Tarif.L71U = InsuranceTarif$new(
+    name = "L71-U",
+    type = "wholelife",
+    tarif = "DeathPlus - Short Term Life Insurance",
+    desc = "Term Life insurance (5 years) with constant sum insured and regular premiums",
+    policyPeriod = 5, premiumPeriod = 5,  # premiumPeriod not needed, defaults to maturity
+
+    mortalityTable = mortalityTable.mixed(
+      table1 = mort.AT.census.2011.male, weight1 = 0.65, 
+      table2 = mort.AT.census.2011.female, weight2 = 0.35
+    ),
+    i = 0.005, 
+    tax = 0.04, 
+    costs = initializeCosts(alpha = 0.05, gamma = 0.01, gamma.paidUp = 0.01, unitcosts = 10),
+    surrenderValueCalculation = function(surrenderReserve, params, values) { 
+      surrenderReserve * 0.9 
+    }
+);
+```
+
+## Calculating one particular contract with the given tariff
+
+With the above product / tariff definition, it is now easy to instantiate 
+one particular contract for this tariff. All we need to do is pass the tariff
+and the corresponding contract-specific information (mainly age, sum insured
+and contract closing) to the [InsuranceContract] object:
+
+```{r SimpleExampleRiskContract}
+contract.L71U  = InsuranceContract$new(
+  Tarif.L71U, 
+  age = 35, 
+  contractClosing = as.Date("2020-08-18"), 
+  sumInsured = 100000);
+```
+
+Just creating the contract will already calculate all cash flows, present values,
+premiums, reserves, etc. for the whole contract period. They can be accessed 
+through the \code{contract.L71U$Values} list.
+
+A full list of all possible arguments can be found in the section [All possible parameters and their default values].
+
+
+Once the contract is created, all values can be accessed like this:
+
+```{r SimpleExampleRiskValuesPremCode, eval=F}
+contract.L71U$Values$premiums
+```
+```{r SimpleExampleRiskValuesPremOut, echo=F}
+contract.L71U$Values$premiums %>% kable
+```
+```{r SimpleExampleRiskValuesResCode, eval=F}
+contract.L71U$Values$reserves
+```
+```{r SimpleExampleRiskValuesResOut, echo=F}
+contract.L71U$Values$reserves %>% pander()
+```
+
+Looking back at the definition of the tariff, the only spot where the type of
+insurance actually came in was the \code{type} argument of the [InsuranceTarif]
+definition. This is one of the most important flags and is central to correct
+implementation of a tarif. On the other hand, all it does is to cause different
+vectors of survival, death and guaranteed cash flows. Once the cash flows are 
+determined, the insurance contract and tariff does not need the insurance type
+any more.
+
+In our term life example, the insurance contract's unit cash flows are 1 for death 
+benefits (both when premiums are paid and when the contract is paid-up) and for
+premiums in advance. All other cash flows (guaranteed, survival or disease cash 
+flows) are zero. Similarly, the cost structure described above and implemented
+by the [LifeInsuranceContracts::initializeCosts()] function defines all cost cash
+flows, which are the starting point for all further calculations (only relevant 
+columns of the data.frame are shown):
+
+```{r SimpleExampleRiskCFCode, eval=F}
+contract.L71U$Values$cashFlows
+```
+```{r SimpleExampleRiskCFOut, echo=F}
+contract.L71U$Values$cashFlows %>% select(starts_with('premiums'), starts_with('death'), -death_Refund_past ) %>% pander()
+```
+```{r SimpleExampleRiskCFCostCode, eval=F}
+contract.L71U$Values$cashFlowsCosts
+```
+```{r SimpleExampleRiskCFCostOut, echo=F}
+contract.L71U$Values$cashFlowsCosts
+```
+
+Once these unit cash flows are set, all insurance contracts are handled identically.
+First, present values of each of the cash flows are calculated, from which 
+the premiums can be calculated by the equivalence principle.
+
+```{r SimpleExampleRiskPVCode, eval=F}
+contract.L71U$Values$presentValues
+```
+```{r SimpleExampleRiskPVOut, echo=F}
+contract.L71U$Values$presentValues %>% as.data.frame() %>% select(starts_with('premiums'), starts_with('death'), -death_Refund_past ) %>% pander(round=5)
+```
+```{r SimpleExampleRiskPVCostCode, eval=F}
+contract.L71U$Values$presentValuesCosts
+```
+```{r SimpleExampleRiskPVCostOut, echo=F}
+contract.L71U$Values$presentValuesCosts
+```
+```{r SimpleExampleRiskPVPremCode, eval=F}
+contract.L71U$Values$premiums
+```
+```{r SimpleExampleRiskPVPremOut, echo=F}
+contract.L71U$Values$premiums %>% data.frame() %>% pander()
+```
+
+The actual calculation of the premiums has to be in the order gross premium, 
+Zillmer premiuem, then net premium. The reason for this particular order is that
+some tariffs have a gross premium refund in case of death. So to calculate the
+net premium, the gross premium is required. 
+
+The premiums allow the unit cash flows and present values to be converted to 
+monetary terms (fields \code{contract.L71U$Values$absCashFlows} and 
+\code{contract.L71U$Values$absPresentValues}). Also, the reserves of the 
+contract can be calculated.
+
+```{r SimpleExampleRiskPremiumsCode, eval=F}
+contract.L71U$Values$reserves
+```
+```{r SimpleExampleRiskPremiumsOut, echo=F}
+contract.L71U$Values$reserves %>% pander(digits=2)
+```
+
+Also, the premium composition into costs, risk premium, savings premium and 
+other components is possible.
+
+```{r SimpleExampleRiskPremiumCompositionCode, eval=F}
+contract.L71U$Values$premiumComposition
+```
+```{r SimpleExampleRiskPremiumCompositionOut, echo=F}
+contract.L71U$Values$premiumComposition %>% as.data.frame() %>% select(-loading.frequency, -rebate.premium, -rebate.partner, -profit.advance, -rebate.sum, -charge.noMedicalExam, -premium.risk.actual, -premium.risk.security, -risk.disease, -premium.risk.disease.actual, -premium.risk.disease.security, -starts_with('Zillmer')) %>% pander()
+```
+
+
+
+
+As we see, the whole history and future of the contract is calculated as soon 
+as it is created. It is, however, also possible to modify a contract later on,
+e.g. by stopping premium payments and converting it to a paid-up contract.
+
+```{r SimpleExampleRiskConversionCode, eval=F}
+contract.L71U = contract.L71U$premiumWaiver(t = 3)
+contract.L71U$Values$reserves
+```
+```{r SimpleExampleRiskConversionOut, echo=F}
+contract.L71U = contract.L71U$premiumWaiver(t = 3)
+contract.L71U$Values$reserves %>% pander()
+```
+
+
+## Creating tables with various parameters
+
+When prototyping a new product or creating marketing material, it is often needed
+to create tables of premiums, reserves, benefits or surrender values for different
+parameters (e.g. different ages, maturities and sums insured for the marketing 
+department, or different guaranteed interest rates, mortality tables or costs 
+for the product development group). 
+
+This can be easily done by the functions [contractGridPremium()] or [contractGrid()].
+They take one argument \code{axes}, which gives the parameters for the axes of
+the table (more than two dimensions are possible!), while all other parameters
+are passed unchanged to [InsuranceContract$new()].
+
+
+First, let us create a grid of premiums for different ages and maturities (for 
+sum insured 100,000 Euro):
+```{r SimpleExampleRiskPremiumGrid}
+contractGridPremium(
+  axes = list(age = seq(20, 80, 5), policyPeriod = seq(10, 40, 5)),
+  tarif = Tarif.L71U, 
+  contractClosing = as.Date("2020-08-18"), 
+  sumInsured = 100000
+)
+```
+
+One can also pass more than two dimensions to the axes:
+```{r SimpleExampleRiskPremiumGrid3D}
+contractGridPremium(
+  axes = list(age = seq(20, 80, 10), policyPeriod = seq(10, 40, 10), sumInsured = c(10000, 50000, 100000)),
+  tarif = Tarif.L71U, 
+  contractClosing = as.Date("2020-08-18")
+)
+```
+
+
+One can use any of the parameters of the [InsuranceContract$new()] call in the
+\code{axes} argument, even the \code{tarif} or \code{mortalityTable} parameters. 
+This means that one can create tables comparing different tariffs, or showing
+the effect of different life tables.
+
+In the following example, we use the tarif \code{Tarif.L71U}, but instead of the
+unisex table (mixed 65:35 from male:female tables), we use the male mortality tables
+of the Austrian census from 1870 to 2011 (with a contract period of 10 years fixed, and varying ages):
+
+```{r SimpleExampleRiskPremiumGridLifeTables}
+contractGridPremium(
+  axes = list(mortalityTable = mort.AT.census["m", ], age = seq(20, 80, 10)),
+  tarif = Tarif.L71U, 
+  sumInsured = 100000,
+  contractClosing = as.Date("2020-08-18")
+) %>% pander(round=1, digits=15, keep.trailing.zeros = T)
+```
+
+
+# All possible parameters and their default values
+
+All possible parameters of an insurance contract are stored in sub-lists of a a structure 
+[InsuranceContract.Parameters]. If not provided by the call to [InsuranceContract$new()], 
+the values will be taken from either the [InsuranceTariff]'s default parameters, 
+the [ProfitParticipation]'s default parameters or the global defaults in the 
+[InsuranceContract.ParameterDefault]. The cascade or parameters is (from top to
+bottom):
+
+* explicit parameters passed to [InsuranceContract$addProfitScenario()] (applies 
+  only for the added profit scenario)
+* explicit parameters passed to [InsuranceContract$new()] or [InsuranceContract$clone()]
+* parameters set with the [ProfitParticipation]
+* parameters set with the [InsuranceTarif]
+* Default values set in [InsuranceContract.ParameterDefaults]
+
+In addition to the parameters listed below, the [InsuranceContract$new()] 
+constructor function takes the following parameters
+
+\define{
+\item{tarif}{The [InsuranceTarif] object describing the tarif}
+\item{parent}{For contracts with multiple parts, children get passed a pointer to the parent}
+\item{calculate}{How much of the contract to calculate (by default everything will be calculated)}
+\item{profitid}{The profit ID for contracts with profit participation}
+}
+
 ```{r}
 str(InsuranceContract.ParameterDefaults)
 ```
 ```{r, results="asis"}
 
-#pandoc.listRK(InsuranceContract.ParameterDefaults)
+# pandoc.listRK(InsuranceContract.ParameterDefaults)
 ```
+
+
+# Tarif Specification and implementation of a concrete contract
+
+An insurance contract is modelled by the abstract product specification 
+([InsuranceTarif] class) and the concrete (individualized) [InsuranceContract]. 
+
+* The [InsuranceTarif] object describes the product in abstract terms, holds
+  default parameters and provides all calculation functions for cash flows, 
+  present values, premiums and reserves (provided the contract's actual Parameters).
+  It does not, however, hold contract-specific data.
+* The [InsuranceContract] object holds the individual contract data (like age, contract 
+  closing date, sum insured, etc.) that override the tariff's defaults. It also 
+  holds a pointer to the insurance tariff and provides the general logic to
+  calculate all parts of an insurance contract by calling the corresponding 
+  functions of the tariff.
+
+```{r TarifDefinition}
+riskTarif = InsuranceTarif$new(
+  name = "Example Risk Tarif", 
+  
+)
+
+
+
+```
+
+# Cost structure
+
+Costs of an insurance contracts can have
+
+# Calculation approach: Cash flows, present values, premiums and reserves
+
+
+# Creating premium and contract grids
+
+# Exporting contract data to Excel
+
+# Advance profit participation (premium rebate)
+
+
+# Profit participation schemes
+
+
+# Modifying the default calculation approach

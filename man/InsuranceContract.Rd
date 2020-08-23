@@ -10,8 +10,176 @@ all other relevant contract parameters (if not defined by the tariff or
 explicitly overridden by the contract) can be given in the constructor.
 }
 \details{
+\subsection{Usage}{
+
+The typical usage of this class is to simply call \code{\link[=InsuranceContract$new]{InsuranceContract$new()}}.
+
+All parameters from the \link{InsuranceContract.ParameterDefaults} can be passed
+to the constructor of the class (i.e. the \code{\link[=InsuranceContract$new]{InsuranceContract$new()}}-call).
+Parameters not explicitly given, will be taken from the tariff or as a fall-back
+mechanism from the \link{InsuranceContract.ParameterDefaults} defaults.
+
 Immediately upon construction, all premiums, reserves and cash flows for the
-whole contract period are calculated.
+whole contract period are calculated and can be accessed via the \code{Values}
+field of the object.
+}
+
+\subsection{Calculation approach: Cash Flows}{
+
+An insurance contract is basically defined by the (unit) cash flows it produces:
+\itemize{
+\item Premium payments (in advance or in arrears) at each timestep
+\item Survival payments at each timestep
+\item Death benefits at each timestep
+\item Disease benefits at each timestep
+\item Guaranteed payments at each timestep
+}
+Together with the transition probabilities (mortalityTable parameter)
+the present values can be calculated, from which the premiums follow and
+finally the reserves and a potential profit sharing.
+
+For example, a term life insurance with regular premiums would have the following
+cash flows:
+\itemize{
+\item premium cash flows: 1, 1, 1, 1, 1, ...
+\item survival cash flows: 0, 0, 0, 0, 0, ...
+\item guaranteed cash flows: 0, 0, 0, 0, 0, ...
+\item death benefit cash flows: 1, 1, 1, 1, 1, ...
+}
+
+A single-premium term life insurance would look similar, except for the premiums:
+\itemize{
+\item premium cash flows: 1, 0, 0, 0, 0, ...
+}
+
+A pure endowment has no death benefits, but a survival benefit of 1 at the
+maturity of the contract:
+\itemize{
+\item premium cash flows: 1, 1, 1, 1, 1, ...
+\item survival cash flows: 0, 0, ..., 0, 1
+\item guaranteed cash flows: 0, 0, 0, 0, 0, ...
+\item death benefit cash flows: 0, 0, 0, 0, 0, ...
+}
+
+An endowment has also death benefits during the contract duration:
+\itemize{
+\item premium cash flows: 1, 1, 1, 1, 1, ...
+\item survival cash flows: 0, 0, ..., 0, 1
+\item guaranteed cash flows: 0, 0, 0, 0, 0, ...
+\item death benefit cash flows: 1, 1, 1, 1, 1, ...
+}
+
+A (deferred) annuity has premium cash flows only during the deferral peroid
+and only survival cash flows during the annuity payment phase. Often, in case
+of death during the deferral period, all premiums paid are refunded as a death
+benefit.:
+\itemize{
+\item premium cash flows: 1, 1, ...,  1, 0, 0, 0, ...
+\item survival cash flows: 0, 0, ..., 0, 1, 1, 1,...
+\item guaranteed cash flows: 0, 0, 0, 0, 0, ...
+\item death benefit cash flows: 1, 2, 3, 4, 5, ..., 0, 0, ...
+}
+
+A terme-fix insurance has a guaranteed payment at maturity, even if the insured
+has already died. The premiums, however, are only paid until death (which is
+not reflected in the contingent cash flows, but rather in the transition
+probabilities):
+\itemize{
+\item premium cash flows: 1, 1, 1, 1, ...,  1
+\item survival cash flows: 0, 0, 0, 0, ..., 0
+\item guaranteed cash flows: 0, 0, 0, ..., 0, 1
+\item death benefit cash flows: 0, 0, 0, 0, ..., 0
+}
+}
+
+\subsection{Calculation approach: Valuation}{
+
+The calculation of all contract values is controlled by the function
+\code{\link[=InsuranceContract$calculateContract]{InsuranceContract$calculateContract()}} (using methods of the \link{InsuranceTarif}
+object) and follows the following logic:
+\enumerate{
+\item Once the (unit) cash flows and the transition probbilities are determined,
+the actuarial equivalence principle states that at time of inception, the
+(net and gross) premium must be determined in a way that the present value
+of the future benefits and costs minus the present value of the future premiums
+must be equal, i.e. in expectation the future premiums ove the whole lifetime
+of the contract will exactly cover the benefits and costs. Similarly, at all
+later time steps, the difference between these two present values needs to be
+reserved (i.e. has already been paid by the customer by previous premiums).
+\item This allows the premiums to be calculated by first calculating the present
+values for all of the benefit and costs cash flow vectors.
+\item The formulas
+to calculate the gross, Zillmer and net premiums involve simple linear
+combinations of these present values, so the coefficients of these formulas
+is determined next.
+\item With the coefficients of the premium formulas calculated, all premiums
+can be calculated (first the gross premium, because due to potential gross
+premium refunds in case of death, the formula for the net premium requires
+the gross premium, which the formula for the gross premium involves no other
+type of premuim).
+\item With premiums determined, all unit cash flows and unit present values can
+now be expressed in monetary terms (i.e. the actual Euro-amount that flows
+rather than a percentage).
+\item As described above, the difference between the present values of premiums
+and present values of benefits and costs is defined as the required amount
+of reserves, so the reserves (net, gross, administration cost, balance sheet)
+and all values derived from them (i.e. surrender value, sum insured in case of
+premium waiver, etc.) are calculated.
+\item The decomposition of the premium into parts dedicated to specific purposes
+(tax, rebates, net premium, gross premium, Zillmer premium, cost components,
+risk premium, savings premium, etc.) can be done once the reserves are
+ready (since e.g. the savings premium is defined as the difference of
+discounted reserves at times $t$ and $t+1$).
+\item If the contract has (discretionary or obligatory) profit sharing mechanisms
+included, the corresponding \link{ProfitParticipation} object can calculate that
+profit sharing amounts, once all guaranteed values are calculated. This can
+also be triggered manually (with custom profit sharing rates) by calling
+the methods \code{\link[=InsuranceContract$profitScenario]{InsuranceContract$profitScenario()}} or \code{\link[=InsuranceContract$addProfitScenario]{InsuranceContract$addProfitScenario()}}.
+}
+}
+}
+\section{Public fields}{
+\if{html}{\out{<div class="r6-fields">}}
+\describe{
+\item{\code{tarif}}{The \link{InsuranceTarif} underlying this contract. The tarif is the abstract
+product description (i.e. defining the type of insurance, fixing tpyes
+of benefits, specifying costs, guaranteed interest rate, mortality tables,
+potential profit sharing mechanisms, etc.), while the contract holds
+the individual parts like age, sum insured, contract duration, premium
+payment frequency, etc.}
+
+\item{\code{parent}}{A pointer to the parent contract. Some contracts consist of multiple
+parts (e.g. a main savings contract with a dread-disease rider, or
+a contract with multiple dynamic increases). These are internally
+represented by one \link{InsuranceContract} object per contract part, plus
+one contract object combining them and deriving combined premiums,
+reserves and profit participation. The child contracts (i.e. the
+objects representing the individual parts) have a pointer to their
+parent, while the overall contract holds a list of all its child contract parts.}
+
+\item{\code{ContractParameters}}{Insurance contract parameters explicitly specified in the contract
+(i.e. parameters that are NOT taken from the tariff of the defaults).}
+
+\item{\code{Parameters}}{Full set of insurance contract parameters applying to this contract.
+The set of parameters is a combination of explicitly given (contract-specific)
+values, parameters determined by the tariff and default values.}
+
+\item{\code{Values}}{List of all contract values (cash flows, present values, premiums,
+reserves, premium decomposition, profit participation, etc.). These
+values will be calculated and filled when the contract is created
+and updated whenever the contract is changed.}
+
+\item{\code{blocks}}{For contracts with multiple contract parts: List of all tariff blocks
+(independently calculated \link{InsuranceContract} objects, that are combined
+to one contract, e.g. dynamic/sum increases). If this field is empty,
+this object describes a contract block (calculated as a stand-alone
+tariff), otherwise it will simply be the sum of its blocks (adjusted
+to span the same time periods)}
+
+\item{\code{history}}{A list keeping track of all contract changes (including the whole
+contract state and its values before the change).}
+}
+\if{html}{\out{</div>}}
 }
 \section{Methods}{
 \subsection{Public methods}{

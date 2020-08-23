@@ -2,28 +2,29 @@
 #' @importFrom objectProperties setSingleEnum
 #' @importFrom utils head tail
 #' @importFrom methods new
+NULL
+
+
+
+#' Enum to describe when a benefit or premium payment is due (in advance or in arrears)
+#' @details Currently, only two values are allowed;
+#' \itemize{
+#'     \item "in advance"
+#'     \item "in arrears"
+#' }
 #'
+#' @export
+PaymentTimeEnum = objectProperties::setSingleEnum("PaymentTime", levels = c("in advance", "in arrears"));
 
-# @name PaymentTimeSingleEnum
-# @description Enum to describe when a benefit or premium payment is due (in advance or in arrears)
-# @details Currently, only two values are allowed;
-# * "in advance"
-# * "in arrears
-#
-# @export
-PaymentTimeEnum = objectProperties::setSingleEnum("PaymentTime", levels = c("in advance", "in arrears"))
-#PaymentCountEnum = objectProperties::setSingleEnum(PaymentCount, levels = c(1,2,3))
-
-# @name SexSingleEnum
-# @description Enum to describe possble sexes in an insurance contract or tariff.
-# @details
-# Currently, only possible values are allowed;
-# * "unisex"
-# * "male"
-# * "female"
-#
-# @export
-SexEnum = objectProperties::setSingleEnum("Sex", levels = c("unisex", "male", "female"))
+#' Enum to describe possble sexes in an insurance contract or tariff.
+#' @details
+#' Currently, only possible values are allowed;
+#' * "unisex"
+#' * "male"
+#' * "female"
+#'
+#' @export
+SexEnum = objectProperties::setSingleEnum("Sex", levels = c("unisex", "male", "female"));
 
 
 #' Describes the death benefit of a linearly decreasing whole life insurance (after a possible deferall period)
@@ -71,7 +72,7 @@ deathBenefit.linearDecreasing = function(len, params, values) {
 #' @param interest The interest rate of the loan, which is underlying the insurance.
 #'
 #'
-#'@export
+#' @export
 deathBenefit.annuityDecreasing = function(interest) {
     function(len, params, values) {
         protectionPeriod = params$ContractData$policyPeriod - params$ContractData$deferralPeriod;

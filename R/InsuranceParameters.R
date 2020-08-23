@@ -149,7 +149,7 @@ InsuranceContract.Values = list(
 #'               insured for contracts with multiple insured (i.e. joint-lives)}
 #'     \item{\code{$sex}}{Sex of the insured, to allow gender-specific prixing
 #'               (e.g. different mortalities or age modification), default="unisex",
-#'               Type is [SexSingleEnum]}
+#'               Type is [SexEnum]}
 #'     \item{\code{$policyPeriod}}{Policy Duration (in years)}
 #'     \item{\code{$premiumPeriod}}{Premium payment period (in year), for
 #'               single-premium contracts, \code{premiumPeriod = 1}. Default is
@@ -177,11 +177,11 @@ InsuranceContract.Values = list(
 #'               value is only used by the parent block (i.e. $t=0$ of the child
 #'               is aligned with $t=blockStart$ of the parent block.}
 #'     \item{\code{$premiumPayments}}{Whether premiums are paid in advance
-#'               (default) or arrears. Value is of type [PaymentTimeSingleEnum]
+#'               (default) or arrears. Value is of type [PaymentTimeEnum]
 #'               with possible values "in advance" and 'in arrears"}
 #'     \item{\code{$benefitPayments}}{Whether recurring benefits (e.g. annuities)
 #'               are paid in advance (default) or arrears. Value is of type
-#'               [PaymentTimeSingleEnum] with possible values "in advance" and
+#'               [PaymentTimeEnum] with possible values "in advance" and
 #'               "in arrears"}
 #'     \item{\code{$premiumFrequency}}{Number of premium payments per year, default is 1.}
 #'     \item{\code{$benefitFrequency}}{Number of benefit payments per year, default is 1.}
