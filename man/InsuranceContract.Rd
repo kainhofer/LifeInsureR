@@ -9,9 +9,7 @@ The corresponding tariff and the profit participation scheme, as well as
 all other relevant contract parameters (if not defined by the tariff or
 explicitly overridden by the contract) can be given in the constructor.
 }
-\details{
-\subsection{Usage}{
-
+\section{Usage}{
 The typical usage of this class is to simply call \code{\link[=InsuranceContract$new]{InsuranceContract$new()}}.
 
 All parameters from the \link{InsuranceContract.ParameterDefaults} can be passed
@@ -24,21 +22,20 @@ whole contract period are calculated and can be accessed via the \code{Values}
 field of the object.
 }
 
-\subsection{Calculation approach: Cash Flows}{
-
+\section{Calculation approach: Cash Flows}{
 An insurance contract is basically defined by the (unit) cash flows it produces:
 \itemize{
-\item Premium payments (in advance or in arrears) at each timestep
-\item Survival payments at each timestep
-\item Death benefits at each timestep
-\item Disease benefits at each timestep
-\item Guaranteed payments at each timestep
+\item \strong{Premium payments} (in advance or in arrears) at each timestep
+\item \strong{Survival payments} at each timestep
+\item \strong{Guaranteed payments} at each timestep
+\item \strong{Death benefits} at each timestep
+\item \strong{Disease benefits} at each timestep
 }
 Together with the transition probabilities (mortalityTable parameter)
 the present values can be calculated, from which the premiums follow and
 finally the reserves and a potential profit sharing.
 
-For example, a term life insurance with regular premiums would have the following
+For example, a \emph{\strong{term life insurance with regular premiums}} would have the following
 cash flows:
 \itemize{
 \item premium cash flows: 1, 1, 1, 1, 1, ...
@@ -47,12 +44,12 @@ cash flows:
 \item death benefit cash flows: 1, 1, 1, 1, 1, ...
 }
 
-A single-premium term life insurance would look similar, except for the premiums:
+A \emph{\strong{single-premium term life insurance}} would look similar, except for the premiums:
 \itemize{
 \item premium cash flows: 1, 0, 0, 0, 0, ...
 }
 
-A pure endowment has no death benefits, but a survival benefit of 1 at the
+A \emph{\strong{pure endowment}} has no death benefits, but a survival benefit of 1 at the
 maturity of the contract:
 \itemize{
 \item premium cash flows: 1, 1, 1, 1, 1, ...
@@ -61,7 +58,7 @@ maturity of the contract:
 \item death benefit cash flows: 0, 0, 0, 0, 0, ...
 }
 
-An endowment has also death benefits during the contract duration:
+An \emph{\strong{endowment}} has also death benefits during the contract duration:
 \itemize{
 \item premium cash flows: 1, 1, 1, 1, 1, ...
 \item survival cash flows: 0, 0, ..., 0, 1
@@ -69,7 +66,7 @@ An endowment has also death benefits during the contract duration:
 \item death benefit cash flows: 1, 1, 1, 1, 1, ...
 }
 
-A (deferred) annuity has premium cash flows only during the deferral peroid
+A \emph{\strong{(deferred) annuity}B} has premium cash flows only during the deferral peroid
 and only survival cash flows during the annuity payment phase. Often, in case
 of death during the deferral period, all premiums paid are refunded as a death
 benefit.:
@@ -80,7 +77,7 @@ benefit.:
 \item death benefit cash flows: 1, 2, 3, 4, 5, ..., 0, 0, ...
 }
 
-A terme-fix insurance has a guaranteed payment at maturity, even if the insured
+A \emph{\strong{terme-fix insurance}} has a guaranteed payment at maturity, even if the insured
 has already died. The premiums, however, are only paid until death (which is
 not reflected in the contingent cash flows, but rather in the transition
 probabilities):
@@ -92,52 +89,51 @@ probabilities):
 }
 }
 
-\subsection{Calculation approach: Valuation}{
-
+\section{Calculation approach: Valuation}{
 The calculation of all contract values is controlled by the function
 \code{\link[=InsuranceContract$calculateContract]{InsuranceContract$calculateContract()}} (using methods of the \link{InsuranceTarif}
 object) and follows the following logic:
 \enumerate{
-\item Once the (unit) cash flows and the transition probbilities are determined,
-the actuarial equivalence principle states that at time of inception, the
+\item First the \strong{contingent (unit) cash flows} and the \strong{transition probbilities} are determined.
+\item The \strong{actuarial equivalence principle} states that at time of inception, the
 (net and gross) premium must be determined in a way that the present value
 of the future benefits and costs minus the present value of the future premiums
 must be equal, i.e. in expectation the future premiums ove the whole lifetime
 of the contract will exactly cover the benefits and costs. Similarly, at all
 later time steps, the difference between these two present values needs to be
 reserved (i.e. has already been paid by the customer by previous premiums).
-\item This allows the premiums to be calculated by first calculating the present
-values for all of the benefit and costs cash flow vectors.
+\item This allows the premiums to be calculated by first calculating the \strong{present
+values} for all of the \strong{benefit and costs cash flow} vectors.
 \item The formulas
-to calculate the gross, Zillmer and net premiums involve simple linear
-combinations of these present values, so the coefficients of these formulas
-is determined next.
-\item With the coefficients of the premium formulas calculated, all premiums
-can be calculated (first the gross premium, because due to potential gross
+to calculate the gross, Zillmer and net \strong{premiums} involve simple linear
+combinations of these present values, so the \strong{coefficients of these formulas}
+are determined next.
+\item With the coefficients of the premium formulas calculated, all \strong{premiums
+can be calculated} (first the gross premium, because due to potential gross
 premium refunds in case of death, the formula for the net premium requires
 the gross premium, which the formula for the gross premium involves no other
 type of premuim).
 \item With premiums determined, all unit cash flows and unit present values can
-now be expressed in monetary terms (i.e. the actual Euro-amount that flows
+now be expressed in monetary terms / as \strong{absolute cash flows} (i.e. the actual Euro-amount that flows
 rather than a percentage).
 \item As described above, the difference between the present values of premiums
 and present values of benefits and costs is defined as the required amount
-of reserves, so the reserves (net, gross, administration cost, balance sheet)
+of reserves, so the \strong{reserves (net, gross, administration cost, balance sheet)}
 and all values derived from them (i.e. surrender value, sum insured in case of
 premium waiver, etc.) are calculated.
-\item The decomposition of the premium into parts dedicated to specific purposes
+\item The \strong{decomposition of the premium} into parts dedicated to specific purposes
 (tax, rebates, net premium, gross premium, Zillmer premium, cost components,
 risk premium, savings premium, etc.) can be done once the reserves are
 ready (since e.g. the savings premium is defined as the difference of
 discounted reserves at times $t$ and $t+1$).
-\item If the contract has (discretionary or obligatory) profit sharing mechanisms
+\item If the contract has \strong{(discretionary or obligatory) profit sharing} mechanisms
 included, the corresponding \link{ProfitParticipation} object can calculate that
 profit sharing amounts, once all guaranteed values are calculated. This can
 also be triggered manually (with custom profit sharing rates) by calling
 the methods \code{\link[=InsuranceContract$profitScenario]{InsuranceContract$profitScenario()}} or \code{\link[=InsuranceContract$addProfitScenario]{InsuranceContract$addProfitScenario()}}.
 }
 }
-}
+
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
 \describe{
@@ -178,6 +174,8 @@ to span the same time periods)}
 
 \item{\code{history}}{A list keeping track of all contract changes (including the whole
 contract state and its values before the change).}
+
+\item{\code{dummy.public}}{dummy field to allow a trailing comma after the previous field/method}
 }
 \if{html}{\out{</div>}}
 }
