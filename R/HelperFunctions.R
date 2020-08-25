@@ -26,6 +26,28 @@ PaymentTimeEnum = objectProperties::setSingleEnum("PaymentTime", levels = c("in 
 #' @export
 SexEnum = objectProperties::setSingleEnum("Sex", levels = c("unisex", "male", "female"));
 
+#' Enum to define how much of a contract needs to be calculated automatically.
+#' @details
+#' When an [InsuranceContract] object is created, all time series are immediately
+#' calculated. However, sometimes, one only needs part of the values, so it
+#' would be a waste of resources to calculate e.g. all future reserves and
+#' profit participation, if only premiums are of interest.
+#'
+#' @export
+CalculationEnum = objectProperties::setSingleEnum("Calculation",
+    levels = c(
+      "all",
+      "probabilities",
+      "cashflows",
+      "presentvalues",
+      "premiums",
+      "absvalues",
+      "reserves",
+      "premiumcomposition",
+      "profitparticipation",
+      "history"
+    )
+)
 
 #' Describes the death benefit of a linearly decreasing whole life insurance (after a possible deferall period)
 #'

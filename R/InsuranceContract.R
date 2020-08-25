@@ -4,6 +4,8 @@
 #' @import R6
 NULL
 
+
+
 ############ Class InsuranceContract ###########################################
 #' Base Class for Insurance Contracts
 #'
@@ -24,6 +26,52 @@ NULL
 #' Immediately upon construction, all premiums, reserves and cash flows for the
 #' whole contract period are calculated and can be accessed via the \code{Values}
 #' field of the object.
+#'
+#'
+#' # Calculation approach: Valuation
+#'
+#' The calculation of all contract values is controlled by the function
+#' [InsuranceContract$calculateContract()] (using methods of the [InsuranceTarif]
+#' object) and follows the following logic:
+#'
+#' 1. First the **contingent (unit) cash flows** and the **transition probbilities**
+#' are determined.
+#' 2. The **actuarial equivalence principle** states that at time of inception, the
+#' (net and gross) premium must be determined in a way that the present value
+#' of the future benefits and costs minus the present value of the future premiums
+#' must be equal, i.e. in expectation the future premiums ove the whole lifetime
+#' of the contract will exactly cover the benefits and costs. Similarly, at all
+#' later time steps, the difference between these two present values needs to be
+#' reserved (i.e. has already been paid by the customer by previous premiums).
+#' 2. This allows the premiums to be calculated by first calculating the **present
+#' values** for all of the **benefit and costs cash flow** vectors.
+#' 3. The formulas
+#' to calculate the gross, Zillmer and net **premiums** involve simple linear
+#' combinations of these present values, so the **coefficients of these formulas**
+#' are determined next.
+#' 4. With the coefficients of the premium formulas calculated, all **premiums
+#' can be calculated** (first the gross premium, because due to potential gross
+#' premium refunds in case of death, the formula for the net premium requires
+#' the gross premium, which the formula for the gross premium involves no other
+#' type of premuim).
+#' 5. With premiums determined, all unit cash flows and unit present values can
+#' now be expressed in monetary terms / as **absolute cash flows** (i.e. the actual Euro-amount that flows
+#' rather than a percentage).
+#' 6. As described above, the difference between the present values of premiums
+#' and present values of benefits and costs is defined as the required amount
+#' of reserves, so the **reserves (net, gross, administration cost, balance sheet)**
+#' and all values derived from them (i.e. surrender value, sum insured in case of
+#' premium waiver, etc.) are calculated.
+#' 7. The **decomposition of the premium** into parts dedicated to specific purposes
+#' (tax, rebates, net premium, gross premium, Zillmer premium, cost components,
+#' risk premium, savings premium, etc.) can be done once the reserves are
+#' ready (since e.g. the savings premium is defined as the difference of
+#' discounted reserves at times $t$ and $t+1$).
+#' 8. If the contract has **(discretionary or obligatory) profit sharing**B mechanisms
+#' included, the corresponding [ProfitParticipation] object can calculate that
+#' profit sharing amounts, once all guaranteed values are calculated. This can
+#' also be triggered manually (with custom profit sharing rates) by calling
+#' the methods [InsuranceContract$profitScenario()] or [InsuranceContract$addProfitScenario()].
 #'
 #'
 #' # Calculation approach: Cash Flows
@@ -87,51 +135,10 @@ NULL
 #' * guaranteed cash flows: 0, 0, 0, ..., 0, 1
 #' * death benefit cash flows: 0, 0, 0, 0, ..., 0
 #'
-#' # Calculation approach: Valuation
+
 #'
-#' The calculation of all contract values is controlled by the function
-#' [InsuranceContract$calculateContract()] (using methods of the [InsuranceTarif]
-#' object) and follows the following logic:
-#'
-#' 1. First the **contingent (unit) cash flows** and the **transition probbilities** are determined.
-#' 2. The **actuarial equivalence principle** states that at time of inception, the
-#' (net and gross) premium must be determined in a way that the present value
-#' of the future benefits and costs minus the present value of the future premiums
-#' must be equal, i.e. in expectation the future premiums ove the whole lifetime
-#' of the contract will exactly cover the benefits and costs. Similarly, at all
-#' later time steps, the difference between these two present values needs to be
-#' reserved (i.e. has already been paid by the customer by previous premiums).
-#' 2. This allows the premiums to be calculated by first calculating the **present
-#' values** for all of the **benefit and costs cash flow** vectors.
-#' 3. The formulas
-#' to calculate the gross, Zillmer and net **premiums** involve simple linear
-#' combinations of these present values, so the **coefficients of these formulas**
-#' are determined next.
-#' 4. With the coefficients of the premium formulas calculated, all **premiums
-#' can be calculated** (first the gross premium, because due to potential gross
-#' premium refunds in case of death, the formula for the net premium requires
-#' the gross premium, which the formula for the gross premium involves no other
-#' type of premuim).
-#' 5. With premiums determined, all unit cash flows and unit present values can
-#' now be expressed in monetary terms / as **absolute cash flows** (i.e. the actual Euro-amount that flows
-#' rather than a percentage).
-#' 6. As described above, the difference between the present values of premiums
-#' and present values of benefits and costs is defined as the required amount
-#' of reserves, so the **reserves (net, gross, administration cost, balance sheet)**
-#' and all values derived from them (i.e. surrender value, sum insured in case of
-#' premium waiver, etc.) are calculated.
-#' 7. The **decomposition of the premium** into parts dedicated to specific purposes
-#' (tax, rebates, net premium, gross premium, Zillmer premium, cost components,
-#' risk premium, savings premium, etc.) can be done once the reserves are
-#' ready (since e.g. the savings premium is defined as the difference of
-#' discounted reserves at times $t$ and $t+1$).
-#' 8. If the contract has **(discretionary or obligatory) profit sharing**B mechanisms
-#' included, the corresponding [ProfitParticipation] object can calculate that
-#' profit sharing amounts, once all guaranteed values are calculated. This can
-#' also be triggered manually (with custom profit sharing rates) by calling
-#' the methods [InsuranceContract$profitScenario()] or [InsuranceContract$addProfitScenario()].
-#'
-#'
+#' @examples
+#' # TODO
 #'
 #' @export
 InsuranceContract = R6Class(
@@ -192,6 +199,68 @@ InsuranceContract = R6Class(
 
         #### The code:
 
+        #' @description  Create a new insurance contract (for the given tariff/product) and calculate all time series
+        #'
+        #' @details The \code{InsuranceContract$new()} function creates a new
+        #' insurance contract for the given tariff, using the parameters passed
+        #' to the function (and the defaults specified in the tariff).
+        #'
+        #' As soon as this function is called, the contract object calculates
+        #' all time series (cash flows, premiums, reserves, profit participation)
+        #' for the whole contract duration.
+        #'
+        #' The most important parameters that are typically passed to the
+        #' constructor are:
+        #' * \code{age} ... Age of the insured person (used to derive mortalities / transition probabilities)
+        #' * \code{policyPeriod} ... Maturity of the policy (in years)
+        #' * \code{premiumPeriod} ... How long premiums are paid (\code{premiumPeriod = 1}
+        #'        for single-premium contracts, \code{premiumPeriod} equals
+        #'        \code{policyPeriod} for regular premium payments for the whole
+        #'        contract period, while other premium payment durations indicate
+        #'        premium payments only for shorter periods than the whole contract
+        #'        duration). Default is equal to \code{policyPeriod}
+        #' * \code{sumInsured} ... The sum insured (i.e. survival benefit for
+        #'         endowments, death benefit for whole/term life insurances,
+        #'         annuity payments for annuities)
+        #' * \code{contractClosing} ... Date of the contract beginning (typically
+        #'        created using something like \code{as.Date("2020-08-01")})
+        #' * \code{YOB} ... Year of birth of the insured (for cohort mortality
+        #'        tables). If not given, YOB is derived from \code{age} and
+        #'        \code{contractClosing}.
+        #' * \code{deferralPeriod} ... Deferral period for deferred annuities
+        #'        (i.e. when annuity payments start at a future point in time).
+        #'        Default is 0.
+        #' * \code{premiumFrequency} ... How many premium payments per year are
+        #'        made (e.g. 1 for yearly premiums, 4 for quarterly premiumd,
+        #'        12 for monthly premium payments). Default is 1 (yearly premiums).
+        #'
+        #' While these are the most common and most important parameters, all
+        #' parameters can be overwritten on a per-contract basis, even those
+        #' that are defined by the tariff. For a full list and explanation of all
+        #' parameters, see [InsuranceContract.ParameterDefaults].
+        #'
+        #' @param tarif The [InsuranceTarif] object describing the Tariff/Product
+        #'        and providing defaults for the parameters.
+        #' @param parent For contracts with multiple contract blocks (dynamic
+        #'        increases, sum increases, riders), each child is created with
+        #'        a pointer to its parent. NULL for single-block contracts or
+        #'        for the overall-contract of a multi-block contract. This
+        #'        parameter is used internally, but should not be used in
+        #'        user-written code.
+        #' @param calculate how much of the contract's time series need to be
+        #'        calculated. See [CalculateEnum] for all possible values. This
+        #'        is usefull to prevent calculation of e.g. reserves and profit
+        #'        participation, when one only wants to create a grid of premiums.
+        #' @param profitid The ID of the default profit participation scenario.
+        #'        The default profit participation scenario uses the default
+        #'        values passed, while further scenarios can be added by
+        #'        [InsuranceContract$addProfitScenario()].
+        #' @param ... Further parameters (age, sum insured, contract closing /
+        #'        begin, premium payment details, etc.) of the contract, which
+        #'        can also override parameters defined at the tariff-level.
+        #'        Possible values are all sub-fields of the
+        #'        [InsuranceContract.ParameterDefaults] data structure.
+        #'
         initialize = function(tarif, parent = NULL, calculate = "all", profitid = "default", ...) {
             private$initParams = c(list(tarif = tarif, parent = parent, calculate = calculate, profitid = profitid), list(...))
             self$tarif = tarif;
@@ -228,6 +297,31 @@ InsuranceContract = R6Class(
             invisible(self)
         },
 
+        #' @description Add the current state of the contract to the history list
+        #'
+        #' @details The \code{InsuranceContract$addHistorySnapshot()} function
+        #' adds the current (or the explicitly given) state of the contract
+        #' (parameters, calculated values, tarif, list of all contract blocks)
+        #' to the history list (available in the \code{history} field of the
+        #' contract, i.e. \code{InsuranceContract$history}).
+        #'
+        #' @param time the time described by the snapshot
+        #' @param comment a comment to store together with the contract state
+        #' @param type The type of action that caused a history snapshot to
+        #'        be stored. Typical values are "Contract" to describe the initial
+        #'        contract, "Premium Waiver" or "Dynamic Increase".
+        #' @param params The set of params to be stored in the history snapshot
+        #'        (default is \code{self$Parameters}, if not explicitly given)
+        #' @param values The calculated time series of all contract values
+        #'        calculated so far. Default is \code{self$Values}, if not
+        #'        explicitly given
+        #' @param tarif The underlying [InsuranceTarif] object describing the
+        #'        Product/Tariff. Default is \code{self$tarif}, if not explicitly given.
+        #' @param blocks The list of all contract children for contracts with
+        #'        multiple insurance blocks (e.g. dynamic increases, riders, etc.)
+        #'
+        #' @examples
+        #' # TODO
         addHistorySnapshot = function(time = 0, comment = "Initial contract values", type = "Contract", params = self$Parameters, values = self$Values, tarif = self$tarif, blocks = self$blocks) {
             self$history = rbind(
                 self$history,
@@ -246,6 +340,35 @@ InsuranceContract = R6Class(
             invisible(self)
         },
 
+        #' @description Add a child contract block (e.g. a dynamic increase or a rider) to an insurance contract
+        #'
+        #' @details Contracts with multiple contract blocks (typically either
+        #' contracts with dynamic increases, sum increases or protection riders)
+        #' are constructed by instantiating the child block (e.g. a single
+        #' dynamic increase or the rider) independently with its own (shorter)
+        #' duration and then inserting it into the parent contract with this
+        #' function at the given time.
+        #'
+        #' If no [InsuranceContract] object is passed as \code{block}, a copy
+        #' of the parent is created with overriding parameters given in \code{...}.
+        #'
+        #' @param id The identifier of the child block to be inserted
+        #' @param block The [InsuranceContract] object describing the child block.
+        #'        If NULL (or not given at all), a copy of the parent will be
+        #'        created
+        #' @param t Then the child block starts, relative to the parent block.
+        #'        The child block is calculated independently (with time 0
+        #'        describing its own start), so when aggregating all values from
+        #'        the individual blocks to overall values for the whole contract,
+        #'        the child's values need to be translated to the parent contracts's
+        #'        time frame using this parameter
+        #' @param comment The comment to use in the history snapshot.
+        #' @param ... parameters to be passed to [InsuranceContract$new()] when
+        #'        \code{block} is not given and a copy of the parent should be
+        #'        created with overrides.
+        #'
+        #' @examples
+        #' # TODO
         addBlock = function(id = NULL, block = NULL, t = block$Values$int$blockStart, comment = comment, ...) {
             if (missing(block) || is.null(block) || !is(block, "InsuranceContract")) {
                 # Create a block with the same tariff and parameters as the main contract, but allow overriding params with the ... arguments

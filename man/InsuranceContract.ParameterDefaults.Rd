@@ -42,7 +42,7 @@ contracts with multiple parts, e.g. dynamic increases),
 default = "Hauptvertrag"}
 \item{\code{$sumInsured}}{Sum insured, default = 100,000}
 \item{\code{$YOB}}{Year of birth of the insured, used to determine the
-age for the application of the mortality table},
+age for the application of the mortality table}
 \item{\code{$age}}{Age of the insured}
 \item{\code{$technicalAge}}{Technical age of the insured (when the age
 for the application of the mortality table does not coincide
@@ -86,25 +86,24 @@ are paid in advance (default) or arrears. Value is of type
 \link{PaymentTimeEnum} with possible values "in advance" and
 "in arrears"}
 \item{\code{$premiumFrequency}}{Number of premium payments per year, default is 1.}
-\item{\code{$benefitFrequency}}{Number of benefit payments per year, default is 1.}\preformatted{\\item\{\code{$widowProportion}\}\{For annuities with a widow transition,
-          this describes the factor of the widow benefits relative to
-          the original benefit.\}
-\\item\{\code{$deathBenefitProportion}\}\{For endowments with a death and
-          survival benefit, this describes the proportion of the death
-          benefit relative to the survival benefit.\}
-\\item\{\code{$premiumRefund}\}\{Proportion of (gross) premiums refunded on
-          death (including additional risk, e.g. 1.10 = 110\% of paid premiums)\}
-\\item\{\code{$premiumIncrease}\}\{The yearly growth factor of the premium,
-          i.e. 1.05 means +5\% increase each year; a vector describes the
-          premiums for all years\}
-\\item\{\code{$annuityIncrease}\}\{The yearly growth factor of the annuity
-          payments, i.e. 1.05 means +5\% increase each year; a vector
-          describes the annuity unit payments for all years\}
-\\item\{\code{$deathBenefit}\}\{The yearly relative death benefit (relative
-          to the initial sum insured); Can be set to a \code{function(len,
-              params, values)}, e.g. \code{deathBenefit = deathBenefit.linearDecreasing}\}
-}
-
+\item{\code{$benefitFrequency}}{Number of benefit payments per year, default is 1.}
+\item{\code{$widowProportion}}{For annuities with a widow transition,
+this describes the factor of the widow benefits relative to
+the original benefit.}
+\item{\code{$deathBenefitProportion}}{For endowments with a death and
+survival benefit, this describes the proportion of the death
+benefit relative to the survival benefit.}
+\item{\code{$premiumRefund}}{Proportion of (gross) premiums refunded on
+death (including additional risk, e.g. 1.10 = 110\% of paid premiums)}
+\item{\code{$premiumIncrease}}{The yearly growth factor of the premium,
+i.e. 1.05 means +5\% increase each year; a vector describes the
+premiums for all years}
+\item{\code{$annuityIncrease}}{The yearly growth factor of the annuity
+payments, i.e. 1.05 means +5\% increase each year; a vector
+describes the annuity unit payments for all years}
+\item{\code{$deathBenefit}}{The yearly relative death benefit (relative
+to the initial sum insured); Can be set to a \code{function(len,
+              params, values)}, e.g. \code{deathBenefit = deathBenefit.linearDecreasing}}
 }
 }
 
@@ -208,28 +207,27 @@ while the bases, on which they are applied is defined in the profit scheme.
 \item{\code{$advanceProfitParticipation}}{Advance profit participation
 rate (percentage rebate of the gross premium)}
 \item{\code{$advanceProfitParticipationInclUnitCost}}{Advance profit
-participation rate (percentage rebate on the gross premium after all surcharges and unit costs.}\preformatted{\\item\{\code{$waitingPeriod}\}\{Waiting period of the profit sharing (e.g.
-          no profit in the first two years of a contract, or similar)\}
-\\item\{\code{$guaranteedInterest}\}\{Individual contract-specific overrides
-          of the guaranteed interest rate (i.e. not keyed by year)\}
-\\item\{\code{$interestProfitRate}\}\{Interest profit rate (guaranteed interest
-          rate + interest profit rate = total credited rate)\}
-\\item\{\code{$totalInterest}\}\{Total credited rate (guarantee + interest profit)\}
-\\item\{\code{$mortalityProfitRate}\}\{Mortality Profit rate\}
-\\item\{\code{$expenseProfitRate}\}\{Expense profit rate\}
-\\item\{\code{$sumProfitRate}\}\{Sum profit rate (for high sumInsured)\}
-\\item\{\code{$terminalBonusRate}\}\{Terminal bonus rate (non-terminal-bonus
-         fund, but "old" Austrian terminal bonus)\}
-\\item\{\code{$terminalBonusFundRate}\}\{Terminal bonus fund rate\}
-\\item\{\code{$profitParticipationScheme}\}\{Profit participation scheme (object of class [ProfitParticipation])\}
-\\item\{\code{$profitComponents}\}\{Profit components of the profit scheme. List containing one or more of \code{c("interest", "risk", "expense", "sum", "terminal")}\}
-\\item\{\code{$profitClass}\}\{String describing the profit class the tariff
-          is assigned to. Profit classes are used to bundle similar
-          contracts (e.g. following similar risks) together. Profit
-          participation rates are defined at the level of profit classes.\}
-\\item\{\code{$profitRates}\}\{General, company-wide profit rates, key columns are year and profitClass\}
-
-\\item\{\code{$scenarios}\}\{profit participation scenarios (list of overridden parameters for each scenario)\}
+participation rate (percentage rebate on the gross premium after all surcharges and unit costs.}
+\item{\code{$waitingPeriod}}{Waiting period of the profit sharing (e.g.
+no profit in the first two years of a contract, or similar)}
+\item{\code{$guaranteedInterest}}{Individual contract-specific overrides
+of the guaranteed interest rate (i.e. not keyed by year)}
+\item{\code{$interestProfitRate}}{Interest profit rate (guaranteed interest
+rate + interest profit rate = total credited rate)}
+\item{\code{$totalInterest}}{Total credited rate (guarantee + interest profit)}
+\item{\code{$mortalityProfitRate}}{Mortality Profit rate}
+\item{\code{$expenseProfitRate}}{Expense profit rate}
+\item{\code{$sumProfitRate}}{Sum profit rate (for high sumInsured)}
+\item{\code{$terminalBonusRate}}{Terminal bonus rate (non-terminal-bonus
+fund, but "old" Austrian terminal bonus)}
+\item{\code{$terminalBonusFundRate}}{Terminal bonus fund rate}
+\item{\code{$profitParticipationScheme}}{Profit participation scheme (object of class \link{ProfitParticipation})}
+\item{\code{$profitComponents}}{Profit components of the profit scheme. List containing one or more of \code{c("interest", "risk", "expense", "sum", "terminal")}}
+\item{\code{$profitClass}}{String describing the profit class the tariff
+is assigned to. Profit classes are used to bundle similar
+contracts (e.g. following similar risks) together. Profit
+participation rates are defined at the level of profit classes.}
+\item{\code{$profitRates}}{General, company-wide profit rates, key columns are year and profitClass}\preformatted{\\item\{\code{$scenarios}\}\{profit participation scenarios (list of overridden parameters for each scenario)\}
 }
 
 }

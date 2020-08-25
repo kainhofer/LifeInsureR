@@ -140,7 +140,7 @@ InsuranceContract.Values = list(
 #'               default = "Hauptvertrag"}
 #'     \item{\code{$sumInsured}}{Sum insured, default = 100,000}
 #'     \item{\code{$YOB}}{Year of birth of the insured, used to determine the
-#'               age for the application of the mortality table},
+#'               age for the application of the mortality table}
 #'     \item{\code{$age}}{Age of the insured}
 #'     \item{\code{$technicalAge}}{Technical age of the insured (when the age
 #'               for the application of the mortality table does not coincide
@@ -185,7 +185,6 @@ InsuranceContract.Values = list(
 #'               "in arrears"}
 #'     \item{\code{$premiumFrequency}}{Number of premium payments per year, default is 1.}
 #'     \item{\code{$benefitFrequency}}{Number of benefit payments per year, default is 1.}
-#'
 #'     \item{\code{$widowProportion}}{For annuities with a widow transition,
 #'               this describes the factor of the widow benefits relative to
 #'               the original benefit.}
@@ -303,7 +302,6 @@ InsuranceContract.Values = list(
 #'               rate (percentage rebate of the gross premium)}
 #'     \item{\code{$advanceProfitParticipationInclUnitCost}}{Advance profit
 #'               participation rate (percentage rebate on the gross premium after all surcharges and unit costs.}
-#'
 #'     \item{\code{$waitingPeriod}}{Waiting period of the profit sharing (e.g.
 #'               no profit in the first two years of a contract, or similar)}
 #'     \item{\code{$guaranteedInterest}}{Individual contract-specific overrides
@@ -317,7 +315,6 @@ InsuranceContract.Values = list(
 #'     \item{\code{$terminalBonusRate}}{Terminal bonus rate (non-terminal-bonus
 #'              fund, but "old" Austrian terminal bonus)}
 #'     \item{\code{$terminalBonusFundRate}}{Terminal bonus fund rate}
-
 #'     \item{\code{$profitParticipationScheme}}{Profit participation scheme (object of class [ProfitParticipation])}
 #'     \item{\code{$profitComponents}}{Profit components of the profit scheme. List containing one or more of \code{c("interest", "risk", "expense", "sum", "terminal")}}
 #'     \item{\code{$profitClass}}{String describing the profit class the tariff
