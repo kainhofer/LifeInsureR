@@ -355,7 +355,7 @@ InsuranceContract = R6Class(
         #' @param id The identifier of the child block to be inserted
         #' @param block The [InsuranceContract] object describing the child block.
         #'        If NULL (or not given at all), a copy of the parent will be
-        #'        created
+        #'        created.
         #' @param t Then the child block starts, relative to the parent block.
         #'        The child block is calculated independently (with time 0
         #'        describing its own start), so when aggregating all values from
@@ -398,8 +398,50 @@ InsuranceContract = R6Class(
             invisible(self)
         },
 
+        #' @description Add a dynamic increase with the same parameters as the main contract part
+        #'
+        #' @details This method adds a new contract block describing a dynamic
+        #'          or sum increase (increasing the sum insured at a later time
+        #'          $t$ than contract inception). This increase is modelled by a
+        #'          separate [InsuranceContract] object with the sum difference
+        #'          as its own \code{sumInsured}.
+        #'
+        #'          By default, all parameters are taken from the main contract,
+        #'          with the maturity adjusted to match the original contract's
+        #'          maturity.
+        #'
+        #'          The main contract holds all child blocks, controls their
+        #'          valueation and aggregates all children's values to the
+        #'          total values of the overall contract.
+        #'
+        #' @param t The time within the main contract when the sum increase happens.
+        #'          The [InsuranceContract] object describing the dynamic increase
+        #'          will still internally start at its own time 0, but the
+        #'          aggregation by the main contract will correctly offset to
+        #'          the time $t$ within the main contract.
+        #' @param NewSumInsured The over-all new sum insured (sum of original
+        #'          contract and all dynamica increaeses). The \code{sumInsured}
+        #'          of the new dynamic increase block will be determined as the
+        #'          difference of the old and new overall sum insured. Alternatively,
+        #'          it can directly be given as the \code{SumInsuredDelta}
+        #'          argument instead.
+        #' @param SumInsuredDelta The sum insured of only the dynamic increase,
+        #'          i.e. the sumInsured of the dynamic contract block only. The
+        #'          overall sum insured will increase by this amount. Only one of
+        #'          \code{NewSumInsured} and \code{SumInsuredDelta} is needed,
+        #'          the other one will be calculated accordingly. If both are
+        #'          given, the \code{SumInsuredDelta} will take precedence.
+        #' @param id The identifier of the contract block describing the dynamic
+        #'          increase. This is a free-form string that should be unique
+        #'          within the list of child blocks. It will be displayed in the
+        #'          Excel export feature and in the history snapshot list.
+        #' @param ... Paramters to override in the dynamic block. By default,
+        #'          all parameters of the main contract block will be used, but
+        #'          they can be overridden per dynamic increase block.
+        #'
+        #' @examples
+        #' # TODO
         addDynamics = function(t, NewSumInsured, SumInsuredDelta, id, ...) {
-            # TODO: Implement overriding contract parameters by ...
 
             # TODO: Override only the required parameters
             params = private$initParams
@@ -435,6 +477,48 @@ InsuranceContract = R6Class(
             do.call(self$addBlock, params)
         },
 
+        #' @description Calculate all time series of the contract from the parameters
+        #'
+        #' @details This method calculates all contract values (potentially
+        #'          starting from and preserving all values before a later time
+        #'          \code{valuesFrom}). This function is not meant to be called
+        #'          directly, but internally, whenever a contract is created or
+        #'          modified.
+        #'
+        #'          There is, hoever, a legitimate case to call this function
+        #'          when a contract was initially created with a value of
+        #'          \code{calculate} other than "all", so not all values of the
+        #'          contract were calculated. When one later needs more values
+        #'          than were initially calculated, this function can be called.
+        #'          However, any contract changes might need to be rolled back
+        #'          and reapplied again afterwards. So even in this case it is
+        #'          probably easier to create the contract object from scratch
+        #'          again.
+        #'
+        #' @param calculate Which values to calculate. See [CalculateEnum]
+        #' @param valuesFrom Calculate only values starting from this time step
+        #'        on (all values before that time will be preserved). This is
+        #'        required when a contract is changed significantly (potentially
+        #'        even switching to a new tariff), so that the calculation bases
+        #'        for previous periods are no longer available.
+        #' @param premiumCalculationTime The time point when the premium should
+        #'        be re-calculated (including existing reserves) based on the
+        #'        actuarial equivalence principle. All reserves will be based on
+        #'        these new premiums.
+        #' @param preservePastPV Whether present value before the recalculation
+        #'        time \code{valuesFrom} should be preserved or recalculated.
+        #'        When they are recalculated, the present values are consistent
+        #'        to the new cash flows over the whole contract period, but
+        #'        they no longer represent the actual contract state at these
+        #'        times. If values are not recalculated, the reserves at each
+        #'        time step represent the proper state at that point in time.
+        #' @param recalculatePremiums Whether the premiums should be recalculated
+        #'        at time \code{premiumCalculationTime} at all.
+        #' @param recalculatePremiumSum Whether to recalculate the overall premium
+        #'        sum when the premium is recalculated.
+        #' @param history_comment The comment for the history snapshot entyr
+        #' @param history_type The type (free-form string) to record in the history snapshot
+        #'
         calculateContract = function(calculate = "all", valuesFrom = 0, premiumCalculationTime = 0, preservePastPV = TRUE, recalculatePremiums = TRUE, recalculatePremiumSum = TRUE, history_comment = NULL, history_type = "Contract") {
             if (!is.null(self$blocks)) {
                 for (b in self$blocks) {
@@ -544,6 +628,18 @@ InsuranceContract = R6Class(
 
             invisible(self)
         },
+
+        #' @description Aggregate values from all child contract blocks (if any)
+        #'
+        #' @details This function is an internal function for contracts with
+        #'        multiple child blocks (dynamic increases, sum increases, riders).
+        #'        It takes the values from all child blocks and calculates the
+        #'        overall values from all child blocks aggregated.
+        #'
+        #'        This function should not be called manually.
+        #'
+        #' @param valuesFrom The time from when to aggragate values. Values before
+        #'        that time will be left unchanged.
         consolidateBlocks = function(valuesFrom = 0) {
             # First, Re-calculate all children that have children on their own
             for (b in self$blocks) {
@@ -619,8 +715,16 @@ InsuranceContract = R6Class(
             invisible(self)
         },
 
-        # Premium Waiver: Stop all premium payments at time t
-        # the SumInsured is determined from the available
+        #' @description Stop premium payments and re-calculate sumInsured of the paid-up contract
+        #'
+        #' @details This function modifies the contract at time $t$ so that
+        #'        no further premiums are paid (i.e. a paid-up contract) and the
+        #'        \code{sumInsured} is adjusted according to the existing reserves.
+        #'
+        #' @param t Time of the premium waiver.
+        #'
+        #' @examples
+        #' # TODO
         premiumWaiver = function(t) {
             newSumInsured = self$Values$reserves[[toString(t), "PremiumFreeSumInsured"]];
             self$Parameters$ContractState$premiumWaiver = TRUE;
@@ -640,55 +744,46 @@ InsuranceContract = R6Class(
 
 
 
-        # Premium Waiver: Stop all premium payments at time t
-        # the SumInsured is determined from the available
-        premiumWaiverOLD = function(t) {
-            newSumInsured = self$Values$reserves[[toString(t), "PremiumFreeSumInsured"]];
-            self$Parameters$ContractState$premiumWaiver = TRUE;
-            self$Parameters$ContractState$surrenderPenalty = FALSE; # Surrender penalty has already been applied, don't apply a second time
-            self$Parameters$ContractState$alphaRefunded = TRUE;     # Alpha cost (if applicable) have already been refunded partially, don't refund again
-
-            self$Parameters$ContractData$sumInsured = newSumInsured;
-
-            self$Values$cashFlowsBasic = mergeValues(starting = self$Values$cashFlowsBasic, ending = private$determineCashFlowsBasic(), t = t);
-            self$Values$cashFlows = mergeValues(starting = self$Values$cashFlows, ending = private$determineCashFlows(), t = t);
-            # Premium sum is not affected by premium waivers, i.e. everything depending on the premium sum uses the original premium sum!
-            # self$Values$premiumSum = private$determinePremiumSum();
-            self$Values$cashFlowsCosts = mergeValues3D(starting = self$Values$cashFlowsCosts, ending = private$determineCashFlowsCosts(), t = t);
-
-            pv = private$calculatePresentValues();
-            pvc = private$calculatePresentValuesCosts();
-            self$Values$presentValuesCosts = mergeValues3D(starting = self$Values$presentValuesCosts, ending = pvc, t = t);
-
-            # TODO:
-            # the premiumCalculation function returns the premiums AND the cofficients,
-            # so we have to extract the coefficients and store them in a separate variable
-            # res = private$calculatePremiums(t);
-            # self$Values$premiumCoefficients = mergeValues(starting = self$Values$premiumCoefficients, ending=res[["coefficients"]], t = t);
-            # self$Values$premiums = mergeValues(starting= = res[["premiums"]]
-
-            # Update the cash flows and present values with the values of the premium
-            pvAllBenefits = private$calculatePresentValuesBenefits()
-            self$Values$presentValues = mergeValues(starting = self$Values$presentValues, ending = cbind(pv, pvAllBenefits), t = t);
-
-            self$Values$absCashFlows       = mergeValues(starting = self$Values$absCashFlows,       ending = private$calculateAbsCashFlows(), t = t);
-            self$Values$absPresentValues   = mergeValues(starting = self$Values$absPresentValues,   ending = private$calculateAbsPresentValues(), t = t);
-            self$Values$reserves           = mergeValues(starting = self$Values$reserves,           ending = private$calculateReserves(), t = t);
-            self$Values$basicData          = mergeValues(starting = self$Values$basicData,          ending = private$getBasicDataTimeseries(), t = t);
-            self$Values$premiumComposition = mergeValues(starting = self$Values$premiumComposition, ending = private$premiumAnalysis(), t = t);
-
-            self$addHistorySnapshot(time = t, comment = sprintf("Premium waiver at time %d", t),
-                                    type = "PremiumWaiver", params = self$Parameters, values = self$Values);
-
-            invisible(self)
-        },
-
-        # Calculate one profit scenario and return all values
+        #' @description Calculate one profit scenario and return all values
+        #'
+        #' @details This function calculates one profit scenario with the
+        #'         provided profit participation parameters (all parameters
+        #'         not given in the call are taken from their values of the
+        #'         contract, profit participation scheme or tariff).
+        #'
+        #' @param ... Scenario-specific profit sharing parameters, overriding
+        #'         the default values. Typically, adjusted profit rates are required
+        #'         in a profitScenario.
+        #' @return a data.frame holding all profit participation values (rates,
+        #'         bases for the different profit types, profit allocations,
+        #'         terminal bonus funds, profit in case of death/surrender/premium waiver)
+        #'
+        #' @examples
+        #' # TODO
         profitScenario = function(...) {
             private$calculateProfitParticipation(...)
         },
 
-        # Calculate one profit scenario and store it in the contract (e.g. to be exported to Excel), this function can be chained!
+        #' @description Calculate one profit scenario and store it in the contract
+        #'
+        #' @details This function calculates one profit scenario with the
+        #'         provided profit participation parameters (all parameters
+        #'         not given in the call are taken from their values of the
+        #'         contract, profit participation scheme or tariff). The results
+        #'         are stored in a list of profit scenarios inside the contract.
+        #'
+        #'         This function can be chained to calculate and add multiple
+        #'         profit scenarios.
+        #'
+        #' @param id The unique ID of the profit scenario. Will be used as key
+        #'         in the list of profit scenarios and printed out in the Excel
+        #'         export.
+        #' @param ... Scenario-specific profit sharing parameters, overriding
+        #'         the default values. Typically, adjusted profit rates are required
+        #'         in a profitScenario.
+        #'
+        #' @examples
+        #' # TODO
         addProfitScenario = function(id, ...) {
             .args = as.list(match.call()[-1])
             self$Parameters$ProfitParticipation$scenarios[[id]] = list(...)

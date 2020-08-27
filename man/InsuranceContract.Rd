@@ -194,6 +194,57 @@ function at the given time.
 
 If no \link{InsuranceContract} object is passed as \code{block}, a copy
 of the parent is created with overriding parameters given in \code{...}.
+
+This method adds a new contract block describing a dynamic
+or sum increase (increasing the sum insured at a later time
+$t$ than contract inception). This increase is modelled by a
+separate \link{InsuranceContract} object with the sum difference
+as its own \code{sumInsured}.\preformatted{     By default, all parameters are taken from the main contract,
+     with the maturity adjusted to match the original contract's
+     maturity.
+
+     The main contract holds all child blocks, controls their
+     valueation and aggregates all children's values to the
+     total values of the overall contract.
+}
+
+This method calculates all contract values (potentially
+starting from and preserving all values before a later time
+\code{valuesFrom}). This function is not meant to be called
+directly, but internally, whenever a contract is created or
+modified.\preformatted{     There is, hoever, a legitimate case to call this function
+     when a contract was initially created with a value of
+     \code{calculate} other than "all", so not all values of the
+     contract were calculated. When one later needs more values
+     than were initially calculated, this function can be called.
+     However, any contract changes might need to be rolled back
+     and reapplied again afterwards. So even in this case it is
+     probably easier to create the contract object from scratch
+     again.
+}
+
+This function is an internal function for contracts with
+multiple child blocks (dynamic increases, sum increases, riders).
+It takes the values from all child blocks and calculates the
+overall values from all child blocks aggregated.\preformatted{   This function should not be called manually.
+}
+
+This function modifies the contract at time $t$ so that
+no further premiums are paid (i.e. a paid-up contract) and the
+\code{sumInsured} is adjusted according to the existing reserves.
+
+This function calculates one profit scenario with the
+provided profit participation parameters (all parameters
+not given in the call are taken from their values of the
+contract, profit participation scheme or tariff).
+
+This function calculates one profit scenario with the
+provided profit participation parameters (all parameters
+not given in the call are taken from their values of the
+contract, profit participation scheme or tariff). The results
+are stored in a list of profit scenarios inside the contract.\preformatted{    This function can be chained to calculate and add multiple
+    profit scenarios.
+}
 }
 
 \examples{
@@ -208,6 +259,30 @@ of the parent is created with overriding parameters given in \code{...}.
 
 ## ------------------------------------------------
 ## Method `InsuranceContract$addBlock`
+## ------------------------------------------------
+
+# TODO
+
+## ------------------------------------------------
+## Method `InsuranceContract$addDynamics`
+## ------------------------------------------------
+
+# TODO
+
+## ------------------------------------------------
+## Method `InsuranceContract$premiumWaiver`
+## ------------------------------------------------
+
+# TODO
+
+## ------------------------------------------------
+## Method `InsuranceContract$profitScenario`
+## ------------------------------------------------
+
+# TODO
+
+## ------------------------------------------------
+## Method `InsuranceContract$addProfitScenario`
 ## ------------------------------------------------
 
 # TODO
@@ -267,7 +342,6 @@ contract state and its values before the change).}
 \item \href{#method-calculateContract}{\code{InsuranceContract$calculateContract()}}
 \item \href{#method-consolidateBlocks}{\code{InsuranceContract$consolidateBlocks()}}
 \item \href{#method-premiumWaiver}{\code{InsuranceContract$premiumWaiver()}}
-\item \href{#method-premiumWaiverOLD}{\code{InsuranceContract$premiumWaiverOLD()}}
 \item \href{#method-profitScenario}{\code{InsuranceContract$profitScenario()}}
 \item \href{#method-addProfitScenario}{\code{InsuranceContract$addProfitScenario()}}
 \item \href{#method-clone}{\code{InsuranceContract$clone()}}
@@ -394,7 +468,7 @@ Add a child contract block (e.g. a dynamic increase or a rider) to an insurance 
 
 \item{\code{block}}{The \link{InsuranceContract} object describing the child block.
 If NULL (or not given at all), a copy of the parent will be
-created}
+created.}
 
 \item{\code{t}}{Then the child block starts, relative to the parent block.
 The child block is calculated independently (with time 0
@@ -424,8 +498,51 @@ created with overrides.}
 \if{html}{\out{<a id="method-addDynamics"></a>}}
 \if{latex}{\out{\hypertarget{method-addDynamics}{}}}
 \subsection{Method \code{addDynamics()}}{
+Add a dynamic increase with the same parameters as the main contract part
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{InsuranceContract$addDynamics(t, NewSumInsured, SumInsuredDelta, id, ...)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{t}}{The time within the main contract when the sum increase happens.
+The \link{InsuranceContract} object describing the dynamic increase
+will still internally start at its own time 0, but the
+aggregation by the main contract will correctly offset to
+the time $t$ within the main contract.}
+
+\item{\code{NewSumInsured}}{The over-all new sum insured (sum of original
+contract and all dynamica increaeses). The \code{sumInsured}
+of the new dynamic increase block will be determined as the
+difference of the old and new overall sum insured. Alternatively,
+it can directly be given as the \code{SumInsuredDelta}
+argument instead.}
+
+\item{\code{SumInsuredDelta}}{The sum insured of only the dynamic increase,
+i.e. the sumInsured of the dynamic contract block only. The
+overall sum insured will increase by this amount. Only one of
+\code{NewSumInsured} and \code{SumInsuredDelta} is needed,
+the other one will be calculated accordingly. If both are
+given, the \code{SumInsuredDelta} will take precedence.}
+
+\item{\code{id}}{The identifier of the contract block describing the dynamic
+increase. This is a free-form string that should be unique
+within the list of child blocks. It will be displayed in the
+Excel export feature and in the history snapshot list.}
+
+\item{\code{...}}{Paramters to override in the dynamic block. By default,
+all parameters of the main contract block will be used, but
+they can be overridden per dynamic increase block.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Examples}{
+\if{html}{\out{<div class="r example copy">}}
+\preformatted{# TODO
+}
+\if{html}{\out{</div>}}
+
 }
 
 }
@@ -433,6 +550,7 @@ created with overrides.}
 \if{html}{\out{<a id="method-calculateContract"></a>}}
 \if{latex}{\out{\hypertarget{method-calculateContract}{}}}
 \subsection{Method \code{calculateContract()}}{
+Calculate all time series of the contract from the parameters
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{InsuranceContract$calculateContract(
   calculate = "all",
@@ -446,31 +564,83 @@ created with overrides.}
 )}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{calculate}}{Which values to calculate. See \link{CalculateEnum}}
+
+\item{\code{valuesFrom}}{Calculate only values starting from this time step
+on (all values before that time will be preserved). This is
+required when a contract is changed significantly (potentially
+even switching to a new tariff), so that the calculation bases
+for previous periods are no longer available.}
+
+\item{\code{premiumCalculationTime}}{The time point when the premium should
+be re-calculated (including existing reserves) based on the
+actuarial equivalence principle. All reserves will be based on
+these new premiums.}
+
+\item{\code{preservePastPV}}{Whether present value before the recalculation
+time \code{valuesFrom} should be preserved or recalculated.
+When they are recalculated, the present values are consistent
+to the new cash flows over the whole contract period, but
+they no longer represent the actual contract state at these
+times. If values are not recalculated, the reserves at each
+time step represent the proper state at that point in time.}
+
+\item{\code{recalculatePremiums}}{Whether the premiums should be recalculated
+at time \code{premiumCalculationTime} at all.}
+
+\item{\code{recalculatePremiumSum}}{Whether to recalculate the overall premium
+sum when the premium is recalculated.}
+
+\item{\code{history_comment}}{The comment for the history snapshot entyr}
+
+\item{\code{history_type}}{The type (free-form string) to record in the history snapshot}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-consolidateBlocks"></a>}}
 \if{latex}{\out{\hypertarget{method-consolidateBlocks}{}}}
 \subsection{Method \code{consolidateBlocks()}}{
+Aggregate values from all child contract blocks (if any)
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{InsuranceContract$consolidateBlocks(valuesFrom = 0)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{valuesFrom}}{The time from when to aggragate values. Values before
+that time will be left unchanged.}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-premiumWaiver"></a>}}
 \if{latex}{\out{\hypertarget{method-premiumWaiver}{}}}
 \subsection{Method \code{premiumWaiver()}}{
+Stop premium payments and re-calculate sumInsured of the paid-up contract
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{InsuranceContract$premiumWaiver(t)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{t}}{Time of the premium waiver.}
 }
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-premiumWaiverOLD"></a>}}
-\if{latex}{\out{\hypertarget{method-premiumWaiverOLD}{}}}
-\subsection{Method \code{premiumWaiverOLD()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{InsuranceContract$premiumWaiverOLD(t)}\if{html}{\out{</div>}}
+\if{html}{\out{</div>}}
+}
+\subsection{Examples}{
+\if{html}{\out{<div class="r example copy">}}
+\preformatted{# TODO
+}
+\if{html}{\out{</div>}}
+
 }
 
 }
@@ -478,8 +648,31 @@ created with overrides.}
 \if{html}{\out{<a id="method-profitScenario"></a>}}
 \if{latex}{\out{\hypertarget{method-profitScenario}{}}}
 \subsection{Method \code{profitScenario()}}{
+Calculate one profit scenario and return all values
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{InsuranceContract$profitScenario(...)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{...}}{Scenario-specific profit sharing parameters, overriding
+the default values. Typically, adjusted profit rates are required
+in a profitScenario.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+a data.frame holding all profit participation values (rates,
+bases for the different profit types, profit allocations,
+terminal bonus funds, profit in case of death/surrender/premium waiver)
+}
+\subsection{Examples}{
+\if{html}{\out{<div class="r example copy">}}
+\preformatted{# TODO
+}
+\if{html}{\out{</div>}}
+
 }
 
 }
@@ -487,8 +680,30 @@ created with overrides.}
 \if{html}{\out{<a id="method-addProfitScenario"></a>}}
 \if{latex}{\out{\hypertarget{method-addProfitScenario}{}}}
 \subsection{Method \code{addProfitScenario()}}{
+Calculate one profit scenario and store it in the contract
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{InsuranceContract$addProfitScenario(id, ...)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{id}}{The unique ID of the profit scenario. Will be used as key
+in the list of profit scenarios and printed out in the Excel
+export.}
+
+\item{\code{...}}{Scenario-specific profit sharing parameters, overriding
+the default values. Typically, adjusted profit rates are required
+in a profitScenario.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Examples}{
+\if{html}{\out{<div class="r example copy">}}
+\preformatted{# TODO
+}
+\if{html}{\out{</div>}}
+
 }
 
 }
