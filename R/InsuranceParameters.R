@@ -21,14 +21,28 @@ NULL
 #' @param gamma Administration costs while premiums are paid (relative to sum insured)
 #' @param gamma.paidUp Administration costs for paid-up contracts (relative to sum insured)
 #' @param gamma.premiumfree Administration costs for planned premium-free period (reltaive to sum insured)
+#' @param gamma.contract Administration costs for the whole contract period (relative to sum insured)
 #' @param unitcosts Unit costs (absolute monetary amount, during premium period)
 #' @param unitcosts.PolicyPeriod Unit costs (absolute monetary amount, during full contract period)
 #'
 #' @examples
 #' # empty cost structure (only 0 costs)
 #' initializeCosts()
+#'
+#' # the most common cost types can be given in initializeCosts()
+#' initializeCosts(alpha = 0.04, Zillmer = 0.025, beta = 0.05, gamma.contract = 0.001)
+#'
+#' # The same cost structure manually
+#' costs.Bsp = initializeCosts();
+#' costs.Bsp[["alpha", "SumPremiums", "once"]] = 0.04;
+#' costs.Bsp[["Zillmer", "SumPremiums", "once"]] = 0.025;
+#' costs.Bsp[["beta", "GrossPremium", "PremiumPeriod"]] = 0.05;
+#' costs.Bsp[["gamma", "SumInsured", "PolicyPeriod"]] = 0.001;
+#'
+#'
+#'
 #' @export
-initializeCosts = function(costs, alpha, Zillmer, beta, gamma, gamma.paidUp, gamma.premiumfree, unitcosts, unitcosts.PolicyPeriod) {
+initializeCosts = function(costs, alpha, Zillmer, beta, gamma, gamma.paidUp, gamma.premiumfree, gamma.contract, unitcosts, unitcosts.PolicyPeriod) {
     if (missing(costs)) {
         dimnm = list(
             type = c("alpha", "Zillmer", "beta", "gamma", "gamma_nopremiums", "unitcosts"),
@@ -59,6 +73,9 @@ initializeCosts = function(costs, alpha, Zillmer, beta, gamma, gamma.paidUp, gam
     if (!missing(gamma.paidUp))  {
         costs[["gamma_nopremiums", "SumInsured", "PolicyPeriod"]] = gamma.paidUp;
     }
+    if (!missing(gamma.contract))  {
+        costs[["gamma", "SumInsured", "PolicyPeriod"]] = gamma.contract;
+    }
     if (!missing(unitcosts)) {
         costs[["unitcosts", "Constant", "PremiumPeriod"]] = unitcosts;
     }
@@ -67,9 +84,6 @@ initializeCosts = function(costs, alpha, Zillmer, beta, gamma, gamma.paidUp, gam
     }
     costs
 }
-# costs[["beta", "GrossPremium", "once"]] = 0.12; // Bei EINMALERLAG!
-# costs[["gamma", "SumInsured", "PolicyPeriod"]] = 0.0005;
-# costs[["alpha", "NetPremium", "once"]]
 
 
 #' Data structure (filled only with NULL) for insurance contract class member values.

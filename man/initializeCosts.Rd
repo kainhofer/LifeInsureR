@@ -12,6 +12,7 @@ initializeCosts(
   gamma,
   gamma.paidUp,
   gamma.premiumfree,
+  gamma.contract,
   unitcosts,
   unitcosts.PolicyPeriod
 )
@@ -31,6 +32,8 @@ initializeCosts(
 
 \item{gamma.premiumfree}{Administration costs for planned premium-free period (reltaive to sum insured)}
 
+\item{gamma.contract}{Administration costs for the whole contract period (relative to sum insured)}
+
 \item{unitcosts}{Unit costs (absolute monetary amount, during premium period)}
 
 \item{unitcosts.PolicyPeriod}{Unit costs (absolute monetary amount, during full contract period)}
@@ -49,4 +52,17 @@ The main purpose of this structure is to be passed to \link{InsuranceContract} o
 \examples{
 # empty cost structure (only 0 costs)
 initializeCosts()
+
+# the most common cost types can be given in initializeCosts()
+initializeCosts(alpha = 0.04, Zillmer = 0.025, beta = 0.05, gamma.contract = 0.001)
+
+# The same cost structure manually
+costs.Bsp = initializeCosts();
+costs.Bsp[["alpha", "SumPremiums", "once"]] = 0.04;
+costs.Bsp[["Zillmer", "SumPremiums", "once"]] = 0.025;
+costs.Bsp[["beta", "GrossPremium", "PremiumPeriod"]] = 0.05;
+costs.Bsp[["gamma", "SumInsured", "PolicyPeriod"]] = 0.001;
+
+
+
 }
