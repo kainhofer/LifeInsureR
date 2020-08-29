@@ -197,7 +197,7 @@ InsuranceTarif = R6Class(
     #' or mortality table for comparison. There is no need to re-implement a
     #' tariff for such comparisons, as long as only parameters are changed.
     #'
-    #' @param ... Parameters for the [InsuranceContract.Parameterstructure],
+    #' @param ... Parameters for the [InsuranceContract.ParameterStructure],
     #'            defining the characteristics of the tariff.
     #' @import MortalityTables
     #' @examples
@@ -236,7 +236,7 @@ InsuranceTarif = R6Class(
     #'
     #' @param tariffType An enum specifying the main characteristics of the tarif.
     #'       See [tariffType]
-    #' @param ... Parameters for the [InsuranceContract.ParametersStructure],
+    #' @param ... Parameters for the [InsuranceContract.ParameterStructure],
     #'            defining the characteristics of the tariff.
     #' @import MortalityTables
     #' @examples

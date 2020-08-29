@@ -195,7 +195,7 @@ Initialize a new tariff object
 
 \item{\code{desc}}{A short human-readable description. See \link{InsuranceTarif$desc}}
 
-\item{\code{...}}{Parameters for the \link{InsuranceContract.Parameterstructure},
+\item{\code{...}}{Parameters for the \link{InsuranceContract.ParameterStructure},
 defining the characteristics of the tariff.}
 }
 \if{html}{\out{</div>}}
@@ -269,7 +269,7 @@ create a copy of a tariff with certain parameters changed
 \item{\code{tariffType}}{An enum specifying the main characteristics of the tarif.
 See \link{tariffType}}
 
-\item{\code{...}}{Parameters for the \link{InsuranceContract.ParametersStructure},
+\item{\code{...}}{Parameters for the \link{InsuranceContract.ParameterStructure},
 defining the characteristics of the tariff.}
 }
 \if{html}{\out{</div>}}

@@ -154,7 +154,7 @@ ProfitParticipation = R6Class(
     },
 
 
-    #' @description Store all passed parameters in the [Parameters] field
+    #' @description Store all passed parameters in the [ProfitParticipation$Parameters] field
     #' @param ... any of the named fields defined in
     #'      [InsuranceContract.ParameterStructure$ProfitParticipation]. All other
     #'      arguments will be ignored
@@ -162,8 +162,8 @@ ProfitParticipation = R6Class(
         self$Parameters = fillFields(self$Parameters, list(...));
     },
 
-    #' @description Store all passed functions in the [Functions] field
-    #' @param ... any of the functions defined in the [Functions] field. All other
+    #' @description Store all passed functions in the [ProfitParticipation$Functions] field
+    #' @param ... any of the functions defined in the [ProfitParticipation$Functions] field. All other
     #'     arguments will be ignored
     setFunctions = function(...) {
         self$Functions = fillFields(self$Functions, list(...));
@@ -187,7 +187,7 @@ ProfitParticipation = R6Class(
     #' to the values passed to this method.
     #'
     #' @param name The new name for the cloned [ProfitParticipation] object
-    #' @param ... Parameters for the [InsuranceContract.ParametersStructure],
+    #' @param ... Parameters for the [InsuranceContract.ParameterStructure],
     #'            defining the characteristics of the tariff.
     createModification = function(name  = NULL, ...) {
         cloned = self$clone();
@@ -252,7 +252,7 @@ ProfitParticipation = R6Class(
 
     #' @description Set up the data.frame containing the profit participation rates
     #' @param ... additional parameters passed to the profit calculation functions
-    #'     stored in the [Functions] field.
+    #'     stored in the [ProfitParticipation$Functions] field.
     setupRates = function(params, values, ...) {
         # 1) Profit scheme or contract provides general company-wide profit rates for some years:
         #       profitRates
@@ -364,7 +364,7 @@ ProfitParticipation = R6Class(
     #' @param profitScenario profit participation values from a previous calculation
     #' (NULL if profit calculation is to be calculated from the contract inception).
     #' Values before \code{calculateFrom} will be used from this data.frame.
-    #' @param ... additional parameters to be passed to [setupRates]
+    #' @param ... additional parameters to be passed to [ProfitParticipation$setupRates()]
     getProfitParticipation = function(calculateFrom = 0, profitScenario = NULL, params, values, ...) {
         waiting      = valueOrFunction(params$ProfitParticipation$waitingPeriod, params = params, values = values);
         if (is.numeric(waiting) && waiting > 0) {

@@ -133,7 +133,7 @@ Create a new profit participation scheme
 \if{html}{\out{<a id="method-setParameters"></a>}}
 \if{latex}{\out{\hypertarget{method-setParameters}{}}}
 \subsection{Method \code{setParameters()}}{
-Store all passed parameters in the \link{Parameters} field
+Store all passed parameters in the \link{ProfitParticipation$Parameters} field
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ProfitParticipation$setParameters(...)}\if{html}{\out{</div>}}
 }
@@ -152,7 +152,7 @@ arguments will be ignored}
 \if{html}{\out{<a id="method-setFunctions"></a>}}
 \if{latex}{\out{\hypertarget{method-setFunctions}{}}}
 \subsection{Method \code{setFunctions()}}{
-Store all passed functions in the \link{Functions} field
+Store all passed functions in the \link{ProfitParticipation$Functions} field
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ProfitParticipation$setFunctions(...)}\if{html}{\out{</div>}}
 }
@@ -160,7 +160,7 @@ Store all passed functions in the \link{Functions} field
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{...}}{any of the functions defined in the \link{Functions} field. All other
+\item{\code{...}}{any of the functions defined in the \link{ProfitParticipation$Functions} field. All other
 arguments will be ignored}
 }
 \if{html}{\out{</div>}}
@@ -190,7 +190,7 @@ create a copy of a profit scheme with certain parameters changed
 \describe{
 \item{\code{name}}{The new name for the cloned \link{ProfitParticipation} object}
 
-\item{\code{...}}{Parameters for the \link{InsuranceContract.ParametersStructure},
+\item{\code{...}}{Parameters for the \link{InsuranceContract.ParameterStructure},
 defining the characteristics of the tariff.}
 }
 \if{html}{\out{</div>}}
@@ -280,7 +280,7 @@ scheme and the contract)}
 insurance contract, including cash flows, premiums, reserves etc.).}
 
 \item{\code{...}}{additional parameters passed to the profit calculation functions
-stored in the \link{Functions} field.}
+stored in the \link{ProfitParticipation$Functions} field.}
 }
 \if{html}{\out{</div>}}
 }
@@ -345,7 +345,7 @@ scheme and the contract)}
 \item{\code{values}}{Contract values calculated so far (guaranteed component of the
 insurance contract, including cash flows, premiums, reserves etc.).}
 
-\item{\code{...}}{additional parameters to be passed to \link{setupRates}}
+\item{\code{...}}{additional parameters to be passed to \code{\link[=ProfitParticipation$setupRates]{ProfitParticipation$setupRates()}}}
 }
 \if{html}{\out{</div>}}
 }
