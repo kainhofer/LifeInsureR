@@ -19,6 +19,10 @@ costs.Bsp[["Zillmer", "SumPremiums", "once"]] = 0.025; # deutsche Beschränkung 
 costs.Bsp[["beta", "GrossPremium", "PremiumPeriod"]] = 0.05;
 costs.Bsp[["gamma", "SumInsured", "PolicyPeriod"]] = 0.001;
 
+
+initializeCosts(alpha = 0.04, Zillmer = 0.025, beta = 0.05, gamma.contract = 0.001)
+
+
 costs.Bsp.Unterjaehrigkeit = list("1" = 0.0, "2" = 0.01, "4" = 0.015, "12" = 0.02);
 
 # Stückkosten: 10EUR + 5% PS, maximal 50
