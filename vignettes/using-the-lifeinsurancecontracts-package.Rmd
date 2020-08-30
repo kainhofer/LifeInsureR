@@ -268,8 +268,11 @@ contract.L71U$Values$cashFlows %>% select(starts_with('premiums'), starts_with('
 ```{r SimpleExampleRiskCFCostCode, eval=F}
 contract.L71U$Values$cashFlowsCosts
 ```
-```{r SimpleExampleRiskCFCostOut, echo=F}
-contract.L71U$Values$cashFlowsCosts
+```{r SimpleExampleRiskCFCostOut, echo=F, results="asis"}
+for (base in dimnames(contract.L71U$Values$cashFlowsCosts)[[3]]) {
+  cat("* ,,\"", base, "\"\n", sep = "")
+  cat(contract.L71U$Values$cashFlowsCosts[,,base ] %>% pander(round = 4, style = "rmarkdown"))
+}
 ```
 
 Once these unit cash flows are set, all insurance contracts are handled identically.
@@ -285,8 +288,11 @@ contract.L71U$Values$presentValues %>% as.data.frame() %>% select(starts_with('p
 ```{r SimpleExampleRiskPVCostCode, eval=F}
 contract.L71U$Values$presentValuesCosts
 ```
-```{r SimpleExampleRiskPVCostOut, echo=F}
-contract.L71U$Values$presentValuesCosts
+```{r SimpleExampleRiskPVCostOut, echo=F, results="asis"}
+for (base in dimnames(contract.L71U$Values$presentValuesCosts)[[3]]) {
+  cat("* ,,\"", base, "\"\n", sep = "")
+  cat(contract.L71U$Values$presentValuesCosts[,,base ] %>% pander(round = 4, style = "rmarkdown"))
+}
 ```
 ```{r SimpleExampleRiskPVPremCode, eval=F}
 contract.L71U$Values$premiums
@@ -355,22 +361,35 @@ are passed unchanged to `InsuranceContract$new()`.
 
 First, let us create a grid of premiums for different ages and maturities (for 
 sum insured 100,000 Euro):
-```{r SimpleExampleRiskPremiumGrid}
-contractGridPremium(
+```{r SimpleExampleRiskPremiumGrid, eval=T, results="hide"}
+grd = contractGridPremium(
   axes = list(age = seq(20, 80, 5), policyPeriod = seq(10, 40, 5)),
   tarif = Tarif.L71U, 
   contractClosing = as.Date("2020-08-18"), 
   sumInsured = 100000
 )
+grd
+```
+```{r SimpleExampleRiskPremiumGridOut, echo = F}
+# TODO: Table with dimnames in vignette 
+grd %>% as.data.frame() %>% rownames_to_column("age |  policyPeriod") %>% pander
+
 ```
 
 One can also pass more than two dimensions to the axes:
-```{r SimpleExampleRiskPremiumGrid3D}
-contractGridPremium(
+```{r SimpleExampleRiskPremiumGrid3D, results = "hide"}
+grd = contractGridPremium(
   axes = list(age = seq(20, 80, 10), policyPeriod = seq(10, 40, 10), sumInsured = c(10000, 50000, 100000)),
   tarif = Tarif.L71U, 
   contractClosing = as.Date("2020-08-18")
 )
+grd
+```
+```{r SimpleExampleRiskPremiumGrid3DOut, echo=F, results="asis"}
+for (d in dimnames(grd)[[3]]) {
+  cat("* , , ", names(dimnames(grd))[[3]], "=",  d, "\n", sep = "")
+  cat(grd[,,d ] %>% as.data.frame() %>% rownames_to_column("age \\|  policyPeriod") %>% pander(digits = 7, round = 2, style = "rmarkdown"))
+}
 ```
 
 
@@ -659,8 +678,8 @@ Waiving premiums and recalculating the sum insured is very easy, one just calls
 the method `InsuranceContract$premiumWaiver(t = ..)` on the existing contract.
 
 ```{r Contract.PureEndPrf}
-contract.PureEnd.NoRefund$premiumWaiver(t=7)
-contract.PureEnd.NoRefund$Values$reserves
+contract.PureEnd.NoRefund.Prf = contract.PureEnd.NoRefund$clone()$premiumWaiver(t = 7)
+contract.PureEnd.NoRefund.Prf$Values$reserves
 ```
 
 Notice that the contract changes are made directly to the contract ("reference semantics"). This is 
@@ -803,7 +822,7 @@ initializeCosts() %>% dimnames
 The most common types of cost can be directly given in the call to `initializeCosts()`,
 but for some uncommon combinations, one can directly fill any of the fields in the
 three-dimensional array manually.
-```{r costExample}
+```{r costExample, eval=F}
 initializeCosts(alpha = 0.04, Zillmer = 0.025, beta = 0.05, gamma.contract = 0.001)
 
 # the above is the short form of:
@@ -822,7 +841,7 @@ premium waiver at time 7), the absolute cost cash flows are:
 contract.PureEnd.NoRefund$Values$absCashFlows
 ```
 ```{r costCashFlows, echo=F}
-contract.PureEnd.NoRefund$Values$absCashFlows %>% select(alpha, Zillmer, beta, gamma, gamma_nopremiums, unitcosts) %>% pander()
+contract.PureEnd.NoRefund$Values$absCashFlows[1:11,] %>% select(alpha, Zillmer, beta, gamma, gamma_nopremiums, unitcosts) %>% pander()
 ```
 
 
@@ -830,7 +849,7 @@ In addition to these standardized costs, which are included in the expense-loade
 premium (sometimes also called the "(actuarial) gross premium"), there are certain
 loadings and rebates that are applied after the expense-loaded premium $BP_x$:
 
-$$P_\xn = \left\{ (BP_x + oUZu - SuRa) \cdot VS \cdot (1-VwGew) + unitC\right\} \cdot  \left(1-PrRa-VwGew_{StkK}-PartnerRa\right)\cdot \left(1+uz(k)\right) \cdot (1+tax)$$
+$$P_x = \left\{ (BP_x + oUZu - SuRa) \cdot VS \cdot (1-VwGew) + unitC\right\} \cdot  \left(1-PrRa-VwGew_{StkK}-PartnerRa\right)\cdot \left(1+uz(k)\right) \cdot (1+tax)$$
 
 with the following surcharges and rebates:
 
@@ -851,14 +870,118 @@ with the following surcharges and rebates:
 
 # Creating premium and contract grids
 
+When developing a new product or comparing different products, it is often
+required to create tables of premiums or reserves for a product/tarif where 
+just some of the parameters (like age, sum insured or maturity) change. 
+
+For this purpose, this package provides two functions to create two- or 
+higher-dimensional grids of contracts with each dimension representing one 
+of the parameters varying.
+
+* `contra
+TODO
+
 # Exporting contract data to Excel
+
+The LifeInsuranceContracts package also provides a function to export a given 
+contract to a spreadsheet in Excel format:
+
+* `exportInsuranceContract.xlsx(contract, filename)`
+
+This function takes the contract and exports all data.frames in the contract's 
+`contract$Values` data list as separate tabs to a spreadsheet file. It also 
+adds some nice formatting and additional markup. For contracts with multiple
+contract blocks (e.g. dynamic increases / sum increases or riders), the main
+contract and all its child blocks are exported as well.
+
+The tab containing the premiums and the premium calculation coefficients even
+include the formulas, so one can in theory play around with the parameters to 
+see how the premium changes.
+
+If the contract has profit participation features and some profit scenarios have 
+been added, they are exported as well.
+
+Notice, however, that the Excel export is in general a static file containing 
+the current state of the contract and all its values (cash flows, present values,
+premiums, reserves, profit participation, etc.) as well as the most important
+parameters and an overview of the history of the contract.
+
+```{r ExcelExport,eval=F}
+contract.exportExample = contract.PureEnd.NoRefund$clone()$
+  addDynamics(t = 3, SumInsuredDelta = 10000)$
+  addDynamics(t = 5, SumInsuredDelta = 15000)$
+  addDynamics(t = 10, SumInsuredDelta = 15000)$
+  addDynamics(t = 14, SumInsuredDelta = 10000)
+exportInsuranceContract.xlsx(contract.exportExample, filename = "Example_PureEndowment_Dynamics.xlsx")
+```
+
+
+
+# Creating example values required for submission to the Austrian Financial Market Authority
+
+When introducing a new tariff, an Austrian insurance company has to submit
+a detailled mathematical description (so-called "Versicherungsmathematische 
+Grundlagen") of the tariff to the Financial Market Authority (FMA), which have
+to follow the [regulation on actuarial bases for life insurance -- LV-VMGV](https://www.ris.bka.gv.at/GeltendeFassung.wxe?Abfrage=Bundesnormen&Gesetzesnummer=20009298). The sections and contents
+of this document are strictly defined in the regulation, and in addition to the
+formulas of the tariff, an example contract has to be calculated with the following
+key parameters:
+
+* age 35, duration 30 years (15 years for protection tariffs)
+* sum insured 100 000 Euro / monthly annuity 1000 Euro for annuities
+* yearly premiums during the whole contract period (defereal period of 30 years for annuities)
+* intermediate values (reserves, etc.) have to be calculated at $t=10$.
+
+Given a tariff and a derived contract (with the above key parameters), this
+package provides two functions to calculate and print / export
+the required values either to the console / screen or to a file:
+
+* `showVmGlgExamples(contract, prf = 10, t = 10, t_prf = 12, file = "", ...)`
+* `exportInsuranceContractExample(contract, prf = 10, outdir = ".", basename=NULL, extraname = NULL, ...)`
+
+The function `showVmGlgExamples` calculates all required values for the actuarial
+bases document in the required order (including values after a premium waiver 
+at the given time). If a filename is given, the output is exported to that text file,
+otherwise it is simply printed out in the R console:
+
+```{r VmGlgExample}
+VMGL.contract = InsuranceContract$new(
+    Tarif.PureEnd,
+    age = 35, policyPeriod = 30, 
+    premiumFrequency = 1,
+    sumInsured = 100000,
+    contractClosing = as.Date("2020-07-01")
+  )
+
+showVmGlgExamples(VMGL.contract)
+```
+
+
+The `exportInsuranceContractExample` provides no new functionality, but combines 
+the Excel export feature and the regulatory example together. For a given contract
+it will create three files:
+
+* Excel export of the contract
+* Excel export of the contract with a premium waiver applied at the given time
+* The regulatory example (with premium waiver at the same time as in the Excel export) in a text file
+
+One can give a base name and an extra name to distinguish different calculations
+in the file names.
+
 
 # Handling contracts with increases (fixed increasing benefits / premiums, dynamic increases, sum increases)
 
+TODO
+
 # Advance profit participation (premium rebate)
 
+TODO
 
 # Profit participation schemes
 
+TODO
 
 # Modifying the default calculation approach
+
+TODO
+

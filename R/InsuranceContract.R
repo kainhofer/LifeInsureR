@@ -455,6 +455,7 @@ InsuranceContract = R6Class(
             # TODO: Generalize this to also allow specifying dynamic premium rather than sum insured
             if (!missing(SumInsuredDelta)) {
                 SIdelta = SumInsuredDelta
+                NewSumInsured = SIdelta + self$Values$reserves[t + 1, "SumInsured"]
             } else if (!missing(NewSumInsured)) {
                 SIdelta = NewSumInsured - self$Values$reserves[t + 1, "SumInsured"]
             } else {

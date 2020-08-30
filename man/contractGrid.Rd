@@ -2,16 +2,20 @@
 % Please edit documentation in R/contractGrid.R
 \name{contractGrid}
 \alias{contractGrid}
-\title{Create a multi-dimensional grid of InsuranceContract objects, where the axes
-ranges are given with the axes argument.
-This function will return the full InsuranceContract objects, so apply can
-later be used to extract premiums, reserves and other values to display in
-a grid.}
+\alias{contractGridPremium}
+\title{Create a grid of InsuranceContract objects or premiums with each axis representing one varying parameter}
 \usage{
 contractGrid(
   axes = list(age = seq(20, 60, 10), policyPeriod = seq(5, 35, 5)),
   YOB = NULL,
   observationYear = NULL,
+  ...
+)
+
+contractGridPremium(
+  contractGrid = NULL,
+  premium = "written",
+  .fun = function(c) {     c[[1]]$Values$premiums[[premium]] },
   ...
 )
 }
@@ -22,12 +26,51 @@ contractGrid(
 
 \item{observationYear}{The observation year, for which the grid shall be calculated. If given, the YOB is calculated from it, otherwise the contract's YOB is used}
 
-\item{...}{Additional parameters to be passed to \link{InsuranceContract$new}}
+\item{...}{In \code{contractGrid}: Additional parameters to be passed to \link{InsuranceContract$new}; In \code{contractGridPremium}: Additional parameters to be passed to \code{contractGrid}.}
+
+\item{contractGrid}{(optional) existing contract grid from which to derive
+premiums. If not given, \link{contractGrid} is called with all parameters, so
+\code{...} should contain an \code{axes} argument in that case.}
+
+\item{premium}{The type of premium to derive (key of the \code{contract$Values$premiums} list.}
+
+\item{.fun}{The function to extract the desired premium from a contract
+object. By default it accesses the premium vector and extracts the
+type of premium given in the \code{premium} parameter. One can,
+however pass any other extractor function to access e.g. reserves,
+cash flows etc. at any desired time.}
 }
 \description{
-Create a multi-dimensional grid of InsuranceContract objects, where the axes
-ranges are given with the axes argument.
-This function will return the full InsuranceContract objects, so apply can
-later be used to extract premiums, reserves and other values to display in
-a grid.
+The function \code{contractGrid} creates a (two- or multi-dimensional) grid
+of InsuranceContract objects, where each axis represents one of the insurance
+parameters varying as given in the \code{axes} argument (as a named list).
+
+The function \code{contractGridPremium} returns a grid of premiums as requested in
+the \code{premium} parameter rather than the full InsuranceContract objects.
+It is a convenience wrapper around \code{contractGrid} and is recommended if
+one is only interested in a grid of one particular value (typically some
+kind of premium).
+The function \code{contractGridPremium} can also be used on an existing
+\code{contractGrid}-generated grid of contracts to extract grid of numerical
+values of the specified premiums. If no contract grid is passed to
+\code{contractGridPremium}, \code{contractGrid} will be called to create it.
+}
+\details{
+The function \code{contractGrid} will return the full \link{InsuranceContract}
+objects, so apply can later be used to extract premiums, reserves and other
+values to display in a grid. For this feature, one can also use the convenience
+function \code{contractGridPremium}.
+
+The \code{axes} list describing the parameters changing along the axes of the
+resulting grid is internally expanded with \code{\link[=grid.expand]{grid.expand()}}. The resulting flat
+list of parameter (together with the fixed parameters passed as \code{...})
+is then passed to the \code{\link[=InsuranceContract$new]{InsuranceContract$new()}} call to create the corresponding
+contract object.
+
+To create the human-readable row-/columnnames of the resulting array,
+the function \link{make.}
+}
+\examples{
+# TODO
+
 }

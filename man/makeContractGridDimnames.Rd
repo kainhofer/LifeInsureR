@@ -2,7 +2,7 @@
 % Please edit documentation in R/contractGrid.R
 \name{makeContractGridDimnames}
 \alias{makeContractGridDimnames}
-\title{Generate proper dimnames for all exntries of the axes of a \link{contractGrid}}
+\title{Generate proper dimnames for all entries of the axes of a \code{\link[=contractGrid]{contractGrid()}}}
 \usage{
 makeContractGridDimnames(axes)
 }
@@ -10,5 +10,10 @@ makeContractGridDimnames(axes)
 \item{axes}{the axes with all names, for which a name should be generated}
 }
 \description{
-Generate proper dimnames for all exntries of the axes of a \link{contractGrid}
+Generate proper dimnames for all entries of the axes of a \code{\link[=contractGrid]{contractGrid()}}
 }
+\section{Functions}{
+\itemize{
+\item \code{makeContractGridDimnames}: Generate proper dimnames for all entries of the axes of a \code{\link[=contractGrid]{contractGrid()}}
+}}
+
