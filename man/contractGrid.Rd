@@ -15,7 +15,7 @@ contractGrid(
 contractGridPremium(
   contractGrid = NULL,
   premium = "written",
-  .fun = function(c) {     c[[1]]$Values$premiums[[premium]] },
+  .fun = function(cntr) {     cntr$Values$premiums[[premium]] },
   ...
 )
 }
@@ -68,7 +68,9 @@ is then passed to the \code{\link[=InsuranceContract$new]{InsuranceContract$new(
 contract object.
 
 To create the human-readable row-/columnnames of the resulting array,
-the function \link{make.}
+the function \code{\link[=makeContractGridDimname]{makeContractGridDimname()}} for each value of the axes, allowing
+human-readable representations e.g. of a tariff or a mortality table as
+the dimension label.
 }
 \examples{
 # TODO

@@ -27,7 +27,9 @@
 #' contract object.
 #'
 #' To create the human-readable row-/columnnames of the resulting array,
-#' the function [make.]
+#' the function [makeContractGridDimname()] for each value of the axes, allowing
+#' human-readable representations e.g. of a tariff or a mortality table as
+#' the dimension label.
 #'
 #'
 #'
@@ -70,39 +72,53 @@ contractGrid = function(axes = list(age = seq(20, 60, 10), policyPeriod = seq(5,
     array(vals, dim = sapply(axes, length), dimnames = dimnames)
 }
 
-#' @describeIn makeContractGridDimname Create a dimensional name for an [InsuranceTarif] object
+# describeIn makeContractGridDimname Create a dimensional name for an [InsuranceTarif] object
 #' @export
 makeContractGridDimname.InsuranceTarif = function(value) { value$name }
-#' @describeIn makeContractGridDimname Create a dimensional name for an R6 object (using its \code{name} field)
+# describeIn makeContractGridDimname Create a dimensional name for an R6 object (using its \code{name} field)
 #' @export
 makeContractGridDimname.R6 = function(value) { value$name }
-#' @describeIn makeContractGridDimname Create a dimensional name for an [mortalityTable] object
+# describeIn makeContractGridDimname Create a dimensional name for an [mortalityTable] object
 #' @export
 makeContractGridDimname.mortalityTable = function(value) { value@name }
-#' @describeIn makeContractGridDimname Create a dimensional name for a numeric parameter value
+# describeIn makeContractGridDimname Create a dimensional name for a numeric parameter value
 #' @export
 makeContractGridDimname.numeric = function(value) { value }
-#' @describeIn makeContractGridDimname Create a dimensional name for a numeric parameter value
+# describeIn makeContractGridDimname Create a dimensional name for a numeric parameter value
 #' @export
 makeContractGridDimname.double = function(value) { value }
-#' @describeIn makeContractGridDimname Create a dimensional name for an object that can be directly used as a human-readable row-/columnname
+# describeIn makeContractGridDimname Create a dimensional name for an object that can be directly used as a human-readable row-/columnname
 #' @export
 makeContractGridDimname.default = function(value) { value }
 #' Create human-readable labels for the dimensions in a [contractGrid()]
 #'
-#' The funciton \code{makeContractGridDimname} generates a short, human-readable
-#' dimension label for the object passed as \code{value}, to be used in [contractGrid].
+#' The function \code{makeContractGridDimname} generates a short, human-readable
+#' dimension label for the entries along the axes of a [contractGrid()].
 #' The default is to use the \code{value} unchanged as the row-/columnname, but
 #' for some parameter values (like a [InsuranceTarif] or [mortalityTable])
 #' a custom method of this function is needed to create the (short) human-readable
 #' representation for the axes in the grid.
+#'
 #' @param value the value along the axis, for which a name should be generated
-# describeIn makeContractGridDimname Create a short, human-readable dimensional name for an object (default S3 method)
+#' @describeIn makeContractGridDimname Create a short, human-readable dimensional name for an object (default S3 method)
+#' @examples
+#' library(MortalityTables)
+#' mortalityTables.load("Austria_Census")
+#'
+#' makeContractGridDimname(mort.AT.census.2011.unisex)
+#'
+#' makeContractGridDimnames(axes = list(
+#'     age = seq(30,60,10),
+#'     mortalityTable = c(mort.AT.census.2011.unisex, mort.AT.census.2011.male, mort.AT.census.2011.female))
+#' )
 #' @export
 makeContractGridDimname = function(value) { UseMethod("makeContractGridDimname", value) }
-#' Generate proper dimnames for all entries of the axes of a [contractGrid()]
+
+#' @description The function \code{makeContractGridDimnames} generate proper
+#' dimnames for all entries of the axes of a [contractGrid()] by calling
+#' \code{makeContractGridDimname} on each of the axes' values
 #' @param axes the axes with all names, for which a name should be generated
-#' @describeIn makeContractGridDimnames Generate proper dimnames for all entries of the axes of a [contractGrid()]
+#' @describeIn makeContractGridDimname Generate proper dimnames for all entries of the axes of a [contractGrid()]
 #' @export
 makeContractGridDimnames = function(axes) {
     lapply(axes, function(axis) { lapply(axis, makeContractGridDimname); } )
@@ -134,11 +150,11 @@ makeContractGridDimnames = function(axes) {
 #'
 #' @rdname contractGrid
 #' @export
-contractGridPremium = function(contractGrid = NULL, premium="written", .fun = function(c) { c[[1]]$Values$premiums[[premium]] }, ...) {
+contractGridPremium = function(contractGrid = NULL, premium="written", .fun = function(cntr) { cntr$Values$premiums[[premium]] }, ...) {
     if (missing(contractGrid) || is.null(contractGrid)) {
         contractGrid = contractGrid(...)
     }
-    apply(contractGrid, 1:length(dim(contractGrid)), .fun)
+    apply(contractGrid, 1:length(dim(contractGrid)), function(c) { .fun(c[[1]])})
 }
 
 
