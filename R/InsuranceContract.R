@@ -381,7 +381,7 @@ InsuranceContract = R6Class(
             if (length(self$blocks) == 0) {
                 main = self$clone()
                 main$parent = self
-                self$blocks[["main"]] = main
+                self$blocks[[main$Parameters$ContractData$id]] = main
                 self$Parameters$ContractData$id = "Gesamt"
             }
 
