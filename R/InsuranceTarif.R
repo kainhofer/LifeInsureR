@@ -1195,7 +1195,7 @@ InsuranceTarif = R6Class(
       if (!is.null(ppScheme)) {
           advanceProfitParticipation = ppScheme$getAdvanceProfitParticipation(params = params, values = values)
       }
-      afterProfit      = afterSumRebate * (1 + advanceProfitParticipation);
+      afterProfit      = afterSumRebate * (1 - advanceProfitParticipation);
       profits.advance  = afterProfit - afterSumRebate;
 
       # unit costs
