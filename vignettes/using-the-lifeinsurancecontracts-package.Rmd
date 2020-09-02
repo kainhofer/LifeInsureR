@@ -1573,7 +1573,7 @@ are:
 | `guaranteedInterest` $i$        | Contract-specific override of the guaranteed intereste rate (only for profit participation purposes) |
 | `interestProfitRate` $ip_t$     | Profit interest rate (added to the guaranteed interest rate to arrive at the total credited rate) |
 | `totalInterest` $tcr_t$         | The total credited interest rate (sum of guaranteed interest and profit participation interest) |
-| `mortalityProfitRate` $mp_t$    | Mortality profit rate |
+| `mortalityProfitRate` $rp_t$    | Mortality / risk profit rate |
 | `expenseProfitRate` $ep_t$      | Expenso profit rate |
 | `sumProfitRate` $sp_t$          | Sum profit rate (typically a function, depending on sum insured) |
 | `terminalBonusRate` $tb_t$      | Terminal bonus rate |
@@ -1685,30 +1685,53 @@ The most common functions are:
 
 ### Example profit scheme
 
-For example, imagine a tariff's total cumulated assigned profit $G_t$ and the benefits at time $t$ hav ethe formulas:
-$$G_t = G_{t-1} \cdot \left(1 + i + ip_t\right) + ip_t \cdot \frac{\left(Res_{t-1} + Res_{t}\right)}{2} + sp_t \cdot SumInsured$$
-$$Death_t = G_t \cdot \left(1 + i + ip_t\right)$$
-$$Matu_n = G_n$$
-$$Surrender_t = G_t\cdot \left(1+\frac{i + ip_t}{2}\right)$$
-$$Red_t = G_t$$
+For example, imagine a tariff's total cumulated assigned profit $G_t$ and the benefits at time $t$ have the formulas:
+$$Prof_t = \left(G_{t-1} + TBF_{t-1}\right) \cdot \left(1 + i + ip_t\right) + ip_t \cdot \frac{\left(Res_{t-1} + Res_{t}\right)}{2} + rp_t \cdot P^r_t + ep_t \cdot SumInsured + sp_t(SI) \cdot SumInsured$$
+$$G_t = G_{t-1} + (1 - tbf_t) \cdot Prof_t$$
+$$TBF_t = TBF_{t-1} + tbf_t \cdot Prof_t$$
+$$Death_t = G_t \cdot \left(1 + i + ip_t\right) + TBF_t$$
+$$Matu_n = G_n + TBF_n$$
+$$Surrender_t = G_t\cdot \left(1+\frac{i + ip_t}{2}\right) + 0.5 \cdot TBF_t$$
+$$Red_t = G_t + 0.5 \cdot TBF_t$$
 
 
 These formulas can be interpreted as following: 
 
-* There are two profit components: interest profit and sum profit
-* The existing cumulated profit $G_{t-1}$ yields interest with the guaranteed 
+* There are multiple profit components: interest profit, risk profit, expense profit and sum profit.
+* The total profit assignment $Prof_t$ in year $t$ consists of:
+  * Interest (guarantee + interest profit rate) on the accrued profits and the terminal bonus fund
+  * Interest profit on the average reserve
+  * Risk profit as part of the risk premium (similar to advance profit participation, but on a year-by-year basis on the actual risk premium)
+  * Expense profit relative to the sum insured
+  * Sum profit relative to the sum insured. The rate depends on the sum insured, too (e.g. higher SI typically have higher sum profit)
+  * Only a portion $(1-tbf_t)$ is added to the accrued bonus, while the rest ist 
+    stored in the Terminal Bonus Fund.
+* The existing cumulated profit $G_{t-1}$ and the terminal bonus fund $TBF_{t-1}$ yields interest with the guaranteed 
   interest rate plus potentially the interest profit rate. If the total credited 
   rate is lower than the guarantee, the guarantee is still applied to the 
   existing profits. => `PP.rate.interestProfitPlusGuarantee`
 * Additionaly, interest profit is assigned with rate $ip_t$ (=0 if total 
   credited rate is below guarantee) multiplied with the average of the current
-  and the previous reserve. => `PP.base.meanContractualReserve`
+  and the previous reserve for the guaranteed part. => `PP.base.meanContractualReserve`
+* The risk profit works similar to advance profit participation, only that part 
+  of the (actual) risk premium of the year is returned to the customer after 
+  having paid it. => `PP.base.ZillmerRiskPremium` 
+* Expense profit is based on the sum insured, since most cost structures are 
+  linear in the sum insured and contain certain loadings, which are returned 
+  to the customer via this profit component.
 * A sum profit of $sp_t$ of the sum insured is added, even if no interest profit
-  is distributed.
+  is distributed. The sum profit rate depends on the sum insured (as a function),
+  since the charges expenses increase linearly in the sum insured while the actual
+  cost do increase only sub-linear. So for higher sums typically more expenses
+  are returned. => The sum profit rate will be a function rather than a single 
+  value each year.
+* Only a part $(1-tbf_t)$ of the profit assignment in year $t$ is added to the 
+  accrued profits $G_t$, while the rest $tbf_t$ is stored in the terminal bonus 
+  fund $TBF_t$, which is partially lost on surrender or premium waiver.
   
-The values of $Res_t$, $SumInsured$ and the guaranteed interest $i^g_t$ are 
+The values of $Res_t$, $P^r_t$, $SumInsured$ and the guaranteed interest $i^g_t$ are 
 prescribed by the tariff or contract, while the profit participation rates 
-$ip_t$ and $sp_t$ are decided on a year-by-year basis by the management boards.
+$ip_t$, $rp_t$, $ep_t$ and $sp_t$ are decided on a year-by-year basis by the management boards.
 
 The benefits for death, maturity, surrender and premium waivers are:
 
@@ -1720,39 +1743,218 @@ The benefits for death, maturity, surrender and premium waivers are:
   last anniversary => `PP.benefit.ProfitPlusHalfInterestMinGuaranteeTotal`
 * When premiums are waived, the existing accrued profits are taken into account
   without any additional interest. => `PP.benefit.Profit`
+* The terminal bonus fund is paid out fully on death and at maturity, while half 
+  of the TBF is lost on surrender or premium waiver.
 
-This profit scheme can be easily be implementes as a `ProfitParticipation` 
-object:
+This profit scheme can be easily be implemented as a `ProfitParticipation` 
+object, where one can pass the functions for bases and calculation and also 
+provide default profit rates:
 
 ```{r Example.ProfitParticipation}
 ProfitScheme.example = ProfitParticipation$new(
   name = "Example Profit Scheme, V 1.0",
-  profitComponents = c("interest", "sum"),
+  profitComponents = c("interest", "risk", "expense", "sum", "TBF"),
 
   getInterestOnProfits    = PP.rate.interestProfitPlusGuarantee,
   getInterestProfitBase   = PP.base.meanContractualReserve,
+  getRiskProfitBase       = PP.base.ZillmerRiskPremium,
+  getExpenseProfitBase    = PP.base.sumInsured,
   getSumProfitBase        = PP.base.sumInsured,
+  getTerminalBonusFundBase = PP.base.totalProfitAssignment,
   
-  sumProfitRate = 0.01,
+  mortalityProfitRate = 0.15,
+  expenseProfitRate = 0.01,
+  sumProfitRate = function(params, ...) {if (params$ContractData$sumInsured > 1000000) 0.005 else 0;},
+  terminalBonusFundRate = 0.3,
+  
+  calculateSurvivalBenefit      = PP.benefit.ProfitPlusTerminalBonusReserve,
+  
+  calculateDeathBenefitAccrued  = PP.benefit.ProfitPlusInterestMinGuaranteeTotal,
+  calculateDeathBenefitTerminal = PP.benefit.TerminalBonus,
+  calculateSurrenderBenefitAccrued = PP.benefit.ProfitPlusHalfInterestMinGuaranteeTotal,
+  calculateSurrenderBenefitTerminal = function(profits, ...) {  profits[, "TBF"] / 2 },
+  calculatePremiumWaiverBenefitAccrued = PP.benefit.Profit,
+  calculatePremiumWaiverBenefitTerminal = function(profits, ...) {  profits[, "TBF"] / 2 },
+  
   profitClass = NULL
 )
 ```
 
 The calculation functions are not given, as they default to the correct
 `PP.calculate.RateOnBase` anyway. The interest profit rates are not given, as
-they will vary over time. Instead, the interest (and sum) profit rates
-are passed to `InsuranceContract$addProfitScenario()` to calculate one particular
+they will vary over time with no default value. Rathery, they need to be  passed 
+to the call to `InsuranceContract$addProfitScenario()` to calculate one particular
 profit scenario with given rates.
+In contrast, the mortality, expense and sum profit rates are initialized with 
+some default values, which will be used if a profit scenario does not explicitly 
+give those profit rates.
 
-The sum profit rate is given as a default, but each contract and in particular 
-each profit scenario should explicitly give the sum profit rate.
 
-TODO
+### Using the profit scheme in a tariff or contract
+
+The profit scheme defined above can now be used with the `profitParticipationScheme` 
+parameter in a tariff or a contract. Usually, the profit scheme is a property of
+the product, so it should be specified in the tariff, but can be overridden in 
+a contract.
+
+As an example, let us create an endowment contract with 500\% death benefit 
+that uses this profit scheme:
+
+```{r Example.PP.Endowment}
+contract.Endow.PP = InsuranceContract$new(
+  tarif = Tarif.Endowment,
+  sumInsured = 10000,
+  deathBenefitProportion = 5,
+  age = 50, policyPeriod = 15,
+  
+  profitParticipationScheme = ProfitScheme.example,
+  contractClosing = as.Date("2020-09-01")
+)
+```
+
+In contrast to the guaranteed values, which can and will be calculated as soon
+as the contract is created, the profit participation needs to be explicitly 
+called with the desired rates. A contract can store multiple different profit
+scenarios, which can be added with the `addProfitScenario()` method. This method
+can also be chained to add multiple scenarios (e.g. )
+```{r ExamplePP.Endowment.addScenario}
+contract.Endow.PP$
+  addProfitScenario(id = "Current total credited rate", guaranteedInterest = 0.005, interestProfitRate = 0.02, totalInterest = 0.025)$
+  addProfitScenario(id = "Current TCR-1%", guaranteedInterest = 0.005, interestProfitRate = 0.01, totalInterest = 0.015)$
+  addProfitScenario(id = "Current TCR+1%", guaranteedInterest = 0.005, interestProfitRate = 0.03, totalInterest = 0.035)
+  
+```
+All profit scenarios are stored in the `InsuranceContract$Values$profitScenarios`
+list indexed with the id given in the call.
+
+The array containing all values of the profit scenario first holds the calculation 
+basis and the rate for each of the profit components:
+```{r ExamplePP.Endowment.Scenarios}
+contract.Endow.PP$Values$profitScenarios$`Current total credited rate` %>%
+  as.data.frame() %>%
+  select(ends_with("Base"), ends_with("Interest"), ends_with("Rate"), -TBFRate, -TBFBase, -totalInterest) %>%
+  rowid_to_column("t") %>% mutate(t = t - 1) %>% kable()
+```
+
+The base for interest profit is the average of the reserve:
+```{r ExPP.End.reserve, echo = F}
+contract.Endow.PP$Values$reserves %>% as.data.frame() %>% 
+  rownames_to_column("t") %>% 
+  select(t, SumInsured, Zillmer) %>% 
+  mutate(AvgZillmer = rollingmean(c(0,Zillmer))) %>%
+  pander()
+```
+
+From the bases and rates, the calculation function (in our case simply the multiplication of rate and base) is applied to arrive at the yearly profit allocation of each component:
+
+```{r ExamplePP.Endowment.ScenariosAttib}
+contract.Endow.PP$Values$profitScenarios$`Current total credited rate` %>%
+  as.data.frame() %>%
+  select(ends_with("Profit"), totalProfitAssignment, -totalProfit) %>%
+  rowid_to_column("t") %>% mutate(t = t - 1) %>%
+  pander
+
+```
+
+The `totalProfitAssignment` column is the sum of all component allocations in the given year (the $Prof_t$ in the formulas above).
+
+After all components are calculated, the yearly profit assignment is split into the part that is accrued in the regular bonus and the part that is placed in the terminal bonus fund, using the terminal bonus fund rate. Finally, the yearly regular and terminal bonus assignments can be summed up to the regular and the terminal bonus:
+
+```{r ExamplePP.Endowment.ScenariosTBFTotal}
+contract.Endow.PP$Values$profitScenarios$`Current total credited rate` %>%
+  as.data.frame() %>%
+  select(TBFBase, TBFRate, TBFBonusAssignment, regularBonusAssignment, TBF, regularBonus, totalProfit) %>%
+  rowid_to_column("t") %>% mutate(t = t - 1) %>%
+  pander
+```
+
+
+The last step in the calculation of a scenario is to calculate the benefits for 
+each of the possible types of payout:
+
+```{r ExamplePP.Endowment.ScenariosBenefits}
+contract.Endow.PP$Values$profitScenarios$`Current total credited rate` %>%
+  as.data.frame() %>%
+  select(survival, deathAccrued, death, surrenderAccrued, surrender, premiumWaiverAccrued, premiumWaiver) %>%
+  rowid_to_column("t") %>% mutate(t = t - 1) %>%
+  pander
+```
+
+One can add as many profit scenarios as desired. Each of the rates in the 
+`addProfitScenario`-call can also be a vector giving the corresponding rate
+for each year of the contract:
+
+```{r ExamplePP.Endowment.Scenario.Decr}
+contract.Endow.PP$
+  addProfitScenario(id = "decreasing TCR", guaranteedInterest = 0.005, 
+                    interestProfitRate = (15:0)/15 * 0.02, 
+                    expenseProfitRate = c(rep(0.01, 5), rep(0.005, 5), rep(0, 6)))
+
+contract.Endow.PP$Values$profitScenarios$`decreasing TCR` %>%
+  as.data.frame() %>%
+  select(interestBase, expenseBase, interestProfitRate, expenseProfitRate, interestOnProfitRate, interestProfit, expenseProfit, totalProfit) %>%
+  rowid_to_column("t") %>% mutate(t = t - 1) %>%
+  kable
+```
+
+In the Excel export, a separate tab of the Excel file will hold all profit scenarios added to the contract.
+
 
 
 # Modifying the default calculation approach
 
-TODO
+While the cash-flow approach described above and based on the `type` parameter of the
+`InsuranceTarif` works very well for all standart types of life insurance, sometimes 
+a tariff does not follow the standard behaviour exactly. The valuation approach
+with all-determining cash flows is still correct, but the cash flows might need 
+to be adjusted. For this, some hook functions are provided that allow modification 
+of the contract's internals (e.g. cash flows) before all other calculations commence.
+
+Two hooks are provided, which allow modifications of the cash flow profiles before 
+present values, premiums and reserves are calculated:
+
+|    |      |
+|:---|:-----|
+|`adjustCashFlows` | Adjust the premium and benefit cash flows of the contract |
+|`adjustCashFlowsCosts` | Adjust the cost cash flows |
+
+The function signature is `function(x, params, values, ...)`, where `x` is the 
+object holding the standard cash flows determined for the contract. The return 
+value of the hook function will be used instead of `x`.
+
+
+An example where the cash-flow-approach solely based on `type` does not immediately
+work is a waiting period of 3 years for the death benefit. In particular,
+if a person dies during the first 3 years of the contract, no death benefit is paid out.
+
+The easiest way to implement such cash flows is to let the `InsuranceTarif` first
+create the standard cash flows (with benefits during the first three years) and then
+provide a hook function that nullifies the benefits in the waiting period, before
+all present values, premiums and reserves are calculated.
+
+```{r WaitingPeriod.Hook}
+contract.Endow.Waiting = InsuranceContract$new(
+  tarif = Tarif.Endowment,
+  sumInsured = 10000,
+  age = 50, policyPeriod = 15,
+  
+  contractClosing = as.Date("2020-09-01"),
+  adjustCashFlows = function(x, ...) { x[1:3, "death_SumInsured"] = 0; x }
+)
+
+contract.Endow.Waiting$Values$cashFlows[,c("premiums_advance", "survival_advance", "death_SumInsured")] %>% pander
+
+contractGridPremium(
+  axes = list(age = seq(20, 80, 10), adjustCashFlows = c(function(x, ...) x, function(x, ...) { x[1:3, "death_SumInsured"] = 0; x })),
+  tarif = Tarif.Endowment,
+  sumInsured = 10000,
+  policyPeriod = 15,
+  
+  contractClosing = as.Date("2020-09-01")
+) %>% `colnames<-`(c("full benefit", "Waiting period"))
+
+```
+
 
 # Misc
 
