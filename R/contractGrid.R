@@ -21,7 +21,7 @@
 #' function \code{contractGridPremium}.
 #'
 #' The \code{axes} list describing the parameters changing along the axes of the
-#' resulting grid is internally expanded with [grid.expand()]. The resulting flat
+#' resulting grid is internally expanded with [expand.grid()]. The resulting flat
 #' list of parameter (together with the fixed parameters passed as \code{...})
 #' is then passed to the [InsuranceContract$new()] call to create the corresponding
 #' contract object.
@@ -109,7 +109,8 @@ makeContractGridDimname.default = function(value) { value }
 #'
 #' makeContractGridDimnames(axes = list(
 #'     age = seq(30,60,10),
-#'     mortalityTable = c(mort.AT.census.2011.unisex, mort.AT.census.2011.male, mort.AT.census.2011.female))
+#'     mortalityTable = c(mort.AT.census.2011.unisex, mort.AT.census.2011.male,
+#'                        mort.AT.census.2011.female))
 #' )
 #' @export
 makeContractGridDimname = function(value) { UseMethod("makeContractGridDimname", value) }

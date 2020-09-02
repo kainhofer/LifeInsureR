@@ -62,7 +62,7 @@ values to display in a grid. For this feature, one can also use the convenience
 function \code{contractGridPremium}.
 
 The \code{axes} list describing the parameters changing along the axes of the
-resulting grid is internally expanded with \code{\link[=grid.expand]{grid.expand()}}. The resulting flat
+resulting grid is internally expanded with \code{\link[=expand.grid]{expand.grid()}}. The resulting flat
 list of parameter (together with the fixed parameters passed as \code{...})
 is then passed to the \code{\link[=InsuranceContract$new]{InsuranceContract$new()}} call to create the corresponding
 contract object.

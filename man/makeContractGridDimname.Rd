@@ -41,6 +41,7 @@ makeContractGridDimname(mort.AT.census.2011.unisex)
 
 makeContractGridDimnames(axes = list(
     age = seq(30,60,10),
-    mortalityTable = c(mort.AT.census.2011.unisex, mort.AT.census.2011.male, mort.AT.census.2011.female))
+    mortalityTable = c(mort.AT.census.2011.unisex, mort.AT.census.2011.male,
+                       mort.AT.census.2011.female))
 )
 }

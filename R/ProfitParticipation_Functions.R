@@ -313,7 +313,7 @@ PP.benefit.TerminalBonus5YearsProRata = function(profits, params, ...) {
 };
 
 #' @describeIn ProfitParticipationFunctions
-#' Terminal bonus is only paid out during the last 5 years of the contract (but never during the first 10 year)
+#' Terminal bonus is only paid out during the last 5 years of the contract (but never during the first 10 years)
 #' @export
 PP.benefit.TerminalBonus5Years = function(profits, params, ...) {
   n = params$ContractData$policyPeriod;

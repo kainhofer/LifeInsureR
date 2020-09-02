@@ -243,7 +243,7 @@ the rates and how the assigned profit is calculated.
 
 \item \code{PP.benefit.TerminalBonus5YearsProRata}: Calculate benefit from terminal bonus as 1/n parts of the terminal bonus reserve during the last 5 years
 
-\item \code{PP.benefit.TerminalBonus5Years}: Terminal bonus is only paid out during the last 5 years of the contract (but never during the first 10 year)
+\item \code{PP.benefit.TerminalBonus5Years}: Terminal bonus is only paid out during the last 5 years of the contract (but never during the first 10 years)
 
 \item \code{PP.benefit.TerminalBonus}: Calculate benefit from terminal bonus (full bonus), either old-style terminal bonus reserve or Terminal Bonus Fund (TBF)
 }}
