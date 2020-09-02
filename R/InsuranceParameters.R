@@ -361,20 +361,20 @@ InsuranceContract.ParameterDefaults = list(
         technicalAge = NULL,
         ageDifferences = NULL,                  # Age differences of all other insured relative to the first one, for joint live insurances
         sex = "unisex",                         # Sex, to allow gender-sepecific pricing (e.g. different mortalities or age modification)
-        policyPeriod = 25,                      # gesamte Vertragslaufzeit
+        policyPeriod = 25,                      # total policy duration (including deferral period, guaranteed annuity payments etd.)
         premiumPeriod = NULL,                   # Default: policyPeriod, unless explicitly overridden
-        deferralPeriod = 0,                     # Aufschubzeit bei Leibrenten
-        guaranteedPeriod = 0,                   # Garantiezeit bei Leibrenten
+        deferralPeriod = 0,                     # deferral period for annuities
+        guaranteedPeriod = 0,                   # guaranteed payments for annuities
         contractClosing = NULL,                 # Contract closing date (day/month is relevant for balance sheet reserves)
         blockStart = 0,                         # When the current tariff block starts (main block starts a 0, dynamic increases start later!), only used by the parent block (i.e. t=0 of child is aligned with t=blockStart of parent)
 
-        premiumPayments = "in advance",         # Prämienzahlungsweise (vor-/nachschüssig)
-        benefitPayments = "in advance",         # Leistungszahlungsweise (vor-/nachschüssig)
+        premiumPayments = "in advance",         # premium payments in advance or arrears
+        benefitPayments = "in advance",         # benefit payments in advance or arrears (annuities!)
 
-        premiumFrequency = 1,                   # Anzahl der Prämienzahlungen pro Jahr
-        benefitFrequency = 1,                   # Anzahl der Leistungszahlungen pro Jahr (bei Renten, bzw. bei ALV Leistung am Ende des k-ten Teil des Jahres)
+        premiumFrequency = 1,                   # number of premium payments per year
+        benefitFrequency = 1,                   # number of benefit payments per year (for annuities) or death benefit at the end of every 1/k-th year
 
-        widowProportion = 0,                    # Witwenübergang (Anteil an VS des VN)
+        widowProportion = 0,                    # widow transition factor (on sum insured)
         deathBenefitProportion = 1,             # For endowments: Proportion of the death benefit relative to the life benefit
         premiumRefund = 0,                      # Proportion of premiums refunded on death (including additional risk, e.g. 1.10 = 110% of paid premiums)
         premiumIncrease = 1,                    # The yearly growth factor of the premium, i.e. 1.05 means +5% increase each year; a Vector describes the premiums for all years
@@ -382,7 +382,7 @@ InsuranceContract.ParameterDefaults = list(
         deathBenefit = 1                        # The yearly relative death benefit (relative to the initial sum insured); Can be set to a function(len, params, values), e.g. deathBenefit = deathBenefit.linearDecreasing
     ),
     ContractState = list(
-        premiumWaiver = FALSE,                  # Vertrag ist prämienfrei gestellt
+        premiumWaiver = FALSE,                  # contract is paid-up
         surrenderPenalty = TRUE,                # Set to FALSE after the surrender penalty has been applied once, e.g. on a premium waiver
         alphaRefunded = FALSE                   # Alpha costs not yet refunded (in case of contract changes)
     ),
@@ -402,14 +402,14 @@ InsuranceContract.ParameterDefaults = list(
     Loadings = list( # Loadings can also be function(sumInsured, premiums)
         ongoingAlphaGrossPremium = 0,           # Acquisition cost that increase the gross premium
         tax = 0.04,                             # insurance tax, factor on each premium paid
-        unitcosts = 0,                          # Annual unit cost for each policy (Stückkosten), absolute value (can be a function)
+        unitcosts = 0,                          # Annual unit cost for each policy, absolute value (can be a function)
         security = 0,                           # Additional security loading on all benefit payments, factor on all benefits
         noMedicalExam = 0,                      # Loading when no medicial exam is done, % of SumInsured
         noMedicalExamRelative = 0,              # Loading when no medicial exam is done, % of gross premium
         sumRebate = 0,                          # gross premium reduction for large premiums, % of SumInsured
         extraRebate = 0,                        # gross premium reduction for any reason, % of SumInsured
         premiumRebate = 0,                      # gross premium reduction for large premiums, % of gross premium # TODO
-        partnerRebate = 0,                      # Partnerrabatt auf Prämie mit Zu-/Abschlägen, wenn mehr als 1 Vertrag gleichzeitig abgeschlossen wird, additiv mit advanceBonusInclUnitCost and premiumRebate
+        partnerRebate = 0,                      # Partner rabate on premium (including loading and other rebates) if more than one similar contract is concluded
         extraChargeGrossPremium = 0,            # extra charges on gross premium (smoker, leisure activities, BMI too high, etc.)
         benefitFrequencyLoading = list("1" = 0.0, "2" = 0.0, "4" = 0.0, "12" = 0.0), # TODO: Properly implement this as a function
         premiumFrequencyLoading = list("1" = 0.0, "2" = 0.0, "4" = 0.0, "12" = 0.0) # TODO: Properly implement this as a function
@@ -420,8 +420,8 @@ InsuranceContract.ParameterDefaults = list(
     ),
 
     ProfitParticipation = list(
-        advanceProfitParticipation = 0,                # Vorweggewinnbeteiligung (%-Satz der Bruttoprämie)
-        advanceProfitParticipationInclUnitCost = 0,    # Vorweggewinnbeteiligung (%-Satz der Prämie mit Zu-/Abschlägen, insbesondere nach Stückkosten)
+        advanceProfitParticipation = 0,                # advance profit participation (percentage of gross premium)
+        advanceProfitParticipationInclUnitCost = 0,    # advance profit participation (percentage of premium including unit cost and all charges and rebates)
 
         waitingPeriod = NULL,
 
