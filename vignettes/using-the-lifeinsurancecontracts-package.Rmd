@@ -158,7 +158,7 @@ implementations of life insurance products and contracts.
 To understand how the package implements life insurance contracts, let us look
 at a simple example:
 
-## Tarif description
+## Product description
 
 Term Life Insurance 
 
@@ -186,9 +186,9 @@ Surrender Value:
 * Reserve minus 10% surrender penalty, also applied on premium waiver
 
 
-## Tariff implementation as an InsuranceTarif object
+## Tariff implementation (InsuranceTarif)
 
-```{r SimpleExampleRiskTarif}
+```{r SimpleExampleRiskTarif, warning=F, results="hide", message = F}
 library(magrittr)
 library(MortalityTables)
 library(LifeInsuranceContracts)
@@ -214,7 +214,7 @@ Tarif.L71U = InsuranceTarif$new(
 );
 ```
 
-## Calculating one particular contract with the given tariff
+## Creating a contract
 
 With the above product / tariff definition, it is now easy to instantiate 
 one particular contract for this tariff. All we need to do is pass the tariff
@@ -241,7 +241,7 @@ Once the contract is created, all values can be accessed like this:
 ```{r SimpleExampleRiskValuesPremCode, eval=F}
 contract.L71U$Values$premiums
 ```
-```{r SimpleExampleRiskValuesPremOut, echo=F}
+```{r SimpleExampleRiskValuesPremCodeOut, echo=F}
 contract.L71U$Values$premiums %>% kable
 ```
 ```{r SimpleExampleRiskValuesResCode, eval=F}
@@ -411,17 +411,21 @@ In the following example, we use the tarif `Tarif.L71U`, but instead of the
 unisex table (mixed 65:35 from male:female tables), we use the male mortality tables
 of the Austrian census from 1870 to 2011 (with a contract period of 10 years fixed, and varying ages):
 
-```{r SimpleExampleRiskPremiumGridLifeTables}
-contractGridPremium(
+```{r SimpleExampleRiskPremiumGridLifeTables, results = "hide"}
+grd = contractGridPremium(
   axes = list(mortalityTable = mort.AT.census["m", ], age = seq(20, 80, 10)),
   tarif = Tarif.L71U, 
   sumInsured = 100000,
   contractClosing = as.Date("2020-08-18")
-) %>% pander(round=1, digits=15, keep.trailing.zeros = T)
+) 
+grd
+```
+```{r SimpleExampleRiskPremiumGridLifeTablesOUT, echo = F}
+grd %>% pander(round=1, digits=15, keep.trailing.zeros = T)
 ```
 
 
-# All possible parameters and their default values
+# All possible parameters
 
 All possible parameters of an insurance contract are stored in sub-lists of a a structure 
 `InsuranceContract.Parameters`. If not provided by the call to `InsuranceContract$new()`, 
@@ -451,11 +455,10 @@ constructor function takes the following parameters
 str(InsuranceContract.ParameterDefaults)
 ```
 ```{r, results="asis"}
-
 # pandoc.listRK(InsuranceContract.ParameterDefaults)
 ```
 
-# Tarif Specification and implementation of a concrete contract
+# Tarif and Contract Specification
 
 An insurance contract is modelled by the abstract product specification 
 (`InsuranceTarif` class) and the concrete (individualized) `InsuranceContract`. 
@@ -483,23 +486,20 @@ parameters also in the contract's `new` call.
 The `InsuranceTarif` class provides a way to define an abstract insurance product.
 The most important parameters to be passed in the  `InsuranceTarif$new()` call are:
 
-**General settings for the Tariff**
-
-* `name`, `tarif` and `desc` providing IDs and human-readable descriptions of the insurance product. They are just used as labels and array keys, but do not influence the calculations.
-* `type` is the most important parameter, defining the type of life insurance product (endowment, pure endowment, annuity, whole life insurance, dread-disease insurance, etc.)
-
-**Actuarial Bases for the Tariff**
-
-* `mortalityTable` is a `MortalityTable` Object (package "MortalityTables"), providing the transition probabilities (typically death probabilities, but potentially also morbidity in dread-disease insurances)
-* `i` Guaranteed interest rate
-* `costs`, `unitcosts` are passed a data structure for all cost parameters (see below)
-* `premiumFrequencyLoading` describes the surcharge for premium payments more often than yearly (as a named list)
-* `premiumRefund` describes how much of the (gross) premium paid is returned upon death (often provided e.g. in deferred annuities or pure endowments with no fixed death benefit)
-* `tax` is the insurance tax
-
-**Benefit calculation**
-
-* `surrenderValueCalculation` can be passed a hook function that calculates the surrender value given the current reserves at each time step
+| | |
+|:-----|:----------|
+|**General settings for the Tariff** ||
+| `name`, `tarif`, `desc` | IDs and human-readable descriptions of the insurance product. They are just used as labels and array keys, but do not influence the calculations.|
+| `type` | the most important parameter, defining the type of life insurance product (endowment, pure endowment, annuity, whole life insurance, dread-disease insurance, etc.)|
+|**Actuarial Bases for the Tariff**  ||
+| `mortalityTable` | a `MortalityTable` Object (package "MortalityTables"), providing the transition probabilities (typically death probabilities, but potentially also morbidity in dread-disease insurances)|
+| `i` | Guaranteed interest rate|
+| `costs`, `unitcosts` | passed a data structure for all cost parameters (see below)|
+| `premiumFrequencyLoading` | surcharge for premium payments more often than yearly (as a named list)|
+| `premiumRefund` | how much of the (gross) premium paid is returned upon death (often provided e.g. in deferred annuities or pure endowments with no fixed death benefit)|
+| `tax` |insurance tax
+|**Benefit calculation** ||
+| `surrenderValueCalculation` | can be passed a hook function that calculates the surrender value given the current reserves at each time step|
 
 
 
@@ -508,7 +508,7 @@ refund upon death and a linearly decreasing surrender penalty:
 
 
 
-```{r TarifDefinition}
+```{r TarifDefinition, message = F}
 Tarif.PureEnd = InsuranceTarif$new(
   name = "Example Tariff - Pure Endowment",
   type = "pureendowment",
@@ -518,7 +518,7 @@ Tarif.PureEnd = InsuranceTarif$new(
   mortalityTable = mort.AT.census.2011.unisex,
   i = 0.005,
   # Costs: 4% acquisition, where 2.5% are zillmered, 5\% of each premium as beta costs, 
-  #        1%o acquisition costs of the sum insured over the whole contract period
+  #        1%o administration costs of the sum insured over the whole contract period
   costs = initializeCosts(alpha = 0.04, Zillmer = 0.025, beta = 0.05, gamma.contract = 0.001, gamma.paidUp = 0.001),
   unitcosts = 10,
 
@@ -555,14 +555,14 @@ Tarif.PureEnd.SP = Tarif.PureEnd$createModification(
 )
 ```
 
-### Sample tariffs for the most common types of life insurance
+### Sample tariffs for the most common life insurance types
 
 For the examples in the remainder of this vignette, we can create some more
 example tariffs covering the most common types of life insurance. 
 
 
 **General definitions for all tariffs**
-```{r TarifDefinitions.All}
+```{r TarifDefinitions.All,message = F}
 library(MortalityTables)
 mortalityTables.load("Austria_Census")
 mortalityTables.load("Austria_Annuities_AVOe2005R")
@@ -675,7 +675,7 @@ Tarif.DreadDisease = InsuranceTarif$new(
 )
 ```
 
-## Creating a contract for a given tariff
+## Creating a contract
 
 While the tariff describes the general product features, the contract object
 holds the data of a concrete contract. All insurance parameters (see section 
@@ -684,33 +684,20 @@ tarif defaults.
 
 However, the most important and often used parameters are:
 
-**Information about insuree**
-
-* `age` the age of the insured person at contract start
-* `YOB` the year of birth of the insured person (`age`, `YOB` and `contractClosing` 
-   are redundant, at most two need to be given). YOB is only relevant for 
-   cohort mortality tables. For period life tables (which are independent of
-   the birth year of the person), this parameter is not needed.
-* `sex` is relevant for sex-specific life tables (common in the past)
-
-**Contract details**
-
-* `sumInsured` describes the benefit when the insured event happens. Typically
-  the lump sum for whole life insurances or endowments, or the (yearly) payment
-  for annuities
-* `policyPeriod` defines the duration of the whole contract
-* `premiumPeriod` defines how long premiums are paid (1 for single-premium 
-  contracts, equal to `policyPeriod` (default) for regular premiums)
-* `premiumFrequency` defines how often premiums are paid within a year (e.g. 
-  1 for yearly premiums, 4 for quarterly, 12 for monthly)
-* `contractClosing` describes the starting date of the contract
-* `deathBenefitProportion` gives the factor of death benefit relative to the 
-  survival benefit of endowments (1 means equal death and survival probabilities)
-* `noMedicalExam`, `noMedicalExamRelative`, `sumRebate`, `extraRebate`, 
-  `premiumRebate` describe various types of rebates or charges. They can either 
-  be defined in general functional form in the tariff to apply to all contracts,
-  or given individually for each contract. For the details, when each of these 
-  rebates are applied, check the formula reference document.
+|  |  |
+|:-----|:---------|
+|**Information about insuree** |
+| `age` |the age of the insured person at contract start
+| `YOB` | the year of birth of the insured person (`age`, `YOB` and `contractClosing` are redundant, at most two need to be given). YOB is only relevant for cohort mortality tables. For period life tables (which are independent of the birth year of the person), this parameter is not needed. |
+| `sex` | relevant for sex-specific life tables (common in the past) |
+|**Contract details** |
+| `sumInsured` | the benefit when the insured event happens. Typically the lump sum for whole life insurances or endowments, or the (yearly) payment for annuities |
+| `policyPeriod` | the duration of the whole contract |
+| `premiumPeriod` | how long premiums are paid (1 for single-premiumcontracts, equal to `policyPeriod` (default) for regular premiums) |
+| `premiumFrequency` | how often premiums are paid within a year (e.g.1 for yearly premiums, 4 for quarterly, 12 for monthly) |
+| `contractClosing` | the starting date of the contract |
+| `deathBenefitProportion` | gives the factor of death benefit relative to thesurvival benefit of endowments (1 means equal death and survival probabilities) |
+| `noMedicalExam`, `noMedicalExamRelative`, `sumRebate`, `extraRebate`, `premiumRebate` | various types of rebates or charges. They can either be defined in general functional form in the tariff to apply to all contracts, or given individually for each contract. For the details, when each of these rebates are applied, check the formula reference document.|
   
 
 
@@ -727,9 +714,18 @@ contract.PureEnd = InsuranceContract$new(
   )
 ```
 
-```{r Contract.premiums}
+```{r Contract.premiums,eval=F}
 contract.PureEnd$Values$premiums
+```
+
+```{r Contract.premiumsOUT, echo = F}
+contract.PureEnd$Values$premiums %>% kable(digits=4)
+```
+```{r Contract.premiumComposition,eval=F}
 contract.PureEnd$Values$premiumComposition
+```
+```{r Contract.premiumCompositionOUT, echo = F}
+contract.PureEnd$Values$premiumComposition %>% as.data.frame() %>% rowid_to_column("t") %>% mutate(t = t-1) %>% select(t, charged, tax, loading.frequency, gross, gamma, beta, alpha, alpha.noZillmer, alpha.Zillmer,  Zillmer, net, risk, savings) %>% pander
 ```
 
 Due to the full premium refund in case of death, there is only very little 
@@ -806,9 +802,12 @@ surrender penalty is usually applied to the reserve before the conversion.
 Waiving premiums and recalculating the sum insured is very easy, one just calls
 the method `InsuranceContract$premiumWaiver(t = ..)` on the existing contract.
 
-```{r Contract.PureEndPrf}
+```{r Contract.PureEndPrf, results="hide"}
 contract.PureEnd.NoRefund.Prf = contract.PureEnd.NoRefund$clone()$premiumWaiver(t = 7)
 contract.PureEnd.NoRefund.Prf$Values$reserves
+```
+```{r Contract.PureEndPrfOUT, echo=F}
+contract.PureEnd.NoRefund.Prf$Values$reserves %>% pander
 ```
 
 Notice that the contract changes are made directly to the contract ("reference semantics"). This is 
@@ -1021,13 +1020,17 @@ variant and a variant with regular premiums, both of which have a potential
 (partial or full) premium refund in case of death. How do the premiums of these
 contracts compare and how do the premiums depend on the premium refund proportion?
 
-```{r Grid.Endowment.compare}
-contractGridPremium(
+```{r Grid.Endowment.compare, results = "hide"}
+grd = contractGridPremium(
   axes = list(tarif = c(Tarif.PureEnd, Tarif.Endowment, Tarif.PureEnd.SP), premiumRefund = c(0, 0.5, 1)),
   age = 50, policyPeriod = 20,
   sumInsured = 10000,
   contractClosing = as.Date("2020-09-01")
 )
+grd
+```
+```{r Grid.Endowment.compareOUT, echo = F}
+grd %>% kableTable
 ```
 
 The default implementation of `contractGridPremium` returns the written premium,
@@ -1046,33 +1049,72 @@ grd = contractGrid(
   sumInsured = 10000,
   contractClosing = as.Date("2020-09-01")
 )
-
+```
+```{r Grid.Endowment.compareOtherG1, eval = F}
 # Compare net premiums without loadings:
 contractGridPremium(grd, premium = "net")
+```
+```{r Grid.Endowment.compareOtherG1Out, echo = F}
+contractGridPremium(grd, premium = "net") %>% kableTable
+```
 
+```{r Grid.Endowment.compareOtherG2, eval = F}
 # Compare premium sums over the whole contract period (all contracts have the same sumInsured)
-contractGridPremium(grd, .fun = function(c) {c$Values$unitPremiumSum * c$Values$premiums["written"]})
+contractGridPremium(grd, .fun = function(c) {with(c$Values, 
+     unitPremiumSum * premiums["written"])
+})
+```
+```{r Grid.Endowment.compareOtherG2Out, echo = F}
+# Compare premium sums over the whole contract period (all contracts have the same sumInsured)
+contractGridPremium(grd, .fun = function(c) {with(c$Values, 
+     unitPremiumSum * premiums["written"])
+}) %>% kableTable(digits = 2)
+```
 
+```{r Grid.Endowment.compareOtherG3, eval = F}
 # Compare risk premiums at time t=10 (the 11th row of the premium decomposition)
 contractGridPremium(grd, .fun = function(c) {c$Values$premiumComposition[11, "risk"]})
+```
+```{r Grid.Endowment.compareOtherG3Out, echo = F}
+# Compare risk premiums at time t=10 (the 11th row of the premium decomposition)
+contractGridPremium(grd, .fun = function(c) {c$Values$premiumComposition[11, "risk"]}) %>% kableTable(digits = 2)
+```
 
+```{r Grid.Endowment.compareOtherG4, eval = F}
 # Compare present value of all benefits and refunds (without costs) at time t=0
 contractGridPremium(grd, .fun = function(c) {c$Values$absPresentValues[1, "benefitsAndRefund"]})
-
+```
+```{r Grid.Endowment.compareOtherG4Out, echo = F}
+# Compare present value of all benefits and refunds (without costs) at time t=0
+contractGridPremium(grd, .fun = function(c) {c$Values$absPresentValues[1, "benefitsAndRefund"]}) %>% kableTable(digits = 2)
 ```
 
 
-Other usefil examples of grid comparisons include e.g. the effect of the interest 
+
+
+Other useful examples of grid comparisons include e.g. the effect of the interest 
 rate and the mortality table on the premiums:
 
-```{r Grid.Protection}
-contractGridPremium(
-  axes = list(mortalityTable = mort.AT.census["m", ], i = c(0, 0.005, 0.01), age = c(30, 45, 60), policyPeriod = c(10, 20)),
+```{r Grid.Protection, results ="hide"}
+grd = contractGridPremium(
+  axes = list(mortalityTable = mort.AT.census["m", -(1:10)], i = c(0, 0.005, 0.01), age = c(30, 45, 60), policyPeriod = c(10, 20)),
   tarif = Tarif.Life,
   contractClosing = as.Date("2020-09-01"),
   sumInsured = 10000
 )
+grd
 ```
+
+```{r Grid.ProtectionOUT, echo=F, results="asis"}
+for (a in dimnames(grd)[[3]]) {
+for (d in dimnames(grd)[[4]]) {
+  cat("\n", "* ", names(dimnames(grd))[[3]], "=",  a, ", ", names(dimnames(grd))[[4]], "=",  d, "\n\n", sep = "")
+  # cat(grd[,,d ] %>% as.data.frame() %>% rownames_to_column("age \\|  policyPeriod") %>% pander(digits = 7, round = 2, style = "rmarkdown"))
+  cat(grd[,, a, d] %>% kableTable(digits = 2), "\n")
+}
+}
+```
+
 
 # Exporting contract data to Excel
 
@@ -1110,7 +1152,7 @@ exportInsuranceContract.xlsx(contract.exportExample, filename = "Example_PureEnd
 
 
 
-# Creating example values required for submission to the Austrian Financial Market Authority
+# Creating examples for the Austrian Financial Market Authority
 
 When introducing a new tariff, an Austrian insurance company has to submit
 a detailled mathematical description (so-called "Versicherungsmathematische 
@@ -1162,7 +1204,7 @@ One can give a base name and an extra name to distinguish different calculations
 in the file names.
 
 
-# Handling contracts with increases (fixed increasing benefits / premiums, dynamic increases, sum increases)
+# Handling contracts with increases
 
 While many insurance contracts have a fixed sum insured and constant premium,
 many contracts include some kind of adjustment to account for inflation. There
@@ -1186,7 +1228,7 @@ All three increases can in theory be combined in the same contract, although
 in practice this usually does not happen and at most one kind of increase is 
 included in a contract
 
-## Fixed yearly premium increase with constant sum insured
+## Fixed yearly premium increases
 
 With this kind of increases, the initial contract valuation (i.e. the determination 
 of the premium at contract inception) already takes into account that the premium
@@ -1201,7 +1243,7 @@ the parameter:
 
 * `premiumIncrease` ... The factor, by which the premium increases yearly. Default is 1.0 (no increase in premium).
 
-In the following example, we create a 20-year endowment contract with constant 
+In the following example, we create a 10-year endowment contract with constant 
 premiums over the whole period and another one with idential parameters except 
 that the premium increases by 4\% each year:
 
@@ -1210,7 +1252,7 @@ that the premium increases by 4\% each year:
 contract.Endow.Constant = InsuranceContract$new(
   tarif = Tarif.Endowment,
   sumInsured = 10000,
-  age = 40, policyPeriod = 20,
+  age = 50, policyPeriod = 10,
   contractClosing = as.Date("2020-09-01")
 )
 # Contract with 4% yearly premium increase and same sum insured
@@ -1218,7 +1260,7 @@ contract.Endow.PremInc = InsuranceContract$new(
   tarif = Tarif.Endowment,
   sumInsured = 10000,
   premiumIncrease = 1.04,
-  age = 40, policyPeriod = 20,
+  age = 50, policyPeriod = 10,
   contractClosing = as.Date("2020-09-01")
 )
 premium.comparison = data.frame(
@@ -1233,7 +1275,7 @@ premium.comparison %>% pander
 ```
 
 
-## Fixed yearly benefit increase with constant premium
+## Fixed yearly benefit increases with constant premium
 
 With this kind of increases, the premium will stay constant over the whole 
 contract maturity, but the death and/or survival benefit (or the annuity payment)
@@ -1250,7 +1292,7 @@ the parameters:
 * `annuityIncrease` ... The factor, by which potential annuity payments increase yearly. Default is 1.0 (no increase in annuity benefits)
 * `deathBenefit` ... The vector of death benefits (relative to the sum insured, which for endowments describes the survival benefit)
 
-In the following example, we create a 20-year endowment contract with constant 
+In the following example, we create a 10-year endowment contract with constant 
 premiums over the whole period and another one with idential parameters except 
 that the premium increases by 4\% each year:
 
@@ -1259,7 +1301,7 @@ that the premium increases by 4\% each year:
 contract.TermLife.Constant = InsuranceContract$new(
   tarif = Tarif.Life,
   sumInsured = 10000,
-  age = 40, policyPeriod = 20,
+  age = 50, policyPeriod = 10,
   contractClosing = as.Date("2020-09-01")
 )
 # Contract with 4% yearly increase in sum insured (final survival benefit is 10.000)
@@ -1267,7 +1309,7 @@ contract.TermLife.SumInc = InsuranceContract$new(
   tarif = Tarif.Life,
   sumInsured = 10000,
   deathBenefit = (1.04)^(0:20),
-  age = 40, policyPeriod = 20,
+  age = 50, policyPeriod = 10,
   contractClosing = as.Date("2020-09-01")
 )
 premium.comparison = data.frame(
@@ -1277,8 +1319,9 @@ premium.comparison = data.frame(
   `Premium w. sum increase` = contract.TermLife.SumInc$Values$absCashFlows[,"premiums_advance"],
   check.names = F
   )
+premium.comparison
 ```
-```{r FixedSumIncrease.WholeLifeOut, results = "asis"}
+```{r FixedSumIncrease.WholeLifeOut, results = "asis", echo=F}
 premium.comparison %>% pander
 ```
 
@@ -1287,7 +1330,7 @@ rather through the parameter
 
 * `annuityIncrease` ... yearly increase factor of the annuity payments
 
-In the following example, we create a 20-year endowment contract with constant 
+In the following example, we create a 10-year endowment contract with constant 
 premiums over the whole period and another one with idential parameters except 
 that the premium increases by 4\% each year:
 
@@ -1296,10 +1339,10 @@ that the premium increases by 4\% each year:
 contract.Annuity.Constant = InsuranceContract$new(
   tarif = Tarif.DefAnnuity,
   sumInsured = 1200,
-  age = 50, 
-  policyPeriod = 20,
-  deferralPeriod = 10,
-  premiumPeriod = 10,
+  age = 55, 
+  policyPeriod = 10,
+  deferralPeriod = 5,
+  premiumPeriod = 5,
   contractClosing = as.Date("2020-09-01")
 )
 # Contract with 4% yearly increase in annuity benefits
@@ -1307,10 +1350,10 @@ contract.Annuity.Increasing = InsuranceContract$new(
   tarif = Tarif.DefAnnuity,
   sumInsured = 1200,
   annuityIncrease = 1.04,
-  age = 50, 
-  policyPeriod = 20,
-  deferralPeriod = 10,
-  premiumPeriod = 10,
+  age = 55, 
+  policyPeriod = 10,
+  deferralPeriod = 5,
+  premiumPeriod = 5,
   contractClosing = as.Date("2020-09-01")
 )
 # Contract with 4% yearly increase in premiums and in annuity payments
@@ -1319,10 +1362,10 @@ contract.Annuity.IncreasingBoth = InsuranceContract$new(
   sumInsured = 1200,
   annuityIncrease = 1.04,
   premiumIncrease = 1.04,
-  age = 50, 
-  policyPeriod = 20,
-  deferralPeriod = 10,
-  premiumPeriod = 10,
+  age = 55, 
+  policyPeriod = 10,
+  deferralPeriod = 5,
+  premiumPeriod = 5,
   contractClosing = as.Date("2020-09-01")
 )
 premium.comparison = data.frame(
@@ -1424,15 +1467,297 @@ lapply(blk, function(b) {
 
 ```
 
-# Advance profit participation (premium rebate)
+
+
+# Profit participation
+
+In addition to the above guaranteed values, many contracts also include some 
+kind of profit sharing. The total amount of money to be distributed is usually
+predetermined by law or regulation (in Austria by the
+[https://www.ris.bka.gv.at/GeltendeFassung.wxe?Abfrage=Bundesnormen&Gesetzesnummer=20009295]("Lebensversicherung-Gewinnbeteiligungsverordnung -- LV-GBV")), 
+but the actual way they are distributed to individual contracts is up the
+insurance undertaking. The profit participation scheme defines profit participation
+allocations based on certain rates and bases, where the formulas and the types 
+of profit are pre-determined in a formal document (which in this package will 
+be implemented as an object of class `ProfitParticipation`), while the profit 
+rates are determined by the management of the undertaking ("discretionary benefits").
+
+
+Typical Austrian insurance contracts have one of two
+kinds of profit sharing mechanisms:
+
+* "Advance profit participation" or "direct contributions", which is a direct 
+  premium rebate, which can in theory be lowered or revoked at any time.
+* Yearly profit assignments into the reserves based on "total credited interet 
+  rate" and other profit attribution rates.
+
+## Advance profit participation (premium rebate)
+
+To implement advance profit participation, one still needs to create a 
+`ProfitParticipation` object, which can be empty. The contract parameters 
+`advanceProfitParticipation` and `advanceProfitParticipationInclUnitCost` then 
+define the premium rebate. They can be set either in the profit scheme or in
+the tariff definition. The latter is usually the easier way, as one profit 
+scheme might be applicable to multiple different tariffs with different advance 
+profit participation rates.
+
+As an example, we will use our `Tarif.Life` whole life tarif defined above and
+add a $38\%$ advance profit participation on the premium:
+```{r AdvanceProfitExample}
+profit.Advance.V1 = ProfitParticipation$new(
+    name = "Profit Scheme for advance profit participation, V 1.0",
+    advanceProfitParticipation = 0.38
+);
+
+Tarif.Life.withPP = Tarif.Life$createModification(
+  name = "Example Tariff - Whole/Term Life with profit sharing",
+  tarif = "Life1PP",
+  profitParticipationScheme = profit.Advance.V1
+)
+
+contract.LifePP = InsuranceContract$new(
+  tarif = Tarif.Life.withPP,
+  age = 40, policyPeriod = 10,
+  sumInsured = 100000,
+  contractClosing = as.Date("2019-09-01")
+)
+```
+
+The premium composition shows that the profit participation 
+```{r advanceProfitExample.PremiumComposition, eval=F}
+contract.LifePP$Values$premiumComposition
+```
+```{r advanceProfitExample.PremiumCompositionOUT, echo=F}
+contract.LifePP$Values$premiumComposition[,c("charged", "tax", "unitcosts", "profit.advance", "gross", "net")] %>% as.data.frame() %>% rowid_to_column("t") %>% mutate(t = t-1) %>% pander
+```
+
+
+## The ProfitParticiption class
+
+The profit participation scheme of a tarif is represented by an object of the
+`ProfitParticipation` class. While the `InsuranceContract.Parameters` list contains
+elements for the profit rates, the implementation of the calculation of the
+profit parts is done by functions defined in the `ProfitParticipation` 
+constructor.
+
+This scheme is passed to the `InsuranceTarif` or `InsuranceContract` via the 
+`profitParticipationScheme` parameter.
+`
+
+There are different types of profit participation assignments, based on the type
+of risks they are based upon:
+
+* __Interest profit__: total credited rate (minus guarantee) applied to some kind of reserve
+* __Risk profit__: risk profit rate applied to the risk premium, capital or the sum insured
+* __Expense profit__: expense profit rate applied to the sum insured
+* __Sum profit__: rate (depending on sum insured) applied to the sum insured 
+* __Terminal bonus__: yearly attributions are collected and paid out only on contract maturity
+* __Terminal bonus fund__: Part of the ongoing profit allocation is not immediately attributed to the contract, but stored in a special reserve and paid out only on maturity.
+
+
+
+The (default) parameters that can be passed to the `ProfitParticipation` constructor
+are:
+
+| | |
+|:-----|:----------|
+|**General profit setup** ||
+| `waitingPeriod`   | During the waiting period at the beginning of a contract, no profit participation is assigned |
+| `profitComponents` | describes the different components of profit participation ("interest", "risk", "expense", "sum", "terminal") |
+| `profitClass`      | a profit ID used to identify the correct profit rates (rates are defined per profit class) |
+| `profitRates`      | a data frame containing company-wide profit rates. Key columns are year and profitClass |
+|**Advance profit participation rates** ||
+| `advanceProfitParticipation`             | premium rebate (percentage discount on the gross premium) |
+| `advanceProfitParticipationInclUnitCost` | premium rebate (percentage discount on the gross premium including unit costs) |
+|**Regular profit participation rates** ||
+| `guaranteedInterest` $i$        | Contract-specific override of the guaranteed intereste rate (only for profit participation purposes) |
+| `interestProfitRate` $ip_t$     | Profit interest rate (added to the guaranteed interest rate to arrive at the total credited rate) |
+| `totalInterest` $tcr_t$         | The total credited interest rate (sum of guaranteed interest and profit participation interest) |
+| `mortalityProfitRate` $mp_t$    | Mortality profit rate |
+| `expenseProfitRate` $ep_t$      | Expenso profit rate |
+| `sumProfitRate` $sp_t$          | Sum profit rate (typically a function, depending on sum insured) |
+| `terminalBonusRate` $tb_t$      | Terminal bonus rate |
+| `terminalBonusFundRate` $tbf_t$ | Terminal bonus fund rate, i.e. which percentage of the assigned profits are withheld in a separate terminal bonus fund and only paid out at maturity. |
+
+
+
+
+
+For the calculation of the profit participation, the `ProfitParticipation` class
+holds a list of function pointers to calculate each component of profit participation.
+For each of interest, risk, expense, sum, terminal and terminal bonus fund the 
+following three functions can be given:
+
+* **Profit rate**: return the profit rate as a function from the values of the contract
+  
+  Function signature: `function(rates, ...)`
+* **Profit base**: The quantity on which to apply the rate. Typically this function 
+  returns either the current reserve, the previous reserve (or some combination), 
+  the sum insured or the current risk premium.
+  
+  Function signature: `function(rates, params, values, ...)`
+* **Calculation**: A function taking the rate and the base and calculate the 
+  profit assigned for the specific profit component. Most common are a simple 
+  multiplication of base and rate, but other formulas are possible, too.
+  
+  Function signature: `function(base, rate, waiting, rates, params, values, ...) `
+  
+
+Thus, the constructor of the `ProfitParticipation` class also takes the following
+parameters:
+
+|Type of profit      |Function for rate          | Function for base         | Function for calculation    |
+|:-------------------|:--------------------------|:--------------------------|:----------------------------|
+|interest on accrued profit |`getInterestOnProfits` |- (existing profit)    |-                            |
+|interest profit     |`getInterestProfitRate`    |`getInterestProfitBase`    |`calculateInterestProfit`    |
+|risk profit         |`getRiskProfitRate`        |`getRiskProfitBase`        |`calculateRiskProfit`        |
+|expense profit      |`getExpenseProfitRate`     |`getExpenseProfitBase`     |`calculateExpenseProfit`     |
+|sum profit          |`getSumProfitRate`         |`getSumProfitBase`         |`calculateSumProfit`         |
+|terminal bonus      |`getTerminalBonusRate`     |`getTerminalBonusBase`     |`calculateTerminalBonus`     |
+|terminal bonus fund |`getTerminalBonusFundRate` |`getTerminalBonusFundBase` |`calculateTerminalBonusFund` |
+
+In addition, the following parameters define functions for reserves:
+
+* `getTerminalBonusReserve` ... Calculate the reserve for the terminal bonus 
+  from the bonus assignments (old tariffs often use some kind of discounting or 
+  conditional reserving for the terminal bonus reserve)
+  
+  Function signature: `function(profits, rates, terminalBonus, terminalBonusAccount, params, values)`
+
+
+To calculate the actual benefits paid out from profit participation, the following 
+parameters take the corresponding functions (signature: `function(profits, rates, params, values, ...)` )
+
+| |        |
+|:---|:---------|
+|`calculateSurvivalBenefit`  |Benefit from profit participation at maturity (in addition to the guaranteed payout) |
+|`calculateDeathBenefitAccrued` |Benefit from profit participation upon death (in addition to the guaranteed payout) |
+|`calculateDeathBenefitTerminal` |Benefit from terminal bonus upon death  (in addition to the guaranteed payout and regular profit participation) |
+|`calculateSurrenderBenefitAccrued` |Benefit from profit participation upon contract surrender (in addition to the surrender value) |
+|`calculateSurrenderBenefitTerminal` |Benefit from terminal bonus upon  contract surrender (in addition to the surrender value and regular profit participation) |
+|`calculatePremiumWaiverBenefitAccrued` |Benefit from profit participation upon premium waiver (in addition to the surrender value) |
+|`calculatePremiumWaiverBenefitTerminal` |Benefit from terminal bonus upon premium waiver surrender (in addition to the surrender value and regular profit participation) |
+
+### Existing functions to use
+
+While the details of a profit participation scheme are very specific and no two 
+profit schemes are exactly alike, the basic functionality to extract rates and 
+bases and the calculation functions are usually not so different. For this 
+reason, the `LifeInsuranceContracts` package provides several little helper functions
+that provide the most common functionality for the definition of rates, bases and
+the profit calculation. See `?ProfitParticipationFunctions` for the full list.
+
+The most common functions are:
+
+* `PP.base.PreviousZillmerReserve(rates, params, values, ...)`
+* `PP.base.contractualReserve(rates, params, values, ...)`
+* `PP.base.previousContractualReserve(rates, params, values, ...)`
+* `PP.base.meanContractualReserve(rates, params, values, ...)`
+* `PP.base.ZillmerRiskPremium(rates, params, values, ...)`
+* `PP.base.sumInsured(rates, params, values, ...)`
+* `PP.base.totalProfitAssignment(res, ...)`
+
+* `PP.rate.interestProfit(rates, ...)`
+* `PP.rate.riskProfit(rates, ...)`
+* `PP.rate.expenseProfit(rates, ...)`
+* `PP.rate.sumProfit(rates, ...)`
+* `PP.rate.terminalBonus(rates, ...)`
+* `PP.rate.terminalBonusFund(rates, ...)`
+* `PP.rate.interestProfitPlusGuarantee(rates, ...)`
+* `PP.rate.totalInterest(rates, ...)`
+
+* `PP.calculate.RateOnBase(base, rate, waiting, rates, params, values, ...)`
+* `PP.calculate.RateOnBaseMin0(base, rate, waiting, rates, params, values, ...)`
+* `PP.calculate.RatePlusGuaranteeOnBase(base, rate, waiting, rates, params, values, ...)`
+
+* `PP.benefit.ProfitPlusTerminalBonusReserve(profits, ...)`
+* `PP.benefit.Profit(profits, ...)`
+* `PP.benefit.ProfitPlusGuaranteedInterest(profits, rates, ...)`
+* `PP.benefit.ProfitPlusTotalInterest(profits, rates, params, values)`
+* `PP.benefit.ProfitPlusHalfTotalInterest(profits, ...)`
+* `PP.benefit.ProfitPlusInterestMinGuaranteeTotal(profits, rates, ...)`
+* `PP.benefit.TerminalBonus5YearsProRata(profits, params, ...)`
+* `PP.benefit.TerminalBonus5Years(profits, params, ...)`
+* `PP.benefit.TerminalBonus(profits, params, ...)`
+
+
+
+
+### Example profit scheme
+
+For example, imagine a tariff's total cumulated assigned profit $G_t$ and the benefits at time $t$ hav ethe formulas:
+$$G_t = G_{t-1} \cdot \left(1 + i + ip_t\right) + ip_t \cdot \frac{\left(Res_{t-1} + Res_{t}\right)}{2} + sp_t \cdot SumInsured$$
+$$Death_t = G_t \cdot \left(1 + i + ip_t\right)$$
+$$Matu_n = G_n$$
+$$Surrender_t = G_t\cdot \left(1+\frac{i + ip_t}{2}\right)$$
+$$Red_t = G_t$$
+
+
+These formulas can be interpreted as following: 
+
+* There are two profit components: interest profit and sum profit
+* The existing cumulated profit $G_{t-1}$ yields interest with the guaranteed 
+  interest rate plus potentially the interest profit rate. If the total credited 
+  rate is lower than the guarantee, the guarantee is still applied to the 
+  existing profits. => `PP.rate.interestProfitPlusGuarantee`
+* Additionaly, interest profit is assigned with rate $ip_t$ (=0 if total 
+  credited rate is below guarantee) multiplied with the average of the current
+  and the previous reserve. => `PP.base.meanContractualReserve`
+* A sum profit of $sp_t$ of the sum insured is added, even if no interest profit
+  is distributed.
+  
+The values of $Res_t$, $SumInsured$ and the guaranteed interest $i^g_t$ are 
+prescribed by the tariff or contract, while the profit participation rates 
+$ip_t$ and $sp_t$ are decided on a year-by-year basis by the management boards.
+
+The benefits for death, maturity, surrender and premium waivers are:
+
+* In case of death, the existing cumulated profits yield one additional year of interest => `PP.benefit.ProfitPlusInterestMinGuaranteeTotal`
+* At maturity of the contract, the existing cumulated profits are paid out in 
+  addition to the guaranteed benefits of the contract. => `PP.benefit.Profit`
+* In case of surrender (on average half a year after the contract's anniversary), 
+  half a year of interest is added to the existing cumulated profits from the 
+  last anniversary => `PP.benefit.ProfitPlusHalfInterestMinGuaranteeTotal`
+* When premiums are waived, the existing accrued profits are taken into account
+  without any additional interest. => `PP.benefit.Profit`
+
+This profit scheme can be easily be implementes as a `ProfitParticipation` 
+object:
+
+```{r Example.ProfitParticipation}
+ProfitScheme.example = ProfitParticipation$new(
+  name = "Example Profit Scheme, V 1.0",
+  profitComponents = c("interest", "sum"),
+
+  getInterestOnProfits    = PP.rate.interestProfitPlusGuarantee,
+  getInterestProfitBase   = PP.base.meanContractualReserve,
+  getSumProfitBase        = PP.base.sumInsured,
+  
+  sumProfitRate = 0.01,
+  profitClass = NULL
+)
+```
+
+The calculation functions are not given, as they default to the correct
+`PP.calculate.RateOnBase` anyway. The interest profit rates are not given, as
+they will vary over time. Instead, the interest (and sum) profit rates
+are passed to `InsuranceContract$addProfitScenario()` to calculate one particular
+profit scenario with given rates.
+
+The sum profit rate is given as a default, but each contract and in particular 
+each profit scenario should explicitly give the sum profit rate.
 
 TODO
 
-# Profit participation schemes
-
-TODO
 
 # Modifying the default calculation approach
 
 TODO
 
+# Misc
+
+TODO:
+
+* Frequency charges (monthly / quarterly / biannual premium payments)
+* security loadings
+* 
