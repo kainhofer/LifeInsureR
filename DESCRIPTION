@@ -45,6 +45,7 @@ Suggests:
     pander,
     kableExtra,
     magrittr,
-    tibble
+    tibble,
+    testthat
 VignetteBuilder: knitr
 Roxygen: list(markdown = TRUE)
