@@ -44,86 +44,6 @@ kableTable = function(grd, ...) {
     column_spec(1, bold = T, border_right = T)
 }
 
-
-
-## Modified pandoc.list function that also works with NULL entries in the lists:
-pandoc.listRK.return <- function(elements, style = c('bullet', 'ordered', 'roman'), loose = FALSE, add.line.breaks = TRUE, add.end.of.list = TRUE, indent.level = 0, missing = panderOptions('missing')) { #nolint
-
-    ## checks
-    if (!is.logical(loose)) {
-        stop('Wrong argument provided: loose')
-    }
-
-    ## default values
-    if (missing(style)) {
-        style <- panderOptions('list.style')
-    } else {
-        style <- match.arg(style)
-    }
-
-    ## replace missing values
-    w <- which(is.na(elements))
-    if (length(w) > 0) {
-        elements[w] <- missing
-    }
-
-    ## helpers
-    elements.l <- length(elements)
-    marker     <- switch(style,
-                         'bullet'  = rep('* ', elements.l),
-                         'ordered' = paste0(1:elements.l, '. '),
-                         'roman'   = paste0(as.roman(1:elements.l), '. '))
-
-    ## number of elements should be more than one
-    if (elements.l == 0) {
-        return('')
-    }
-
-    ## recursive call
-    i.lag <- 0
-    res <- ifelse(add.line.breaks, '\n', '')
-    nms = names(elements)
-    for (i in 1:elements.l) {
-        res <- paste0(res, paste(rep(' ', indent.level * 4), collapse = ''), marker[i - i.lag])
-        if (nms[[i]] != "") {
-            res <- paste0(res, nms[[i]], ': ')
-        }
-
-        if (length(elements[[i]]) <=1 && !is.list(elements[[i]])) {
-            res <- paste0(res, elements[[i]], '\n')
-        } else {
-            i.lag <<- i.lag + 1
-            res <- paste0(res, '\n', pandoc.listRK.return(elements[[i]], style, loose, FALSE, FALSE, indent.level + 1))
-        }
-        res <- paste0(res, ifelse(loose, '\n', ''))
-    }
-
-    # res <- paste(sapply(1:elements.l, function(i) {
-    #     if (length(elements[[i]]) <= 1 && !is.list(elements[[i]])) {
-    #         paste0(paste(rep(' ', indent.level * 4), collapse = ''), marker[i - i.lag], elements[[i]])
-    #     } else {
-    #         i.lag <<- i.lag + 1
-    #         pandoc.listRK.return(elements[[i]], style, loose, FALSE, FALSE, indent.level + 1)
-    #     }}),
-    #     collapse = '\n', ifelse(loose, '\n', ''))
-
-    ## closing tag
-    if (add.end.of.list) {
-        res <- paste0(res, ifelse(loose, '', '\n\n'), '<!-- end of list -->\n')
-    }
-    if (add.line.breaks) {
-        res <- add.blank.lines(res)
-    }
-
-    return(res)
-
-}
-
-#' @export
-pandoc.listRK <- function(...)
-    cat(pandoc.listRK.return(...))
-
-
 ```
 
 
@@ -148,6 +68,27 @@ An insurance contract is described by three different objects;
   object describes the profit participation (like the `InsuranceTarif` object
   describes the guaranteed payments) and us used by the `InsuranceContract` 
   object.
+
+
+The tariff and the profit scheme are purely descriptional and their creation does
+not trigger any calculations. 
+However, when one creates a contract for a given tariff, the following steps are 
+done to calculate all values relevant for the contract:
+
+* Extract the transition probabilities (mortality)
+* Set up all cash flow time series (premiums, guaranteed payments, survival payments, death payments, disease payments, charged cost cash flows)
+* Calculate all present values for each time for all the cash flows (benefits, premiums and costs)
+* Use the actuarial equivalence principle and the present values at time $t=0$ to calculate the premium of the contract
+* Express all cash flows also in absolute (monetary) terms
+* Calculate the reserves at every moment
+* Calculate the premium decomposition
+* Apply the (optional) profit participation scheme with the given profit scenario
+* Optionally apply contract changes (premiums waivers, dynamic) and further profit scenarios
+
+All steps after the cash flow setup are implemented in a very generic way, as 
+the cash flows fully determine an insurance contract and as soon as the cash 
+flows are fixed, the valuation and reserve calculation can be expressed in 
+terms of expected present values of the cash flows only.
 
 While this might at first seem a bit complicated, it allows for very generic
 implementations of life insurance products and contracts.
@@ -994,7 +935,104 @@ with the following surcharges and rebates:
 
 
 
+## Frequency charges
 
+Typically, an insurance premium is calculated with yearly premiums paid in advance.
+If premiums are paid more often per year (Parameter `premiumFrequency` or 
+`benefitFrequency` set to a value larger than 1, typically 2 for half-yearly, 
+4 for quarterly, or 12 for monthly payments), part of the interest during the year
+is lost, as well as the premiums for the remainder of the year if the insured event
+happens. So usually there is some kind of extra charge included:
+
+* A frequency charge is added on the gross premium => Parameter `premiumFrequencyLoading` 
+  and `benefitFrequencyLoading` are set to a list with keys "1", "2", "4" and "12" 
+  and values that correspond to the extra charge (as a factor on the gross premium, 
+  i.e. a percentage).
+* The premium or benefit payments are calculated (approximately) as payments 
+  $k$-times per year using yearly death / incidence probabilities. This calculation
+  is typically using some approximations in $k$ => Parameter `premiumFrequencyOrder` 
+  and `benefitFrequencyOrder` set to a value larger than 0. 
+* Contracts with $k>1$ have higher cost loadings on the gross premium. => 
+  Parameter `costs` is implemented a function with signature $function(params, values)$, 
+  which accesses `params$ContractData$premiumFrequency` to return different expense
+  rates for different premium payment frequencies.
+* If the guaranteed interest rate is 0\%, the exact moment of payment during a year 
+  is irrelevant for the guaranteed values. However, if a yield larger than 0\% is
+  achieved, it is assigned to the contract via profit participation. So it makes
+  sense adjust profit participation rates depending on the premium frequency 
+  rather than modifying the premium. The higher the profit participation, the
+  higher the effect of the $k$-th yearly premium payments and the higher the 
+  modification of the rates can be. => Parameter `getInterestProfitRate` of
+  the profit scheme can be implemented as a function that modifies the 
+  rate depending on the premium or benefit frequency (similar to the cost adjustment 
+  mentioned in the previous item).
+
+```{r FrequencyCharges}
+Tarif.Life.FrequencyLoading = Tarif.Life$createModification(
+  name = "Term life (frequency loading)",
+  premiumFrequencyLoading = list("1" = 0.0, "2" = 0.01, "4" = 0.015, "12" = 0.02)
+)
+Tarif.Life.FrequencyApprox1 = Tarif.Life$createModification(
+  name = "Term life (k-th yearly, approx. 1.Ord.)",
+  premiumFrequencyOrder = 1
+)
+Tarif.Life.FrequencyApprox2 = Tarif.Life$createModification(
+  name = "Term life (k-th yearly, approx. 2.Ord.)",
+  premiumFrequencyOrder = 2
+)
+Tarif.Life.FrequencyApprox3 = Tarif.Life$createModification(
+  name = "Term life (k-th yearly, exact)",
+  premiumFrequencyOrder = Inf
+)
+
+Tarif.Life.FrequencyExpense = Tarif.Life$createModification(
+  name = "Term life (modified gamma costs)",
+  costs = function(params, values) {
+    switch (toString(params$ContractData$premiumFrequency),
+        "12" = initializeCosts(alpha = 0.04, Zillmer = 0.025,  beta = 0.05,  gamma.contract = 0.00127, gamma.paidUp = 0.001),
+        "4" = initializeCosts(alpha = 0.04, Zillmer = 0.025,  beta = 0.05,  gamma.contract = 0.00119, gamma.paidUp = 0.001),
+        "2" = initializeCosts(alpha = 0.04, Zillmer = 0.025,  beta = 0.05,  gamma.contract = 0.0011, gamma.paidUp = 0.001),
+        initializeCosts(alpha = 0.04, Zillmer = 0.025,  beta = 0.05,  gamma.contract = 0.001, gamma.paidUp = 0.001)
+    )
+  }
+)
+```
+
+Of course, the loadings and costs mentioned above are not necessarily mathematically 
+derived to offset the interest effect of k-th yearly payments. Rather, they are 
+often simply decided by the management. Thus, the three approaches implemented
+here can have quite different results:
+```{r FrequencyCharges.Grid}
+contractGridPremium(
+  axes = list(tarif = c(Tarif.Life.FrequencyLoading, Tarif.Life.FrequencyApprox1, 
+                        Tarif.Life.FrequencyApprox2, Tarif.Life.FrequencyApprox3, 
+                        Tarif.Life.FrequencyExpense),
+              premiumFrequency = c(1, 2, 4, 12)),
+  age = 40, policyDuration = 20,
+  sumInsured = 100000,
+  contractClosing = as.Date("2020-09-01")
+) %>% kableTable
+```
+
+
+
+## Security loadings
+
+Although most mortality tables and expense loadings already have a certain amount 
+of security margins included, often a tariff (mostly protection products) adds 
+an additional security loading directly to the net present value of the benedits.
+
+This can be easily implemented using the parameter `security`:
+
+```{r Protection.Security}
+contractGridPremium(
+  axes = list(age = seq(30, 60, 10), security = 10*(0:5)/100),
+  tarif = Tarif.Life,
+  policyDuration = 20,
+  sumInsured = 100000,
+  contractClosing = as.Date("2020-09-01")
+) %>% kableTable(digits = 2)
+```
 
 # Creating premium and contract grids
 
@@ -1554,6 +1592,10 @@ of risks they are based upon:
 * __Terminal bonus__: yearly attributions are collected and paid out only on contract maturity
 * __Terminal bonus fund__: Part of the ongoing profit allocation is not immediately attributed to the contract, but stored in a special reserve and paid out only on maturity.
 
+Each of these profit components in general depends in some way on a profit rate and a basis to which the rate is applied. So each component has the general functional form:
+$$Profit^{type}_t = Calc\left(Rate^{type}_t, Basis^{type}_t\right)$$
+The most common calculation function is a simple multiplication, i.e.
+$Calc(r, b) = r\cdot b$, but other functions are possible, to
 
 
 The (default) parameters that can be passed to the `ProfitParticipation` constructor
@@ -1584,7 +1626,7 @@ are:
 
 
 For the calculation of the profit participation, the `ProfitParticipation` class
-holds a list of function pointers to calculate each component of profit participation.
+holds a list of function pointers to calculate each component of profit participation, as outlined above.
 For each of interest, risk, expense, sum, terminal and terminal bonus fund the 
 following three functions can be given:
 
@@ -1951,15 +1993,7 @@ contractGridPremium(
   policyPeriod = 15,
   
   contractClosing = as.Date("2020-09-01")
-) %>% `colnames<-`(c("full benefit", "Waiting period"))
+) %>% `colnames<-`(c("Full benefit", "Waiting period"))
 
 ```
 
-
-# Misc
-
-TODO:
-
-* Frequency charges (monthly / quarterly / biannual premium payments)
-* security loadings
-* 
