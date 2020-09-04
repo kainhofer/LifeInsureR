@@ -4,9 +4,9 @@
 \name{SexSingleEnum-class}
 \alias{SexSingleEnum-class}
 \alias{SexEnum}
-\title{Enum to describe possble sexes in an insurance contract or tariff.}
+\title{Enum to describe possible sexes in an insurance contract or tariff.}
 \description{
-Enum to describe possble sexes in an insurance contract or tariff.
+Enum to describe possible sexes in an insurance contract or tariff.
 }
 \details{
 Currently, only possible values are allowed;

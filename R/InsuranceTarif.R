@@ -62,9 +62,9 @@ TariffTypeEnum = objectProperties::setSingleEnum(
 #' Most methods of this class are not meant to be called manually, but are supposed
 #' to be called by the InsuranceContract object with contract-specific information.
 #' The only methods that are typically used for defining an insurance tariff are
-#' the constructor [InsuranceTarif$new()] and the cloning method
-#' [InsuranceTarif$createModification()]. All other methods should never be called
-#' manually.
+#' the constructor \href{#method-new}{\code{InsuranceTarif$new()}} and the cloning method
+#' \href{#method-createModification}{\code{InsuranceTarif$createModification()}}.
+#' All other methods should never be called manually.
 #'
 #' However, as overriding private methods is not possible in an R6 class, all the
 #' methods need to be public to allow overriding them in derived classes.
@@ -72,8 +72,8 @@ TariffTypeEnum = objectProperties::setSingleEnum(
 # # Parameters for the constructors
 #' @param name The unique name / ID of the tariff
 #' @param type An enum specifying the main characteristics of the tarif. See [TariffTypeEnum]
-#' @param tarif The tariff's public name. See [InsuranceTarif$tarif]
-#' @param desc A short human-readable description. See [InsuranceTarif$desc]
+#' @param tarif The tariff's public name to be stored in the `tarif` field.
+#' @param desc A short human-readable description to be stored in the `desc` field.
 # # General parameters for (almost) all function
 #' @param params Contract-specific, full set of parameters of the contract
 #'      (merged parameters of the defaults, the tariff, the profit participation
@@ -225,7 +225,7 @@ InsuranceTarif = R6Class(
 
     #' @description create a copy of a tariff with certain parameters changed
     #' @details This method \code{createModification} returns a copy of the tariff
-    #' with all given arguments changed in the tariff's [InsuranceTarif$Parameters]
+    #' with all given arguments changed in the tariff's `InsuranceTarif$Parameters`
     #' parameter list.
     #'
     #' As InsuranceTarif is a R6 class with reference logic, simply assigning
@@ -235,7 +235,7 @@ InsuranceTarif = R6Class(
     #' to the values passed to this method.
     #'
     #' @param tariffType An enum specifying the main characteristics of the tarif.
-    #'       See [tariffType]
+    #'       See [TariffTypeEnum]
     #' @param ... Parameters for the [InsuranceContract.ParameterStructure],
     #'            defining the characteristics of the tariff.
     #' @import MortalityTables
@@ -421,7 +421,7 @@ InsuranceTarif = R6Class(
     },
 
     #' @description Returns the basic (unit) cash flows associated with the type
-    #' of insurance given in the [InsuranceTarif$tariffType] field
+    #' of insurance given in the InsuranceTarif's `tariffType` field
     #' @details Not to be called directly, but implicitly by the [InsuranceContract] object.
     getBasicCashFlows = function(params, values) {
       deferralPeriod = params$ContractData$deferralPeriod;
@@ -583,7 +583,7 @@ InsuranceTarif = R6Class(
     #' @description Returns the present values of the cash flows of the contract
     #' (cash flows already calculated and stored in the \code{cashFlows} data.frame)
     #' @details Not to be called directly, but implicitly by the [InsuranceContract] object.
-    #' @param cashFlows data.frame of cash flows calculated by a call to [InsuranceTarif$getCashFlows()]
+    #' @param cashFlows data.frame of cash flows calculated by a call to \href{#method-getCashFlows}{\code{InsuranceTarif$getCashFlows()}}
     presentValueCashFlows = function(cashFlows, params, values) {
 
       qq = self$getTransitionProbabilities(params);
@@ -642,7 +642,7 @@ InsuranceTarif = R6Class(
     },
 
     #' @description Calculates the present values of the cost cash flows of the
-    #' contract (cost cash flows alreay calculated by [InsuranceTarif$getCashFlowsCosts()]
+    #' contract (cost cash flows alreay calculated by \href{#method-getCashFlowsCosts}{\code{InsuranceTarif$getCashFlowsCosts()}}
     #' and stored in the \code{values} list
     #' @details Not to be called directly, but implicitly by the [InsuranceContract] object.
     presentValueCashFlowsCosts = function(params, values) {
@@ -1128,7 +1128,7 @@ InsuranceTarif = R6Class(
     #'
     #' @details Not to be called directly, but implicitly by the [InsuranceContract] object.
     #' @param ... Additional parameters for the profit participation calculation, passed
-    #'            through to the profit participation scheme's [ProfitParticipation$getProfitParticipation()]
+    #'            through to the profit participation scheme's \href{ProfitParticipation.html#method-getProfitParticipation}{\code{ProfitParticipation$getProfitParticipation()}}
     calculateProfitParticipation = function(params, ...) {
         ppScheme = params$ProfitParticipation$profitParticipationScheme;
         if (!is.null(ppScheme)) {

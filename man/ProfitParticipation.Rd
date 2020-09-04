@@ -24,15 +24,15 @@ profit scheme comes into play) and a discretionary profit on top.
 
 This function is called when a new profit participation scheme
 is created with a call to \code{ProfitParticipation$new(...)}. Possible
-parameters to the \code{new}-Call are all parameters from the
-\link{InsuranceContract.ParameterStructure$ProfitParticipation} parameter
+parameters to the \code{new}-Call are all parameters from the \code{ProfitParticipation} sublist of the
+\link{InsuranceContract.ParameterStructure} parameter
 structure (which are understood as template values that can be overridden
 per contract or even per profit participation scenario) and the components
-of the \link{ProfitParticipation$Functions} list defining the functions to calculate the individual
+of the \code{Functions} field defining the functions to calculate the individual
 components of the profit participation (rates, calculation bases, calculation, benefits)
 
 This method \code{createModification} returns a copy of the profit scheme
-with all given arguments changed in the schmes's \link{ProfitParticipation$Parameters}
+with all given arguments changed in the schmes's \code{Parameters}
 parameter list.
 
 As ProfitParticipation is a R6 class with reference logic, simply assigning
@@ -71,7 +71,8 @@ parameters, i.e. the \code{ProfitParticipation} element of the
 
 All elements defined in the profit scheme can be overriden per contract
 in the call to \code{[InsuranceContract]$new} or even in the explicit
-call to \link{InsuranceContract$profitScenario} or \link{InsuranceContract$addProfitScenario}.}
+call to \ifelse{html}{\href{InsuranceContract.html#method-profitScenario}{\code{InsuranceContract$profitScenario()}}}{\code{InsuranceContract$profitScenario()()}}
+or \ifelse{html}{\href{InsuranceContract.html#method-addProfitScenario}{\code{InsuranceContract$addProfitScenario()}}}{\code{InsuranceContract$addProfitScenario()()}}.}
 
 \item{\code{Functions}}{list of functions defined to calculate the individual
 components. For each of the profit components
@@ -123,8 +124,9 @@ Create a new profit participation scheme
 \describe{
 \item{\code{name}}{The name of the profit scheme (typicall the name of the profit plan and its version)}
 
-\item{\code{...}}{profit participation parameters to be stored in
-\link{ProfitParticipation$Parameters} or calculation functions to be stored in \link{ProfitParticipation$Functions}}
+\item{\code{...}}{profit participation parameters to be stored in the
+\verb{Parameters field or calculation functions to be stored in the }Functions`
+field}
 }
 \if{html}{\out{</div>}}
 }
@@ -133,7 +135,7 @@ Create a new profit participation scheme
 \if{html}{\out{<a id="method-setParameters"></a>}}
 \if{latex}{\out{\hypertarget{method-setParameters}{}}}
 \subsection{Method \code{setParameters()}}{
-Store all passed parameters in the \link{ProfitParticipation$Parameters} field
+Store all passed parameters in the \code{Parameters} field
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ProfitParticipation$setParameters(...)}\if{html}{\out{</div>}}
 }
@@ -141,9 +143,8 @@ Store all passed parameters in the \link{ProfitParticipation$Parameters} field
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{...}}{any of the named fields defined in
-\link{InsuranceContract.ParameterStructure$ProfitParticipation}. All other
-arguments will be ignored}
+\item{\code{...}}{any of the named fields defined in the \code{ProfitParticipation} sublist of the
+\link{InsuranceContract.ParameterStructure}. All other arguments will be ignored}
 }
 \if{html}{\out{</div>}}
 }
@@ -152,7 +153,7 @@ arguments will be ignored}
 \if{html}{\out{<a id="method-setFunctions"></a>}}
 \if{latex}{\out{\hypertarget{method-setFunctions}{}}}
 \subsection{Method \code{setFunctions()}}{
-Store all passed functions in the \link{ProfitParticipation$Functions} field
+Store all passed functions in the \code{Functions} field
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ProfitParticipation$setFunctions(...)}\if{html}{\out{</div>}}
 }
@@ -160,7 +161,7 @@ Store all passed functions in the \link{ProfitParticipation$Functions} field
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{...}}{any of the functions defined in the \link{ProfitParticipation$Functions} field. All other
+\item{\code{...}}{any of the functions defined in the \code{Functions} field. All other
 arguments will be ignored}
 }
 \if{html}{\out{</div>}}
@@ -280,7 +281,7 @@ scheme and the contract)}
 insurance contract, including cash flows, premiums, reserves etc.).}
 
 \item{\code{...}}{additional parameters passed to the profit calculation functions
-stored in the \link{ProfitParticipation$Functions} field.}
+stored in the \code{Functions} field.}
 }
 \if{html}{\out{</div>}}
 }
@@ -345,7 +346,7 @@ scheme and the contract)}
 \item{\code{values}}{Contract values calculated so far (guaranteed component of the
 insurance contract, including cash flows, premiums, reserves etc.).}
 
-\item{\code{...}}{additional parameters to be passed to \code{\link[=ProfitParticipation$setupRates]{ProfitParticipation$setupRates()}}}
+\item{\code{...}}{additional parameters to be passed to \href{ProfitParticipation.html#method-setupRates}{\code{ProfitParticipation$setupRates()}}}
 }
 \if{html}{\out{</div>}}
 }

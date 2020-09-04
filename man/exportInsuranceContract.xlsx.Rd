@@ -37,5 +37,5 @@ contract = InsuranceContract$new(
     sumInsured = 1000,
     contractClosing = as.Date("2016-10-01")
 );
-exportInsuranceContract.xlsx(contract, "Example_annuity_contract.xlsx")
+\dontrun{exportInsuranceContract.xlsx(contract, "Example_annuity_contract.xlsx")}
 }

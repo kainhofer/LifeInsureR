@@ -52,7 +52,10 @@ ProfitParticipation = R6Class(
     #'
     #' All elements defined in the profit scheme can be overriden per contract
     #' in the call to \code{[InsuranceContract]$new} or even in the explicit
-    #' call to [InsuranceContract$profitScenario] or [InsuranceContract$addProfitScenario].
+    #' call to \ifelse{html}{\href{InsuranceContract.html#method-profitScenario}{\code{InsuranceContract$profitScenario()}}}{\code{InsuranceContract$profitScenario()()}}
+    #' or \ifelse{html}{\href{InsuranceContract.html#method-addProfitScenario}{\code{InsuranceContract$addProfitScenario()}}}{\code{InsuranceContract$addProfitScenario()()}}.
+    #'
+    #'
     Parameters = InsuranceContract.ParameterStructure$ProfitParticipation,
 
     ########################################################################m#
@@ -136,16 +139,17 @@ ProfitParticipation = R6Class(
     #' @description Create a new profit participation scheme
     #' @details This function is called when a new profit participation scheme
     #' is created with a call to \code{ProfitParticipation$new(...)}. Possible
-    #' parameters to the \code{new}-Call are all parameters from the
-    #' [InsuranceContract.ParameterStructure$ProfitParticipation] parameter
+    #' parameters to the \code{new}-Call are all parameters from the `ProfitParticipation` sublist of the
+    #' [InsuranceContract.ParameterStructure] parameter
     #' structure (which are understood as template values that can be overridden
     #' per contract or even per profit participation scenario) and the components
-    #' of the [ProfitParticipation$Functions] list defining the functions to calculate the individual
+    #' of the `Functions` field defining the functions to calculate the individual
     #' components of the profit participation (rates, calculation bases, calculation, benefits)
     #'
     #' @param name The name of the profit scheme (typicall the name of the profit plan and its version)
-    #' @param ... profit participation parameters to be stored in
-    #'     [ProfitParticipation$Parameters] or calculation functions to be stored in [ProfitParticipation$Functions]
+    #' @param ... profit participation parameters to be stored in the
+    #' `Parameters field or calculation functions to be stored in the `Functions`
+    #' field
     initialize = function(name = NULL, ...) {
       if (!missing(name))           self$name = name;
       self$setParameters(...);
@@ -154,16 +158,15 @@ ProfitParticipation = R6Class(
     },
 
 
-    #' @description Store all passed parameters in the [ProfitParticipation$Parameters] field
-    #' @param ... any of the named fields defined in
-    #'      [InsuranceContract.ParameterStructure$ProfitParticipation]. All other
-    #'      arguments will be ignored
+    #' @description Store all passed parameters in the `Parameters` field
+    #' @param ... any of the named fields defined in the `ProfitParticipation` sublist of the
+    #'      [InsuranceContract.ParameterStructure]. All other arguments will be ignored
     setParameters = function(...) {
         self$Parameters = fillFields(self$Parameters, list(...));
     },
 
-    #' @description Store all passed functions in the [ProfitParticipation$Functions] field
-    #' @param ... any of the functions defined in the [ProfitParticipation$Functions] field. All other
+    #' @description Store all passed functions in the `Functions` field
+    #' @param ... any of the functions defined in the `Functions` field. All other
     #'     arguments will be ignored
     setFunctions = function(...) {
         self$Functions = fillFields(self$Functions, list(...));
@@ -177,7 +180,7 @@ ProfitParticipation = R6Class(
 
     #' @description create a copy of a profit scheme with certain parameters changed
     #' @details This method \code{createModification} returns a copy of the profit scheme
-    #' with all given arguments changed in the schmes's [ProfitParticipation$Parameters]
+    #' with all given arguments changed in the schmes's `Parameters`
     #' parameter list.
     #'
     #' As ProfitParticipation is a R6 class with reference logic, simply assigning
@@ -252,7 +255,7 @@ ProfitParticipation = R6Class(
 
     #' @description Set up the data.frame containing the profit participation rates
     #' @param ... additional parameters passed to the profit calculation functions
-    #'     stored in the [ProfitParticipation$Functions] field.
+      #'     stored in the `Functions` field.
     setupRates = function(params, values, ...) {
         # 1) Profit scheme or contract provides general company-wide profit rates for some years:
         #       profitRates
@@ -364,7 +367,7 @@ ProfitParticipation = R6Class(
     #' @param profitScenario profit participation values from a previous calculation
     #' (NULL if profit calculation is to be calculated from the contract inception).
     #' Values before \code{calculateFrom} will be used from this data.frame.
-    #' @param ... additional parameters to be passed to [ProfitParticipation$setupRates()]
+    #' @param ... additional parameters to be passed to \href{ProfitParticipation.html#method-setupRates}{\code{ProfitParticipation$setupRates()}}
     getProfitParticipation = function(calculateFrom = 0, profitScenario = NULL, params, values, ...) {
         waiting      = valueOrFunction(params$ProfitParticipation$waitingPeriod, params = params, values = values);
         if (is.numeric(waiting) && waiting > 0) {

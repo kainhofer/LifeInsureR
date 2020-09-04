@@ -105,32 +105,5 @@ contract.Bsp.waiver = InsuranceContract$
     contractClosing = as.Date("2020-07-01"),
     id = "Hauptvertrag"
   )$premiumWaiver(t = 5)
-exportInsuranceContract.xlsx(contract.Bsp.waiver, filename = "BEISPIEL_Contract_PrfALT.xlsx")
-
-contract.Bsp.waiverNew = InsuranceContract$
-  new(
-    Tarif.Bsp,
-    age = 35, policyPeriod = 15, premiumPeriod = 15,
-    premiumFrequency = 12,
-    sumInsured = 100000,
-    contractClosing = as.Date("2020-07-01"),
-    id = "Hauptvertrag"
-  )$premiumWaiverNew(t = 5)
-exportInsuranceContract.xlsx(contract.Bsp.waiverNew, filename = "BEISPIEL_Contract_PrfNEU.xlsx")
-
-contract.Bsp.waiver$Values$cashFlowsBasic == contract.Bsp.waiverNew$Values$cashFlowsBasic
-contract.Bsp.waiver$Values$cashFlows == contract.Bsp.waiverNew$Values$cashFlows
-contract.Bsp.waiver$Values$cashFlowsCosts == contract.Bsp.waiverNew$Values$cashFlowsCosts
-contract.Bsp.waiver$Values$presentValues == contract.Bsp.waiverNew$Values$presentValues
-contract.Bsp.waiver$Values$presentValuesCosts == contract.Bsp.waiverNew$Values$presentValuesCosts
-
-contract.Bsp.waiver$Values$reserves == contract.Bsp.waiverNew$Values$reserves
-contract.Bsp.waiver$Values$reservesBalanceSheet == contract.Bsp.waiverNew$Values$reservesBalanceSheet
-
-contract.Bsp.waiver$Values$absCashFlows == contract.Bsp.waiverNew$Values$absCashFlows
-contract.Bsp.waiver$Values$absPresentValues == contract.Bsp.waiverNew$Values$absPresentValues
-contract.Bsp.waiver$Values$premiumComposition == contract.Bsp.waiverNew$Values$premiumComposition
-contract.Bsp.waiver$Values$premiumCompositionSums == contract.Bsp.waiverNew$Values$premiumCompositionSums
-contract.Bsp.waiver$Values$premiumCompositionPV == contract.Bsp.waiverNew$Values$premiumCompositionPV
-contract.Bsp.waiver$Values$basicData == contract.Bsp.waiverNew$Values$basicData
+exportInsuranceContract.xlsx(contract.Bsp.waiver, filename = "BEISPIEL_Contract_PrWaiver.xlsx")
 

@@ -16,7 +16,7 @@ NULL
 #' @export
 PaymentTimeEnum = objectProperties::setSingleEnum("PaymentTime", levels = c("in advance", "in arrears"));
 
-#' Enum to describe possble sexes in an insurance contract or tariff.
+#' Enum to describe possible sexes in an insurance contract or tariff.
 #' @details
 #' Currently, only possible values are allowed;
 #' * "unisex"

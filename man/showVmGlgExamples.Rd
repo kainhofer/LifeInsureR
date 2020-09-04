@@ -40,6 +40,7 @@ contract = InsuranceContract$new(
 showVmGlgExamples(contract)
 
 # Optionally output to a file rather than the console:
+\dontrun{
 showVmGlgExamples(contract, file = "annuity-example.txt")
-
+}
 }

@@ -16,10 +16,11 @@ NULL
 #'
 #' # Usage
 #'
-#' The typical usage of this class is to simply call [InsuranceContract$new()].
+#' The typical usage of this class is to simply call
+#' \ifelse{html}{\href{#method-new}{\code{InsuranceContract$new()}}}{\code{InsuranceContract$new()()}}.
 #'
 #' All parameters from the [InsuranceContract.ParameterDefaults] can be passed
-#' to the constructor of the class (i.e. the [InsuranceContract$new()]-call).
+#' to the constructor of the class (i.e. the \ifelse{html}{\href{#method-new}{\code{InsuranceContract$new()}}}{\code{InsuranceContract$new()()}}-call).
 #' Parameters not explicitly given, will be taken from the tariff or as a fall-back
 #' mechanism from the [InsuranceContract.ParameterDefaults] defaults.
 #'
@@ -31,7 +32,7 @@ NULL
 #' # Calculation approach: Valuation
 #'
 #' The calculation of all contract values is controlled by the function
-#' [InsuranceContract$calculateContract()] (using methods of the [InsuranceTarif]
+#' \ifelse{html}{\href{method-calculateContract}{\code{InsuranceContract$calculateContract()}}}{\code{InsuranceContract$calculateContract()()}} (using methods of the [InsuranceTarif]
 #' object) and follows the following logic:
 #'
 #' 1. First the **contingent (unit) cash flows** and the **transition probbilities**
@@ -71,7 +72,10 @@ NULL
 #' included, the corresponding [ProfitParticipation] object can calculate that
 #' profit sharing amounts, once all guaranteed values are calculated. This can
 #' also be triggered manually (with custom profit sharing rates) by calling
-#' the methods [InsuranceContract$profitScenario()] or [InsuranceContract$addProfitScenario()].
+#' the methods \ifelse{html}{\href{#method-profitScenario}{\code{InsuranceContract$profitScenario()}}}{\code{InsuranceContract$profitScenario()()}}]
+#' or \ifelse{html}{\href{#method-addProfitScenario}{\code{InsuranceContract$addProfitScenario()}}}{\code{InsuranceContract$addProfitScenario()()}}.
+#'
+#'
 #'
 #'
 #' # Calculation approach: Cash Flows
@@ -248,13 +252,13 @@ InsuranceContract = R6Class(
         #'        parameter is used internally, but should not be used in
         #'        user-written code.
         #' @param calculate how much of the contract's time series need to be
-        #'        calculated. See [CalculateEnum] for all possible values. This
+        #'        calculated. See [CalculationEnum] for all possible values. This
         #'        is usefull to prevent calculation of e.g. reserves and profit
         #'        participation, when one only wants to create a grid of premiums.
         #' @param profitid The ID of the default profit participation scenario.
         #'        The default profit participation scenario uses the default
         #'        values passed, while further scenarios can be added by
-        #'        [InsuranceContract$addProfitScenario()].
+        #'        \ifelse{html}{\href{#method-addProfitScenario}{\code{InsuranceContract$addProfitScenario()}}}{\code{InsuranceContract$addProfitScenario()()}}.
         #' @param ... Further parameters (age, sum insured, contract closing /
         #'        begin, premium payment details, etc.) of the contract, which
         #'        can also override parameters defined at the tariff-level.
@@ -363,7 +367,7 @@ InsuranceContract = R6Class(
         #'        the child's values need to be translated to the parent contracts's
         #'        time frame using this parameter
         #' @param comment The comment to use in the history snapshot.
-        #' @param ... parameters to be passed to [InsuranceContract$new()] when
+        #' @param ... parameters to be passed to \ifelse{html}{\href{#method-new}{\code{InsuranceContract$new()}}}{\code{InsuranceContract$new()()}} when
         #'        \code{block} is not given and a copy of the parent should be
         #'        created with overrides.
         #'
@@ -496,7 +500,7 @@ InsuranceContract = R6Class(
         #'          probably easier to create the contract object from scratch
         #'          again.
         #'
-        #' @param calculate Which values to calculate. See [CalculateEnum]
+        #' @param calculate Which values to calculate. See [CalculationEnum]
         #' @param valuesFrom Calculate only values starting from this time step
         #'        on (all values before that time will be preserved). This is
         #'        required when a contract is changed significantly (potentially

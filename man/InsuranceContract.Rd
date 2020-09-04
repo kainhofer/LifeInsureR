@@ -15,10 +15,11 @@ all other relevant contract parameters (if not defined by the tariff or
 explicitly overridden by the contract) can be given in the constructor.
 }
 \section{Usage}{
-The typical usage of this class is to simply call \code{\link[=InsuranceContract$new]{InsuranceContract$new()}}.
+The typical usage of this class is to simply call
+\ifelse{html}{\href{#method-new}{\code{InsuranceContract$new()}}}{\code{InsuranceContract$new()()}}.
 
 All parameters from the \link{InsuranceContract.ParameterDefaults} can be passed
-to the constructor of the class (i.e. the \code{\link[=InsuranceContract$new]{InsuranceContract$new()}}-call).
+to the constructor of the class (i.e. the \ifelse{html}{\href{#method-new}{\code{InsuranceContract$new()}}}{\code{InsuranceContract$new()()}}-call).
 Parameters not explicitly given, will be taken from the tariff or as a fall-back
 mechanism from the \link{InsuranceContract.ParameterDefaults} defaults.
 
@@ -29,7 +30,7 @@ field of the object.
 
 \section{Calculation approach: Valuation}{
 The calculation of all contract values is controlled by the function
-\code{\link[=InsuranceContract$calculateContract]{InsuranceContract$calculateContract()}} (using methods of the \link{InsuranceTarif}
+\ifelse{html}{\href{method-calculateContract}{\code{InsuranceContract$calculateContract()}}}{\code{InsuranceContract$calculateContract()()}} (using methods of the \link{InsuranceTarif}
 object) and follows the following logic:
 \enumerate{
 \item First the \strong{contingent (unit) cash flows} and the \strong{transition probbilities}
@@ -69,7 +70,8 @@ discounted reserves at times $t$ and $t+1$).
 included, the corresponding \link{ProfitParticipation} object can calculate that
 profit sharing amounts, once all guaranteed values are calculated. This can
 also be triggered manually (with custom profit sharing rates) by calling
-the methods \code{\link[=InsuranceContract$profitScenario]{InsuranceContract$profitScenario()}} or \code{\link[=InsuranceContract$addProfitScenario]{InsuranceContract$addProfitScenario()}}.
+the methods \ifelse{html}{\href{#method-profitScenario}{\code{InsuranceContract$profitScenario()}}}{\code{InsuranceContract$profitScenario()()}}]
+or \ifelse{html}{\href{#method-addProfitScenario}{\code{InsuranceContract$addProfitScenario()}}}{\code{InsuranceContract$addProfitScenario()()}}.
 }
 }
 
@@ -376,14 +378,14 @@ parameter is used internally, but should not be used in
 user-written code.}
 
 \item{\code{calculate}}{how much of the contract's time series need to be
-calculated. See \link{CalculateEnum} for all possible values. This
+calculated. See \link{CalculationEnum} for all possible values. This
 is usefull to prevent calculation of e.g. reserves and profit
 participation, when one only wants to create a grid of premiums.}
 
 \item{\code{profitid}}{The ID of the default profit participation scenario.
 The default profit participation scenario uses the default
 values passed, while further scenarios can be added by
-\code{\link[=InsuranceContract$addProfitScenario]{InsuranceContract$addProfitScenario()}}.}
+\ifelse{html}{\href{#method-addProfitScenario}{\code{InsuranceContract$addProfitScenario()}}}{\code{InsuranceContract$addProfitScenario()()}}.}
 
 \item{\code{...}}{Further parameters (age, sum insured, contract closing /
 begin, premium payment details, etc.) of the contract, which
@@ -479,7 +481,7 @@ time frame using this parameter}
 
 \item{\code{comment}}{The comment to use in the history snapshot.}
 
-\item{\code{...}}{parameters to be passed to \code{\link[=InsuranceContract$new]{InsuranceContract$new()}} when
+\item{\code{...}}{parameters to be passed to \ifelse{html}{\href{#method-new}{\code{InsuranceContract$new()}}}{\code{InsuranceContract$new()()}} when
 \code{block} is not given and a copy of the parent should be
 created with overrides.}
 }
@@ -567,7 +569,7 @@ Calculate all time series of the contract from the parameters
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{calculate}}{Which values to calculate. See \link{CalculateEnum}}
+\item{\code{calculate}}{Which values to calculate. See \link{CalculationEnum}}
 
 \item{\code{valuesFrom}}{Calculate only values starting from this time step
 on (all values before that time will be preserved). This is

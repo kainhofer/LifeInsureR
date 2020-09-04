@@ -42,7 +42,7 @@ NULL
 #'     sumInsured = 1000,
 #'     contractClosing = as.Date("2016-10-01")
 #' );
-#' exportInsuranceContractExample(contract, prf = 10)
+#' \dontrun{exportInsuranceContractExample(contract, prf = 10)}
 #'
 #' @export
 exportInsuranceContractExample = function(contract, prf = 10, outdir = ".", basename=NULL, extraname = NULL, ...) {
