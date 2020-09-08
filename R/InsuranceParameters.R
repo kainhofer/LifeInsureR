@@ -293,6 +293,8 @@ InsuranceContract.Values = list(
 #'     \item{\code{$premiumFrequencyLoading}}{Loading on the premium for premium
 #'               payment frequencies of more than once a year. Format is
 #'               \code{list("1" = 0.0, "2" = 0.0, "4" = 0.0, "12" = 0.0)}}
+#'     \item{\code{$alphaRefundPeriod}}{How long the acquisition costs should be 
+#'               (partially) refunded in case of surrender or premium waiver.}
 #' }
 #'
 #'
@@ -412,7 +414,8 @@ InsuranceContract.ParameterDefaults = list(
         partnerRebate = 0,                      # Partner rabate on premium (including loading and other rebates) if more than one similar contract is concluded
         extraChargeGrossPremium = 0,            # extra charges on gross premium (smoker, leisure activities, BMI too high, etc.)
         benefitFrequencyLoading = list("1" = 0.0, "2" = 0.0, "4" = 0.0, "12" = 0.0), # TODO: Properly implement this as a function
-        premiumFrequencyLoading = list("1" = 0.0, "2" = 0.0, "4" = 0.0, "12" = 0.0) # TODO: Properly implement this as a function
+        premiumFrequencyLoading = list("1" = 0.0, "2" = 0.0, "4" = 0.0, "12" = 0.0), # TODO: Properly implement this as a function
+        alphaRefundPeriod = 5                   # How long acquisition costs should be refunded in case of surrender
     ),
     Features = list(                          # Special cases for the calculations
         betaGammaInZillmer = FALSE,             # Whether beta and gamma-costs should be included in the Zillmer premium calculation
