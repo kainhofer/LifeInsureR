@@ -988,7 +988,7 @@ InsuranceTarif = R6Class(
       if (params$ContractState$alphaRefunded) {
         alphaRefund = 0
       } else {
-        r = min(params$ContractData$policyPeriod, 5);
+        r = min(params$ContractData$policyPeriod, params$Loadings$alphaRefundPeriod);
         ZillmerSoFar = Reduce("+", values$absCashFlows$Zillmer, accumulate = TRUE);
         ZillmerTotal = sum(values$absCashFlows$Zillmer);
         len = length(ZillmerSoFar);
