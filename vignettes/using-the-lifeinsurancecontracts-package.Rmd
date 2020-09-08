@@ -1512,7 +1512,7 @@ lapply(blk, function(b) {
 In addition to the above guaranteed values, many contracts also include some 
 kind of profit sharing. The total amount of money to be distributed is usually
 predetermined by law or regulation (in Austria by the
-[https://www.ris.bka.gv.at/GeltendeFassung.wxe?Abfrage=Bundesnormen&Gesetzesnummer=20009295]("Lebensversicherung-Gewinnbeteiligungsverordnung -- LV-GBV")), 
+["Lebensversicherung-Gewinnbeteiligungsverordnung -- LV-GBV"](https://www.ris.bka.gv.at/GeltendeFassung.wxe?Abfrage=Bundesnormen&Gesetzesnummer=20009295), 
 but the actual way they are distributed to individual contracts is up the
 insurance undertaking. The profit participation scheme defines profit participation
 allocations based on certain rates and bases, where the formulas and the types 

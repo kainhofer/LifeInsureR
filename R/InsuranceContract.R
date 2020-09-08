@@ -32,7 +32,7 @@ NULL
 #' # Calculation approach: Valuation
 #'
 #' The calculation of all contract values is controlled by the function
-#' \ifelse{html}{\href{method-calculateContract}{\code{InsuranceContract$calculateContract()}}}{\code{InsuranceContract$calculateContract()()}} (using methods of the [InsuranceTarif]
+#' \ifelse{html}{\href{#method-calculateContract}{\code{InsuranceContract$calculateContract()}}}{\code{InsuranceContract$calculateContract()()}} (using methods of the [InsuranceTarif]
 #' object) and follows the following logic:
 #'
 #' 1. First the **contingent (unit) cash flows** and the **transition probbilities**

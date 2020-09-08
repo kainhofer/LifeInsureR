@@ -2,8 +2,8 @@ Package: LifeInsuranceContracts
 Type: Package
 Version: 0.0.1
 Date: 2020-09-04
-Title: A framework for general, traditional life insurance contracts, including profit
-    participation and contract changes
+Title: A Framework for General, Traditional Life Insurance Contracts, Including Profit
+    Participation and Contract Changes
 Description: R6 classes to model traditional life insurance
     contracts like annuities, whole life insurances or endowments. All relevant
     quantities like premium decomposition, reserves and benefits over the whole
@@ -19,9 +19,9 @@ Imports:
     objectProperties,
     lubridate,
     openxlsx,
-    abind,
     dplyr,
     scales,
+    abind,
     stringr,
     methods,
     rlang
@@ -51,3 +51,4 @@ VignetteBuilder: knitr
 Roxygen: list(markdown = TRUE)
 URL: https://gitlab.open-tools.net/R/r-life-insurance-contracts
 BugReports: https://gitlab.open-tools.net/R/r-life-insurance-contracts/-/issues
+"

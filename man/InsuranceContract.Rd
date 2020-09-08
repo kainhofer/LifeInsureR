@@ -30,7 +30,7 @@ field of the object.
 
 \section{Calculation approach: Valuation}{
 The calculation of all contract values is controlled by the function
-\ifelse{html}{\href{method-calculateContract}{\code{InsuranceContract$calculateContract()}}}{\code{InsuranceContract$calculateContract()()}} (using methods of the \link{InsuranceTarif}
+\ifelse{html}{\href{#method-calculateContract}{\code{InsuranceContract$calculateContract()}}}{\code{InsuranceContract$calculateContract()()}} (using methods of the \link{InsuranceTarif}
 object) and follows the following logic:
 \enumerate{
 \item First the \strong{contingent (unit) cash flows} and the \strong{transition probbilities}

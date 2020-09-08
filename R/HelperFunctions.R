@@ -129,7 +129,7 @@ mergeValues3D = function(starting, ending, t) {
   } else if (t == 0) {
     ending
   } else {
-    abind(starting[1:t,,], ending[-1:-t,,], along = 1)
+    abind::abind(starting[1:t,,], ending[-1:-t,,], along = 1)
   }
 }
 # Caution: px is not neccessarily 1-qx, because we might also have dread diseases so that px=1-qx-ix! However, the ix is not used for the survival present value
