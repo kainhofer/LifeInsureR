@@ -51,4 +51,3 @@ VignetteBuilder: knitr
 Roxygen: list(markdown = TRUE)
 URL: https://gitlab.open-tools.net/R/r-life-insurance-contracts
 BugReports: https://gitlab.open-tools.net/R/r-life-insurance-contracts/-/issues
-"
