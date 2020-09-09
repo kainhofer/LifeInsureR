@@ -9,7 +9,7 @@
 Enum to describe possible sexes in an insurance contract or tariff.
 }
 \details{
-Currently, only possible values are allowed;
+Currently, the only possible values are:
 \itemize{
 \item "unisex"
 \item "male"

@@ -184,6 +184,8 @@ payment frequencies of more than once a year. Format is
 \item{\code{$premiumFrequencyLoading}}{Loading on the premium for premium
 payment frequencies of more than once a year. Format is
 \code{list("1" = 0.0, "2" = 0.0, "4" = 0.0, "12" = 0.0)}}
+\item{\code{$alphaRefundPeriod}}{How long the acquisition costs should be
+(partially) refunded in case of surrender or premium waiver.}
 }
 }
 

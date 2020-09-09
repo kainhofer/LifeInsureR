@@ -242,10 +242,31 @@ PP.calculate.RateOnBaseSGFFactor = function(base, rate, waiting, rates, params, 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 #' @describeIn ProfitParticipationFunctions
+#' Extract the given columns of the profit participation array of values and sum
+#' them up. Columns that do not exist, because the profit scheme does not
+#' provide the corresponding profit component will be silently ignored.
+#' This allows generic benefit calculation functions to be written that do
+#' not need to distinguish e.g. whether an old-style terminal bonus or a terminal
+#' bonus fund is provided.
+#'
+#' This function is not meant to be called directly, but within a profit benefit
+#' calculation function.
+#'
+#' @param profits The array of profit participation component values
+#' @param cols The columns of the profit values array to be summed (columns given that do not exist in the profits array are ignired)
+#' @export
+sumProfits = function(profits, cols) {
+  # extract the columns -- if they exist -- and sum them up:
+  rowSums(
+    profits[, intersect(c(), colnames(profits))]
+  )
+}
+
+#' @describeIn ProfitParticipationFunctions
 #' Calculate survival benefit as total profit amount plus the terminal bonus reserve
 #' @export
 PP.benefit.ProfitPlusTerminalBonusReserve = function(profits, ...) {
-  profits[,"regularBonus"] + profits[,"TBF"] + profits[,"terminalBonusReserve"]
+  sumProfits(profits, c("regularBonus", "TBF", "terminalBonusReserve"))
 };
 
 #' @describeIn ProfitParticipationFunctions
@@ -309,7 +330,7 @@ PP.benefit.ProfitGuaranteeSupporting = function(profits, rates, params, values, 
 #' @export
 PP.benefit.TerminalBonus5YearsProRata = function(profits, params, ...) {
   n = params$ContractData$policyPeriod;
-  (profits[, "terminalBonusReserve"] + profits[, "TBF"]) * (0:n)/n * ((0:n) >= max(10, n - 5))
+  sumProfits(profits, c("TBF", "terminalBonusReserve")) * (0:n)/n * ((0:n) >= max(10, n - 5))
 };
 
 #' @describeIn ProfitParticipationFunctions
@@ -317,14 +338,14 @@ PP.benefit.TerminalBonus5YearsProRata = function(profits, params, ...) {
 #' @export
 PP.benefit.TerminalBonus5Years = function(profits, params, ...) {
   n = params$ContractData$policyPeriod;
-  (profits[, "terminalBonusReserve"] + profits[, "TBF"]) * ((0:n) >= max(10, n - 5))
+  sumProfits(profits, c("TBF", "terminalBonusReserve")) * ((0:n) >= max(10, n - 5))
 }
 
 #' @describeIn ProfitParticipationFunctions
 #' Calculate benefit from terminal bonus (full bonus), either old-style terminal bonus reserve or Terminal Bonus Fund (TBF)
 #' @export
 PP.benefit.TerminalBonus = function(profits, params, ...) {
-  profits[, "terminalBonusReserve"] + profits[, "TBF"]
+  sumProfits(profits, c("TBF", "terminalBonusReserve"))
 };
 
 "dummy"

@@ -27,6 +27,7 @@
 \alias{PP.calculate.RateOnBaseMin0}
 \alias{PP.calculate.RatePlusGuaranteeOnBase}
 \alias{PP.calculate.RateOnBaseSGFFactor}
+\alias{sumProfits}
 \alias{PP.benefit.ProfitPlusTerminalBonusReserve}
 \alias{PP.benefit.Profit}
 \alias{PP.benefit.ProfitPlusGuaranteedInterest}
@@ -115,6 +116,8 @@ PP.calculate.RateOnBaseSGFFactor(
   ...
 )
 
+sumProfits(profits, cols)
+
 PP.benefit.ProfitPlusTerminalBonusReserve(profits, ...)
 
 PP.benefit.Profit(profits, ...)
@@ -153,7 +156,7 @@ insurance contract, including cash flows, premiums, reserves etc.).}
 
 \item{res}{the data.frame of reserves.}
 
-\item{profits}{The data.frame of profits assigned}
+\item{profits}{The array of profit participation component values}
 
 \item{terminalBonus}{The terminal bonus calculated}
 
@@ -165,6 +168,8 @@ where terminal bonuses are accrued, potentiall discounted from the maturity)}
 \item{rate}{The profit participation rate}
 
 \item{waiting}{A possible waiting period}
+
+\item{cols}{The columns of the profit values array to be summed (columns given that do not exist in the profits array are ignired)}
 }
 \description{
 Various helper functions for the \code{ProfitParticipation} class that
@@ -222,6 +227,16 @@ the rates and how the assigned profit is calculated.
 \item \code{PP.calculate.RatePlusGuaranteeOnBase}: Calculate profit by a rate + guaranteed interest applied on the basis (with an optional waiting vector of values 0 or 1)
 
 \item \code{PP.calculate.RateOnBaseSGFFactor}: Calculate profit by a simple rate applied on the basis (with only (1-SGFFactor) put into profit participation, and an optional waiting vector of values 0 or 1)
+
+\item \code{sumProfits}: Extract the given columns of the profit participation array of values and sum
+them up. Columns that do not exist, because the profit scheme does not
+provide the corresponding profit component will be silently ignored.
+This allows generic benefit calculation functions to be written that do
+not need to distinguish e.g. whether an old-style terminal bonus or a terminal
+bonus fund is provided.
+
+This function is not meant to be called directly, but within a profit benefit
+calculation function.
 
 \item \code{PP.benefit.ProfitPlusTerminalBonusReserve}: Calculate survival benefit as total profit amount plus the terminal bonus reserve
 

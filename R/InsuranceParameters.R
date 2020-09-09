@@ -293,7 +293,7 @@ InsuranceContract.Values = list(
 #'     \item{\code{$premiumFrequencyLoading}}{Loading on the premium for premium
 #'               payment frequencies of more than once a year. Format is
 #'               \code{list("1" = 0.0, "2" = 0.0, "4" = 0.0, "12" = 0.0)}}
-#'     \item{\code{$alphaRefundPeriod}}{How long the acquisition costs should be 
+#'     \item{\code{$alphaRefundPeriod}}{How long the acquisition costs should be
 #'               (partially) refunded in case of surrender or premium waiver.}
 #' }
 #'
@@ -438,7 +438,7 @@ InsuranceContract.ParameterDefaults = list(
         terminalBonusFundRate = NULL,
 
         profitParticipationScheme = NULL,      # Gewinnbeteiligungssystem (object of class Profit Participation)
-        profitComponents = c("interest", "risk", "expense", "sum", "terminal"),
+        profitComponents = c(),                 # Potential values: "interest", "risk", "expense", "sum", "terminal", "TBF"
         profitClass = NULL,
         profitRates = NULL,                     # General, company-wide profit rates, key columns are year and profitClass
 

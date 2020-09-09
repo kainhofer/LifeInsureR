@@ -18,7 +18,7 @@ PaymentTimeEnum = objectProperties::setSingleEnum("PaymentTime", levels = c("in 
 
 #' Enum to describe possible sexes in an insurance contract or tariff.
 #' @details
-#' Currently, only possible values are allowed;
+#' Currently, the only possible values are:
 #' * "unisex"
 #' * "male"
 #' * "female"
@@ -33,6 +33,18 @@ SexEnum = objectProperties::setSingleEnum("Sex", levels = c("unisex", "male", "f
 #' would be a waste of resources to calculate e.g. all future reserves and
 #' profit participation, if only premiums are of interest.
 #'
+#' Possible values are:
+#' * "all"
+#' * "probabilities"
+#' * "cashflows"
+#' * "presentvalues"
+#' * "premiums"
+#' * "absvalues"
+#' * "reserves"
+#' * "premiumcomposition"
+#' * "profitparticipation"
+#' * "history"
+#'
 #' @export
 CalculationEnum = objectProperties::setSingleEnum("Calculation",
     levels = c(
@@ -46,6 +58,46 @@ CalculationEnum = objectProperties::setSingleEnum("Calculation",
       "premiumcomposition",
       "profitparticipation",
       "history"
+    )
+)
+
+
+#' Enum to define the different components of profit participation.
+#' @details
+#' Profit participation schemes typically consist of different components,
+#' which are calculated independently. Typical components are interest profit
+#' to distribute investment gains to the customer, risk profit and expense profit
+#' to return security margins in the biometric risk and the expenses to the customer
+#' and sum profit, which aplies to contracts with higher sums insured, where
+#' charged expenses are calculated from the sum insured, while the actual
+#' expenses are more or less constant. Thus, high contracts are charged more,
+#' which causes profits that are returned as sum profit.
+#'
+#' As a special case, part of the profits can be stored in a terminal bonus
+#' reserve and only distributed on maturity (or potentially on death), but
+#' not on surrender. Some (older) profit participation schemes add an independently
+#' calculated bonus on maturity (e.g. twice the total profit assignment of the
+#' last year) at maturity to give customers an additional incentive not to
+#' surrender a contract.
+#'
+#' Possible values are (multiple can be given):
+#' * "interest"
+#' * "risk"
+#' * "expense"
+#' * "sum"
+#' * "terminal"
+#' * "TBF"
+#'
+#' @export
+ProfitComponentsEnum = objectProperties::setMultipleEnum("ProfitComponents",
+    levels = c(
+      "advance",
+      "interest",
+      "risk",
+      "expense",
+      "sum",
+      "terminal",
+      "TBF"
     )
 )
 
@@ -464,6 +516,26 @@ fallbackFields = function(fields, valuelist) {
 rollingmean = function(x) (tail(x, -1) + head(x, -1))/2
 
 
+# Sum two or more vectors and correctly handle (i.e. ignore) NULL values given
+plusNULL = function(v1, v2, ...) {
+  if (missing(v2) && length(list(...)) == 0) {
+    if (missing(v1) || is.null(v1)) {
+      return(0)
+    } else {
+      return(v1)
+    }
+  }
+  if (missing(v1) || is.null(v1)) {
+    return(plusNULL(v2, ...));
+  }
+  if (missing(v2) || is.null(v2)) {
+    return(plusNULL(v1, ...));
+  } else {
+    return(plusNULL(v1 + v2, ...))
+  }
+}
+
+
 ######################################################################=#
 # Functions for handling sub-contract blocks                        ####
 
@@ -493,3 +565,5 @@ sumPaddedArrays = function(arr1 = NULL, arr2 = NULL, pad1 = 0, pad2 = 0) {
     arr1 + arr2
   }
 }
+
+
