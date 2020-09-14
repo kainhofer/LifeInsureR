@@ -455,6 +455,7 @@ InsuranceContract = R6Class(
             if (!is.null(params$premiumPeriod)) params$premiumPeriod = max(1, params$premiumPeriod - t)
             if (!is.null(params$deferralPeriod)) params$deferralPeriod = max(0, params$deferralPeriod - t)
             if (!is.null(params$contractClosing)) params$contractClosing = params$contractClosing + years(t)
+            # TODO: Adjust non-constant parameters (e.g. profit rates or benefits given as vector) to the later start time
 
             # TODO: Generalize this to also allow specifying dynamic premium rather than sum insured
             if (!missing(SumInsuredDelta)) {
