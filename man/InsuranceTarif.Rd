@@ -988,7 +988,7 @@ parameters and the already calculated reserves of the contract.
 scheme and the contract)}
 
 \item{\code{...}}{Additional parameters for the profit participation calculation, passed
-through to the profit participation scheme's \href{ProfitParticipation.html#method-getProfitParticipation}{\code{ProfitParticipation$getProfitParticipation()}}}
+through to the profit participation scheme's \href{../../LifeInsuranceContracts/html/ProfitParticipation.html#method-getProfitParticipation}{\code{ProfitParticipation$getProfitParticipation()}}}
 }
 \if{html}{\out{</div>}}
 }

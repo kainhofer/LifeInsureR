@@ -1128,7 +1128,7 @@ InsuranceTarif = R6Class(
     #'
     #' @details Not to be called directly, but implicitly by the [InsuranceContract] object.
     #' @param ... Additional parameters for the profit participation calculation, passed
-    #'            through to the profit participation scheme's \href{ProfitParticipation.html#method-getProfitParticipation}{\code{ProfitParticipation$getProfitParticipation()}}
+    #'            through to the profit participation scheme's \href{../../LifeInsuranceContracts/html/ProfitParticipation.html#method-getProfitParticipation}{\code{ProfitParticipation$getProfitParticipation()}}
     calculateProfitParticipation = function(params, ...) {
         ppScheme = params$ProfitParticipation$profitParticipationScheme;
         if (!is.null(ppScheme)) {

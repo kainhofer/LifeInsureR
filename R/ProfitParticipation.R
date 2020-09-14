@@ -52,8 +52,8 @@ ProfitParticipation = R6Class(
     #'
     #' All elements defined in the profit scheme can be overriden per contract
     #' in the call to \code{[InsuranceContract]$new} or even in the explicit
-    #' call to \ifelse{html}{\href{InsuranceContract.html#method-profitScenario}{\code{InsuranceContract$profitScenario()}}}{\code{InsuranceContract$profitScenario()()}}
-    #' or \ifelse{html}{\href{InsuranceContract.html#method-addProfitScenario}{\code{InsuranceContract$addProfitScenario()}}}{\code{InsuranceContract$addProfitScenario()()}}.
+    #' call to \ifelse{html}{\href{../../LifeInsuranceContracts/html/InsuranceContract.html#method-profitScenario}{\code{InsuranceContract$profitScenario()}}}{\code{InsuranceContract$profitScenario()()}}
+    #' or \ifelse{html}{\href{../../LifeInsuranceContracts/html/InsuranceContract.html#method-addProfitScenario}{\code{InsuranceContract$addProfitScenario()}}}{\code{InsuranceContract$addProfitScenario()()}}.
     #'
     #'
     Parameters = InsuranceContract.ParameterStructure$ProfitParticipation,
@@ -367,7 +367,7 @@ ProfitParticipation = R6Class(
     #' @param profitScenario profit participation values from a previous calculation
     #' (NULL if profit calculation is to be calculated from the contract inception).
     #' Values before \code{calculateFrom} will be used from this data.frame.
-    #' @param ... additional parameters to be passed to \href{ProfitParticipation.html#method-setupRates}{\code{ProfitParticipation$setupRates()}}
+    #' @param ... additional parameters to be passed to \href{../../LifeInsuranceContracts/html/ProfitParticipation.html#method-setupRates}{\code{ProfitParticipation$setupRates()}}
     getProfitParticipation = function(calculateFrom = 0, profitScenario = NULL, params, values, ...) {
         waiting      = valueOrFunction(params$ProfitParticipation$waitingPeriod, params = params, values = values);
         if (is.numeric(waiting) && waiting > 0) {
