@@ -479,7 +479,7 @@ InsuranceContract = R6Class(
             # Override with arguments explicitly given
             arguments = list(...)
             params[names(arguments)] = arguments[names(arguments)]
-            params$comment = sprintf("Dynamic increase at time %d to sum %d", t, NewSumInsured)
+            params$comment = sprintf("Dynamic increase at time %d to sum %02f", t, NewSumInsured)
             do.call(self$addBlock, params)
         },
 
