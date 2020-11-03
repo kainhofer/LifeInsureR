@@ -42,6 +42,15 @@ TariffTypeEnum = objectProperties::setSingleEnum(
     "dread-disease",
     "endowment + dread-disease"
   ))
+setValidity("TariffTypeSingleEnum", function(object) {
+  if (length(object) != 1L) {
+    "Only one tariff type can be given"
+  } else if (!object %in% levels(object)) {
+    paste("Tarif type '", object, "' does not exist. Valid tariff types are:",
+          paste0("\n('", paste0(levels(object), collapse = "', '"),
+                 "')"), sep = "")
+  }
+});
 
 
 ############# Class InsuranceTarif ###########################################
@@ -160,7 +169,7 @@ InsuranceTarif = R6Class(
     #'        temporary dread-disease insurance. Benefits occur either on death,
     #'        severe illness or survival, whichever comes first.}
     #' }
-    tariffType = ("wholelife"),
+    tariffType = TariffTypeEnum("wholelife"),
 
     #' @field Parameters A data structure (nested list) containing all relevant
     #' parameters describing a contract, its underlying tariff, the profit
@@ -206,7 +215,9 @@ InsuranceTarif = R6Class(
     #'     i = 0.01, mortalityTable = AVOe2005R.male)
     initialize = function(name = NULL, type = "wholelife", tarif = "Generic Tarif", desc = "Description of tarif", ...) {
       if (!missing(name))           self$name = name;
-      if (!missing(type))           self$tariffType = type;
+      if (!missing(type)) {
+        self$tariffType = TariffTypeEnum(type)
+      }
       if (!missing(tarif))          self$tarif = tarif;
       if (!missing(desc))           self$desc = desc;
 
