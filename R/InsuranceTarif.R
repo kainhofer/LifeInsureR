@@ -1082,7 +1082,9 @@ InsuranceTarif = R6Class(
       contractDates = params$ContractData$contractClosing + years(1:years);
       balanceDates = balanceDate + years(1:years - 1);
 
-      if (params$ActuarialBases$balanceSheetMethod == "30/360") {
+      if (is.function(params$ActuarialBases$balanceSheetMethod)) {
+        baf = params$ActuarialBases$balanceSheetMethod(params = params, contractDates = contractDates, balanceDates = balanceDates)
+      } else if (params$ActuarialBases$balanceSheetMethod == "30/360") {
         baf = ((month(balanceDates + days(1)) - month(contractDates) - 1) %% 12 + 1) / 12
       } else if (params$ActuarialBases$balanceSheetMethod == "act/act") {
         baf = as.numeric((balanceDates + days(1)) - contractDates, units = "days" ) / as.numeric(balanceDates - (balanceDates - years(1)), units = "days")

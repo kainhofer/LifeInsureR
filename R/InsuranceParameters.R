@@ -255,7 +255,11 @@ InsuranceContract.Values = list(
 #'               month are relevant.}
 #'     \item{\code{$balanceSheetMethod}}{How to interpolate the balance sheet
 #'               reserves (at the balandeSheetDate) from the yearly contractual
-#'               reserves.}
+#'               reserves. Either a string "30/360", "act/act", "act/360", "act/365"
+#'               or a function with signature \code{balanceSheetMethod(params, contractDates, balanceDates)}
+#'               that returns a vector of coefficients for each year to
+#'               interpolate the reserves available at the given \code{contractDates}
+#'               for the desirec \code{balanceDates}}}
 #'     \item{\code{$surrenderValueCalculation}}{A function describing the surrender
 #'               value calculation.}
 #'     \item{\code{$premiumFrequencyOrder}}{Order of the approximation for
