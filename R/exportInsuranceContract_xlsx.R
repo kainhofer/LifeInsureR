@@ -230,6 +230,7 @@ getContractBlockValues = function(contract) {
   values = data.frame(
       "ID"                  = contract$Parameters$ContractData$id,
       "Tariff"              = contract$tarif$tarif,
+      "Start of Contract"   = contract$Parameters$ContractData$contractClosing,
       "Sum insured"         = contract$Parameters$ContractData$sumInsured,
       "Mortality table"     = contract$Parameters$ActuarialBases$mortalityTable@name,
       i                     = contract$Parameters$ActuarialBases$i,
@@ -312,20 +313,24 @@ exportContractDataTable = function(wb, sheet, contract, ccol = 1, crow = 1, styl
   mergeCells(wb, sheet, cols = 2:10, rows = 1);
   mergeCells(wb, sheet, cols = 2:10, rows = 2);
   mergeCells(wb, sheet, cols = 2:10, rows = 3);
-  addStyle(wb, sheet, style = styles$wrap, rows = 3, cols = 2:10, stack = TRUE);
-  addStyle(wb, sheet, style = createStyle(valign = "top"), rows = 1:3, cols = 1:10, gridExpand = TRUE, stack = TRUE);
+  addStyle(wb, sheet, style = styles$wrap, rows = 3, cols = 2:11, stack = TRUE);
+  addStyle(wb, sheet, style = createStyle(valign = "top"), rows = 1:3, cols = 1:11, gridExpand = TRUE, stack = TRUE);
 
   crow = crow + 4;
 
   # Values (parameters, premiums, etc.) of all blocks   ####
   tmp = contractValues %>%
     select(
-      Vertragsteil = .data$ID, Tarif = .data$Tariff, .data$`Sum insured`,
+      Vertragsteil = .data$ID, Beginn = .data$`Start of Contract`, Tarif = .data$Tariff, .data$`Sum insured`,
       .data$`Mortality table`, .data$i, .data$Age, .data$`Policy duration`, .data$`Premium period`,
       .data$`Deferral period`, .data$`Guaranteed payments`)
   writeValuesTable(wb, sheet, values = setInsuranceValuesLabels(tmp),
                    caption = "Basisdaten der Vertragsteile", crow = crow, ccol = 1,
                    tableName = "BlocksBasicData", styles = styles)
+  # Second column is start date of contract, fourth is sum insured, sixth is guaranteed interest rate
+  addStyle(wb, sheet, style = styles$currency0, rows = crow + 1 + (1:NROW(tmp)), cols = 4, gridExpand = TRUE, stack = TRUE);
+  addStyle(wb, sheet, style = styles$cost0, rows = crow + 1 + (1:NROW(tmp)), cols = 6, gridExpand = TRUE, stack = TRUE);
+
   crow = crow + NROW(tmp) + 2 + 2 # 2 rows for caption/table header, 2 rows padding
 
   # Unit Premiums ####
@@ -457,7 +462,10 @@ exportReserveTable = function(wb, sheet, contract, ccol = 1, crow = 1, styles = 
     caption = "Bilanzreserve", valueStyle = styles$currency0) + 1;
 
   endrow = (crow + 1 + nrrow)
-  addStyle(wb, sheet, style = createStyle(numFmt = "0.0##"), cols = oldccol,
+  # First column of balance sheet reserves is the date, the second the fractional time within the contract
+  addStyle(wb, sheet, style = createStyle(numFmt = "DATE"), cols = oldccol,
+           rows = (crow + 2):endrow, gridExpand = TRUE, stack = TRUE);
+  addStyle(wb, sheet, style = createStyle(numFmt = "0.0##"), cols = oldccol + 1,
            rows = (crow + 2):endrow, gridExpand = TRUE, stack = TRUE);
 
   exportBlockID(wb, sheet, id = id, rows = blockid.row, cols = ccol:cl, styles = styles)
@@ -841,7 +849,8 @@ exportInsuranceContract.xlsx = function(contract, filename) {
     wrap = createStyle(wrapText = TRUE),
     center = createStyle(halign = "center", valign = "center"),
     separator = createStyle(fgFill = "#000000"),
-    unitpremiums = createStyle(numFmt = "0.00000%; -0.00000%;")
+    unitpremiums = createStyle(numFmt = "0.00000%; -0.00000%;"),
+    date = createStyle(numFmt = "DATE")
   );
 
   ############################################### #

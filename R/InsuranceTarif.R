@@ -1069,7 +1069,7 @@ InsuranceTarif = R6Class(
       }
 
       contractDates = params$ContractData$contractClosing + years(1:years);
-      balanceDates = balanceDate + years(1:years);
+      balanceDates = balanceDate + years(1:years - 1);
 
       if (params$ActuarialBases$balanceSheetMethod == "30/360") {
         baf = ((month(balanceDates + days(1)) - month(contractDates) - 1) %% 12 + 1) / 12
@@ -1080,7 +1080,7 @@ InsuranceTarif = R6Class(
       } else if (params$ActuarialBases$balanceSheetMethod == "act/365") {
         baf = pmin(as.numeric((balanceDates + days(1)) - contractDates, units = "days" ) / 365, 1)
       }
-      baf
+      data.frame(date = balanceDates, time = baf + (1:years) - 1, baf = baf)
     },
 
     #' @description Calculate the reserves for the balance sheets at Dec. 31 of each
@@ -1091,7 +1091,9 @@ InsuranceTarif = R6Class(
       reserves = values$reserves;
       years = length(reserves[,"Zillmer"]);
       # Balance sheet reserves:
-      baf = self$getBalanceSheetReserveFactor(params, years = years);
+      factors = self$getBalanceSheetReserveFactor(params, years = years);
+      baf = factors$baf
+      factors$baf = NULL
       resZ_BS = (1 - baf) * reserves[,"Zillmer"] + baf * c(reserves[-1, "Zillmer"], 0);
       resGamma_BS = (1 - baf) * reserves[,"gamma"] + baf * c(reserves[-1, "gamma"], 0);
       res_BS = resZ_BS + resGamma_BS;
@@ -1113,7 +1115,7 @@ InsuranceTarif = R6Class(
       }
 
       # Collect all reserves to one large matrix
-      res = cbind("time" = baf + (1:years) - 1,
+      res = cbind(factors,
                   "Zillmer"               = pmax(resZ_BS,0),
                   "gamma"                 = pmax(resGamma_BS,0),
                   "Balance Sheet Reserve" = pmax(res_BS,0),
