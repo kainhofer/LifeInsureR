@@ -1070,9 +1070,10 @@ InsuranceTarif = R6Class(
     #' @description Calculate the (linear) interpolation factors for the balance
     #' sheet reserve (Dec. 31) between the yearly contract clowing dates
     #' @details Not to be called directly, but implicitly by the [InsuranceContract] object.
+    #' @param method The method for the balance sheet interpolation (30/360, act/act, act/360, act/365 or a function)
     #' @param years how many years to calculate (for some usances, the factor
     #'      is different in leap years!)
-    getBalanceSheetReserveFactor = function(params, years = 1) {
+    getBalanceSheetReserveFactor = function(method, params, years = 1) {
       balanceDate = params$ActuarialBases$balanceSheetDate
       year(balanceDate) = year(params$ContractData$contractClosing);
       if (balanceDate < params$ContractData$contractClosing) {
@@ -1082,15 +1083,15 @@ InsuranceTarif = R6Class(
       contractDates = params$ContractData$contractClosing + years(1:years);
       balanceDates = balanceDate + years(1:years - 1);
 
-      if (is.function(params$ActuarialBases$balanceSheetMethod)) {
-        baf = params$ActuarialBases$balanceSheetMethod(params = params, contractDates = contractDates, balanceDates = balanceDates)
-      } else if (params$ActuarialBases$balanceSheetMethod == "30/360") {
+      if (is.function(method)) {
+        baf = method(params = params, contractDates = contractDates, balanceDates = balanceDates)
+      } else if (method == "30/360") {
         baf = ((month(balanceDates + days(1)) - month(contractDates) - 1) %% 12 + 1) / 12
-      } else if (params$ActuarialBases$balanceSheetMethod == "act/act") {
+      } else if (method == "act/act") {
         baf = as.numeric((balanceDates + days(1)) - contractDates, units = "days" ) / as.numeric(balanceDates - (balanceDates - years(1)), units = "days")
-      } else if (params$ActuarialBases$balanceSheetMethod == "act/360") {
+      } else if (method == "act/360") {
         baf = pmin(as.numeric((balanceDates + days(1)) - contractDates, units = "days" ) / 360, 1)
-      } else if (params$ActuarialBases$balanceSheetMethod == "act/365") {
+      } else if (method == "act/365") {
         baf = pmin(as.numeric((balanceDates + days(1)) - contractDates, units = "days" ) / 365, 1)
       }
       data.frame(date = balanceDates, time = baf + (1:years) - 1, baf = baf)
@@ -1104,7 +1105,7 @@ InsuranceTarif = R6Class(
       reserves = values$reserves;
       years = length(reserves[,"Zillmer"]);
       # Balance sheet reserves:
-      factors = self$getBalanceSheetReserveFactor(params, years = years);
+      factors = self$getBalanceSheetReserveFactor(method = params$ActuarialBases$balanceSheetMethod, params = params, years = years);
       baf = factors$baf
       factors$baf = NULL
       resZ_BS = (1 - baf) * reserves[,"Zillmer"] + baf * c(reserves[-1, "Zillmer"], 0);
@@ -1112,12 +1113,16 @@ InsuranceTarif = R6Class(
       res_BS = resZ_BS + resGamma_BS;
 
       # Premium transfer / unearned premium:
-      bm = month(params$ContractData$contractClosing)
-      freq = params$ContractData$premiumFrequency
+      fact = valueOrFunction(params$ActuarialBases$unearnedPremiumsMethod, params = params, dates = factors$date)
+      if (is.null(fact) || is.na(fact)) {
+        freq = params$ContractData$premiumFrequency
+        bm = month(params$ContractData$contractClosing)
+
+        fact = (month(factors$date) - bm + 12 + 1) %% (12/freq) * (freq/12)
+      }
       # TODO: We have no vector of actual written premiums (implicit assumption
       # seems to be that the premium stays constant!). Once we have such a vector,
       # rewrite the following code
-      fact = (bm - 1) %% (12/freq) / 12 * freq
       unearnedPremiums = fact * values$cashFlows$premiums_advance * values$premiums[["written_beforetax"]] # TODO
       # If advance profit participation is granted, unearned premiums still apply to the whole gross premium without PP and partner rebate!
       ppScheme      = params$ProfitParticipation$profitParticipationScheme;

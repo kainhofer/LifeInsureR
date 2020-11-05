@@ -260,6 +260,10 @@ InsuranceContract.Values = list(
 #'               that returns a vector of coefficients for each year to
 #'               interpolate the reserves available at the given \code{contractDates}
 #'               for the desirec \code{balanceDates}}}
+#'               reserves.}
+#'     \item{\code{$unearnedPremiumsMethod}}{How to calculate the unearned
+#'               premiums (considering the balance sheet date and the premium
+#'               frequency). A function with signature \code{unearnedPremiumsMethod(params, dates)}}
 #'     \item{\code{$surrenderValueCalculation}}{A function describing the surrender
 #'               value calculation.}
 #'     \item{\code{$premiumFrequencyOrder}}{Order of the approximation for
@@ -399,6 +403,7 @@ InsuranceContract.ParameterDefaults = list(
         i = 0.00,                               # guaranteed interest rate
         balanceSheetDate = as.Date("1900-12-31"),  # Balance sheet date (for the calculation of the balance sheet reserves, year is irrelevant)
         balanceSheetMethod = "30/360",
+        unearnedPremiumsMethod = NULL,          # Function to calculate the factors for unearned premiums
         surrenderValueCalculation = NULL,       # By default no surrender penalties
 
         premiumFrequencyOrder = 0,              # Order of the approximation for payments within the year (unless an extra frequency loading is used => then leave this at 0)
