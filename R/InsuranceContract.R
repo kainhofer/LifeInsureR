@@ -518,6 +518,9 @@ InsuranceContract = R6Class(
         #'        they no longer represent the actual contract state at these
         #'        times. If values are not recalculated, the reserves at each
         #'        time step represent the proper state at that point in time.
+        #' @param additionalCapital The capital that is added to the contract
+        #'        (e.g. capital carried over from a previous contract) at the
+        #'        premium calculation time.
         #' @param recalculatePremiums Whether the premiums should be recalculated
         #'        at time \code{premiumCalculationTime} at all.
         #' @param recalculatePremiumSum Whether to recalculate the overall premium
@@ -525,7 +528,7 @@ InsuranceContract = R6Class(
         #' @param history_comment The comment for the history snapshot entyr
         #' @param history_type The type (free-form string) to record in the history snapshot
         #'
-        calculateContract = function(calculate = "all", valuesFrom = 0, premiumCalculationTime = 0, preservePastPV = TRUE, recalculatePremiums = TRUE, recalculatePremiumSum = TRUE, history_comment = NULL, history_type = "Contract") {
+        calculateContract = function(calculate = "all", valuesFrom = 0, premiumCalculationTime = 0, preservePastPV = TRUE, additionalCapital = 0, recalculatePremiums = TRUE, recalculatePremiumSum = TRUE, history_comment = NULL, history_type = "Contract") {
             if (!is.null(self$blocks)) {
                 for (b in self$blocks) {
                     .args = as.list(match.call()[-1])
@@ -549,6 +552,10 @@ InsuranceContract = R6Class(
                 starting = self$Values$cashFlows,
                 ending = private$determineCashFlows(),
                 t = valuesFrom);
+
+            if (additionalCapital > 0) {
+                self$values$cashFlows[as.character(premiumCalculationTime), "additional_capital"] = additionalCapital / self$values$ContractData$sumInsured
+            }
 
             if (recalculatePremiumSum) {
                 # Premium waiver: Premium sum is not affected by premium waivers, i.e. everything depending on the premium sum uses the original premium sum!

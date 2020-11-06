@@ -131,6 +131,7 @@ labelsReplace = function(labels) {
   # Cash Flows
   labels[labels == "premiums_advance"] = "Pr\u00e4m. vorsch.";
   labels[labels == "premiums_arrears"] = "Pr\u00e4m. nachsch.";
+  labels[labels == "additional_capital"] = "Einschuss";
   labels[labels == "guaranteed_advance"] = "Gar. vorsch.";
   labels[labels == "guaranteed_arrears"] = "Gar. nachsch.";
   labels[labels == "survival_advance"] = "Erl. vorsch.";
@@ -317,19 +318,20 @@ exportContractDataTable = function(wb, sheet, contract, ccol = 1, crow = 1, styl
   addStyle(wb, sheet, style = createStyle(valign = "top"), rows = 1:3, cols = 1:11, gridExpand = TRUE, stack = TRUE);
 
   crow = crow + 4;
-
   # Values (parameters, premiums, etc.) of all blocks   ####
   tmp = contractValues %>%
+    mutate(`Initial Capital` = contractPremiums$additional_capital) %>%
     select(
-      Vertragsteil = .data$ID, Beginn = .data$`Start of Contract`, Tarif = .data$Tariff, .data$`Sum insured`,
+      Vertragsteil = .data$ID, Beginn = `Start of Contract`, Tarif = .data$Tariff, .data$`Sum insured`,
+      `Initial Capital`,
       .data$`Mortality table`, .data$i, .data$Age, .data$`Policy duration`, .data$`Premium period`,
       .data$`Deferral period`, .data$`Guaranteed payments`)
   writeValuesTable(wb, sheet, values = setInsuranceValuesLabels(tmp),
                    caption = "Basisdaten der Vertragsteile", crow = crow, ccol = 1,
                    tableName = "BlocksBasicData", styles = styles)
   # Second column is start date of contract, fourth is sum insured, sixth is guaranteed interest rate
-  addStyle(wb, sheet, style = styles$currency0, rows = crow + 1 + (1:NROW(tmp)), cols = 4, gridExpand = TRUE, stack = TRUE);
-  addStyle(wb, sheet, style = styles$cost0, rows = crow + 1 + (1:NROW(tmp)), cols = 6, gridExpand = TRUE, stack = TRUE);
+  addStyle(wb, sheet, style = styles$currency0, rows = crow + 1 + (1:NROW(tmp)), cols = 4:5, gridExpand = TRUE, stack = TRUE);
+  addStyle(wb, sheet, style = styles$cost0, rows = crow + 1 + (1:NROW(tmp)), cols = 7, gridExpand = TRUE, stack = TRUE);
 
   crow = crow + NROW(tmp) + 2 + 2 # 2 rows for caption/table header, 2 rows padding
 

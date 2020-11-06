@@ -511,6 +511,7 @@ InsuranceTarif = R6Class(
       cf = data.frame(
         premiums_advance   = zeroes,
         premiums_arrears   = zeroes,
+        additional_capital = zeroes,
         guaranteed_advance = zeroes,
         guaranteed_arrears = zeroes,
         survival_advance   = zeroes,
@@ -523,6 +524,7 @@ InsuranceTarif = R6Class(
         row.names          = ages - age
       );
 
+      cf$additional_capital = pad0(params$ContractData$initialCapital / params$ContractData$sumInsured, cflen)
       # Premiums:
       if (!params$ContractState$premiumWaiver) {
         premiums = self$getPremiumCF(len = cflen, params = params, values = values)
@@ -624,6 +626,7 @@ InsuranceTarif = R6Class(
           values$cashFlows$premiums_advance, values$cashFlows$premiums_arrears,
           m = params$ContractData$premiumFrequency, mCorrection = premiumFreqCorr,
           v = v),
+        additional_capital = calculatePVSurvival(px, qx, values$cashFlows$additional_capital, 0, v = v),
         guaranteed = calculatePVGuaranteed(
           values$cashFlows$guaranteed_advance, values$cashFlows$guaranteed_arrears,
           m = params$ContractData$benefitFrequency, mCorrection = benefitFreqCorr,
@@ -701,7 +704,8 @@ InsuranceTarif = R6Class(
         # of the sumInsured (in cashFlowsBasic) for non-constant sums insured.
         # So here, we don't need to multiply with  values$cashFlowsBasic$sumInsured!
         propGP = c("premiums_advance", "premiums_arrears");
-        propSI = c("guaranteed_advance", "guaranteed_arrears",
+        propSI = c("additional_capital",
+                   "guaranteed_advance", "guaranteed_arrears",
                    "survival_advance", "survival_arrears", "death_SumInsured",
                    "death_PremiumFree", "disease_SumInsured");
         propPS = c("death_GrossPremium", "death_Refund_past");
@@ -744,8 +748,8 @@ InsuranceTarif = R6Class(
       pv[,c("guaranteed", "survival", "death_SumInsured", "disease_SumInsured", "death_PremiumFree")] =
         pv[,c("guaranteed", "survival", "death_SumInsured", "disease_SumInsured", "death_PremiumFree")] * params$ContractData$sumInsured;
       pv[,c("death_GrossPremium", "death_Refund_past", "death_Refund_future")] = pv[,c("death_GrossPremium", "death_Refund_past", "death_Refund_future")] * values$premiums[["gross"]] * params$ContractData$premiumRefund;
-      pv[,c("benefits", "benefitsAndRefund", "alpha", "Zillmer", "beta", "gamma", "gamma_nopremiums", "unitcosts")] =
-        pv[,c("benefits", "benefitsAndRefund", "alpha", "Zillmer", "beta", "gamma", "gamma_nopremiums", "unitcosts")] * params$ContractData$sumInsured;
+      pv[,c("benefits", "additional_capital", "benefitsAndRefund", "alpha", "Zillmer", "beta", "gamma", "gamma_nopremiums", "unitcosts")] =
+        pv[,c("benefits", "additional_capital", "benefitsAndRefund", "alpha", "Zillmer", "beta", "gamma", "gamma_nopremiums", "unitcosts")] * params$ContractData$sumInsured;
 
       # Sum all death-related payments to "death"  and remove the death_SumInsured column
       pv[,"death_SumInsured"] = pv[,"death_SumInsured"] + pv[,"death_GrossPremium"]
@@ -813,6 +817,7 @@ InsuranceTarif = R6Class(
       );
 
       coeff[["Premium"]][["benefits"]][["premiums"]]            = 1;
+      coeff[["SumInsured"]][["benefits"]][["additional_capital"]]            = -1;
 
       # Costs proportional to NetPremium introduce a non-linearity, as the NP is not available when the gross premium is calculated
       # => the corresponding costs PV is included in the coefficient!
@@ -883,7 +888,7 @@ InsuranceTarif = R6Class(
         "unit.net" = 0, "unit.Zillmer" = 0, "unit.gross" = 0,
         "net" = 0, "Zillmer" = 0, "gross" = 0,
         "unitcost" = 0, "written_yearly" = 0,
-        "written_beforetax" = 0, "tax" = 0, "written" = 0);
+        "written_beforetax" = 0, "tax" = 0, "written" = 0, "additional_capital" = 0);
       coefficients = list("gross" = c(), "Zillmer" = c(), "net" = c());
 
       # Get the present values of the premiums, claims and costs at time 'premiumCalculationTime' (where the premium is to be calculated)
@@ -895,6 +900,7 @@ InsuranceTarif = R6Class(
         return(list("premiums" = values$premiums, "coefficients" = coefficients))
       }
 
+      values$premiums["additional_capital"] = values$cashFlows[t, "additional_capital"] * sumInsured
 
       # net, gross and Zillmer premiums are calculated from the present values using the coefficients on each present value as described in the formulas document
       coeff = self$getPremiumCoefficients("gross", pv * 0, pvCost * 0, premiums = values$premiums, params = params, values = values, premiumCalculationTime = premiumCalculationTime)

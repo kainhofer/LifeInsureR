@@ -153,6 +153,9 @@ InsuranceContract.Values = list(
 #'               contracts with multiple parts, e.g. dynamic increases),
 #'               default = "Hauptvertrag"}
 #'     \item{\code{$sumInsured}}{Sum insured, default = 100,000}
+#'     \item{\code{$initialCapital}}{Reserve/Capital that is already available
+#'               at contract inception, e.g. from a previous contract. No tax
+#'               or acquisition costs are applied to this capital.}
 #'     \item{\code{$YOB}}{Year of birth of the insured, used to determine the
 #'               age for the application of the mortality table}
 #'     \item{\code{$age}}{Age of the insured}
@@ -376,6 +379,7 @@ InsuranceContract.ParameterDefaults = list(
         deferralPeriod = 0,                     # deferral period for annuities
         guaranteedPeriod = 0,                   # guaranteed payments for annuities
         contractClosing = NULL,                 # Contract closing date (day/month is relevant for balance sheet reserves)
+        initialCapital = 0,
         blockStart = 0,                         # When the current tariff block starts (main block starts a 0, dynamic increases start later!), only used by the parent block (i.e. t=0 of child is aligned with t=blockStart of parent)
 
         premiumPayments = "in advance",         # premium payments in advance or arrears
