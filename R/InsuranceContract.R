@@ -479,7 +479,7 @@ InsuranceContract = R6Class(
             # Override with arguments explicitly given
             arguments = list(...)
             params[names(arguments)] = arguments[names(arguments)]
-            params$comment = sprintf("Dynamic increase at time %d to sum %02f", t, NewSumInsured)
+            params$comment = sprintf("Dynamic increase at time %d to sum %0.2f", t, NewSumInsured)
             do.call(self$addBlock, params)
         },
 
@@ -724,6 +724,11 @@ InsuranceContract = R6Class(
             # TODO: Basic Data cannot simply be summed, e.g. the interest rate!
             self$Values$basicData              = consolidateField("basicData")
             # self$Values$basicData[,c("InterestRate", "PolicyDuration", "PremiumPeriod")] = NULL
+
+            # Some fields can NOT be summed, but have to be left untouched.
+            # Hard-code these to use the values from the main contract part:
+            self$Values$reservesBalanceSheet[,c("date", "time")]               = self$blocks[[1]]$Values$reservesBalanceSheet[,c("date", "time")]
+            self$Values$basicData[,c("InterestRate", "PolicyDuration", "PremiumPeriod")]               = self$blocks[[1]]$Values$basicData[,c("InterestRate", "PolicyDuration", "PremiumPeriod")]
 
             invisible(self)
         },
