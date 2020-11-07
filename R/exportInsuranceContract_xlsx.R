@@ -319,8 +319,13 @@ exportContractDataTable = function(wb, sheet, contract, ccol = 1, crow = 1, styl
 
   crow = crow + 4;
   # Values (parameters, premiums, etc.) of all blocks   ####
+  additional_capital = contractPremiums$additional_capital
+  if (is.null(contract$Values$premiums)) {
+      # Contracts with multiple child blocks do not have their own premium structure => set additional capital to 0
+      additional_capital = c(0, additional_capital)
+  }
   tmp = contractValues %>%
-    mutate(`Initial Capital` = contractPremiums$additional_capital) %>%
+    mutate(`Initial Capital` = additional_capital) %>%
     select(
       Vertragsteil = .data$ID, Beginn = `Start of Contract`, Tarif = .data$Tariff, .data$`Sum insured`,
       `Initial Capital`,
