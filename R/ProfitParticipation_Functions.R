@@ -258,7 +258,7 @@ PP.calculate.RateOnBaseSGFFactor = function(base, rate, waiting, rates, params, 
 sumProfits = function(profits, cols) {
   # extract the columns -- if they exist -- and sum them up:
   rowSums(
-    profits[, intersect(c(), colnames(profits))]
+    profits[, intersect(cols, colnames(profits)), drop = FALSE]
   )
 }
 
@@ -305,17 +305,17 @@ PP.benefit.ProfitPlusHalfGuaranteedInterest = function(profits, rates, ...) {
 };
 
 #' @describeIn ProfitParticipationFunctions
-#' Calculate accrued benefit as total profit with interest for one year (min of guarantee and total interest)
+#' Calculate accrued benefit as total profit with interest for one year (max of guarantee and total interest)
 #' @export
 PP.benefit.ProfitPlusInterestMinGuaranteeTotal = function(profits, rates, ...) {
-  profits[,"regularBonus"] * (1 + pmin(rates$guaranteedInterest, rates$totalInterest))
+  profits[,"regularBonus"] * (1 + pmax(rates$guaranteedInterest, rates$totalInterest))
 };
 
 #' @describeIn ProfitParticipationFunctions
-#' Calculate accrued benefit as total profit with interest for half a year (min of guarantee and total interest)
+#' Calculate accrued benefit as total profit with interest for half a year (max of guarantee and total interest)
 #' @export
 PP.benefit.ProfitPlusHalfInterestMinGuaranteeTotal = function(profits, rates, ...) {
-  profits[,"regularBonus"] * (1 + pmin(rates$guaranteedInterest, rates$totalInterest)/2)
+  profits[,"regularBonus"] * (1 + pmax(rates$guaranteedInterest, rates$totalInterest)/2)
 };
 
 #' @describeIn ProfitParticipationFunctions
@@ -347,5 +347,13 @@ PP.benefit.TerminalBonus5Years = function(profits, params, ...) {
 PP.benefit.TerminalBonus = function(profits, params, ...) {
   sumProfits(profits, c("TBF", "terminalBonusReserve"))
 };
+
+#' @describeIn ProfitParticipationFunctions
+#' No benefit paid out
+#' @export
+PP.benefit.None = function(profits, ...) {
+  0
+};
+
 
 "dummy"

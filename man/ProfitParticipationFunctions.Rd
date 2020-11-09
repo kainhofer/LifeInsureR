@@ -40,6 +40,7 @@
 \alias{PP.benefit.TerminalBonus5YearsProRata}
 \alias{PP.benefit.TerminalBonus5Years}
 \alias{PP.benefit.TerminalBonus}
+\alias{PP.benefit.None}
 \title{Helper functions for profit participation}
 \usage{
 PP.base.NULL(rates, params, values, ...)
@@ -141,6 +142,8 @@ PP.benefit.TerminalBonus5YearsProRata(profits, params, ...)
 PP.benefit.TerminalBonus5Years(profits, params, ...)
 
 PP.benefit.TerminalBonus(profits, params, ...)
+
+PP.benefit.None(profits, ...)
 }
 \arguments{
 \item{rates}{data.frame of profit rates}
@@ -250,9 +253,9 @@ calculation function.
 
 \item \code{PP.benefit.ProfitPlusHalfGuaranteedInterest}: Calculate death benefit as total profit with (guaranteed) interest for one year
 
-\item \code{PP.benefit.ProfitPlusInterestMinGuaranteeTotal}: Calculate accrued benefit as total profit with interest for one year (min of guarantee and total interest)
+\item \code{PP.benefit.ProfitPlusInterestMinGuaranteeTotal}: Calculate accrued benefit as total profit with interest for one year (max of guarantee and total interest)
 
-\item \code{PP.benefit.ProfitPlusHalfInterestMinGuaranteeTotal}: Calculate accrued benefit as total profit with interest for half a year (min of guarantee and total interest)
+\item \code{PP.benefit.ProfitPlusHalfInterestMinGuaranteeTotal}: Calculate accrued benefit as total profit with interest for half a year (max of guarantee and total interest)
 
 \item \code{PP.benefit.ProfitGuaranteeSupporting}: Calculate accrued benefit as regular profit, but used to cover initial Zillmerization
 
@@ -261,5 +264,7 @@ calculation function.
 \item \code{PP.benefit.TerminalBonus5Years}: Terminal bonus is only paid out during the last 5 years of the contract (but never during the first 10 years)
 
 \item \code{PP.benefit.TerminalBonus}: Calculate benefit from terminal bonus (full bonus), either old-style terminal bonus reserve or Terminal Bonus Fund (TBF)
+
+\item \code{PP.benefit.None}: No benefit paid out
 }}
 
