@@ -922,12 +922,14 @@ Not to be called directly, but implicitly by the \link{InsuranceContract} object
 Calculate the (linear) interpolation factors for the balance
 sheet reserve (Dec. 31) between the yearly contract clowing dates
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{InsuranceTarif$getBalanceSheetReserveFactor(params, years = 1)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{InsuranceTarif$getBalanceSheetReserveFactor(method, params, years = 1)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
+\item{\code{method}}{The method for the balance sheet interpolation (30/360, act/act, act/360, act/365 or a function)}
+
 \item{\code{params}}{Contract-specific, full set of parameters of the contract
 (merged parameters of the defaults, the tariff, the profit participation
 scheme and the contract)}

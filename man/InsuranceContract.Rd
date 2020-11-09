@@ -559,6 +559,7 @@ Calculate all time series of the contract from the parameters
   valuesFrom = 0,
   premiumCalculationTime = 0,
   preservePastPV = TRUE,
+  additionalCapital = 0,
   recalculatePremiums = TRUE,
   recalculatePremiumSum = TRUE,
   history_comment = NULL,
@@ -589,6 +590,10 @@ to the new cash flows over the whole contract period, but
 they no longer represent the actual contract state at these
 times. If values are not recalculated, the reserves at each
 time step represent the proper state at that point in time.}
+
+\item{\code{additionalCapital}}{The capital that is added to the contract
+(e.g. capital carried over from a previous contract) at the
+premium calculation time.}
 
 \item{\code{recalculatePremiums}}{Whether the premiums should be recalculated
 at time \code{premiumCalculationTime} at all.}
