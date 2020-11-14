@@ -119,12 +119,15 @@ initializeCosts = function(costs, alpha, Zillmer, beta, gamma, gamma.paidUp, gam
     }
     if (!missing(gamma.contract))  {
       costs = setCost(costs, "gamma", "SumInsured", "PolicyPeriod", gamma.contract)
+      costs = setCost(costs, "gamma_nopremiums", "SumInsured", "PolicyPeriod", gamma.contract)
     }
     if (!missing(gamma.afterdeath))  {
       costs = setCost(costs, "gamma", "SumInsured", "AfterDeath", gamma.afterdeath)
+      costs = setCost(costs, "gamma_nopremiums", "SumInsured", "AfterDeath", gamma.afterdeath)
     }
     if (!missing(gamma.fullcontract))  {
       costs = setCost(costs, "gamma", "SumInsured", "FullContract", gamma.fullcontract)
+      costs = setCost(costs, "gamma_nopremiums", "SumInsured", "FullContract", gamma.fullcontract)
     }
     if (!missing(unitcosts)) {
       costs = setCost(costs, "unitcosts", "Constant", "PremiumPeriod", unitcosts)
