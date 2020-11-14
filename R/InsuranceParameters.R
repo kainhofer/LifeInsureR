@@ -413,6 +413,7 @@ InsuranceContract.Values = list(
 #' \describe{
 #'     \item{\code{$adjustCashFlows}}{Function with signature \code{function(x, params, values, ...)} to adjust the benefit/premium cash flows after their setup.}
 #'     \item{\code{$adjustCashFlowsCosts}}{Function with signature \code{function(x, params, values, ...)} to adjust the costs cash flows after their setup.}
+#'     \item{\code{$adjustPremiumCoefficients}}{Function with signature \code{function(coeff, type, premiums, params, values, premiumCalculationTime)} to adjust the coefficients for premium calculation after their default setup. Use cases are e.g. term-fix tariffs where the Zillmer premium term contains the administration cost over the whole contract, but not other gamma- or beta-costs.}
 #' }
 #'
 #'
@@ -517,7 +518,8 @@ InsuranceContract.ParameterDefaults = list(
     Hooks = list(
       # Functions with signature function(x, params, values, ...), default NULL is equivalent to function(x, ...) {x}
       adjustCashFlows = NULL,
-      adjustCashFlowsCosts = NULL
+      adjustCashFlowsCosts = NULL,
+      adjustPremiumCoefficients = NULL # function(coeff, type = type, premiums = premiums, params = params, values = values, premiumCalculationTime = premiumCalculationTime)
     )
 );
 

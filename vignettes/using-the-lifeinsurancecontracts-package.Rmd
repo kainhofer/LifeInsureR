@@ -1959,11 +1959,14 @@ present values, premiums and reserves are calculated:
 |:---|:-----|
 |`adjustCashFlows` | Adjust the premium and benefit cash flows of the contract |
 |`adjustCashFlowsCosts` | Adjust the cost cash flows |
+|`adjustPremiumCoefficients` | Adjust the coefficients of the premium calculation formulas |
 
 The function signature is `function(x, params, values, ...)`, where `x` is the 
 object holding the standard cash flows determined for the contract. The return 
 value of the hook function will be used instead of `x`.
 
+The \code{adjustPremiumCoefficients} hook has a slightly extended function signature 
+\code{function(coeff, type, premiums, params, values, premiumCalculationTime)}.
 
 An example where the cash-flow-approach solely based on `type` does not immediately
 work is a waiting period of 3 years for the death benefit. In particular,
@@ -1995,5 +1998,17 @@ contractGridPremium(
   contractClosing = as.Date("2020-09-01")
 ) %>% `colnames<-`(c("Full benefit", "Waiting period"))
 
+```
+
+Another example are term-fixe insurances where the Zillmer premium also includes the administration (gamma) costs over the whole contract period.
+
+```{r termfix.Zillmeradjust.Hook, eval=FALSE}
+  costs = initializeCosts(alpha = 0.04, Zillmer = 0.035, gamma = 0.0015, gamma.fullcontract = 0.001),
+  adjustPremiumCoefficients = function(coeff, type, premiums, params, values, premiumCalculationTime) {
+    if (type == "Zillmer") {
+      coeff[["SumInsured"]][["costs"]]["gamma", "SumInsured", "guaranteed"] = 1
+    }
+    coeff
+  },
 ```
 

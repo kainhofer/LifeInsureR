@@ -870,7 +870,7 @@ InsuranceTarif = R6Class(
         }
       }
 
-      coeff
+      applyHook(params$Hooks$adjustPremiumCoefficients, coeff, type = type, premiums = premiums, params = params, values = values, premiumCalculationTime = premiumCalculationTime)
     },
 
     #' @description Calculate the premiums of the InsuranceContract given the

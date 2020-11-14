@@ -156,7 +156,13 @@ for the desired \code{balanceDates}}
 premiums (considering the balance sheet date and the premium
 frequency). A function with signature \code{unearnedPremiumsMethod(params, dates)}}
 \item{\code{$surrenderValueCalculation}}{A function describing the surrender
-value calculation.}
+value calculation. If NULL, the full reserve will be used as
+surrender value. If given, it must be a function with signature
+\code{function(SurrenderReserve, params, values)}.}
+\item{\code{$premiumWaiverValueCalculation}}{A function describing the
+reserve used to derive the premium-free sum insured. If NULL,
+the surrender value will be used. If given, it must be a function
+with signature \code{function(SurrenderReserve, params, values)}}
 \item{\code{$premiumFrequencyOrder}}{Order of the approximation for
 payments within the year (unless an extra frequency loading is
 used => then leave this at 0)}
@@ -250,6 +256,7 @@ participation rates are defined at the level of profit classes.}
 \describe{
 \item{\code{$adjustCashFlows}}{Function with signature \code{function(x, params, values, ...)} to adjust the benefit/premium cash flows after their setup.}
 \item{\code{$adjustCashFlowsCosts}}{Function with signature \code{function(x, params, values, ...)} to adjust the costs cash flows after their setup.}
+\item{\code{$adjustPremiumCoefficients}}{Function with signature \code{function(coeff, type, premiums, params, values, premiumCalculationTime)} to adjust the coefficients for premium calculation after their default setup. Use cases are e.g. term-fix tariffs where the Zillmer premium term contains the administration cost over the whole contract, but not other gamma- or beta-costs.}
 }
 }
 }
