@@ -215,12 +215,12 @@ contract.L71U$Values$cashFlows
 contract.L71U$Values$cashFlows %>% select(starts_with('premiums'), starts_with('death'), -death_Refund_past ) %>% pander()
 ```
 ```{r SimpleExampleRiskCFCostCode, eval=F}
-contract.L71U$Values$cashFlowsCosts
+contract.L71U$Values$cashFlowsCosts[,,,"survival"]
 ```
 ```{r SimpleExampleRiskCFCostOut, echo=F, results="asis"}
 for (base in dimnames(contract.L71U$Values$cashFlowsCosts)[[3]]) {
   cat("* ,,\"", base, "\"\n", sep = "")
-  cat(contract.L71U$Values$cashFlowsCosts[,,base ] %>% pander(round = 4, style = "rmarkdown"))
+  cat(contract.L71U$Values$cashFlowsCosts[,,base, "survival"] %>% pander(round = 4, style = "rmarkdown"))
 }
 ```
 
@@ -240,7 +240,7 @@ contract.L71U$Values$presentValuesCosts
 ```{r SimpleExampleRiskPVCostOut, echo=F, results="asis"}
 for (base in dimnames(contract.L71U$Values$presentValuesCosts)[[3]]) {
   cat("* ,,\"", base, "\"\n", sep = "")
-  cat(contract.L71U$Values$presentValuesCosts[,,base ] %>% pander(round = 4, style = "rmarkdown"))
+  cat(contract.L71U$Values$presentValuesCosts[,,base,"survival" ] %>% pander(round = 4, style = "rmarkdown"))
 }
 ```
 ```{r SimpleExampleRiskPVPremCode, eval=F}
@@ -582,7 +582,7 @@ Tarif.DefAnnuity = InsuranceTarif$new(
   tarif = "Life1",
   desc = "A deferred annuity (life-long payments start at age 65) with reg. premiums",
 
-  contractPeriod = function(params, values) { 120 - params$ContractData$age},
+  policyPeriod = function(params, values) { 120 - params$ContractData$age},
   deferralPeriod = function(params, values) { 65 - params$ContractData$age},
   premiumPeriod = function(params, values) { 65 - params$ContractData$age},
     

@@ -87,7 +87,7 @@ writePremiumCoefficients = function(wb, sheet, values, tarif = NULL, type = "ben
       dimn = dimnames(newvals);
       dim(newvals) = c(1, dim(vals));
       dimnames(newvals) = c(list("Coeff"), dimn);
-      as.data.frame(tarif$costValuesAsMatrix(newvals))
+      costValuesAsDF(newvals)
     };
   }
   coeff = rbind(mod(values[["net"]][["SumInsured"]][[type]]),
@@ -104,7 +104,7 @@ writePremiumCoefficients = function(wb, sheet, values, tarif = NULL, type = "ben
 labelsReplace = function(labels) {
   # TODO: Use recode here!
 
-  # Pr?mienarten
+  # Prämienarten
   labels[labels == "unit.net"] = "Netto";
   labels[labels == "unit.Zillmer"] = "Zillmer";
   labels[labels == "unit.gross"] = "Brutto";
@@ -127,6 +127,7 @@ labelsReplace = function(labels) {
   labels[labels == "GrossPremium"] = "BP";
   labels[labels == "NetPremium"] = "NP";
   labels[labels == "Constant"] = "";
+  labels[labels == "Reserve"] = "Res.";
 
   # Cash Flows
   labels[labels == "premiums_advance"] = "Pr\u00e4m. vorsch.";
@@ -141,6 +142,7 @@ labelsReplace = function(labels) {
   labels[labels == "premiums"] = "Pr\u00e4m.";
   labels[labels == "guaranteed"] = "Gar.";
   labels[labels == "survival"] = "Erl.";
+  labels[labels == "after.death"] = "tot";
   labels[labels == "death_SumInsured"] = "Abl. VS";
   labels[labels == "death_GrossPremium"] = "Abl. BP";
   labels[labels == "death"] = "Abl.";
@@ -256,7 +258,7 @@ getContractBlockPremiums = function(contract) {
   if (!is.null(contract$Values$premiums)){
     values = bind_cols(
       data.frame(
-        "ID"                  = contract$Parameters$ContractData$id,
+        "ID" = contract$Parameters$ContractData$id,
         stringsAsFactors = FALSE, check.names = FALSE
       ),
       data.frame(t(contract$Values$premiums), stringsAsFactors = FALSE, check.names = FALSE)
@@ -268,6 +270,22 @@ getContractBlockPremiums = function(contract) {
   }
   values
 }
+
+#' @description Convert the cost values array to a tx15 matrix
+#' @details Not to be called directly, but implicitly by the [InsuranceContract] object.
+#' Convert the array containing cost values like cashflows, present
+#' values, etc. (objects of dimension tx5x3) to a matrix with dimensions (tx15)
+#' @param costValues The cost data structure (array of size tx5x3) to be converted to a matrix
+costValuesAsDF = function(costValues) {
+  as.data.frame.table(costValues, responseName = "Value", stringsAsFactors = TRUE) %>%
+    mutate(Var4 = recode(Var4, "Erl." = "")) %>%
+    arrange(Var4, Var2, Var3, Var1) %>%
+    unite(costtype, Var2, Var3, Var4, sep = " ") %>%
+    pivot_wider(names_from = costtype, values_from = Value) %>%
+    mutate(Var1 = NULL)
+}
+
+
 
 exportLoadingsTable = function(wb, sheet, contract, crow, ccol, styles = styles, seprows = 3, tariffs.handled = c()) {
   tarifname = contract$tarif$tarif
@@ -696,7 +714,7 @@ exportPVTable = function(wb, sheet, contract, ccol = 1, crow = 1, styles = c(), 
     tPrem = contract$Values$int$premiumCalculationTime
 
     qp = contract$Values$transitionProbabilities[1:nrrow,]; # extract the probabilities once, will be needed in
-    costPV = as.data.frame(contract$tarif$costValuesAsMatrix(setInsuranceValuesLabels(contract$Values$presentValuesCosts)));
+    costPV = costValuesAsDF(setInsuranceValuesLabels(contract$Values$presentValuesCosts))
     cl = ccol
 
     # We add six lines before the present values to show the coefficients for the premium calculation
@@ -767,7 +785,7 @@ exportCFTable = function(wb, sheet, contract, ccol = 1, crow = 1, styles = c(), 
       wb, sheet, setInsuranceValuesLabels(contract$Values$cashFlows),
       crow = crow, ccol = cl, tableName = tableName("CF_", id), styles = styles,
       caption = "Leistungscashflows", valueStyle = styles$hide0) + 1;
-    costCF = as.data.frame(contract$tarif$costValuesAsMatrix(setInsuranceValuesLabels(contract$Values$cashFlowsCosts)));
+    costCF = costValuesAsDF(setInsuranceValuesLabels(contract$Values$cashFlowsCosts))
     cl = cl + writeValuesTable(
       wb, sheet, costCF,
       crow = crow, ccol = cl, tableName = tableName("CFcosts_", id), styles = styles,

@@ -151,7 +151,6 @@ all fields.}
 \item \href{#method-getCashFlowsCosts}{\code{InsuranceTarif$getCashFlowsCosts()}}
 \item \href{#method-presentValueCashFlows}{\code{InsuranceTarif$presentValueCashFlows()}}
 \item \href{#method-presentValueCashFlowsCosts}{\code{InsuranceTarif$presentValueCashFlowsCosts()}}
-\item \href{#method-costValuesAsMatrix}{\code{InsuranceTarif$costValuesAsMatrix()}}
 \item \href{#method-getAbsCashFlows}{\code{InsuranceTarif$getAbsCashFlows()}}
 \item \href{#method-getAbsPresentValues}{\code{InsuranceTarif$getAbsPresentValues()}}
 \item \href{#method-presentValueBenefits}{\code{InsuranceTarif$presentValueBenefits()}}
@@ -669,29 +668,6 @@ list) then this method is called by the contract object}
 }
 \subsection{Details}{
 Not to be called directly, but implicitly by the \link{InsuranceContract} object.
-}
-
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-costValuesAsMatrix"></a>}}
-\if{latex}{\out{\hypertarget{method-costValuesAsMatrix}{}}}
-\subsection{Method \code{costValuesAsMatrix()}}{
-Convert the cost values array to a tx15 matrix
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{InsuranceTarif$costValuesAsMatrix(costValues)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{costValues}}{The cost data structure (array of size tx5x3) to be converted to a matrix}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Details}{
-Not to be called directly, but implicitly by the \link{InsuranceContract} object.
-Convert the array containing cost values like cashflows, present
-values, etc. (objects of dimension tx5x3) to a matrix with dimensions (tx15)
 }
 
 }

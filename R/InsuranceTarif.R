@@ -567,28 +567,38 @@ InsuranceTarif = R6Class(
     getCashFlowsCosts = function(params, values) {
       dm = dim(params$Costs);
       dmnames = dimnames(params$Costs);
-      cf = array(0, dim = list(values$int$l, dm[1], dm[2]), dimnames = list(0:(values$int$l - 1), dmnames[[1]], dmnames[[2]]));
-      cf[1,,] = cf[1,,] + params$Costs[,,"once"]
+
+      cf = array(
+        0,
+        dim = list(values$int$l, dm[1], dm[2], 3),
+        dimnames = list(0:(values$int$l - 1), dmnames[[1]], dmnames[[2]], c("survival", "guaranteed", "after.death"))
+      );
+      cf[1,,,"survival"] = cf[1,,,"survival"] + params$Costs[,,"once"]
       for (i in 1:values$int$premiumTerm) {
-        cf[i,,] = cf[i,,] + params$Costs[,,"PremiumPeriod"];
+        cf[i,,,"survival"] = cf[i,,,"survival"] + params$Costs[,,"PremiumPeriod"];
       }
       if (values$int$premiumTerm < values$int$policyTerm) {
         for (i in (values$int$premiumTerm + 1):values$int$policyTerm) {
-          cf[i,,] = cf[i,,] + params$Costs[,,"PremiumFree"];
+          cf[i,,,"survival"] = cf[i,,,"survival"] + params$Costs[,,"PremiumFree"];
         }
       }
       for (i in 1:values$int$policyTerm) {
-        cf[i,,] = cf[i,,] + params$Costs[,,"PolicyPeriod"];
+        cf[i,,,"survival"] = cf[i,,,"survival"] + params$Costs[,,"PolicyPeriod"];
+
+        # Guaranteed cost charged (charged no matter if the person is still alive or death).
+        # Used mainly for term-fix or premium waivers upton death
+        cf[i,,,"guaranteed"] = params$Costs[,,"FullContract"]
+        cf[i,,,"after.death"] = params$Costs[,,"AfterDeath"]
       }
 
       # After premiums are waived, use the gamma_nopremiums instead of gamma:
       if (params$ContractState$premiumWaiver) {
-        cf[,"gamma",] = cf[,"gamma_nopremiums",];
+        cf[,"gamma",,"survival"] = cf[,"gamma_nopremiums",,"survival"];
       }
 
       # some values like sumInsured or gross premium might change over time,
       # so multiply them with the unit cash flows stored in values$cashFlows
-      cf[,,"SumInsured"] = cf[,,"SumInsured"] * values$cashFlowsBasic$sumInsured
+      cf[,,"SumInsured",] = cf[,,"SumInsured",] * values$cashFlowsBasic$sumInsured
 
       applyHook(params$Hooks$adjustCashFlowsCosts, cf, params, values)
     },
@@ -669,22 +679,6 @@ InsuranceTarif = R6Class(
       pvc
     },
 
-    #' @description Convert the cost values array to a tx15 matrix
-    #' @details Not to be called directly, but implicitly by the [InsuranceContract] object.
-    #' Convert the array containing cost values like cashflows, present
-    #' values, etc. (objects of dimension tx5x3) to a matrix with dimensions (tx15)
-    #' @param costValues The cost data structure (array of size tx5x3) to be converted to a matrix
-    costValuesAsMatrix = function(costValues) {
-      dm = dim(costValues);
-      nm = dimnames(costValues);
-      colnames = t(outer(nm[[2]], nm[[3]], paste, sep = "."));
-
-      res = aperm(costValues, c(1,3,2));
-      dim(res) = c(dm[[1]], dm[[2]]*dm[[3]]);
-      dimnames(res) = list(nm[[1]], colnames)
-      res
-    },
-
     #' @description Calculate the cash flows in monetary terms of the insurance contract
     #' @details Once the premiums of the insurance contracts are calculated, all
     #' cash flows can also be expressed in absolute terms. This function
@@ -720,13 +714,14 @@ InsuranceTarif = R6Class(
 
       # costs relative to sumInsured are already set up as the correct multiple
       # of the original SI, including the dynamic changes over time!
-      values$cashFlowsCosts = values$cashFlowsCosts[,,"SumInsured"] * params$ContractData$sumInsured +
-        values$cashFlowsCosts[,,"SumPremiums"] * values$unitPremiumSum * values$premiums[["gross"]] +
-        values$cashFlowsCosts[,,"GrossPremium"] * values$premiums[["gross"]] +
-          values$cashFlowsCosts[,,"NetPremium"] * values$premiums[["net"]] +
-          values$cashFlowsCosts[,,"Constant"];
+      values$cashFlowsCosts = values$cashFlowsCosts[,,"SumInsured",] * params$ContractData$sumInsured +
+        values$cashFlowsCosts[,,"SumPremiums",] * values$unitPremiumSum * values$premiums[["gross"]] +
+        values$cashFlowsCosts[,,"GrossPremium",] * values$premiums[["gross"]] +
+          values$cashFlowsCosts[,,"NetPremium",] * values$premiums[["net"]] +
+          values$cashFlowsCosts[,,"Constant",];
 
-      cbind(values$cashFlows, values$cashFlowsCosts)
+      # Handle survival CF differently, because we don't want ".survival" in the column names!
+      cbind(values$cashFlows, values$cashFlowsCosts[,,"survival"], values$cashFlowsCosts[,,-1])
     },
 
     #' @description Calculate the absolute present value time series of the insurance contract
@@ -776,12 +771,14 @@ InsuranceTarif = R6Class(
                     values$presentValues[,"disease_SumInsured"];
       allBenefits = benefits +
           values$presentValues[,"death_GrossPremium"] * values$premiums[["unit.gross"]] * params$ContractData$premiumRefund;
+      benefitsCosts = rowSums( # Sum over the fourth dimension, leave the first three intact
+        values$presentValuesCosts[,,"SumInsured",] +
+        values$presentValuesCosts[,,"SumPremiums",] * values$unitPremiumSum * values$premiums[["unit.gross"]] +
+        values$presentValuesCosts[,,"GrossPremium",] * values$premiums[["unit.gross"]] +
+        values$presentValuesCosts[,,"NetPremium",] * values$premiums[["unit.net"]] +
+        values$presentValuesCosts[,,"Constant",] / params$ContractData$sumInsured,
+        dims = 2)
 
-      benefitsCosts = values$presentValuesCosts[,,"SumInsured"] +
-        values$presentValuesCosts[,,"SumPremiums"] * values$unitPremiumSum * values$premiums[["unit.gross"]] +
-        values$presentValuesCosts[,,"GrossPremium"] * values$premiums[["unit.gross"]] +
-        values$presentValuesCosts[,,"NetPremium"] * values$premiums[["unit.net"]] +
-        values$presentValuesCosts[,,"Constant"] / params$ContractData$sumInsured;
 
       cbind(
         benefits = benefits,
@@ -824,7 +821,7 @@ InsuranceTarif = R6Class(
       coeff.benefits = (1 + securityLoading);
       if (type == "gross") {
           # TODO: How to include this into the Zillmer premium calculation?
-          coeff.benefits = coeff.benefits * (1 + sum(values$presentValuesCosts[t, c("alpha", "beta", "gamma"), "NetPremium"]) / values$presentValues[[t,"premiums"]])
+          coeff.benefits = coeff.benefits * (1 + sum(values$presentValuesCosts[t, c("alpha", "beta", "gamma"), "NetPremium",]) / values$presentValues[[t,"premiums"]])
       }
       coeff[["SumInsured"]][["benefits"]][["guaranteed"]]       = coeff.benefits;
       coeff[["SumInsured"]][["benefits"]][["survival"]]         = coeff.benefits;
@@ -842,34 +839,34 @@ InsuranceTarif = R6Class(
       # coefficients for the costs
 
       if (type == "gross") {
-        coeff[["SumInsured"]][["costs"]]["alpha", "SumInsured"] = 1;
-        coeff[["SumInsured"]][["costs"]]["beta",  "SumInsured"] = 1;
-        coeff[["SumInsured"]][["costs"]]["gamma", "SumInsured"] = 1;
+        coeff[["SumInsured"]][["costs"]]["alpha", "SumInsured",] = 1;
+        coeff[["SumInsured"]][["costs"]]["beta",  "SumInsured",] = 1;
+        coeff[["SumInsured"]][["costs"]]["gamma", "SumInsured",] = 1;
         # TODO: How to handle beta costs proportional to Sum Insured
-        coeff[["Premium"]][["costs"]]["alpha", "SumPremiums"] = -values$unitPremiumSum;
-        coeff[["Premium"]][["costs"]]["beta",  "SumPremiums"] = -values$unitPremiumSum;
-        coeff[["Premium"]][["costs"]]["gamma", "SumPremiums"] = -values$unitPremiumSum;
+        coeff[["Premium"]][["costs"]]["alpha", "SumPremiums",] = -values$unitPremiumSum;
+        coeff[["Premium"]][["costs"]]["beta",  "SumPremiums",] = -values$unitPremiumSum;
+        coeff[["Premium"]][["costs"]]["gamma", "SumPremiums",] = -values$unitPremiumSum;
 
-        coeff[["Premium"]][["costs"]]["alpha", "GrossPremium"] = -1;
-        coeff[["Premium"]][["costs"]]["beta",  "GrossPremium"] = -1;
-        coeff[["Premium"]][["costs"]]["gamma", "GrossPremium"] = -1;
+        coeff[["Premium"]][["costs"]]["alpha", "GrossPremium",] = -1;
+        coeff[["Premium"]][["costs"]]["beta",  "GrossPremium",] = -1;
+        coeff[["Premium"]][["costs"]]["gamma", "GrossPremium",] = -1;
 
-        coeff[["SumInsured"]][["costs"]]["alpha", "Constant"] = 1 / params$ContractData$sumInsured;
-        coeff[["SumInsured"]][["costs"]]["beta",  "Constant"] = 1 / params$ContractData$sumInsured;
-        coeff[["SumInsured"]][["costs"]]["gamma", "Constant"] = 1 / params$ContractData$sumInsured;
+        coeff[["SumInsured"]][["costs"]]["alpha", "Constant",] = 1 / params$ContractData$sumInsured;
+        coeff[["SumInsured"]][["costs"]]["beta",  "Constant",] = 1 / params$ContractData$sumInsured;
+        coeff[["SumInsured"]][["costs"]]["gamma", "Constant",] = 1 / params$ContractData$sumInsured;
 
       } else if (type == "Zillmer") {
           # TODO: Include costs with basis NetPremium and fixed costs!
-        coeff[["SumInsured"]][["costs"]]["Zillmer","SumInsured"] = 1;
-        coeff[["SumInsured"]][["costs"]]["Zillmer","SumPremiums"] = values$unitPremiumSum * premiums[["unit.gross"]];
-        coeff[["SumInsured"]][["costs"]]["Zillmer","GrossPremium"] = premiums[["unit.gross"]];
+        coeff[["SumInsured"]][["costs"]]["Zillmer","SumInsured",] = 1;
+        coeff[["SumInsured"]][["costs"]]["Zillmer","SumPremiums",] = values$unitPremiumSum * premiums[["unit.gross"]];
+        coeff[["SumInsured"]][["costs"]]["Zillmer","GrossPremium",] = premiums[["unit.gross"]];
         if (params$Features$betaGammaInZillmer) {
-          coeff[["SumInsured"]][["costs"]]["beta",  "SumInsured"] = 1;
-          coeff[["SumInsured"]][["costs"]]["gamma", "SumInsured"] = 1;
-          coeff[["SumInsured"]][["costs"]]["beta",  "SumPremiums"] = values$unitPremiumSum * premiums[["unit.gross"]];
-          coeff[["SumInsured"]][["costs"]]["gamma", "SumPremiums"] = values$unitPremiumSum * premiums[["unit.gross"]];
-          coeff[["SumInsured"]][["costs"]]["beta",  "GrossPremium"] = premiums[["unit.gross"]];
-          coeff[["SumInsured"]][["costs"]]["gamma", "GrossPremium"] = premiums[["unit.gross"]];
+          coeff[["SumInsured"]][["costs"]]["beta",  "SumInsured",] = 1;
+          coeff[["SumInsured"]][["costs"]]["gamma", "SumInsured",] = 1;
+          coeff[["SumInsured"]][["costs"]]["beta",  "SumPremiums",] = values$unitPremiumSum * premiums[["unit.gross"]];
+          coeff[["SumInsured"]][["costs"]]["gamma", "SumPremiums",] = values$unitPremiumSum * premiums[["unit.gross"]];
+          coeff[["SumInsured"]][["costs"]]["beta",  "GrossPremium",] = premiums[["unit.gross"]];
+          coeff[["SumInsured"]][["costs"]]["gamma", "GrossPremium",] = premiums[["unit.gross"]];
         }
       }
 
@@ -894,7 +891,7 @@ InsuranceTarif = R6Class(
       # Get the present values of the premiums, claims and costs at time 'premiumCalculationTime' (where the premium is to be calculated)
       t = as.character(premiumCalculationTime)
       pv = values$presentValues[t,]
-      pvCost = values$presentValuesCosts[t,,]
+      pvCost = values$presentValuesCosts[t,,,]
 
       if (pv[["premiums"]] == 0) {
         return(list("premiums" = values$premiums, "coefficients" = coefficients))
@@ -946,11 +943,13 @@ InsuranceTarif = R6Class(
 
       partnerRebate = valueOrFunction(loadings$partnerRebate, params = params, values = values);
 
-      pv.unitcosts = pvCost["unitcosts","SumInsured"] * sumInsured +
-        pvCost["unitcosts","SumPremiums"] * values$unitPremiumSum * values$premiums[["gross"]] +
-        pvCost["unitcosts","GrossPremium"] * values$premiums[["gross"]] +
-        pvCost["unitcosts","NetPremium"] * values$premiums[["net"]] +
-        pvCost["unitcosts","Constant"];
+      pv.unitcosts = sum(
+        pvCost["unitcosts","SumInsured",] * sumInsured +
+        pvCost["unitcosts","SumPremiums",] * values$unitPremiumSum * values$premiums[["gross"]] +
+        pvCost["unitcosts","GrossPremium",] * values$premiums[["gross"]] +
+        pvCost["unitcosts","NetPremium",] * values$premiums[["net"]] +
+        pvCost["unitcosts","Constant",]
+      )
       premium.unitcosts = pv.unitcosts / pv[["premiums"]] + valueOrFunction(loadings$unitcosts, params = params, values = values);
       values$premiums[["unitcost"]] = premium.unitcosts;
 

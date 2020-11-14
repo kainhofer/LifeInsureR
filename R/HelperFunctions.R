@@ -181,7 +181,7 @@ mergeValues3D = function(starting, ending, t) {
   } else if (t == 0) {
     ending
   } else {
-    abind::abind(starting[1:t,,], ending[-1:-t,,], along = 1)
+    abind::abind(starting[1:t,,,], ending[-1:-t,,,], along = 1)
   }
 }
 # Caution: px is not neccessarily 1-qx, because we might also have dread diseases so that px=1-qx-ix! However, the ix is not used for the survival present value
@@ -232,16 +232,35 @@ calculatePVGuaranteed = function(advance, arrears = c(0), ..., m = 1, mCorrectio
 calculatePVCosts = function(px = 1 - qx, qx = 1 - px, costs, ..., v = 1, start = 0) {
   l = max(length(qx), dim(costs)[1]);
   p = pad0(px, l, value = 0);
-  costs = costs[1:l,,];
+  costs = costs[1:l,,,];
 
   # Take the array structure from the cash flow array and initialize it with 0
   res = costs*0;
-  prev = res[1,,]*0;
+  prev = res[1,,,"survival"]*0;
   # Backward recursion starting from the last time:
+  # Survival Cash flows
   for (i in l:(start + 1)) {
     # cat("values at iteration ", i, ": ", v, q[i], costs[i,,], prev);
-    res[i,,] = costs[i,,] + v*p[i]*prev;
-    prev = res[i,,];
+    res[i,,,"survival"] = costs[i,,,"survival"] + v*p[i]*prev;
+    prev = res[i,,,"survival"];
+  }
+  # guaranteed cash flows (even after death)
+  prev = res[1,,,"guaranteed"]*0;
+  for (i in l:(start + 1)) {
+    res[i,,,"guaranteed"] = costs[i,,,"guaranteed"] + v*prev;
+    prev = res[i,,,"guaranteed"];
+  }
+  # Cash flows only after death
+    # This case is more complicated, as we have two possible states of
+    # payments (present value conditional on active, but payments only when
+    # dead => need to write the Thiele difference equations as a pair of
+    # recursive equations rather than a single recursive formula...)
+  prev = res[1,,,"after.death"]*0;
+  prev.dead = res[1,,,1]*0
+  for (i in l:(start + 1)) {
+    res[i,,,"after.death"] = p[i] * v * prev + (1 - p[i]) * v * prev.dead
+    prev = res[i,,,"after.death"]
+    prev.dead = costs[i,,,"after.death"] + v * prev.dead
   }
   res
 }

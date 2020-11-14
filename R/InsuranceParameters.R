@@ -86,12 +86,12 @@ setCost = function(costs, type, basis = "SumInsured", frequency = "PolicyPeriod"
 #'
 #'
 #' @export
-initializeCosts = function(costs, alpha, Zillmer, beta, gamma, gamma.paidUp, gamma.premiumfree, gamma.contract, unitcosts, unitcosts.PolicyPeriod) {
+initializeCosts = function(costs, alpha, Zillmer, beta, gamma, gamma.paidUp, gamma.premiumfree, gamma.contract, gamma.afterdeath, gamma.fullcontract, unitcosts, unitcosts.PolicyPeriod) {
     if (missing(costs)) {
         dimnm = list(
             type = c("alpha", "Zillmer", "beta", "gamma", "gamma_nopremiums", "unitcosts"),
             basis = c("SumInsured", "SumPremiums", "GrossPremium", "NetPremium", "Constant", "Reserve"),
-            frequency = c("once", "PremiumPeriod", "PremiumFree", "PolicyPeriod")
+            frequency = c("once", "PremiumPeriod", "PremiumFree", "PolicyPeriod", "AfterDeath", "FullContract")
         );
         costs = array(
             0,
@@ -119,6 +119,12 @@ initializeCosts = function(costs, alpha, Zillmer, beta, gamma, gamma.paidUp, gam
     }
     if (!missing(gamma.contract))  {
       costs = setCost(costs, "gamma", "SumInsured", "PolicyPeriod", gamma.contract)
+    }
+    if (!missing(gamma.afterdeath))  {
+      costs = setCost(costs, "gamma", "SumInsured", "AfterDeath", gamma.afterdeath)
+    }
+    if (!missing(gamma.fullcontract))  {
+      costs = setCost(costs, "gamma", "SumInsured", "FullContract", gamma.fullcontract)
     }
     if (!missing(unitcosts)) {
       costs = setCost(costs, "unitcosts", "Constant", "PremiumPeriod", unitcosts)
