@@ -317,7 +317,13 @@ InsuranceContract.Values = list(
 #'               premiums (considering the balance sheet date and the premium
 #'               frequency). A function with signature \code{unearnedPremiumsMethod(params, dates)}}
 #'     \item{\code{$surrenderValueCalculation}}{A function describing the surrender
-#'               value calculation.}
+#'               value calculation. If NULL, the full reserve will be used as
+#'               surrender value. If given, it must be a function with signature
+#'               \code{function(SurrenderReserve, params, values)}.}
+#'     \item{\code{$premiumWaiverValueCalculation}}{A function describing the
+#'               reserve used to derive the premium-free sum insured. If NULL,
+#'               the surrender value will be used. If given, it must be a function
+#'               with signature \code{function(SurrenderReserve, params, values)}}
 #'     \item{\code{$premiumFrequencyOrder}}{Order of the approximation for
 #'               payments within the year (unless an extra frequency loading is
 #'               used => then leave this at 0)}
@@ -458,6 +464,7 @@ InsuranceContract.ParameterDefaults = list(
         balanceSheetMethod = "30/360",
         unearnedPremiumsMethod = NULL,          # Function to calculate the factors for unearned premiums
         surrenderValueCalculation = NULL,       # By default no surrender penalties
+        premiumWaiverValueCalculation = NULL,   # By default, surrender value will be used
 
         premiumFrequencyOrder = 0,              # Order of the approximation for payments within the year (unless an extra frequency loading is used => then leave this at 0)
         benefitFrequencyOrder = 0
