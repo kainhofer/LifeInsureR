@@ -151,8 +151,7 @@ reserves. Either a string "30/360", "act/act", "act/360", "act/365"
 or a function with signature \code{balanceSheetMethod(params, contractDates, balanceDates)}
 that returns a vector of coefficients for each year to
 interpolate the reserves available at the given \code{contractDates}
-for the desirec \code{balanceDates}}}
-reserves.}
+for the desired \code{balanceDates}}
 \item{\code{$unearnedPremiumsMethod}}{How to calculate the unearned
 premiums (considering the balance sheet date and the premium
 frequency). A function with signature \code{unearnedPremiumsMethod(params, dates)}}

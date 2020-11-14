@@ -2,7 +2,7 @@
 % Please edit documentation in R/InsuranceParameters.R
 \name{initializeCosts}
 \alias{initializeCosts}
-\title{Initialize a data structure for the definition of \link{InsuranceTarif} costs}
+\title{Initialize or modify a data structure for the definition of \link{InsuranceTarif} costs}
 \usage{
 initializeCosts(
   costs,
@@ -13,6 +13,8 @@ initializeCosts(
   gamma.paidUp,
   gamma.premiumfree,
   gamma.contract,
+  gamma.afterdeath,
+  gamma.fullcontract,
   unitcosts,
   unitcosts.PolicyPeriod
 )
@@ -45,7 +47,7 @@ Initialize a cost matrix with dimensions: {CostType, Basis, Period}, where:
 \item{Basis:}{SumInsured, SumPremiums, GrossPremium, NetPremium, Constant}
 \item{Period:}{once, PremiumPeriod, PremiumFree, PolicyPeriod}
 }
-This cost structure can then be modified for non-standard costs.
+This cost structure can then be modified for non-standard costs using the \code{\link[=setCost]{setCost()}} function.
 The main purpose of this structure is to be passed to \link{InsuranceContract} or
 \link{InsuranceTarif} definitions.
 }
@@ -62,6 +64,15 @@ costs.Bsp[["alpha", "SumPremiums", "once"]] = 0.04;
 costs.Bsp[["Zillmer", "SumPremiums", "once"]] = 0.025;
 costs.Bsp[["beta", "GrossPremium", "PremiumPeriod"]] = 0.05;
 costs.Bsp[["gamma", "SumInsured", "PolicyPeriod"]] = 0.001;
+
+# The same structure using the setCost() function:
+library(magrittr)
+costs.Bsp = initializeCosts() \%>\%
+  setCost("alpha", "SumPremiums", "once", 0.04) \%>\%
+  setCost("Zillmer", "SumPremiums", "once", 0.025) \%>\%
+  setCost("beta", "GrossPremium", "PremiumPeriod", 0.05) \%>\%
+  setCost("gamma", "SumInsured", "PolicyPeriod", 0.001)
+
 
 
 

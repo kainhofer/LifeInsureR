@@ -1,7 +1,42 @@
 #' @include HelperFunctions.R
 NULL
 
-#' Initialize a data structure for the definition of [InsuranceTarif] costs
+#' Update one component of an [InsuranceTarif]'s cost structure
+#'
+#' Insurance tariff costs are defined by a cost matrix with dimensions: {CostType, Basis, Period}, where:
+#' \describe{
+#'     \item{CostType:}{alpha, Zillmer, beta, gamma, gamma_nopremiums, unitcosts}
+#'     \item{Basis:}{SumInsured, SumPremiums, GrossPremium, NetPremium, Constant}
+#'     \item{Period:}{once, PremiumPeriod, PremiumFree, PolicyPeriod, AfterDeath, FullContract}
+#' }
+#' After creation (using the function [initializeCosts()]), the funciton \code{setCost}
+#' can be used to modify a single entry. While [initializeCosts()] provides arguments
+#' to set the most common types of cost parameters in one call, the \code{setCost}
+#' function allows to modify any cost parameter.
+#'
+#' This function modifies a copy of the cost structure and returns it, so this
+#' function can be chained as often as desired and final return value will contain
+#' all cost modifications.
+#'
+#' @param costs The cost definition matrix (usually created by [initializeCosts()])
+#' @param type The cost type (alpha, Zillmer, beta, gamma, gamma_nopremiums, unitcosts)
+#' @param basis The basis fo which the cost rate is applied (default is SumInsured)
+#' @param frequency How often / during which period the cost is charged (once, PremiumPeriod, PremiumFree, PolicyPeriod, FullContract)
+#'
+#' @return The modified cost structure
+#'
+#' @examples
+#' costs = initializeCosts()
+#' setCost(costs, "alpha", "SumPremiums", "once", 0.05)
+#'
+#' @export
+setCost = function(costs, type, basis = "SumInsured", frequency = "PolicyPeriod", value) {
+  costs[type, basis, frequency] = value
+  costs
+}
+
+
+#' Initialize or modify a data structure for the definition of [InsuranceTarif] costs
 #'
 #' Initialize a cost matrix with dimensions: {CostType, Basis, Period}, where:
 #' \describe{
@@ -9,7 +44,7 @@ NULL
 #'     \item{Basis:}{SumInsured, SumPremiums, GrossPremium, NetPremium, Constant}
 #'     \item{Period:}{once, PremiumPeriod, PremiumFree, PolicyPeriod}
 #' }
-#' This cost structure can then be modified for non-standard costs.
+#' This cost structure can then be modified for non-standard costs using the [setCost()] function.
 #' The main purpose of this structure is to be passed to [InsuranceContract] or
 #' [InsuranceTarif] definitions.
 # TODO: gamma an Erlebensleistungen?
@@ -39,6 +74,15 @@ NULL
 #' costs.Bsp[["beta", "GrossPremium", "PremiumPeriod"]] = 0.05;
 #' costs.Bsp[["gamma", "SumInsured", "PolicyPeriod"]] = 0.001;
 #'
+#' # The same structure using the setCost() function:
+#' library(magrittr)
+#' costs.Bsp = initializeCosts() %>%
+#'   setCost("alpha", "SumPremiums", "once", 0.04) %>%
+#'   setCost("Zillmer", "SumPremiums", "once", 0.025) %>%
+#'   setCost("beta", "GrossPremium", "PremiumPeriod", 0.05) %>%
+#'   setCost("gamma", "SumInsured", "PolicyPeriod", 0.001)
+#'
+#'
 #'
 #'
 #' @export
@@ -56,31 +100,31 @@ initializeCosts = function(costs, alpha, Zillmer, beta, gamma, gamma.paidUp, gam
         );
     }
     if (!missing(alpha)) {
-        costs[["alpha",  "SumPremiums", "once"]] = alpha;
+      costs = setCost(costs, "alpha",  "SumPremiums", "once", alpha)
     }
     if (!missing(Zillmer)) {
-        costs[["Zillmer","SumPremiums", "once"]] = Zillmer;
+      costs = setCost(costs, "Zillmer","SumPremiums", "once", Zillmer)
     }
     if (!missing(beta))  {
-        costs[["beta", "GrossPremium", "PremiumPeriod"]] = beta;
+      costs = setCost(costs, "beta", "GrossPremium", "PremiumPeriod", beta)
     }
     if (!missing(gamma)) {
-        costs[["gamma", "SumInsured", "PremiumPeriod"]] = gamma;
+      costs = setCost(costs, "gamma", "SumInsured", "PremiumPeriod", gamma)
     }
     if (!missing(gamma.premiumfree)) {
-        costs[["gamma", "SumInsured", "PremiumFree"]] = gamma.premiumfree;
+      costs = setCost(costs, "gamma", "SumInsured", "PremiumFree", gamma.premiumfree)
     }
     if (!missing(gamma.paidUp))  {
-        costs[["gamma_nopremiums", "SumInsured", "PolicyPeriod"]] = gamma.paidUp;
+      costs = setCost(costs, "gamma_nopremiums", "SumInsured", "PolicyPeriod", gamma.paidUp)
     }
     if (!missing(gamma.contract))  {
-        costs[["gamma", "SumInsured", "PolicyPeriod"]] = gamma.contract;
+      costs = setCost(costs, "gamma", "SumInsured", "PolicyPeriod", gamma.contract)
     }
     if (!missing(unitcosts)) {
-        costs[["unitcosts", "Constant", "PremiumPeriod"]] = unitcosts;
+      costs = setCost(costs, "unitcosts", "Constant", "PremiumPeriod", unitcosts)
     }
     if (!missing(unitcosts.PolicyPeriod)) {
-        costs[["unitcosts", "Constant", "PolicyPeriod"]] = unitcosts.PolicyPeriod;
+      costs = setCost(costs, "unitcosts", "Constant", "PolicyPeriod", unitcosts.PolicyPeriod)
     }
     costs
 }
@@ -262,8 +306,7 @@ InsuranceContract.Values = list(
 #'               or a function with signature \code{balanceSheetMethod(params, contractDates, balanceDates)}
 #'               that returns a vector of coefficients for each year to
 #'               interpolate the reserves available at the given \code{contractDates}
-#'               for the desirec \code{balanceDates}}}
-#'               reserves.}
+#'               for the desired \code{balanceDates}}
 #'     \item{\code{$unearnedPremiumsMethod}}{How to calculate the unearned
 #'               premiums (considering the balance sheet date and the premium
 #'               frequency). A function with signature \code{unearnedPremiumsMethod(params, dates)}}
