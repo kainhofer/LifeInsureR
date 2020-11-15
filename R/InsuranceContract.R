@@ -688,13 +688,30 @@ InsuranceContract = R6Class(
                     arr1 + arr2
                 }
             }
-            consolidateField = function(field) {
+            sumKeyedArrays = function(arr1 = NULL, arr2 = NULL) {
+                if (is.null(arr2)) {
+                    arr1
+                } else if (is.null(arr1)) {
+                    arr2
+                } else {
+                    bind_rows(arr1, arr2) %>%
+                        group_by(date) %>%
+                        summarise_all(list(sum))
+                }
+            }
+            consolidateField = function(field, keyed = FALSE) {
                 vals = NULL
                 if (length(self$blocks) == 0) {
                     vals = self$Values[[field]]
                 }
                 for (b in self$blocks) {
-                    vals = sumPaddedArrays(arr1 = vals, arr2 = b$Values[[field]], pad2 = b$Parameters$ContractData$blockStart)
+                    if (keyed) {
+                        # The rows of the two data.frames can be associated by the values of a certain column
+                        vals = sumKeyedArrays(arr1 = vals, arr2 = b$Values[[field]])
+                    } else {
+                        # Simply pad the arrays and sum them up:
+                        vals = sumPaddedArrays(arr1 = vals, arr2 = b$Values[[field]], pad2 = b$Parameters$ContractData$blockStart)
+                    }
                 }
                 mergeValues(starting = self$Values[[field]],   ending = vals, t = valuesFrom);
             }
@@ -721,7 +738,7 @@ InsuranceContract = R6Class(
             self$Values$premiumCompositionSums = consolidateField("premiumCompositionSums")
             self$Values$premiumCompositionPV   = consolidateField("premiumCompositionPV")
             self$Values$reserves               = consolidateField("reserves")
-            self$Values$reservesBalanceSheet   = consolidateField("reservesBalanceSheet")
+            self$Values$reservesBalanceSheet   = consolidateField("reservesBalanceSheet", keyed = TRUE)
             # TODO: Basic Data cannot simply be summed, e.g. the interest rate!
             self$Values$basicData              = consolidateField("basicData")
             # self$Values$basicData[,c("InterestRate", "PolicyDuration", "PremiumPeriod")] = NULL
