@@ -32,5 +32,10 @@ contract.L71U$Values$premiums
 contract.L71U$Values$reserves
 
 contract.L71U = contract.L71U$premiumWaiver(t = 3)
-contract.L71U$Values$reserves %>% pander()
+contract.L71U$Values$reserves
+contract.L71U$Values$premiumCoefficients
 
+
+
+exportInsuranceContract.xlsx(contract.L71U, "L71U.xlsx")
+openXL("L71U.xlsx")

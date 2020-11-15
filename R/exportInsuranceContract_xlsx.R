@@ -275,7 +275,6 @@ getContractBlockPremiums = function(contract) {
 #' @details Not to be called directly, but implicitly by the [InsuranceContract] object.
 #' Convert the array containing cost values like cashflows, present
 #' values, etc. (objects of dimension tx5x3) to a matrix with dimensions (tx15)
-#' @param costValues The cost data structure (array of size tx5x3) to be converted to a matrix
 costValuesAsDF = function(costValues) {
   as.data.frame.table(costValues, responseName = "Value", stringsAsFactors = TRUE) %>%
     mutate(Var4 = recode(Var4, "Erl." = "")) %>%
