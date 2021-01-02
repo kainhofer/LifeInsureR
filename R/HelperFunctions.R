@@ -101,6 +101,20 @@ ProfitComponentsEnum = objectProperties::setMultipleEnum("ProfitComponents",
     )
 )
 
+#' Determine whether a contract (given all parameters) is a single-premium contract or with regular premiums
+#'
+#' The death benefit will be the full sumInsured for the first year after the
+#' deferral period and then decrease linearly to 0 at the end of the policyPeriod.
+#' This can be used with the \code{deathBenefit} parameter for insurance
+#' contracts, but should not be called directly.
+#'
+#' @param params The parameters of the contract.
+#' @param values Unused by default (already calculated values of the contract)
+#'
+#' @export
+isSinglePremiumContract = function(params, values) { params$ContractData$premiumPeriod <= 1 }
+
+
 #' Describes the death benefit of a linearly decreasing whole life insurance (after a possible deferall period)
 #'
 #' The death benefit will be the full sumInsured for the first year after the
