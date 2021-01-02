@@ -1268,7 +1268,7 @@ InsuranceTarif = R6Class(
 
 
       # Gross premium = net + zillmeredAlpha + unzillmeredAlpha + beta + gamma premium
-      unit.premiumCF   = ifelse(premiums[["gross"]] == 0, premium.gross * 0, premium.gross / premiums[["gross"]]);
+      unit.premiumCF   = if (premiums[["gross"]] == 0) { premium.gross * 0 } else { premium.gross / premiums[["gross"]] }
       if (values$absPresentValues[t, "premiums.unit"] == 0) {
         premium.gamma    = 0
         premium.beta     = 0
