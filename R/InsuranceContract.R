@@ -618,13 +618,15 @@ InsuranceContract = R6Class(
             if (calculate == "absvalues") return(invisible(self));
 
             self$Values$reserves           = mergeValues(starting = self$Values$reserves,           ending = private$calculateReserves(), t = valuesFrom);
-            self$Values$reservesBalanceSheet = mergeValues(starting = self$Values$reservesBalanceSheet,ending = private$calculateReservesBalanceSheet(), t = valuesFrom);
             if (calculate == "reserves") return(invisible(self));
             self$Values$premiumComposition = mergeValues(starting = self$Values$premiumComposition, ending = private$premiumAnalysis(), t = valuesFrom);
             self$Values$premiumCompositionSums = mergeValues(starting = self$Values$premiumCompositionSums, ending = private$premiumCompositionSums(), t = valuesFrom);
             self$Values$premiumCompositionPV = mergeValues(starting = self$Values$premiumCompositionPV, ending = private$premiumCompositionPV(), t = valuesFrom);
             self$Values$basicData          = mergeValues(starting = self$Values$basicData,          ending = private$getBasicDataTimeseries(), t = valuesFrom);
             if (calculate == "premiumcomposition") return(invisible(self));
+
+            self$Values$reservesBalanceSheet = mergeValues(starting = self$Values$reservesBalanceSheet,ending = private$calculateReservesBalanceSheet(), t = valuesFrom);
+            if (calculate == "reservesbalancesheet") return(invisible(self));
 
             private$profitParticipation(calculateFrom = valuesFrom);
             if (calculate == "profitparticipation") return(invisible(self));
