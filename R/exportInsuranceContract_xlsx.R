@@ -271,6 +271,8 @@ getContractBlockPremiums = function(contract) {
   values
 }
 
+#' Convert the multi-dimensional costs array to a data.frame for output to a file
+#'
 #' @description Convert the cost values array to a tx15 matrix
 #' @details Not to be called directly, but implicitly by the [InsuranceContract] object.
 #' Convert the array containing cost values like cashflows, present

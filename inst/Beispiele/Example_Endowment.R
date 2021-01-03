@@ -1,4 +1,5 @@
 library(LifeInsuranceContracts)
+library(MortalityTables)
 
 ################################################################### #
 #              DEFINITION TARIF                                  ####
@@ -42,7 +43,7 @@ Tarif.Bsp = InsuranceTarif$new(
   type = "endowment",
   tarif = "BSP",
   desc = "Gemischte Versicherung (Standardtarif)",
-  #premiumPeriod = 1,
+  premiumPeriod = 1,
   #alphaRefundLinear = FALSE,
 
   mortalityTable = mort.AT.census.2011.unisex,

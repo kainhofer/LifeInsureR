@@ -212,6 +212,19 @@ payment frequencies of more than once a year. Format is
 included in the Zillmer premium calculation}
 \item{\code{$alphaRefundLinear}}{Whether the refund of alpha-costs on
 surrender is linear in t or follows the NPV of an annuity}
+\item{\code{$useUnearnedPremiums}}{Whether unearned premiums should be
+reported in the balance sheet reserves. Otherwise, a premium
+paid at the beginning of the period is added to the reserve at
+that time for balance-sheet purposes.\preformatted{          For regular premiums, the default is TRUE, i.e. the balance-sheet
+          reserve at time $t$ does not include the premium paid at time
+          $t$, but unearned premiums are included in the balance sheet
+          reserves. For single-premium contracts, there are no "unearned"
+          premiums, but the initial single premium is added to the reserve
+          immediately for balance-sheet purposes. In particular, the
+          balance sheet reserve at time $t=0$ is not 0, but the
+          premium paid. In turn, no unearned premiums are applied.\}
+}
+
 }
 }
 

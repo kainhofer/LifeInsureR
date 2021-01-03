@@ -374,6 +374,19 @@ InsuranceContract.Values = list(
 #'               included in the Zillmer premium calculation}
 #'     \item{\code{$alphaRefundLinear}}{Whether the refund of alpha-costs on
 #'               surrender is linear in t or follows the NPV of an annuity}
+#'     \item{\code{$useUnearnedPremiums}}{Whether unearned premiums should be
+#'               reported in the balance sheet reserves. Otherwise, a premium
+#'               paid at the beginning of the period is added to the reserve at
+#'               that time for balance-sheet purposes.
+#'
+#'               For regular premiums, the default is TRUE, i.e. the balance-sheet
+#'               reserve at time $t$ does not include the premium paid at time
+#'               $t$, but unearned premiums are included in the balance sheet
+#'               reserves. For single-premium contracts, there are no "unearned"
+#'               premiums, but the initial single premium is added to the reserve
+#'               immediately for balance-sheet purposes. In particular, the
+#'               balance sheet reserve at time $t=0$ is not 0, but the
+#'               premium paid. In turn, no unearned premiums are applied.}
 #' }
 #'
 #' ## Elements of sublist \code{InsuranceContract.ParameterDefault$ProfitParticipation}
@@ -490,9 +503,10 @@ InsuranceContract.ParameterDefaults = list(
         premiumFrequencyLoading = list("1" = 0.0, "2" = 0.0, "4" = 0.0, "12" = 0.0), # TODO: Properly implement this as a function
         alphaRefundPeriod = 5                   # How long acquisition costs should be refunded in case of surrender
     ),
-    Features = list(                          # Special cases for the calculations
+    Features = list(                            # Special cases for the calculations
         betaGammaInZillmer = FALSE,             # Whether beta and gamma-costs should be included in the Zillmer premium calculation
-        alphaRefundLinear  = TRUE               # Whether the refund of alpha-costs on surrender is linear in t or follows the NPV of an annuity
+        alphaRefundLinear  = TRUE,              # Whether the refund of alpha-costs on surrender is linear in t or follows the NPV of an annuity
+        useUnearnedPremiums = isRegularPremiumContract # Whether unearned premiums should be calculated in the balance sheet reserves. Otherwise, a premium paid at the beginning of the period is added to the reserve for balance-sheet purposes.
     ),
 
     ProfitParticipation = list(
@@ -510,7 +524,7 @@ InsuranceContract.ParameterDefaults = list(
         terminalBonusRate = NULL,
         terminalBonusFundRate = NULL,
 
-        profitParticipationScheme = NULL,      # Gewinnbeteiligungssystem (object of class Profit Participation)
+        profitParticipationScheme = NULL,       # Gewinnbeteiligungssystem (object of class Profit Participation)
         profitComponents = c(),                 # Potential values: "interest", "risk", "expense", "sum", "terminal", "TBF"
         profitClass = NULL,
         profitRates = NULL,                     # General, company-wide profit rates, key columns are year and profitClass

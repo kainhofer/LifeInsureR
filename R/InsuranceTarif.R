@@ -1118,32 +1118,41 @@ InsuranceTarif = R6Class(
       factors = self$getBalanceSheetReserveFactor(method = params$ActuarialBases$balanceSheetMethod, params = params, years = years);
       baf = factors$baf
       factors$baf = NULL
-      resZ_BS = (1 - baf) * reserves[,"Zillmer"] + baf * c(reserves[-1, "Zillmer"], 0);
-      resGamma_BS = (1 - baf) * reserves[,"gamma"] + baf * c(reserves[-1, "gamma"], 0);
+
+      useUnearnedPremiums = valueOrFunction(params$Features$useUnearnedPremiums, params = params, values = values)
+      resN_BS = (1 - baf) * (reserves[,"net"] + if (!useUnearnedPremiums) values$premiumComposition[,"net"] else 0) + baf * c(reserves[-1, "net"], 0)
+      resZ_BS = (1 - baf) * (reserves[,"Zillmer"] + if (!useUnearnedPremiums) values$premiumComposition[,"Zillmer"] else 0) + baf * c(reserves[-1, "Zillmer"], 0)
+      resGamma_BS = (1 - baf) * (reserves[,"gamma"] + if (!useUnearnedPremiums) values$premiumComposition[,"gamma"] else 0) + baf * c(reserves[-1, "gamma"], 0)
       res_BS = resZ_BS + resGamma_BS;
 
       # Premium transfer / unearned premium:
-      fact = valueOrFunction(params$ActuarialBases$unearnedPremiumsMethod, params = params, dates = factors$date)
-      if (is.null(fact) || is.na(fact)) {
-        freq = params$ContractData$premiumFrequency
-        bm = month(params$ContractData$contractClosing)
+      if (useUnearnedPremiums) {
+        fact = valueOrFunction(params$ActuarialBases$unearnedPremiumsMethod, params = params, dates = factors$date)
+        if (is.null(fact) || is.na(fact)) {
+          freq = params$ContractData$premiumFrequency
+          bm = month(params$ContractData$contractClosing)
 
-        fact = (month(factors$date) - bm + 12 + 1) %% (12/freq) * (freq/12)
-      }
-      # TODO: We have no vector of actual written premiums (implicit assumption
-      # seems to be that the premium stays constant!). Once we have such a vector,
-      # rewrite the following code
-      unearnedPremiums = fact * values$cashFlows$premiums_advance * values$premiums[["written_beforetax"]] # TODO
-      # If advance profit participation is granted, unearned premiums still apply to the whole gross premium without PP and partner rebate!
-      ppScheme      = params$ProfitParticipation$profitParticipationScheme;
-      if (!is.null(ppScheme)) {
+          fact = (month(factors$date) - bm + 12 + 1) %% (12/freq) * (freq/12)
+        }
+        # TODO: We have no vector of actual written premiums (implicit assumption
+        # seems to be that the premium stays constant!). Once we have such a vector,
+        # rewrite the following code
+        unearnedPremiums = fact * values$cashFlows$premiums_advance * values$premiums[["written_beforetax"]] # TODO
+        # If advance profit participation is granted, unearned premiums still apply to the whole gross premium without PP and partner rebate!
+        ppScheme      = params$ProfitParticipation$profitParticipationScheme;
+        if (!is.null(ppScheme)) {
           partnerRebate = valueOrFunction(params$Loadings$partnerRebate, params = params, values = values);
           advanceProfitParticipation = ppScheme$getAdvanceProfitParticipationAfterUnitCosts(params = params, values = values);
           unearnedPremiums = unearnedPremiums / (1 - partnerRebate - advanceProfitParticipation);
+        }
+      } else {
+        # If reserves contain single-premium, no unearned premiums are shown in the balance sheet!
+        unearnedPremiums = 0
       }
 
       # Collect all reserves to one large matrix
       res = cbind(factors,
+                  "net"                   = pmax(resN_BS,0),
                   "Zillmer"               = pmax(resZ_BS,0),
                   "gamma"                 = pmax(resGamma_BS,0),
                   "Balance Sheet Reserve" = pmax(res_BS,0),
