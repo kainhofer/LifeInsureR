@@ -12,8 +12,5 @@ isSinglePremiumContract(params, values)
 \item{values}{Unused by default (already calculated values of the contract)}
 }
 \description{
-The death benefit will be the full sumInsured for the first year after the
-deferral period and then decrease linearly to 0 at the end of the policyPeriod.
-This can be used with the \code{deathBenefit} parameter for insurance
-contracts, but should not be called directly.
+Single premium contracts are identified by the parameter \code{premiumPeriod = 1}.
 }
