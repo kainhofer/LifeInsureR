@@ -1078,7 +1078,7 @@ InsuranceTarif = R6Class(
     },
 
     #' @description Calculate the (linear) interpolation factors for the balance
-    #' sheet reserve (Dec. 31) between the yearly contract clowing dates
+    #' sheet reserve (Dec. 31) between the yearly contract closing dates
     #' @details Not to be called directly, but implicitly by the [InsuranceContract] object.
     #' @param method The method for the balance sheet interpolation (30/360, act/act, act/360, act/365 or a function)
     #' @param years how many years to calculate (for some usances, the factor
@@ -1090,8 +1090,10 @@ InsuranceTarif = R6Class(
         balanceDate = balanceDate + years(1);
       }
 
-      contractDates = params$ContractData$contractClosing + years(1:years);
-      balanceDates = balanceDate + years(1:years - 1);
+      # contractDates = params$ContractData$contractClosing + years(1:years);
+      # balanceDates = balanceDate + years(1:years - 1);
+      contractDates = seq(params$ContractData$contractClosing, length.out = years, by = "year")
+      balanceDates = seq(balanceDate, length.out = years, by = "year")
 
       if (is.function(method)) {
         baf = method(params = params, contractDates = contractDates, balanceDates = balanceDates)

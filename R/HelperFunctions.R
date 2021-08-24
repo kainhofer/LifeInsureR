@@ -170,17 +170,57 @@ deathBenefit.linearDecreasing = function(len, params, values) {
 #'
 #' @export
 deathBenefit.annuityDecreasing = function(interest) {
-    function(len, params, values) {
-        protectionPeriod = params$ContractData$policyPeriod - params$ContractData$deferralPeriod;
-        vk = 1/(1 + interest);
-        if (interest == 0) {
-            sumInsured = (protectionPeriod:0) / protectionPeriod
-        } else {
-            sumInsured = (vk ^ (protectionPeriod:0) - 1) / (vk ^ protectionPeriod - 1)
-        }
-        pad0(sumInsured, l = len)
+  function(len, params, values) {
+    protectionPeriod = params$ContractData$policyPeriod - params$ContractData$deferralPeriod;
+    vk = 1/(1 + interest);
+    if (interest == 0) {
+      sumInsured = (protectionPeriod:0) / protectionPeriod
+    } else {
+      sumInsured = (vk ^ (protectionPeriod:0) - 1) / (vk ^ protectionPeriod - 1)
     }
+    pad0(sumInsured, l = len)
+  }
 }
+
+#' Defines a frequency charge (surcharge for monthly/quarterly/semiannual) premium payments #'
+#' Tariffs are typically calculated with yearly premium installments. When
+#' premiums are paid more often then one a year (in advance), the insurance
+#' receives part of the premium later (or not at all in case of death), so a
+#' surcharge for premium payment frequencies higher than yearly is applied to
+#' the  premium, typically in the form of a percentage of the premium.
+#'
+#' This function generates the internal data structure to define surcharges for
+#' monthly, quarterly and semiannual premium payments. The given surcharges can
+#' be either given as percentage points (e.g. 1.5 means 1.5% = 0.015) or as
+#' fractions of 1 (i.e. 0.015 also means 1.5% surcharge). The heuristics applied
+#' to distinguish percentage points and fractions is that all values larger than 0.1
+#' are understood as percentage points and values 0.1 and lower are understood
+#' as fractions of 1.
+#' As a consequence, a frequency charge of 10% or more MUST be given as percentage points.
+#'
+#' Currently, the frequency charges are internally represented as a named list,
+#' \code{list("1" = 0, "2" = 0.01, "4" = 0.02, "12" = 0.03)}, but that might
+#' change in the future, so it is advised to use this function rather than
+#' explicitly using the named list in your code.
+#'
+#' @param monthly Surcharge for monthly premium payments
+#' @param quarterly Surcharge for quarterly premium payments
+#' @param semiannually Surcharge for semi-annual premium payments
+#' @param yearly Surcharge for yearly premium payments (optiona, default is no surcharge)
+#'
+#' @export
+freqCharge = function(monthly = 0, quarterly = 0, semiannually = 0, yearly = 0) {
+  # Apply the heuristics to allow percentage points given
+  if (monthly > 0.1) monthly = monthly / 100;
+  if (quarterly > 0.1) quarterly = quarterly / 100;
+  if (semiannually > 0.1) semiannually = semiannually / 100;
+  if (yearly > 0.1) yearly = yearly / 100;
+
+  # internal representation for now is a named list:
+  list("1" = yearly, "2" = semiannually, "4" = quarterly, "12" = monthly)
+}
+
+
 
 mergeValues = function(starting, ending, t) {
   # if either starting or ending is missing, always use the other, irrespective of t:

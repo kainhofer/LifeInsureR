@@ -248,7 +248,7 @@ InsuranceContract.Values = list(
 #'               is aligned with $t=blockStart$ of the parent block.}
 #'     \item{\code{$premiumPayments}}{Whether premiums are paid in advance
 #'               (default) or arrears. Value is of type [PaymentTimeEnum]
-#'               with possible values "in advance" and 'in arrears"}
+#'               with possible values "in advance" and "in arrears"}
 #'     \item{\code{$benefitPayments}}{Whether recurring benefits (e.g. annuities)
 #'               are paid in advance (default) or arrears. Value is of type
 #'               [PaymentTimeEnum] with possible values "in advance" and
