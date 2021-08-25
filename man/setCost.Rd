@@ -14,6 +14,8 @@ setCost(costs, type, basis = "SumInsured", frequency = "PolicyPeriod", value)
 \item{basis}{The basis fo which the cost rate is applied (default is SumInsured)}
 
 \item{frequency}{How often / during which period the cost is charged (once, PremiumPeriod, PremiumFree, PolicyPeriod, FullContract)}
+
+\item{value}{The new cost value to set for the given type, basis and frequency}
 }
 \value{
 The modified cost structure

@@ -1,7 +1,7 @@
 Package: LifeInsuranceContracts
 Type: Package
-Version: 0.0.2
-Date: 2020-09-14
+Version: 0.0.3
+Date: 2021-08-24
 Title: Framework for Traditional Life Insurance Contracts
 Description: R6 classes to model traditional life insurance
     contracts like annuities, whole life insurances or endowments. Such life
@@ -29,7 +29,8 @@ Imports:
     abind,
     stringr,
     methods,
-    rlang
+    rlang,
+    tidyr
 License: GPL (>= 2)
 RoxygenNote: 7.1.1
 Collate:

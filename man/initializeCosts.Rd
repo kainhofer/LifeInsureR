@@ -36,6 +36,11 @@ initializeCosts(
 
 \item{gamma.contract}{Administration costs for the whole contract period (relative to sum insured)}
 
+\item{gamma.afterdeath}{Administration costs after the insured person has dies (for term-fix insurances)}
+
+\item{gamma.fullcontract}{Administration costs for the full contract period,
+even if the insured has already dies (for term-fix insurances)}
+
 \item{unitcosts}{Unit costs (absolute monetary amount, during premium period)}
 
 \item{unitcosts.PolicyPeriod}{Unit costs (absolute monetary amount, during full contract period)}

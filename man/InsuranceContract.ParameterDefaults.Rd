@@ -83,7 +83,7 @@ value is only used by the parent block (i.e. $t=0$ of the child
 is aligned with $t=blockStart$ of the parent block.}
 \item{\code{$premiumPayments}}{Whether premiums are paid in advance
 (default) or arrears. Value is of type \link{PaymentTimeEnum}
-with possible values "in advance" and 'in arrears"}
+with possible values "in advance" and "in arrears"}
 \item{\code{$benefitPayments}}{Whether recurring benefits (e.g. annuities)
 are paid in advance (default) or arrears. Value is of type
 \link{PaymentTimeEnum} with possible values "in advance" and
@@ -215,16 +215,15 @@ surrender is linear in t or follows the NPV of an annuity}
 \item{\code{$useUnearnedPremiums}}{Whether unearned premiums should be
 reported in the balance sheet reserves. Otherwise, a premium
 paid at the beginning of the period is added to the reserve at
-that time for balance-sheet purposes.\preformatted{          For regular premiums, the default is TRUE, i.e. the balance-sheet
-          reserve at time $t$ does not include the premium paid at time
-          $t$, but unearned premiums are included in the balance sheet
-          reserves. For single-premium contracts, there are no "unearned"
-          premiums, but the initial single premium is added to the reserve
-          immediately for balance-sheet purposes. In particular, the
-          balance sheet reserve at time $t=0$ is not 0, but the
-          premium paid. In turn, no unearned premiums are applied.\}
-}
-
+that time for balance-sheet purposes.
+For regular premiums, the default is TRUE, i.e. the balance-sheet
+reserve at time $t$ does not include the premium paid at time
+$t$, but unearned premiums are included in the balance sheet
+reserves. For single-premium contracts, there are no "unearned"
+premiums, but the initial single premium is added to the reserve
+immediately for balance-sheet purposes. In particular, the
+balance sheet reserve at time $t=0$ is not 0, but the
+premium paid. In turn, no unearned premiums are applied.}
 }
 }
 
@@ -258,9 +257,8 @@ fund, but "old" Austrian terminal bonus)}
 is assigned to. Profit classes are used to bundle similar
 contracts (e.g. following similar risks) together. Profit
 participation rates are defined at the level of profit classes.}
-\item{\code{$profitRates}}{General, company-wide profit rates, key columns are year and profitClass}\preformatted{\\item\{\code{$scenarios}\}\{profit participation scenarios (list of overridden parameters for each scenario)\}
-}
-
+\item{\code{$profitRates}}{General, company-wide profit rates, key columns are year and profitClass}
+\item{\code{$scenarios}}{profit participation scenarios (list of overridden parameters for each scenario)}
 }
 }
 

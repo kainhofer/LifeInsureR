@@ -22,6 +22,7 @@ NULL
 #' @param type The cost type (alpha, Zillmer, beta, gamma, gamma_nopremiums, unitcosts)
 #' @param basis The basis fo which the cost rate is applied (default is SumInsured)
 #' @param frequency How often / during which period the cost is charged (once, PremiumPeriod, PremiumFree, PolicyPeriod, FullContract)
+#' @param value The new cost value to set for the given type, basis and frequency
 #'
 #' @return The modified cost structure
 #'
@@ -57,6 +58,9 @@ setCost = function(costs, type, basis = "SumInsured", frequency = "PolicyPeriod"
 #' @param gamma.paidUp Administration costs for paid-up contracts (relative to sum insured)
 #' @param gamma.premiumfree Administration costs for planned premium-free period (reltaive to sum insured)
 #' @param gamma.contract Administration costs for the whole contract period (relative to sum insured)
+#' @param gamma.afterdeath Administration costs after the insured person has dies (for term-fix insurances)
+#' @param gamma.fullcontract Administration costs for the full contract period,
+#'                           even if the insured has already dies (for term-fix insurances)
 #' @param unitcosts Unit costs (absolute monetary amount, during premium period)
 #' @param unitcosts.PolicyPeriod Unit costs (absolute monetary amount, during full contract period)
 #'
@@ -166,7 +170,7 @@ InsuranceContract.Values = list(
     profitParticipation = list()
 );
 
-# InsuranceContract.ParameterDefault #######################################
+# InsuranceContract.ParameterDefaults #######################################
 #' Default parameters for the InsuranceContract class. A new contract will be
 #' pre-filled with these values, and values passed in the constructor (or with
 #' other setter functions) will override these values.
@@ -378,7 +382,6 @@ InsuranceContract.Values = list(
 #'               reported in the balance sheet reserves. Otherwise, a premium
 #'               paid at the beginning of the period is added to the reserve at
 #'               that time for balance-sheet purposes.
-#'
 #'               For regular premiums, the default is TRUE, i.e. the balance-sheet
 #'               reserve at time $t$ does not include the premium paid at time
 #'               $t$, but unearned premiums are included in the balance sheet
@@ -420,7 +423,6 @@ InsuranceContract.Values = list(
 #'               contracts (e.g. following similar risks) together. Profit
 #'               participation rates are defined at the level of profit classes.}
 #'     \item{\code{$profitRates}}{General, company-wide profit rates, key columns are year and profitClass}
-#'
 #'     \item{\code{$scenarios}}{profit participation scenarios (list of overridden parameters for each scenario)}
 #' }
 #'
@@ -431,7 +433,6 @@ InsuranceContract.Values = list(
 #'     \item{\code{$adjustCashFlowsCosts}}{Function with signature \code{function(x, params, values, ...)} to adjust the costs cash flows after their setup.}
 #'     \item{\code{$adjustPremiumCoefficients}}{Function with signature \code{function(coeff, type, premiums, params, values, premiumCalculationTime)} to adjust the coefficients for premium calculation after their default setup. Use cases are e.g. term-fix tariffs where the Zillmer premium term contains the administration cost over the whole contract, but not other gamma- or beta-costs.}
 #' }
-#'
 #'
 #'
 #' @examples

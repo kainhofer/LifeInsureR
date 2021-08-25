@@ -3,6 +3,8 @@
 #' @import openxlsx
 #' @import MortalityTables
 #' @import R6
+#' @import tidyr
+#' @importFrom rlang .data
 NULL
 
 
@@ -277,12 +279,14 @@ getContractBlockPremiums = function(contract) {
 #' @details Not to be called directly, but implicitly by the [InsuranceContract] object.
 #' Convert the array containing cost values like cashflows, present
 #' values, etc. (objects of dimension tx5x3) to a matrix with dimensions (tx15)
+#'
+#' #parameter costValues Cost definition data structure
 costValuesAsDF = function(costValues) {
   as.data.frame.table(costValues, responseName = "Value", stringsAsFactors = TRUE) %>%
-    mutate(Var4 = recode(Var4, "Erl." = "")) %>%
-    arrange(Var4, Var2, Var3, Var1) %>%
-    unite(costtype, Var2, Var3, Var4, sep = " ") %>%
-    pivot_wider(names_from = costtype, values_from = Value) %>%
+    mutate(Var4 = recode(.data$Var4, "Erl." = "")) %>%
+    arrange(.data$Var4, .data$Var2, .data$Var3, .data$Var1) %>%
+    unite(.data$costtype, .data$Var2, .data$Var3, .data$Var4, sep = " ") %>%
+    pivot_wider(names_from = .data$costtype, values_from = .data$Value) %>%
     mutate(Var1 = NULL)
 }
 
@@ -346,8 +350,8 @@ exportContractDataTable = function(wb, sheet, contract, ccol = 1, crow = 1, styl
   tmp = contractValues %>%
     mutate(`Initial Capital` = additional_capital) %>%
     select(
-      Vertragsteil = .data$ID, Beginn = `Start of Contract`, Tarif = .data$Tariff, .data$`Sum insured`,
-      `Initial Capital`,
+      Vertragsteil = .data$ID, Beginn = .data$`Start of Contract`, Tarif = .data$Tariff, .data$`Sum insured`,
+      .data$`Initial Capital`,
       .data$`Mortality table`, .data$i, .data$Age, .data$`Policy duration`, .data$`Premium period`,
       .data$`Deferral period`, .data$`Guaranteed payments`)
   writeValuesTable(wb, sheet, values = setInsuranceValuesLabels(tmp),

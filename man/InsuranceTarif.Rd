@@ -896,7 +896,7 @@ Not to be called directly, but implicitly by the \link{InsuranceContract} object
 \if{latex}{\out{\hypertarget{method-getBalanceSheetReserveFactor}{}}}
 \subsection{Method \code{getBalanceSheetReserveFactor()}}{
 Calculate the (linear) interpolation factors for the balance
-sheet reserve (Dec. 31) between the yearly contract clowing dates
+sheet reserve (Dec. 31) between the yearly contract closing dates
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{InsuranceTarif$getBalanceSheetReserveFactor(method, params, years = 1)}\if{html}{\out{</div>}}
 }
