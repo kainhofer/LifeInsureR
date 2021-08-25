@@ -30,6 +30,8 @@ Imports:
     stringr,
     methods,
     rlang,
+    kableExtra,
+    pander,
     tidyr
 License: GPL (>= 2)
 RoxygenNote: 7.1.1
@@ -48,8 +50,6 @@ Collate:
 Suggests:
     knitr,
     rmarkdown,
-    pander,
-    kableExtra,
     magrittr,
     tibble,
     testthat

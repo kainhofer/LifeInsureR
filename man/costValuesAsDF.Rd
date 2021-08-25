@@ -6,6 +6,9 @@
 \usage{
 costValuesAsDF(costValues)
 }
+\arguments{
+\item{costValues}{Cost definition data structure}
+}
 \description{
 Convert the cost values array to a tx15 matrix
 }
@@ -13,6 +16,4 @@ Convert the cost values array to a tx15 matrix
 Not to be called directly, but implicitly by the \link{InsuranceContract} object.
 Convert the array containing cost values like cashflows, present
 values, etc. (objects of dimension tx5x3) to a matrix with dimensions (tx15)
-
-#parameter costValues Cost definition data structure
 }
