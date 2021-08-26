@@ -7,6 +7,7 @@
 InsuranceContract.ParametersFill(
   params = InsuranceContract.ParameterStructure,
   costs = NULL,
+  minCosts = NULL,
   ...
 )
 }

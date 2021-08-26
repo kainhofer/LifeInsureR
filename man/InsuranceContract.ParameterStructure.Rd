@@ -5,7 +5,7 @@
 \alias{InsuranceContract.ParameterStructure}
 \title{Full insurance contract parameter structure.}
 \format{
-An object of class \code{list} of length 8.
+An object of class \code{list} of length 9.
 }
 \usage{
 InsuranceContract.ParameterStructure

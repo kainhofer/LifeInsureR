@@ -351,11 +351,21 @@ InsuranceTarif = R6Class(
     #' an array of the required dimensions. This function makes sures that the
     #' latter function is actually evaluated.
     #'
-    #' @param costs The cost parameter passed to the tarif definition or the
-    #' contract (either an array of the form returned by [initializeCosts()] or
-    #' a function(params, values) returning such an array)
-    getCostValues = function(costs, params) {
-        valueOrFunction(costs, params = params, values = NULL)
+    #' @param params The parameters of the contract / tariff
+    getCostValues = function(params) {
+      costs = valueOrFunction(params$Costs, params = params, values = NULL)
+      baseCost = valueOrFunction(params$minCosts, params = params, values = NULL, costs = costs)
+      if (!is.null(baseCost)) {
+        costWaiver = valueOrFunction(params$ContractData$costWaiver, params = params, values = NULL, costs = costs, minCosts = baseCost)
+        if (is.numeric(costWaiver)) {
+          costs = costs * (1 - costWaiver) + baseCost * costWaiver
+        } else if (is.boolean(costWaiver)) {
+          if (isTRUE(costWaiver)) {
+            costs = baseCost
+          }
+        }
+      }
+      costs
     },
 
     #' @description Returns the unit premium cash flow for the whole contract period.

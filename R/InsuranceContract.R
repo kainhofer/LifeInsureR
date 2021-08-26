@@ -909,7 +909,7 @@ InsuranceContract = R6Class(
             #### #
             # COSTS PARAMETERS: can be a function => evaluate it to get the real costs
             #### #
-            self$Parameters$Costs = private$evaluateCosts(self$Parameters$Costs)
+            self$Parameters$Costs = private$evaluateCosts()
 
             #### #
             # AGES for multiple joint lives:
@@ -953,8 +953,8 @@ InsuranceContract = R6Class(
             invisible(self)
         },
 
-        evaluateCosts = function(costs) {
-            self$tarif$getCostValues(costs, params = self$Parameters)
+        evaluateCosts = function() {
+            self$tarif$getCostValues(params = self$Parameters)
         },
 
         determineInternalValues = function(...) {

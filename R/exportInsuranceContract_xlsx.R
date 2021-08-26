@@ -295,10 +295,10 @@ costValuesAsDF = function(costValues) {
 exportLoadingsTable = function(wb, sheet, contract, crow, ccol, styles = styles, seprows = 3, tariffs.handled = c()) {
   tarifname = contract$tarif$tarif
   if (!(tarifname %in% tariffs.handled)) {
-    # TODO: Detect cost structures overridden at contract-level! => Currently only the default tariff costs are printed!
-    costtable = as.data.frame.table(setInsuranceValuesLabels(contract$Parameters$Costs) )
-    colnames(costtable) = c("Kostenart", "Basis", "Periode", "Kostensatz");
-    costtable = costtable[costtable[,"Kostensatz"] != 0.0000,]
+    costtable = costsDisplayTable(contract$Parameters$Costs)
+    # costtable = as.data.frame.table(setInsuranceValuesLabels(contract$Parameters$Costs) )
+    # colnames(costtable) = c("Kostenart", "Basis", "Periode", "Kostensatz");
+    # costtable = costtable[costtable[,"Kostensatz"] != 0.0000,]
     cap = sprintf("Kosten (Tarif %s)", tarifname)
     writeValuesTable(wb, sheet, costtable, crow = crow, ccol = 1, tableName = tableName("Kosten_", tarifname), styles = styles, caption = cap);
     # writeDataTable(wb, sheet, costtable, startCol = 1, startRow = crow + 1, colNames = TRUE, rowNames = FALSE,

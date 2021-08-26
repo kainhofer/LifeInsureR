@@ -408,19 +408,13 @@ Not to be called directly, but implicitly by the \link{InsuranceContract} object
 Obtain the cost structure from the cost parameter and the
 given paremeter set
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{InsuranceTarif$getCostValues(costs, params)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{InsuranceTarif$getCostValues(params)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{costs}}{The cost parameter passed to the tarif definition or the
-contract (either an array of the form returned by \code{\link[=initializeCosts]{initializeCosts()}} or
-a function(params, values) returning such an array)}
-
-\item{\code{params}}{Contract-specific, full set of parameters of the contract
-(merged parameters of the defaults, the tariff, the profit participation
-scheme and the contract)}
+\item{\code{params}}{The parameters of the contract / tariff}
 }
 \if{html}{\out{</div>}}
 }
