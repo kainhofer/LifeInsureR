@@ -168,6 +168,7 @@ costs.baseAlpha = function(alpha) {
 #'
 #' Returns a data.frame with columns
 #'
+#' @param costs The cost structure to be displayed in a concise table style.
 #' @export
 costsDisplayTable = function(costs) {
   costtable = as.data.frame.table(setInsuranceValuesLabels(costs) )
@@ -617,7 +618,7 @@ InsuranceContract.ParameterStructure$Loadings["premiumFrequencyLoading"] = list(
 #' structure is given, an empty (i.e. all NULL entries) structure is used.
 #'
 #' @param params Initial values of the insurance contract parameters. (default: empty parameter structure)
-#' @param costs,... Values for any of the entries in the insurance contract
+#' @param costs,minCosts,... Values for any of the entries in the insurance contract
 #'                  parameter structure. These values take precedence over the
 #'                  initial parameters provided in \code{params}.
 #'

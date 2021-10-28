@@ -6,6 +6,9 @@
 \usage{
 costsDisplayTable(costs)
 }
+\arguments{
+\item{costs}{The cost structure to be displayed in a concise table style.}
+}
 \description{
 Returns a data.frame with columns
 }
