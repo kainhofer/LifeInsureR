@@ -266,6 +266,9 @@ InsuranceContract = R6Class(
         #'        [InsuranceContract.ParameterDefaults] data structure.
         #'
         initialize = function(tarif, parent = NULL, calculate = "all", profitid = "default", ...) {
+            if (getOption('LIC.debug.init', FALSE)) {
+                browser();
+            }
             private$initParams = c(list(tarif = tarif, parent = parent, calculate = calculate, profitid = profitid), list(...))
             self$tarif = tarif;
             self$parent = parent;
@@ -374,6 +377,9 @@ InsuranceContract = R6Class(
         #' @examples
         #' # TODO
         addBlock = function(id = NULL, block = NULL, t = block$Values$int$blockStart, comment = comment, ...) {
+            if (getOption('LIC.debug.addBlock', FALSE)) {
+                browser();
+            }
             if (missing(block) || is.null(block) || !is(block, "InsuranceContract")) {
                 # Create a block with the same tariff and parameters as the main contract, but allow overriding params with the ... arguments
                 block = InsuranceContract$new(id = id, ...)
@@ -446,6 +452,9 @@ InsuranceContract = R6Class(
         #' @examples
         #' # TODO
         addDynamics = function(t, NewSumInsured, SumInsuredDelta, id, ...) {
+            if (getOption('LIC.debug.addDynamics', FALSE)) {
+                browser();
+            }
 
             # TODO: Override only the required parameters
             params = private$initParams
@@ -530,6 +539,9 @@ InsuranceContract = R6Class(
         #' @param history_type The type (free-form string) to record in the history snapshot
         #'
         calculateContract = function(calculate = "all", valuesFrom = 0, premiumCalculationTime = 0, preservePastPV = TRUE, additionalCapital = 0, recalculatePremiums = TRUE, recalculatePremiumSum = TRUE, history_comment = NULL, history_type = "Contract") {
+            if (getOption('LIC.debug.calculateContract', FALSE)) {
+                browser();
+            }
             if (!is.null(self$blocks)) {
                 for (b in self$blocks) {
                     .args = as.list(match.call()[-1])
@@ -657,6 +669,9 @@ InsuranceContract = R6Class(
         #' @param valuesFrom The time from when to aggragate values. Values before
         #'        that time will be left unchanged.
         consolidateBlocks = function(valuesFrom = 0) {
+            if (getOption('LIC.debug.consolidateBlocks', FALSE)) {
+                browser();
+            }
             # First, Re-calculate all children that have children on their own
             for (b in self$blocks) {
                 if (length(b$blocks) > 0) {
@@ -764,6 +779,9 @@ InsuranceContract = R6Class(
         #' @examples
         #' # TODO
         premiumWaiver = function(t) {
+            if (getOption('LIC.debug.premiumWaiver', FALSE)) {
+                browser();
+            }
             newSumInsured = self$Values$reserves[[toString(t), "PremiumFreeSumInsured"]];
             self$Parameters$ContractState$premiumWaiver = TRUE;
             self$Parameters$ContractState$surrenderPenalty = FALSE; # Surrender penalty has already been applied, don't apply a second time
@@ -799,6 +817,9 @@ InsuranceContract = R6Class(
         #' @examples
         #' # TODO
         profitScenario = function(...) {
+            if (getOption('LIC.debug.profitScenario', FALSE)) {
+                browser();
+            }
             private$calculateProfitParticipation(...)
         },
 
@@ -823,6 +844,9 @@ InsuranceContract = R6Class(
         #' @examples
         #' # TODO
         addProfitScenario = function(id, ...) {
+            if (getOption('LIC.debug.addProfitScenario', FALSE)) {
+                browser();
+            }
             .args = as.list(match.call()[-1])
             self$Parameters$ProfitParticipation$scenarios[[id]] = list(...)
             if (length(self$blocks) > 0) {

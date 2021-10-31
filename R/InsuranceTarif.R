@@ -214,6 +214,9 @@ InsuranceTarif = R6Class(
     #' tarif.male = InsuranceTarif$new(name = "Annuity Males", type = "annuity",
     #'     i = 0.01, mortalityTable = AVOe2005R.male)
     initialize = function(name = NULL, type = "wholelife", tarif = "Generic Tarif", desc = "Description of tarif", ...) {
+      if (getOption('LIC.debug.Tarif.init', FALSE)) {
+        browser();
+      }
       if (!missing(name))           self$name = name;
       if (!missing(type)) {
         self$tariffType = TariffTypeEnum(type)
@@ -257,6 +260,9 @@ InsuranceTarif = R6Class(
     #' tarif.unisex = tarif.male$createModification(name = "Annuity unisex",
     #'     mortalityTable = AVOe2005R.unisex)
     createModification = function(name  = NULL, tarif = NULL, desc  = NULL, tariffType = NULL, ...) {
+      if (getOption('LIC.debug.createModification', FALSE)) {
+        browser();
+      }
       cloned = self$clone();
       if (!missing(name))       cloned$name = name;
       if (!missing(tarif))      cloned$tarif = tarif;
@@ -287,6 +293,9 @@ InsuranceTarif = R6Class(
     #'
     #' @param ... currently unused
     getInternalValues = function(params, ...) {
+      if (getOption('LIC.debug.getInternalValues', FALSE)) {
+        browser();
+      }
       age = params$ContractData$technicalAge
       maxAge = MortalityTables::getOmega(params$ActuarialBases$mortalityTable)
       policyPeriod = params$ContractData$policyPeriod
@@ -305,6 +314,9 @@ InsuranceTarif = R6Class(
     #' by the InsuranceContract class. It returns the relevant ages during the
     #' whole contract period
     getAges = function(params) {
+      if (getOption('LIC.debug.getAges', FALSE)) {
+        browser();
+      }
       ages = ages(params$ActuarialBases$mortalityTable, YOB = params$ContractData$YOB);
       age = params$ContractData$technicalAge;
       if (age > 0) {
@@ -318,6 +330,9 @@ InsuranceTarif = R6Class(
     #'  values \code{values}
     #' @details Not to be called directly, but implicitly by the [InsuranceContract] object.
     getTransitionProbabilities = function(params, values) {
+      if (getOption('LIC.debug.getTransitionProbabilities', FALSE)) {
+        browser();
+      }
       age = params$ContractData$technicalAge;
       ages = self$getAges(params);
       q = MortalityTables::deathProbabilities(params$ActuarialBases$mortalityTable, YOB = params$ContractData$YOB, ageDifferences = params$ContractData$ageDifferences);
@@ -353,6 +368,9 @@ InsuranceTarif = R6Class(
     #'
     #' @param params The parameters of the contract / tariff
     getCostValues = function(params) {
+      if (getOption('LIC.debug.getCostValues', FALSE)) {
+        browser();
+      }
       costs = valueOrFunction(params$Costs, params = params, values = NULL)
       baseCost = valueOrFunction(params$minCosts, params = params, values = NULL, costs = costs)
       if (!is.null(baseCost)) {
@@ -376,6 +394,9 @@ InsuranceTarif = R6Class(
     #' @details Not to be called directly, but implicitly by the [InsuranceContract] object.
     #' @param len The desired length of the returned data frame (the number of contract periods desire)
     getPremiumCF = function(len, params, values) {
+      if (getOption('LIC.debug.getPremiumCF', FALSE)) {
+        browser();
+      }
       premPeriod = min(params$ContractData$premiumPeriod, params$ContractData$policyPeriod, len);
       if (is.null(params$ContractData$premiumIncrease)) {
         pad0(rep(1, premPeriod - 1), len)
@@ -400,6 +421,9 @@ InsuranceTarif = R6Class(
     #' @details Not to be called directly, but implicitly by the [InsuranceContract] object.
     #' @param len The desired length of the returned data frame (the number of contract periods desire)
     getAnnuityCF = function(len, params, values) {
+      if (getOption('LIC.debug.getAnnuityCF', FALSE)) {
+        browser();
+      }
       annuityPeriod = min(params$ContractData$policyPeriod - params$ContractData$deferralPeriod, len);
       if (is.null(params$ContractData$annuityIncrease)) {
         pad0(rep(1, annuityPeriod), len);
@@ -424,6 +448,9 @@ InsuranceTarif = R6Class(
     #' @details Not to be called directly, but implicitly by the [InsuranceContract] object.
     #' @param len The desired length of the returned data frame (the number of contract periods desire)
     getDeathCF = function(len, params, values) {
+      if (getOption('LIC.debug.getDeathCF', FALSE)) {
+        browser();
+      }
       period = params$ContractData$policyPeriod - params$ContractData$deferralPeriod;
       if (is.null(params$ContractData$deathBenefit)) {
         pad0(rep(1, period), len)
@@ -445,6 +472,9 @@ InsuranceTarif = R6Class(
     #' of insurance given in the InsuranceTarif's `tariffType` field
     #' @details Not to be called directly, but implicitly by the [InsuranceContract] object.
     getBasicCashFlows = function(params, values) {
+      if (getOption('LIC.debug.getBasicCashFlows', FALSE)) {
+        browser();
+      }
       deferralPeriod = params$ContractData$deferralPeriod;
       guaranteedPeriod = params$ContractData$guaranteedPeriod;
 
@@ -510,6 +540,9 @@ InsuranceTarif = R6Class(
     #' @description Returns the cash flows for the contract given the parameters
     #' @details Not to be called directly, but implicitly by the [InsuranceContract] object.
     getCashFlows = function(params, values) {
+      if (getOption('LIC.debug.getCashFlows', FALSE)) {
+        browser();
+      }
       age = params$ContractData$technicalAge;
 
       if (is.null(values$cashFlowsBasic)) {
@@ -575,6 +608,9 @@ InsuranceTarif = R6Class(
     #'  and tariff parameters
     #' @details Not to be called directly, but implicitly by the [InsuranceContract] object.
     getCashFlowsCosts = function(params, values) {
+      if (getOption('LIC.debug.getCashFlowsCosts', FALSE)) {
+        browser();
+      }
       dm = dim(params$Costs);
       dmnames = dimnames(params$Costs);
 
@@ -618,6 +654,9 @@ InsuranceTarif = R6Class(
     #' @details Not to be called directly, but implicitly by the [InsuranceContract] object.
     #' @param cashFlows data.frame of cash flows calculated by a call to \href{#method-getCashFlows}{\code{InsuranceTarif$getCashFlows()}}
     presentValueCashFlows = function(cashFlows, params, values) {
+      if (getOption('LIC.debug.presentValueCashFlows', FALSE)) {
+        browser();
+      }
 
       qq = self$getTransitionProbabilities(params);
       qx = pad0(qq$q, values$int$l);
@@ -680,6 +719,9 @@ InsuranceTarif = R6Class(
     #' and stored in the \code{values} list
     #' @details Not to be called directly, but implicitly by the [InsuranceContract] object.
     presentValueCashFlowsCosts = function(params, values) {
+      if (getOption('LIC.debug.presentValueCashFlowsCosts', FALSE)) {
+        browser();
+      }
       len = values$int$l;
       q = self$getTransitionProbabilities(params);
       qx = pad0(q$q, len);
@@ -697,6 +739,9 @@ InsuranceTarif = R6Class(
     #'
     #' This method is NOT to be called directly, but implicitly by the [InsuranceContract] object.
     getAbsCashFlows = function(params, values) {
+      if (getOption('LIC.debug.getAbsCashFlows', FALSE)) {
+        browser();
+      }
 
         # TODO: Set up a nice list with coefficients for each type of cashflow,
         # rather than multiplying each item manually (this also mitigates the risk
@@ -743,6 +788,9 @@ InsuranceTarif = R6Class(
     #'
     #' This method is NOT to be called directly, but implicitly by the [InsuranceContract] object.
     getAbsPresentValues = function(params, values) {
+      if (getOption('LIC.debug.getAbsPresentValues', FALSE)) {
+        browser();
+      }
       pv = values$presentValues;
 
       #pv[,"age"] = pv[,"premiums"];
@@ -774,6 +822,9 @@ InsuranceTarif = R6Class(
     #'
     #' This method is NOT to be called directly, but implicitly by the [InsuranceContract] object.
     presentValueBenefits = function(params, values) {
+      if (getOption('LIC.debug.presentValueBenefits', FALSE)) {
+        browser();
+      }
       # TODO: Here we don't use the securityLoading parameter => Shall it be used or are these values to be understood without additional security loading?
       benefits    = values$presentValues[,"survival"] +
                     values$presentValues[,"guaranteed"] +
@@ -814,6 +865,9 @@ InsuranceTarif = R6Class(
     #'         (e.g. for net and Zillmer, the gross premium has already been
     #'         calculated to allow modelling the premium refund)
     getPremiumCoefficients = function(type = "gross", coeffBenefits, coeffCosts, premiums, params, values, premiumCalculationTime = values$int$premiumCalculationTime) {
+      if (getOption('LIC.debug.getPremiumCoefficients', FALSE)) {
+        browser();
+      }
       # Merge a possibly passed loadings override with the defaults of this class:
       securityLoading = valueOrFunction(params$Loadings$security, params = params, values = values);
       t = as.character(premiumCalculationTime)
@@ -889,6 +943,9 @@ InsuranceTarif = R6Class(
     #'
     #' @details Not to be called directly, but implicitly by the [InsuranceContract] object.
     premiumCalculation = function(params, values, premiumCalculationTime = values$int$premiumCalculationTime) {
+      if (getOption('LIC.debug.premiumCalculation', FALSE)) {
+        browser();
+      }
       loadings = params$Loadings;
       sumInsured = params$ContractData$sumInsured
       values$premiums = c(
@@ -984,6 +1041,9 @@ InsuranceTarif = R6Class(
     #'
     #' @details Not to be called directly, but implicitly by the [InsuranceContract] object.
     reserveCalculation = function(params, values) {
+      if (getOption('LIC.debug.reserveCalculation', FALSE)) {
+        browser();
+      }
       t = "0"
       securityFactor = (1 + valueOrFunction(params$Loadings$security, params = params, values = values));
       ppScheme      = params$ProfitParticipation$profitParticipationScheme;
@@ -1094,6 +1154,9 @@ InsuranceTarif = R6Class(
     #' @param years how many years to calculate (for some usances, the factor
     #'      is different in leap years!)
     getBalanceSheetReserveFactor = function(method, params, years = 1) {
+      if (getOption('LIC.debug.getBalanceSheetReserveFactor', FALSE)) {
+        browser();
+      }
       balanceDate = params$ActuarialBases$balanceSheetDate
       year(balanceDate) = year(params$ContractData$contractClosing);
       if (balanceDate < params$ContractData$contractClosing) {
@@ -1124,6 +1187,9 @@ InsuranceTarif = R6Class(
     #'              the yearly reference date of the contract
     #' @details Not to be called directly, but implicitly by the [InsuranceContract] object.
     reserveCalculationBalanceSheet = function(params, values) {
+      if (getOption('LIC.debug.reserveCalculationBalanceSheet', FALSE)) {
+        browser();
+      }
       reserves = values$reserves;
       years = length(reserves[,"Zillmer"]);
       # Balance sheet reserves:
@@ -1181,7 +1247,10 @@ InsuranceTarif = R6Class(
     #' @param ... Additional parameters for the profit participation calculation, passed
     #'            through to the profit participation scheme's \href{../../LifeInsuranceContracts/html/ProfitParticipation.html#method-getProfitParticipation}{\code{ProfitParticipation$getProfitParticipation()}}
     calculateProfitParticipation = function(params, ...) {
-        ppScheme = params$ProfitParticipation$profitParticipationScheme;
+      if (getOption('LIC.debug.calculateProfitParticipation', FALSE)) {
+        browser();
+      }
+      ppScheme = params$ProfitParticipation$profitParticipationScheme;
         if (!is.null(ppScheme)) {
             ppScheme$getProfitParticipation(params = params, ...)
         }
@@ -1192,14 +1261,20 @@ InsuranceTarif = R6Class(
     #' @param profitScenario The ID of the profit scenario for which to calculate the reserves
     #' @param ... TODO
     reservesAfterProfit = function(profitScenario, params, values, ...) {
-        # TODO
+      if (getOption('LIC.debug.reservesAfterProfit', FALSE)) {
+        browser();
+      }
+      # TODO
     },
 
 
     #' @description Return the time series of the basic contract
     #' @details Not to be called directly, but implicitly by the [InsuranceContract] object.
     getBasicDataTimeseries = function(params, values) {
-        res = cbind(
+      if (getOption('LIC.debug.getBasicDataTimeseries', FALSE)) {
+        browser();
+      }
+      res = cbind(
             "PremiumPayment" = values$premiumComposition[, "charged"] > 0,
             "SumInsured" = values$reserves[, "SumInsured"],
             "Premiums" = values$absCashFlows$premiums_advance + values$absCashFlows$premiums_arrears,
@@ -1215,6 +1290,9 @@ InsuranceTarif = R6Class(
     #' @details Not to be called directly, but implicitly by the [InsuranceContract] object.
     #'          All premiums, reserves and present values have already been calculated.
     premiumDecomposition = function(params, values) {
+      if (getOption('LIC.debug.premiumDecomposition', FALSE)) {
+        browser();
+      }
       loadings   = params$Loadings;
       sumInsured = params$ContractData$sumInsured;
       premiums   = values$premiums;
