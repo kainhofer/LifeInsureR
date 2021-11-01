@@ -17,7 +17,7 @@ showVmGlgExamples(contract, prf = 10, t = 10, t_prf = 12, file = "", ...)
 
 \item{file}{If given, outputs all information to the file rather than the console}
 
-\item{...}{Further parameters (currently unused)}
+\item{...}{Further parameters for generating the contract for a tariff object}
 }
 \description{
 Display the values of the example calculation of the given insurance contract

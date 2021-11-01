@@ -20,13 +20,14 @@ testVmGlgExample(
   VwKostenRes,
   VwKostenRes.prf,
   Bilanzreserve,
-  Prämienübertrag,
-  Rückkaufsreserve,
-  Rückkaufswert,
-  Abschlusskostenrücktrag,
-  Rückkaufswert.prf,
+  Praemienuebertrag,
+  Rueckkaufsreserve,
+  Rueckkaufswert,
+  Abschlusskostenruecktrag,
+  Rueckkaufswert.prf,
   VS.prf,
-  tolerance = 0.01
+  tolerance = 0.01,
+  ...
 )
 }
 \arguments{
@@ -38,9 +39,11 @@ testVmGlgExample(
 
 \item{t_prf}{Time for which to check all values after the premium waiver}
 
-\item{net, }{Zillmer, gross, written, savings, risk, ZillmerRes, ZillmerRes.prf, VwKostenRes, VwKostenRes.prf, Bilanzreserve, Prämienübertrag, Rückkaufsreserve, Rückkaufswert, Abschlusskostenrücktrag, Rückkaufswert.prf, VS.prf Values as printed out by showVmGlgExamples}
+\item{net, }{Zillmer, gross, written, savings, risk, ZillmerRes, ZillmerRes.prf, VwKostenRes, VwKostenRes.prf, Bilanzreserve, Praemienuebertrag, Rueckkaufsreserve, Rueckkaufswert, Abschlusskostenruecktrag, Rueckkaufswert.prf, VS.prf Values as printed out by showVmGlgExamples}
 
 \item{tolerance}{If non-NULL, will ignore small floating point differences. It uses same algorithm as all.equal()}
+
+\item{...}{Further parameters for generating the contract for a tariff object}
 }
 \description{
 Check the values of the example calculation of the given insurance contract
@@ -48,6 +51,9 @@ as required by the Austrian regulation (LV-VMGLV, "LV
 Versicherungsmathematische Grundlagen Verordnung").
 Missing params not passed to the function call will be silently ignored and
 not cause unit test failures.
+}
+\details{
+The easiest way to write unit-tests is using the function \code{vmGlgExample.generateTest}
 }
 \examples{
 library(MortalityTables)
@@ -77,11 +83,11 @@ test_that("Testtarif", {
         VwKostenRes = 0.00,
         VwKostenRes.prf = 0.00,
         Bilanzreserve = 9250.35,
-        Prämienübertrag = 212.52,
-        Rückkaufsreserve = 9011.40,
-        Rückkaufswert = 9011.40,
-        Abschlusskostenrücktrag = 0.00,
-        Rückkaufswert.prf = 9205.96,
+        Praemienuebertrag = 212.52,
+        Rueckkaufsreserve = 9011.40,
+        Rueckkaufswert = 9011.40,
+        Abschlusskostenruecktrag = 0.00,
+        Rueckkaufswert.prf = 9205.96,
         VS.prf = 685.12
     )
 })

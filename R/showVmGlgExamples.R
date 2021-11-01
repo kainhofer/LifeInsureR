@@ -4,6 +4,69 @@
 #' @import scales
 NULL
 
+# Internal helper function to calculate all values => will be used by
+# showVmGlgExamples, testVmGlgExample and vmGlgExample.generateTest
+calcVmGlgExample = function(contract, prf = 10, t = 10, t_prf = 12, ...) {
+
+    if (is(contract, "InsuranceTarif")) {
+        tariff = contract
+        contract = InsuranceContract$new(tariff, ...)
+    }
+    has.prf = prf < contract$Parameters$ContractData$premiumPeriod;
+    if (!is(contract, "InsuranceContract")) {
+        stop("First argument to the functions showVmGlgExamples, testVmGlgExample
+             and vmGlgExample.generateTest need to be an InsuranceContract or InsuranceTarif object! ",
+             "Given object is of class: ",
+             paste(class(contract), collapse = ", "));
+    }
+    if (has.prf) {
+        contract.prf = contract$clone();
+        contract.prf$premiumWaiver(t = prf)
+    }
+
+    vals = list(
+        t = t,
+        prf = prf,
+        t_prf = t_prf,
+        contractClosing = contract$Parameters$ContractData$contractClosing,
+
+        TarifName = contract$tarif$name,
+        TarifDesc = contract$tarif$desc,
+        TarifType = as.character(contract$tarif$tariffType),
+        VS = contract$Parameters$ContractData$sumInsured,
+        Age = contract$Parameters$ContractData$age,
+        policyPeriod = contract$Parameters$ContractData$policyPeriod,
+        premiumPeriod = contract$Parameters$ContractData$premiumPeriod,
+        deferralPeriod = contract$Parameters$ContractData$deferralPeriod,
+        guaranteedPeriod = contract$Parameters$ContractData$guaranteedPeriod,
+        Interest = contract$Parameters$ActuarialBases$i,
+        MortalityTable = contract$Parameters$ActuarialBases$mortalityTable@name,
+
+        net = contract$Values$premiums[["net"]],
+        Zillmer = contract$Values$premiums[["Zillmer"]],
+        gross = contract$Values$premiums[["gross"]],
+        written = contract$Values$premiums[["written"]],
+        savings = contract$Values$premiumComposition[[t + 1, "Zillmer.savings"]],
+        risk = contract$Values$premiumComposition[[t + 1, "Zillmer.risk"]],
+        ZillmerRes = contract$Values$reserves[[t + 1, "Zillmer"]],
+        ZillmerRes.prf = ifelse(has.prf, contract.prf$Values$reserves[[t_prf + 1, "Zillmer"]], NULL),
+        VwKostenRes = contract$Values$reserves[[t + 1, "gamma"]],
+        VwKostenRes.prf = ifelse(has.prf, contract.prf$Values$reserves[[t_prf + 1, "gamma"]], NULL),
+        Bilanzstichtag = contract$Values$reservesBalanceSheet[[t + 1, "time"]],
+        Bilanzreserve = contract$Values$reservesBalanceSheet[[t + 1, "Balance Sheet Reserve"]],
+        Praemienuebertrag = contract$Values$reservesBalanceSheet[[t + 1, "unearned Premiums"]],
+        Rueckkaufsreserve = contract$Values$reserves[[t + 1, "reduction"]],
+        Rueckkaufswert = contract$Values$reserves[[t + 1, "Surrender"]],
+        Abschlusskostenruecktrag = contract$Values$reserves[[t + 1, "alphaRefund"]],
+        Rueckkaufswert.prf = ifelse(has.prf, contract.prf$Values$reserves[[t_prf + 1, "Surrender"]], NULL),
+        VS.after_prf = ifelse(has.prf, contract.prf$Values$reserves[[t_prf + 1, "PremiumFreeSumInsured"]], NULL),
+        VS.prf = ifelse(has.prf, contract$Values$reserves[[t + 1, "PremiumFreeSumInsured"]], NULL)
+
+    );
+    vals
+}
+
+
 #' Display insurance contract calculation example
 #'
 #' Display the values of the example calculation of the given insurance contract
@@ -15,7 +78,7 @@ NULL
 #' @param prf Time of premium waiver (premium-free)
 #' @param t_prf Time for which to show all values after the premium waiver
 #' @param file If given, outputs all information to the file rather than the console
-#' @param ... Further parameters (currently unused)
+#' @param ... Further parameters for generating the contract for a tariff object
 #'
 #' @examples
 #' library(MortalityTables)
@@ -38,80 +101,68 @@ NULL
 #' }
 #' @export
 showVmGlgExamples = function(contract, prf = 10, t = 10, t_prf = 12, file = "", ...) {
+    vals = calcVmGlgExample(contract, prf = prf, t = t, t_prf = t_prf, ...);
 
     has.prf = prf < contract$Parameters$ContractData$premiumPeriod;
 
-    if (!("InsuranceContract" %in% class(contract))) {
-        stop("First argument to function showVmGlgExamples need to be an InsuranceContract object! ",
-             "Given object is of class: ",
-             paste(class(contract), collapse = ", "));
-    }
-    if (has.prf) {
-        contract.prf = contract$clone();
-        contract.prf$premiumWaiver(t = prf)
-    }
-
     output = c(
-        sprintf("Tarif: %s", contract$tarif$name),
-        contract$tarif$desc,
-        sprintf("Typ: %s", contract$tarif$tariffType),
-        sprintf("VS: %.2f", contract$Parameters$ContractData$sumInsured),
+        sprintf("Tarif: %s", vals$TarifName),
+        vals$tarifDesc,
+        sprintf("Typ: %s", vals$tariffType),
+        sprintf("VS: %.2f", vals$VS),
         sprintf("Alter: %d, LZ: %d, Pr\u00e4mienzahlung: %d, Aufschubzeit: %d, Garantiezeit: %d",
-                contract$Parameters$ContractData$age,
-                contract$Parameters$ContractData$policyPeriod,
-                contract$Parameters$ContractData$premiumPeriod,
-                contract$Parameters$ContractData$deferralPeriod,
-                contract$Parameters$ContractData$guaranteedPeriod),
+                vals$age,
+                vals$policyPeriod,
+                vals$premiumPeriod,
+                vals$deferralPeriod,
+                vals$guaranteedPeriod),
 
         sprintf("Rechenzins: %s, Sterbetafel: %s",
-                percent(contract$Parameters$ActuarialBases$i),
-                contract$Parameters$ActuarialBases$mortalityTable@name),
+                scales::percent(vals$Interest), vals$MortalityTable),
         "",
 
         "Pr\u00e4mien:",
         "========",
-        sprintf("Nettopr\u00e4mie:         %8.2f", contract$Values$premiums["net"]),
-        sprintf("Zillmerpr\u00e4mie:       %8.2f", contract$Values$premiums["Zillmer"]),
-        sprintf("Bruttopr\u00e4mie:        %8.2f", contract$Values$premiums["gross"]),
-        sprintf("Vorgeschr.Pr.:       %8.2f", contract$Values$premiums["written"]),
+        sprintf("Nettopr\u00e4mie:         %8.2f", vals$net),
+        sprintf("Zillmerpr\u00e4mie:       %8.2f", vals$Zillmer),
+        sprintf("Bruttopr\u00e4mie:        %8.2f", vals$gross),
+        sprintf("Vorgeschr.Pr.:       %8.2f", vals$written),
         "",
 
-        sprintf("Sparpr\u00e4mie (t=%d):   %8.2f", t, contract$Values$premiumComposition[t + 1, "Zillmer.savings"]),
-        sprintf("Risikopr\u00e4mie (t=%d): %8.2f", t, contract$Values$premiumComposition[t + 1, "Zillmer.risk"]),
+        sprintf("Sparpr\u00e4mie (t=%d):   %8.2f", vals$t, vals$savings),
+        sprintf("Risikopr\u00e4mie (t=%d): %8.2f", vals$t, vals$risk),
         "",
 
         "Reserven:",
         "=========",
-        sprintf("Pr\u00e4mienpflichtig (t=%d):             %8.2f", t, contract$Values$reserves[t + 1, "Zillmer"]),
-        ifelse(has.prf, sprintf("Pr.Frei (mangels Zahlung) (tprf=%d): %8.2f", t_prf, contract.prf$Values$reserves[t_prf + 1, "Zillmer"]), ""),
-        sprintf("VwKostenreserve (t=%d):              %8.2f", t, contract$Values$reserves[t + 1, "gamma"]),
-        ifelse(has.prf, sprintf("VwKostenreserve (Pr.Frei) (tprf=%d): %8.2f", t_prf, contract.prf$Values$reserves[t_prf + 1, "gamma"]), ""),
+        sprintf("Pr\u00e4mienpflichtig (t=%d):             %8.2f", vals$t, vals$ZillmerRes),
+        sprintf("Pr.Frei (mangels Zahlung) (tprf=%d): %8.2f", vals$t_prf, vals$ZillmerRes.prf),
+        sprintf("VwKostenreserve (t=%d):              %8.2f", vals$t, vals$VwKostenRes),
+        sprintf("VwKostenreserve (Pr.Frei) (tprf=%d): %8.2f", vals$t_prf, vals$VwKostenRes.prf),
         "",
 
         sprintf("Bilanzreserve (t=%.2f):             %8.2f",
-                contract$Values$reservesBalanceSheet[t + 1, "time"],
-                contract$Values$reservesBalanceSheet[t + 1, "Balance Sheet Reserve"]),
-        sprintf("Pr\u00e4mien\u00fcbertrag (BM=%2d):             %8.2f", month(contract$Parameters$ContractData$contractClosing), contract$Values$reservesBalanceSheet[t + 1, "unearned Premiums"]),
+                vals$Bilanzstichtag, vals$Bilanzreserve),
+        sprintf("Pr\u00e4mien\u00fcbertrag (BM=%2d):             %8.2f",
+                lubridate::month(vals$contractClosing), vals$Praemienuebertrag),
         "",
 
         "R\u00fcckkauf und Pr\u00e4mienfreistellung:",
         "=================================",
-        sprintf("R\u00fcckkaufsreserve (t=%d):          %8.2f", t, contract$Values$reserves[t + 1, "reduction"]),
-        sprintf("R\u00fcckkaufswert (t=%d):             %8.2f", t, contract$Values$reserves[t + 1, "Surrender"]),
-        sprintf("Abschlusskostenr\u00fccktrag (t=%d):   %8.2f", t, contract$Values$reserves[t + 1, "alphaRefund"]),
+        sprintf("R\u00fcckkaufsreserve (t=%d):          %8.2f", vals$t, vals$Rueckkaufsreserve),
+        sprintf("R\u00fcckkaufswert (t=%d):             %8.2f", vals$t, vals$Rueckkaufswert),
+        sprintf("Abschlusskostenr\u00fccktrag (t=%d):   %8.2f", vals$t, vals$Abschlusskostenruecktrag),
         "",
 
-        ifelse(has.prf, sprintf("R\u00fcckkaufswert (Prf.) (t=%d):      %8.2f (VS: %.2f)",
-                t_prf,
-                contract.prf$Values$reserves[t_prf + 1, "Surrender"],
-                contract.prf$Values$reserves[t_prf + 1, "PremiumFreeSumInsured"]), ""),
+        sprintf("R\u00fcckkaufswert (Prf.) (t=%d):      %8.2f (VS: %.2f)",
+                vals$t_prf, vals$Rueckkaufswert, vals$VS.after_prf),
         "",
 
-        ifelse(has.prf, sprintf("Pr\u00e4mienfreie VS (t=%d):           %8.2f",
-                t, contract$Values$reserves[t + 1, "PremiumFreeSumInsured"]), "")
+        sprintf("Pr\u00e4mienfreie VS (t=%d):           %8.2f",
+                vals$t, vals$VS.prf)
     );
-    cat(paste(output, collapse = '\r\n'), file = file)
-
+    output.str = paste(output, collapse = '\r\n')
+    cat(output.str, file = file)
 }
 
 
@@ -123,12 +174,15 @@ showVmGlgExamples = function(contract, prf = 10, t = 10, t_prf = 12, file = "", 
 #' Missing params not passed to the function call will be silently ignored and
 #' not cause unit test failures.
 #'
+#' The easiest way to write unit-tests is using the function \code{vmGlgExample.generateTest}
+#'
 #' @param contract The insurance contract to calculate and check
 #' @param t Time for which to check all values (except premium-free values)
 #' @param prf Time of premium waiver (premium-free)
 #' @param t_prf Time for which to check all values after the premium waiver
-#' @param net, Zillmer, gross, written, savings, risk, ZillmerRes, ZillmerRes.prf, VwKostenRes, VwKostenRes.prf, Bilanzreserve, Prämienübertrag, Rückkaufsreserve, Rückkaufswert, Abschlusskostenrücktrag, Rückkaufswert.prf, VS.prf Values as printed out by showVmGlgExamples
+#' @param net, Zillmer, gross, written, savings, risk, ZillmerRes, ZillmerRes.prf, VwKostenRes, VwKostenRes.prf, Bilanzreserve, Praemienuebertrag, Rueckkaufsreserve, Rueckkaufswert, Abschlusskostenruecktrag, Rueckkaufswert.prf, VS.prf Values as printed out by showVmGlgExamples
 #' @param tolerance If non-NULL, will ignore small floating point differences. It uses same algorithm as all.equal()
+#' @param ... Further parameters for generating the contract for a tariff object
 #'
 #' @examples
 #' library(MortalityTables)
@@ -158,11 +212,11 @@ showVmGlgExamples = function(contract, prf = 10, t = 10, t_prf = 12, file = "", 
 #'         VwKostenRes = 0.00,
 #'         VwKostenRes.prf = 0.00,
 #'         Bilanzreserve = 9250.35,
-#'         Prämienübertrag = 212.52,
-#'         Rückkaufsreserve = 9011.40,
-#'         Rückkaufswert = 9011.40,
-#'         Abschlusskostenrücktrag = 0.00,
-#'         Rückkaufswert.prf = 9205.96,
+#'         Praemienuebertrag = 212.52,
+#'         Rueckkaufsreserve = 9011.40,
+#'         Rueckkaufswert = 9011.40,
+#'         Abschlusskostenruecktrag = 0.00,
+#'         Rueckkaufswert.prf = 9205.96,
 #'         VS.prf = 685.12
 #'     )
 #' })
@@ -171,70 +225,133 @@ showVmGlgExamples = function(contract, prf = 10, t = 10, t_prf = 12, file = "", 
 #' @export
 testVmGlgExample = function(contract, prf = 10, t = 10, t_prf = 12, net, Zillmer, gross, written, savings, risk,
                             ZillmerRes, ZillmerRes.prf, VwKostenRes, VwKostenRes.prf,
-                            Bilanzreserve, Prämienübertrag,
-                            Rückkaufsreserve, Rückkaufswert, Abschlusskostenrücktrag,
-                            Rückkaufswert.prf, VS.prf, tolerance = 0.01
+                            Bilanzreserve, Praemienuebertrag,
+                            Rueckkaufsreserve, Rueckkaufswert, Abschlusskostenruecktrag,
+                            Rueckkaufswert.prf, VS.prf, tolerance = 0.01,
+                            ...
 ) {
+    vals = calcVmGlgExample(contract, prf = prf, t = t, t_prf = t_prf, ...);
     has.prf = prf < contract$Parameters$ContractData$premiumPeriod;
 
-    if (has.prf) {
-        contract.prf = contract$clone();
-        contract.prf$premiumWaiver(t = prf)
-    }
     if (!missing(net)) {
-        eval(bquote(expect_equal(contract$Values$premiums[["net"]], .(net), tolerance = tolerance)))
+        eval(bquote(expect_equal(vals$net, .(net), tolerance = tolerance)))
     }
     if (!missing(Zillmer)) {
-        eval(bquote(expect_equal(contract$Values$premiums[["Zillmer"]], .(Zillmer), tolerance = tolerance)))
+        eval(bquote(expect_equal(vals$Zillmer, .(Zillmer), tolerance = tolerance)))
     }
     if (!missing(gross)) {
-        eval(bquote(expect_equal(contract$Values$premiums[["gross"]], .(gross), tolerance = tolerance)))
+        eval(bquote(expect_equal(vals$gross, .(gross), tolerance = tolerance)))
     }
     if (!missing(written)) {
-        eval(bquote(expect_equal(contract$Values$premiums[["written"]], .(written), tolerance = tolerance)))
+        eval(bquote(expect_equal(vals$written, .(written), tolerance = tolerance)))
     }
     if (!missing(savings)) {
-        eval(bquote(expect_equal(contract$Values$premiumComposition[[t + 1, "Zillmer.savings"]], .(savings), tolerance = tolerance)))
+        eval(bquote(expect_equal(vals$savings, .(savings), tolerance = tolerance)))
     }
     if (!missing(risk)) {
-        eval(bquote(expect_equal(contract$Values$premiumComposition[[t + 1, "Zillmer.risk"]], .(risk), tolerance = tolerance)))
+        eval(bquote(expect_equal(vals$risk, .(risk), tolerance = tolerance)))
     }
 
     if (!missing(ZillmerRes)) {
-        eval(bquote(expect_equal(contract$Values$reserves[[t + 1, "Zillmer"]], .(ZillmerRes), tolerance = tolerance)))
+        eval(bquote(expect_equal(vals$ZillmerRes, .(ZillmerRes), tolerance = tolerance)))
     }
     if (!missing(ZillmerRes.prf)) {
-        eval(bquote(expect_equal(contract.prf$Values$reserves[[t_prf + 1, "Zillmer"]], .(ZillmerRes.prf), tolerance = tolerance)))
+        eval(bquote(expect_equal(vals$ZillmerRes.prf, .(ZillmerRes.prf), tolerance = tolerance)))
     }
     if (!missing(VwKostenRes)) {
-        eval(bquote(expect_equal(contract$Values$reserves[[t + 1, "gamma"]], .(VwKostenRes), tolerance = tolerance)))
+        eval(bquote(expect_equal(vals$VwKostenRes, .(VwKostenRes), tolerance = tolerance)))
     }
     if (!missing(VwKostenRes.prf)) {
-        eval(bquote(expect_equal(contract.prf$Values$reserves[[t_prf + 1, "gamma"]], .(VwKostenRes.prf), tolerance = tolerance)))
+        eval(bquote(expect_equal(vals$VwKostenRes.prf, .(VwKostenRes.prf), tolerance = tolerance)))
     }
 
 
     if (!missing(Bilanzreserve)) {
-        eval(bquote(expect_equal(contract$Values$reservesBalanceSheet[[t + 1, "Balance Sheet Reserve"]], .(Bilanzreserve), tolerance = tolerance)))
+        eval(bquote(expect_equal(vals$Bilanzreserve, .(Bilanzreserve), tolerance = tolerance)))
     }
-    if (!missing(Prämienübertrag)) {
-        eval(bquote(expect_equal(contract$Values$reservesBalanceSheet[[t + 1, "unearned Premiums"]], .(Prämienübertrag), tolerance = tolerance)))
+    if (!missing(Praemienuebertrag)) {
+        eval(bquote(expect_equal(vals$Praemienuebertrag, .(Praemienuebertrag), tolerance = tolerance)))
     }
 
-    if (!missing(Rückkaufsreserve)) {
-        eval(bquote(expect_equal(contract$Values$reserves[[t + 1, "reduction"]], .(Rückkaufsreserve), tolerance = tolerance)))
+    if (!missing(Rueckkaufsreserve)) {
+        eval(bquote(expect_equal(vals$Rueckkaufsreserve, .(Rueckkaufsreserve), tolerance = tolerance)))
     }
-    if (!missing(Rückkaufswert)) {
-        eval(bquote(expect_equal(contract$Values$reserves[[t + 1, "Surrender"]], .(Rückkaufswert), tolerance = tolerance)))
+    if (!missing(Rueckkaufswert)) {
+        eval(bquote(expect_equal(vals$Rueckkaufswert, .(Rueckkaufswert), tolerance = tolerance)))
     }
-    if (!missing(Abschlusskostenrücktrag)) {
-        eval(bquote(expect_equal(contract$Values$reserves[[t + 1, "alphaRefund"]], .(Abschlusskostenrücktrag), tolerance = tolerance)))
+    if (!missing(Abschlusskostenruecktrag)) {
+        eval(bquote(expect_equal(vals$Abschlusskostenruecktrag, .(Abschlusskostenruecktrag), tolerance = tolerance)))
     }
-    if (!missing(Rückkaufswert.prf)) {
-        eval(bquote(expect_equal(contract.prf$Values$reserves[t_prf + 1, "Surrender"], .(Rückkaufswert.prf), tolerance = tolerance)))
+    if (!missing(Rueckkaufswert.prf)) {
+        eval(bquote(expect_equal(vals$Rueckkaufswert.prf, .(Rueckkaufswert.prf), tolerance = tolerance)))
     }
     if (!missing(VS.prf)) {
-        eval(bquote(expect_equal(contract.prf$Values$reserves[t_prf + 1, "PremiumFreeSumInsured"], .(VS.prf), tolerance = tolerance)))
+        eval(bquote(expect_equal(vals$VS.prf, .(VS.prf), tolerance = tolerance)))
         # OR: contract$Values$reserves[t + 1, "PremiumFreeSumInsured"]
     }
 }
+
+
+
+
+#' Generate testthat output for unit-testing a tarif implementation
+#'
+#' This function calculates the required reference values for the given
+#' insurance contract as required by the Austrian regulation (LV-VMGLV, "LV
+#' Versicherungsmathematische Grundlagen Verordnung") and generates the
+#' code for unit-testing the contract with these values. The code printed
+#' can be directly copied into a unit test file.
+#'
+#' @param contract The insurance contract to calculate and generate unit-testing code.
+#'                 If an InsuranceTarif object is given, a new contract with default
+#'                 values is generated.
+#' @param t Time for which to calculate all values (except premium-free values)
+#' @param prf Time of premium waiver (premium-free)
+#' @param t_prf Time for which to calculated all values after the premium waiver
+#' @param ... Further parameters for generating the contract for a tariff object
+#'
+#' @examples
+#' library(MortalityTables)
+#' mortalityTables.load("Austria_Annuities_AVOe2005R")
+#' # A trivial deferred annuity tariff with no costs:
+#' tariff = InsuranceTarif$new(name="Test Annuity", type="annuity",
+#'     mortalityTable = AVOe2005R.unisex, i=0.01)
+#' vmGlgExample.generateTest(tariff,
+#'     age = 35, YOB = 1981,
+#'     policyPeriod = 30, premiumPeriod = 15, deferralPeriod = 15,
+#'     sumInsured = 1000,
+#'     contractClosing = as.Date("2016-10-01")
+#' )
+#'
+#' @export
+vmGlgExample.generateTest = function(contract, prf = 10, t = 10, t_prf = 12, ...) {
+    cntr = deparse(substitute(contract));
+
+    vals = calcVmGlgExample(contract, prf = prf, t = t, t_prf = t_prf, ...);
+
+    code = paste0("test_that(\"", vals$TarifName, "\", {\n");
+    code = paste0(code, "\tcontract = InsuranceContract$new(\n\t\t", cntr, ",\n\t\t");
+    arguments = sapply(substitute(list(...))[-1], deparse);
+    code = paste0(code,
+                  paste(names(arguments), arguments, sep = " = ", collapse = ",\n\t\t")
+           );
+    code = paste0(code, "\n\t);\n")
+    code = paste0(code, "\t# showVmGlgExamples(contract, t = ", t, ", prf = ", prf, ", t_prf = ", t_prf, ");\n\n")
+    code = paste0(code, "\ttestVmGlgExample(\n\t\tcontract, \n\t\tt = ", t, ", prf = ", prf, ", t_prf = ", t_prf, ",\n")
+
+    check.keys = c("net", "Zillmer", "gross", "written", "savings",
+                   "ZillmerRes", "ZillmerRes.prf", "VwKostenRes", "VwKostenRes.prf",
+                   "Bilanzreserve", "Praemienuebertrag",
+                   "Rueckkaufsreserve", "Rueckkaufswert", "Abschlusskostenruecktrag",
+                   "Rueckkaufswert.prf", "VS.prf");
+    check.str =  paste(
+        check.keys,
+        sprintf("%.2f",vals[check.keys]),
+        sep = " = ", collapse = ", \n\t\t");
+    code = paste0(code, "\t\t", check.str, "\n\t);\n");
+    code = paste0(code, "})\n");
+    cat(code);
+}
+
+
+
