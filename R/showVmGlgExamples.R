@@ -63,6 +63,8 @@ calcVmGlgExample = function(contract, prf = 10, t = 10, t_prf = 12, ...) {
         VS.prf = if(has.prf) contract$Values$reserves[[t + 1, "PremiumFreeSumInsured"]]
 
     );
+    # manually remove all NULL elements (premium waiver not possible  )
+    vals = Filter(Negate(is.null), vals)
     vals
 }
 
@@ -338,6 +340,7 @@ vmGlgExample.generateTest = function(contract, prf = 10, t = 10, t_prf = 12, ...
 
     vals = calcVmGlgExample(contract, prf = prf, t = t, t_prf = t_prf, ...);
 
+
     code = paste0("test_that(\"", vals$TarifName, "\", {\n");
     code = paste0(code, "\tcontract = InsuranceContract$new(\n\t\t", cntr, ",\n\t\t");
     arguments = sapply(substitute(list(...))[-1], deparse);
@@ -353,9 +356,13 @@ vmGlgExample.generateTest = function(contract, prf = 10, t = 10, t_prf = 12, ...
                    "Bilanzreserve", "Praemienuebertrag",
                    "Rueckkaufsreserve", "Rueckkaufswert", "Abschlusskostenruecktrag",
                    "Rueckkaufswert.prf", "VS.prf");
+
+    # Subsetting a list creates NULL entries for missing keys => filter them out
+    # E.g. single-premium contracts do not have any premium-free values, so they are NULL.
+    cmpvals = Filter(Negate(is.null), vals[check.keys]);
     check.str =  paste(
-        check.keys,
-        sprintf("%.2f",vals[check.keys]),
+        names(cmpvals),
+        sprintf("%.2f", cmpvals),
         sep = " = ", collapse = ", \n\t\t");
     code = paste0(code, "\t\t", check.str, "\n\t);\n");
     code = paste0(code, "})\n");
