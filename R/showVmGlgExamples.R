@@ -49,18 +49,18 @@ calcVmGlgExample = function(contract, prf = 10, t = 10, t_prf = 12, ...) {
         savings = contract$Values$premiumComposition[[t + 1, "Zillmer.savings"]],
         risk = contract$Values$premiumComposition[[t + 1, "Zillmer.risk"]],
         ZillmerRes = contract$Values$reserves[[t + 1, "Zillmer"]],
-        ZillmerRes.prf = ifelse(has.prf, contract.prf$Values$reserves[[t_prf + 1, "Zillmer"]], NULL),
+        ZillmerRes.prf = if(has.prf) contract.prf$Values$reserves[[t_prf + 1, "Zillmer"]],
         VwKostenRes = contract$Values$reserves[[t + 1, "gamma"]],
-        VwKostenRes.prf = ifelse(has.prf, contract.prf$Values$reserves[[t_prf + 1, "gamma"]], NULL),
+        VwKostenRes.prf = if(has.prf) contract.prf$Values$reserves[[t_prf + 1, "gamma"]],
         Bilanzstichtag = contract$Values$reservesBalanceSheet[[t + 1, "time"]],
         Bilanzreserve = contract$Values$reservesBalanceSheet[[t + 1, "Balance Sheet Reserve"]],
         Praemienuebertrag = contract$Values$reservesBalanceSheet[[t + 1, "unearned Premiums"]],
         Rueckkaufsreserve = contract$Values$reserves[[t + 1, "reduction"]],
         Rueckkaufswert = contract$Values$reserves[[t + 1, "Surrender"]],
         Abschlusskostenruecktrag = contract$Values$reserves[[t + 1, "alphaRefund"]],
-        Rueckkaufswert.prf = ifelse(has.prf, contract.prf$Values$reserves[[t_prf + 1, "Surrender"]], NULL),
-        VS.after_prf = ifelse(has.prf, contract.prf$Values$reserves[[t_prf + 1, "PremiumFreeSumInsured"]], NULL),
-        VS.prf = ifelse(has.prf, contract$Values$reserves[[t + 1, "PremiumFreeSumInsured"]], NULL)
+        Rueckkaufswert.prf = if(has.prf) contract.prf$Values$reserves[[t_prf + 1, "Surrender"]],
+        VS.after_prf = if(has.prf) contract.prf$Values$reserves[[t_prf + 1, "PremiumFreeSumInsured"]],
+        VS.prf = if(has.prf) contract$Values$reserves[[t + 1, "PremiumFreeSumInsured"]]
 
     );
     vals
@@ -101,6 +101,9 @@ calcVmGlgExample = function(contract, prf = 10, t = 10, t_prf = 12, ...) {
 #' }
 #' @export
 showVmGlgExamples = function(contract, prf = 10, t = 10, t_prf = 12, file = "", ...) {
+    if (getOption('LIC.debug.showVmGlgExamples', FALSE)) {
+        browser();
+    }
     vals = calcVmGlgExample(contract, prf = prf, t = t, t_prf = t_prf, ...);
 
     has.prf = prf < contract$Parameters$ContractData$premiumPeriod;
@@ -230,6 +233,9 @@ testVmGlgExample = function(contract, prf = 10, t = 10, t_prf = 12, net, Zillmer
                             Rueckkaufswert.prf, VS.prf, tolerance = 0.01,
                             ...
 ) {
+    if (getOption('LIC.debug.testVmGlgExample', FALSE)) {
+        browser();
+    }
     vals = calcVmGlgExample(contract, prf = prf, t = t, t_prf = t_prf, ...);
     has.prf = prf < contract$Parameters$ContractData$premiumPeriod;
 
@@ -325,6 +331,9 @@ testVmGlgExample = function(contract, prf = 10, t = 10, t_prf = 12, net, Zillmer
 #'
 #' @export
 vmGlgExample.generateTest = function(contract, prf = 10, t = 10, t_prf = 12, ...) {
+    if (getOption('LIC.debug.vmGlgExample.generateTest', FALSE)) {
+        browser();
+    }
     cntr = deparse(substitute(contract));
 
     vals = calcVmGlgExample(contract, prf = prf, t = t, t_prf = t_prf, ...);
