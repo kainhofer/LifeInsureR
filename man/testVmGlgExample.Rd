@@ -26,7 +26,7 @@ testVmGlgExample(
   Abschlusskostenruecktrag,
   Rueckkaufswert.prf,
   VS.prf,
-  tolerance = 0.01,
+  absTolerance = 0.015,
   ...
 )
 }
@@ -41,9 +41,9 @@ testVmGlgExample(
 
 \item{net, }{Zillmer, gross, written, savings, risk, ZillmerRes, ZillmerRes.prf, VwKostenRes, VwKostenRes.prf, Bilanzreserve, Praemienuebertrag, Rueckkaufsreserve, Rueckkaufswert, Abschlusskostenruecktrag, Rueckkaufswert.prf, VS.prf Values as printed out by showVmGlgExamples}
 
-\item{tolerance}{If non-NULL, will ignore small floating point differences. It uses same algorithm as all.equal()}
-
 \item{...}{Further parameters for generating the contract for a tariff object}
+
+\item{tolerance}{If non-NULL, will ignore small floating point differences. It uses same algorithm as all.equal()}
 }
 \description{
 Check the values of the example calculation of the given insurance contract
