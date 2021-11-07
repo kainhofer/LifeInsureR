@@ -351,7 +351,7 @@ vmGlgExample.generateTest = function(contract, prf = 10, t = 10, t_prf = 12, ...
     code = paste0(code, "\t# showVmGlgExamples(contract, t = ", t, ", prf = ", prf, ", t_prf = ", t_prf, ");\n\n")
     code = paste0(code, "\ttestVmGlgExample(\n\t\tcontract, \n\t\tt = ", t, ", prf = ", prf, ", t_prf = ", t_prf, ",\n")
 
-    check.keys = c("net", "Zillmer", "gross", "written", "savings",
+    check.keys = c("net", "Zillmer", "gross", "written", "savings", "risk",
                    "ZillmerRes", "ZillmerRes.prf", "VwKostenRes", "VwKostenRes.prf",
                    "Bilanzreserve", "Praemienuebertrag",
                    "Rueckkaufsreserve", "Rueckkaufswert", "Abschlusskostenruecktrag",
