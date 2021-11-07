@@ -1090,7 +1090,11 @@ InsuranceTarif = R6Class(
       }
 
       # Reduction Reserve: Reserve used for contract modifications:
-      resReduction = pmax(0, resZ + resGamma + alphaRefund) # V_{x,n}^{Rkf}
+      resReduction = resZ + alphaRefund;
+      if (params$Features$surrenderIncludesCostsReserves) {
+        resReduction = resReduction + resGamma;
+      }
+      resReduction = pmax(0,resReduction) # V_{x,n}^{Rkf}
 
       # Collect all reserves to one large matrix
       res = cbind(

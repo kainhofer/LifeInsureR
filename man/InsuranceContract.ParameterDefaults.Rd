@@ -241,6 +241,9 @@ premiums, but the initial single premium is added to the reserve
 immediately for balance-sheet purposes. In particular, the
 balance sheet reserve at time $t=0$ is not 0, but the
 premium paid. In turn, no unearned premiums are applied.}
+\item{\code{$surrenderIncludesCostsReserves}}{Whether (administration)
+cost reserves are paid out on surrender (i.e. included in the
+surrender value before surrender penalties are applied)}
 }
 }
 

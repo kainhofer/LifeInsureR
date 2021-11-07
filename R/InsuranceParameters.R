@@ -443,6 +443,9 @@ InsuranceContract.Values = list(
 #'               immediately for balance-sheet purposes. In particular, the
 #'               balance sheet reserve at time $t=0$ is not 0, but the
 #'               premium paid. In turn, no unearned premiums are applied.}
+#'     \item{\code{$surrenderIncludesCostsReserves}}{Whether (administration)
+#'               cost reserves are paid out on surrender (i.e. included in the
+#'               surrender value before surrender penalties are applied)}
 #' }
 #'
 #' ## Elements of sublist \code{InsuranceContract.ParameterDefault$ProfitParticipation}
@@ -563,7 +566,8 @@ InsuranceContract.ParameterDefaults = list(
     Features = list(                            # Special cases for the calculations
         betaGammaInZillmer = FALSE,             # Whether beta and gamma-costs should be included in the Zillmer premium calculation
         alphaRefundLinear  = TRUE,              # Whether the refund of alpha-costs on surrender is linear in t or follows the NPV of an annuity
-        useUnearnedPremiums = isRegularPremiumContract # Whether unearned premiums should be calculated in the balance sheet reserves. Otherwise, a premium paid at the beginning of the period is added to the reserve for balance-sheet purposes.
+        useUnearnedPremiums = isRegularPremiumContract, # Whether unearned premiums should be calculated in the balance sheet reserves. Otherwise, a premium paid at the beginning of the period is added to the reserve for balance-sheet purposes.
+        surrenderIncludesCostsReserves = TRUE  # Whether (administration) cost reserves are paid out on surrender (i.e. included in the surrender value before surrender penalties are applied)
     ),
 
     ProfitParticipation = list(
