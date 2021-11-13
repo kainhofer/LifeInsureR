@@ -446,6 +446,8 @@ InsuranceContract.Values = list(
 #'     \item{\code{$surrenderIncludesCostsReserves}}{Whether (administration)
 #'               cost reserves are paid out on surrender (i.e. included in the
 #'               surrender value before surrender penalties are applied)}
+#'     \item{\code{$unitcostsInGross}}{Whether unit costs are included in the
+#'               gross premium calculation or added after gross premiums. (default: FALSE)}
 #' }
 #'
 #' ## Elements of sublist \code{InsuranceContract.ParameterDefault$ProfitParticipation}
@@ -567,7 +569,8 @@ InsuranceContract.ParameterDefaults = list(
         betaGammaInZillmer = FALSE,             # Whether beta and gamma-costs should be included in the Zillmer premium calculation
         alphaRefundLinear  = TRUE,              # Whether the refund of alpha-costs on surrender is linear in t or follows the NPV of an annuity
         useUnearnedPremiums = isRegularPremiumContract, # Whether unearned premiums should be calculated in the balance sheet reserves. Otherwise, a premium paid at the beginning of the period is added to the reserve for balance-sheet purposes.
-        surrenderIncludesCostsReserves = TRUE  # Whether (administration) cost reserves are paid out on surrender (i.e. included in the surrender value before surrender penalties are applied)
+        surrenderIncludesCostsReserves = TRUE,  # Whether (administration) cost reserves are paid out on surrender (i.e. included in the surrender value before surrender penalties are applied)
+        unitcostsInGross = FALSE
     ),
 
     ProfitParticipation = list(

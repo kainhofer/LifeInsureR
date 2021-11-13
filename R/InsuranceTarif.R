@@ -903,35 +903,25 @@ InsuranceTarif = R6Class(
       # coefficients for the costs
 
       if (type == "gross") {
-        coeff[["SumInsured"]][["costs"]]["alpha", "SumInsured",] = 1;
-        coeff[["SumInsured"]][["costs"]]["beta",  "SumInsured",] = 1;
-        coeff[["SumInsured"]][["costs"]]["gamma", "SumInsured",] = 1;
+        affected = c("alpha", "beta", "gamma")
+        if (params$Features$unitcostsInGross) {
+          affected = c(affected, "unitcosts")
+        }
+        coeff[["SumInsured"]][["costs"]][affected, "SumInsured",  ] = 1;
         # TODO: How to handle beta costs proportional to Sum Insured
-        coeff[["Premium"]][["costs"]]["alpha", "SumPremiums",] = -values$unitPremiumSum;
-        coeff[["Premium"]][["costs"]]["beta",  "SumPremiums",] = -values$unitPremiumSum;
-        coeff[["Premium"]][["costs"]]["gamma", "SumPremiums",] = -values$unitPremiumSum;
-
-        coeff[["Premium"]][["costs"]]["alpha", "GrossPremium",] = -1;
-        coeff[["Premium"]][["costs"]]["beta",  "GrossPremium",] = -1;
-        coeff[["Premium"]][["costs"]]["gamma", "GrossPremium",] = -1;
-
-        coeff[["SumInsured"]][["costs"]]["alpha", "Constant",] = 1 / params$ContractData$sumInsured;
-        coeff[["SumInsured"]][["costs"]]["beta",  "Constant",] = 1 / params$ContractData$sumInsured;
-        coeff[["SumInsured"]][["costs"]]["gamma", "Constant",] = 1 / params$ContractData$sumInsured;
+        coeff[["Premium"]]   [["costs"]][affected, "SumPremiums", ] = -values$unitPremiumSum;
+        coeff[["Premium"]]   [["costs"]][affected, "GrossPremium",] = -1;
+        coeff[["SumInsured"]][["costs"]][affected, "Constant",    ] = 1 / params$ContractData$sumInsured;
 
       } else if (type == "Zillmer") {
           # TODO: Include costs with basis NetPremium and fixed costs!
-        coeff[["SumInsured"]][["costs"]]["Zillmer","SumInsured",] = 1;
-        coeff[["SumInsured"]][["costs"]]["Zillmer","SumPremiums",] = values$unitPremiumSum * premiums[["unit.gross"]];
-        coeff[["SumInsured"]][["costs"]]["Zillmer","GrossPremium",] = premiums[["unit.gross"]];
+        affected = c("Zillmer")
         if (params$Features$betaGammaInZillmer) {
-          coeff[["SumInsured"]][["costs"]]["beta",  "SumInsured",] = 1;
-          coeff[["SumInsured"]][["costs"]]["gamma", "SumInsured",] = 1;
-          coeff[["SumInsured"]][["costs"]]["beta",  "SumPremiums",] = values$unitPremiumSum * premiums[["unit.gross"]];
-          coeff[["SumInsured"]][["costs"]]["gamma", "SumPremiums",] = values$unitPremiumSum * premiums[["unit.gross"]];
-          coeff[["SumInsured"]][["costs"]]["beta",  "GrossPremium",] = premiums[["unit.gross"]];
-          coeff[["SumInsured"]][["costs"]]["gamma", "GrossPremium",] = premiums[["unit.gross"]];
+          affected = c(affected, "beta", "gamma")
         }
+        coeff[["SumInsured"]][["costs"]][affected,"SumInsured",  ] = 1;
+        coeff[["SumInsured"]][["costs"]][affected,"SumPremiums", ] = values$unitPremiumSum * premiums[["unit.gross"]];
+        coeff[["SumInsured"]][["costs"]][affected,"GrossPremium",] = premiums[["unit.gross"]];
       }
 
       applyHook(params$Hooks$adjustPremiumCoefficients, coeff, type = type, premiums = premiums, params = params, values = values, premiumCalculationTime = premiumCalculationTime)
@@ -1022,7 +1012,10 @@ InsuranceTarif = R6Class(
 
 
       frequencyLoading = valueOrFunction(loadings$premiumFrequencyLoading, params = params, values = values);
-      premiumBeforeTax = (values$premiums[["unit.gross"]]*(1 + noMedicalExam.relative + extraChargeGrossPremium) + noMedicalExam - sumRebate - extraRebate) * sumInsured * (1 - advanceProfitParticipation) + premium.unitcosts;
+      premiumBeforeTax = (values$premiums[["unit.gross"]]*(1 + noMedicalExam.relative + extraChargeGrossPremium) + noMedicalExam - sumRebate - extraRebate) * sumInsured * (1 - advanceProfitParticipation);
+      if (params$Features$unitcostsInGross) {
+        premiumBeforeTax = premiumBeforeTax + premium.unitcosts;
+      }
       premiumBeforeTax = premiumBeforeTax * (1 - premiumRebate - advanceProfitParticipationUnitCosts - partnerRebate);
       # TODO / FIXME: Add a check that frequencyLoading has an entry for the premiumFrequency -> Otherwise do not add any loading (currently NULL is returned, basically setting all premiums to NULL)
       premiumBeforeTax.y = premiumBeforeTax * (1 + frequencyLoading[[toString(params$ContractData$premiumFrequency)]]);

@@ -244,6 +244,8 @@ premium paid. In turn, no unearned premiums are applied.}
 \item{\code{$surrenderIncludesCostsReserves}}{Whether (administration)
 cost reserves are paid out on surrender (i.e. included in the
 surrender value before surrender penalties are applied)}
+\item{\code{$unitcostsInGross}}{Whether unit costs are included in the
+gross premium calculation or added after gross premiums. (default: FALSE)}
 }
 }
 
