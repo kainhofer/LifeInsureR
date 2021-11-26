@@ -665,12 +665,12 @@ InsuranceTarif = R6Class(
 
       i = params$ActuarialBases$i;
       v = 1/(1 + i);
-      benefitFreqCorr = correctionPaymentFrequency(i = i,
-                                                   m = params$ContractData$benefitFrequency,
-                                                   order = params$ActuarialBases$benefitFrequencyOrder);
-      premiumFreqCorr = correctionPaymentFrequency(i = i,
-                                                   m = params$ContractData$premiumFrequency,
-                                                   order = params$ActuarialBases$premiumFrequencyOrder);
+            benefitFreqCorr = correctionPaymentFrequency(
+              i = i, m = params$ContractData$benefitFrequency,
+              order = valueOrFunction(params$ActuarialBases$benefitFrequencyOrder, params = params, values = values));
+            premiumFreqCorr = correctionPaymentFrequency(
+              i = i, m = params$ContractData$premiumFrequency,
+              order = valueOrFunction(params$ActuarialBases$premiumFrequencyOrder, params = params, values = values));
 
       pvRefund = calculatePVDeath(px, qx, values$cashFlows$death_GrossPremium, v = v);
       pvRefundPast = calculatePVDeath(
@@ -1011,14 +1011,14 @@ InsuranceTarif = R6Class(
       values$premiums[["unitcost"]] = premium.unitcosts;
 
 
-      frequencyLoading = valueOrFunction(loadings$premiumFrequencyLoading, params = params, values = values);
+            frequencyLoading = self$evaluateFrequencyLoading(loadings$premiumFrequencyLoading, params$ContractData$premiumFrequency, params = params, values = values)
       premiumBeforeTax = (values$premiums[["unit.gross"]]*(1 + noMedicalExam.relative + extraChargeGrossPremium) + noMedicalExam - sumRebate - extraRebate) * sumInsured * (1 - advanceProfitParticipation);
       if (params$Features$unitcostsInGross) {
         premiumBeforeTax = premiumBeforeTax + premium.unitcosts;
       }
       premiumBeforeTax = premiumBeforeTax * (1 - premiumRebate - advanceProfitParticipationUnitCosts - partnerRebate);
       # TODO / FIXME: Add a check that frequencyLoading has an entry for the premiumFrequency -> Otherwise do not add any loading (currently NULL is returned, basically setting all premiums to NULL)
-      premiumBeforeTax.y = premiumBeforeTax * (1 + frequencyLoading[[toString(params$ContractData$premiumFrequency)]]);
+            premiumBeforeTax.y = premiumBeforeTax * (1 + frequencyLoading);
       premiumBeforeTax = premiumBeforeTax.y / params$ContractData$premiumFrequency;
       values$premiums[["written_yearly"]] = premiumBeforeTax.y * (1 + tax)
       values$premiums[["written_beforetax"]] = premiumBeforeTax;
@@ -1352,9 +1352,9 @@ InsuranceTarif = R6Class(
       afterRebates     = afterProfit + rebate.premium + rebate.partner;
 
       # premium frequency loading
-      frequencyLoading = valueOrFunction(params$Loadings$premiumFrequencyLoading, params = params, values = values);
+            frequencyLoading = self$evaluateFrequencyLoading(loadings$premiumFrequencyLoading, params$ContractData$premiumFrequency, params = params, values = values)
 
-      afterFrequency   = afterRebates * (1 + frequencyLoading[[toString(params$ContractData$premiumFrequency)]]);
+            afterFrequency   = afterRebates * (1 + frequencyLoading);
       charge.frequency = afterFrequency - afterRebates;
 
       # insurance tax
@@ -1481,6 +1481,29 @@ InsuranceTarif = R6Class(
       apply(values, 2, pv)
     },
 
+        #' @description Calculate the premium frequency loading, i.e. the surcharge
+        #' on the premium for those cases where the premium is not paid yearly.
+        #' Return values can be either a numeric value or a named list with all
+        #' possible premium frequencies as keys.
+        #' @param loading The premiumFrequencyLoading parameter of the Contract or Tariff to be evaluated
+        #' @param frequency The premiumFrequency parameter of the contract
+        evaluateFrequencyLoading = function(loading, frequency, params, values) {
+            frequencyLoading = valueOrFunction(loading, frequency = frequency, params = params, values = values);
+            if (is.null(frequencyLoading)) {
+              0
+            } else if (is.list(frequencyLoading)) {
+                if (as.character(frequency) %in% names(frequencyLoading)) {
+                    frequencyLoading[[as.character(frequency)]]
+                } else {
+                    warning("Unable to handle premium frequency ", frequency, " with the given loading ", frequencyLoading);
+                }
+            } else if (is.numeric(frequencyLoading)) {
+                frequencyLoading
+            } else {
+                warning("premiumFrequencyLoading must be a number or a named list, given: ", frequencyLoading);
+                0
+            }
+        },
 
 
 

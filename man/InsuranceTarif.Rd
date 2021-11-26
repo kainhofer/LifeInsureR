@@ -165,6 +165,7 @@ all fields.}
 \item \href{#method-premiumDecomposition}{\code{InsuranceTarif$premiumDecomposition()}}
 \item \href{#method-calculateFutureSums}{\code{InsuranceTarif$calculateFutureSums()}}
 \item \href{#method-calculatePresentValues}{\code{InsuranceTarif$calculatePresentValues()}}
+\item \href{#method-evaluateFrequencyLoading}{\code{InsuranceTarif$evaluateFrequencyLoading()}}
 \item \href{#method-clone}{\code{InsuranceTarif$clone()}}
 }
 }
@@ -1092,6 +1093,35 @@ times are desired}
 scheme and the contract)}
 
 \item{\code{...}}{currently unused}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-evaluateFrequencyLoading"></a>}}
+\if{latex}{\out{\hypertarget{method-evaluateFrequencyLoading}{}}}
+\subsection{Method \code{evaluateFrequencyLoading()}}{
+Calculate the premium frequency loading, i.e. the surcharge
+on the premium for those cases where the premium is not paid yearly.
+Return values can be either a numeric value or a named list with all
+possible premium frequencies as keys.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{InsuranceTarif$evaluateFrequencyLoading(loading, frequency, params, values)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{loading}}{The premiumFrequencyLoading parameter of the Contract or Tariff to be evaluated}
+
+\item{\code{frequency}}{The premiumFrequency parameter of the contract}
+
+\item{\code{params}}{Contract-specific, full set of parameters of the contract
+(merged parameters of the defaults, the tariff, the profit participation
+scheme and the contract)}
+
+\item{\code{values}}{Contract values calculated so far (in the \code{contract$Values}
+list) then this method is called by the contract object}
 }
 \if{html}{\out{</div>}}
 }

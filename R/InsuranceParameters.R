@@ -548,8 +548,8 @@ InsuranceContract.ParameterDefaults = list(
         surrenderValueCalculation = NULL,       # By default no surrender penalties
         premiumWaiverValueCalculation = NULL,   # By default, surrender value will be used
 
-        premiumFrequencyOrder = 0,              # Order of the approximation for payments within the year (unless an extra frequency loading is used => then leave this at 0)
-        benefitFrequencyOrder = 0
+        premiumFrequencyOrder = function(params, ...) { if (is.null(params$Loadings$premiumFrequencyLoading)) 0 else -1}, # Order of the approximation for payments within the year (unless an extra frequency loading is used => then leave this at 0)
+        benefitFrequencyOrder = function(params, ...) { if (is.null(params$Loadings$benefitFrequencyLoading)) 0 else -1}
     ),
     Costs = initializeCosts(),
     minCosts = NULL,               # Base costs, which cannot be waived
@@ -565,8 +565,8 @@ InsuranceContract.ParameterDefaults = list(
         premiumRebate = 0,                      # gross premium reduction for large premiums, % of gross premium # TODO
         partnerRebate = 0,                      # Partner rabate on premium (including loading and other rebates) if more than one similar contract is concluded
         extraChargeGrossPremium = 0,            # extra charges on gross premium (smoker, leisure activities, BMI too high, etc.)
-        benefitFrequencyLoading = list("1" = 0.0, "2" = 0.0, "4" = 0.0, "12" = 0.0), # TODO: Properly implement this as a function
-        premiumFrequencyLoading = list("1" = 0.0, "2" = 0.0, "4" = 0.0, "12" = 0.0), # TODO: Properly implement this as a function
+        benefitFrequencyLoading = NULL, # TODO: Properly implement this as a function
+        premiumFrequencyLoading = NULL, # TODO: Properly implement this as a function
         alphaRefundPeriod = 5                   # How long acquisition costs should be refunded in case of surrender
     ),
     Features = list(                            # Special cases for the calculations
