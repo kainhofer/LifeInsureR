@@ -44,8 +44,11 @@ default = "Hauptvertrag"}
 \item{\code{$initialCapital}}{Reserve/Capital that is already available
 at contract inception, e.g. from a previous contract. No tax
 or acquisition costs are applied to this capital.}
-\item{\code{$YOB}}{Year of birth of the insured, used to determine the
+\item{\code{$YOB (deprecated)}}{Year of birth of the insured, used to determine the
 age for the application of the mortality table}
+\item{\code{$birthDate}}{Date  of birth of the insured, used to determine the
+age for the application of the mortality table. Alternatively,
+the year alone can be passed as \code{YOB}.}
 \item{\code{$age}}{Age of the insured}
 \item{\code{$technicalAge}}{Technical age of the insured (when the age
 for the application of the mortality table does not coincide

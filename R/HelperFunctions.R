@@ -182,6 +182,32 @@ deathBenefit.annuityDecreasing = function(interest) {
   }
 }
 
+
+#' Calculate the age of the insured based on exact age at contract closing, rounded
+#' to the nearest birthday.
+#'
+#' @param params The parameters of the contract.
+#' @param values Unused by default (already calculated values of the contract)
+#'
+#' @export
+age.exactRounded = function(params, values) {
+  round(time_length(
+    interval(params$ContractData$birthDate, params$ContractData$contractClosing),
+  "years"))
+}
+
+#' Calculate the age of the insured based on the difference of the bith year and
+#' contract closing year.
+#'
+#' @param params The parameters of the contract.
+#' @param values Unused by default (already calculated values of the contract)
+#'
+#' @export
+age.yearDifference = function(params, values) {
+  year(params$ContractData$contractClosing) - year(params$ContractData$birthDate)
+}
+
+
 #' Defines a frequency charge (surcharge for monthly/quarterly/semiannual) premium payments #'
 #' Tariffs are typically calculated with yearly premium installments. When
 #' premiums are paid more often then one a year (in advance), the insurance
@@ -646,5 +672,7 @@ sumPaddedArrays = function(arr1 = NULL, arr2 = NULL, pad1 = 0, pad2 = 0) {
     arr1 + arr2
   }
 }
+
+
 
 

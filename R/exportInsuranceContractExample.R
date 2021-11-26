@@ -59,7 +59,7 @@ exportInsuranceContractExample = function(contract, prf = 10, outdir = ".", base
         if (!missing(extraname) && !is.null(extraname)) {
             basename = paste(basename, "_", extraname, sep = "")
         }
-        basename = paste(basename, "_RZ", sprintf("%.2f", contract$Parameters$ActuarialBases$i), "_x", contract$Parameters$ContractData$age, "_YoB", contract$Parameters$ContractData$YOB, "_LZ", contract$Parameters$ContractData$policyPeriod, "_PrZ", contract$Parameters$ContractData$premiumPeriod, "_VS", contract$Parameters$ContractData$sumInsured, sep = "" )
+        basename = paste(basename, "_RZ", sprintf("%.2f", contract$Parameters$ActuarialBases$i), "_x", contract$Parameters$ContractData$age, "_YoB", year(params$ContractData$birthDate), "_LZ", contract$Parameters$ContractData$policyPeriod, "_PrZ", contract$Parameters$ContractData$premiumPeriod, "_VS", contract$Parameters$ContractData$sumInsured, sep = "" )
     }
 
     filename = paste(basename, ".xlsx", sep = "");

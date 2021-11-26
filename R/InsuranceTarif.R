@@ -317,7 +317,7 @@ InsuranceTarif = R6Class(
       if (getOption('LIC.debug.getAges', FALSE)) {
         browser();
       }
-      ages = ages(params$ActuarialBases$mortalityTable, YOB = params$ContractData$YOB);
+            ages = ages(params$ActuarialBases$mortalityTable, YOB = year(params$ContractData$birthDate));
       age = params$ContractData$technicalAge;
       if (age > 0) {
         ages = ages[-age:-1];
@@ -335,12 +335,12 @@ InsuranceTarif = R6Class(
       }
       age = params$ContractData$technicalAge;
       ages = self$getAges(params);
-      q = MortalityTables::deathProbabilities(params$ActuarialBases$mortalityTable, YOB = params$ContractData$YOB, ageDifferences = params$ContractData$ageDifferences);
+      q = MortalityTables::deathProbabilities(params$ActuarialBases$mortalityTable, YOB = year(params$ContractData$birthDate), ageDifferences = params$ContractData$ageDifferences);
       if (age > 0) {
         q    = q[-age:-1];
       }
       if (!is.null(params$ActuarialBases$invalidityTable)) {
-        i = MortalityTables::deathProbabilities(params$ActuarialBases$invalidityTable, YOB = params$ContractData$YOB, ageDifferences = params$ContractData$ageDifferences);
+        i = MortalityTables::deathProbabilities(params$ActuarialBases$invalidityTable, YOB = year(params$ContractData$birthDate), ageDifferences = params$ContractData$ageDifferences);
         if (age > 0) {
           i    = i[-age:-1];
         }
