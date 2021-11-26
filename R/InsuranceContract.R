@@ -544,10 +544,22 @@ InsuranceContract = R6Class(
             }
             if (!is.null(self$blocks)) {
                 for (b in self$blocks) {
-                    .args = as.list(match.call()[-1])
-                    # correctly shift the valuesFrom by each block's blockStart parameter
-                    .args$valuesFrom = max(0, .args$valuesFrom - b$Parameters$ContractData$blockStart)
-                    do.call(b$calculateContract, .args)
+                    #
+                    # .args = as.list(match.call()[-1])
+                    # # correctly shift the valuesFrom by each block's blockStart parameter
+                    # .args$valuesFrom = max(0, .args$valuesFrom - b$Parameters$ContractData$blockStart)
+                    # do.call(b$calculateContract, .args)
+                    #
+                    b$calculateContract(
+                        calculate = calculate,
+                        valuesFrom = max(0, valuesFrom - b$Parameters$ContractData$blockStart),
+                        premiumCalculationTime = max(0, premiumCalculationTime - b$Parameters$ContractData$blockStart),
+                        preservePastPV = preservePastPV,
+                        additionalCapital = additionalCapital,
+                        recalculatePremiums = recalculatePremiums,
+                        recalculatePremiumSum = recalculatePremiumSum,
+                        history_comment = history_comment,
+                        history_type = history_type)
                 }
             }
             self$Values$int = private$determineInternalValues()
@@ -775,19 +787,26 @@ InsuranceContract = R6Class(
         #'        \code{sumInsured} is adjusted according to the existing reserves.
         #'
         #' @param t Time of the premium waiver.
+        #' @param ... Further parameters (currently unused)
         #'
         #' @examples
         #' # TODO
-        premiumWaiver = function(t) {
+        premiumWaiver = function(t, ...) {
             if (getOption('LIC.debug.premiumWaiver', FALSE)) {
                 browser();
             }
-            newSumInsured = self$Values$reserves[[toString(t), "PremiumFreeSumInsured"]];
+            if (length(self$blocks) > 0) {
+                for (b in self$blocks) {
+                    b$premiumWaiver(t - b$Parameters$ContractData$blockStart, ...)
+                }
+            } else {
+                newSumInsured = self$Values$reserves[[toString(t), "PremiumFreeSumInsured"]];
+                self$Parameters$ContractData$sumInsured = newSumInsured;
+            }
             self$Parameters$ContractState$premiumWaiver = TRUE;
             self$Parameters$ContractState$surrenderPenalty = FALSE; # Surrender penalty has already been applied, don't apply a second time
             self$Parameters$ContractState$alphaRefunded = TRUE;     # Alpha cost (if applicable) have already been refunded partially, don't refund again
-
-            self$Parameters$ContractData$sumInsured = newSumInsured;
+            # TODO: Extract current amount of premium refund and feed that into the calculateContract function...
 
             self$calculateContract(
                 valuesFrom = t,
