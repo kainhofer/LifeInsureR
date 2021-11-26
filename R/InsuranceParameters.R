@@ -317,12 +317,6 @@ InsuranceContract.Values = list(
 #'               "in arrears"}
 #'     \item{\code{$premiumFrequency}}{Number of premium payments per year, default is 1.}
 #'     \item{\code{$benefitFrequency}}{Number of benefit payments per year, default is 1.}
-#'     \item{\code{$widowProportion}}{For annuities with a widow transition,
-#'               this describes the factor of the widow benefits relative to
-#'               the original benefit.}
-#'     \item{\code{$deathBenefitProportion}}{For endowments with a death and
-#'               survival benefit, this describes the proportion of the death
-#'               benefit relative to the survival benefit.}
 #'     \item{\code{$premiumRefund}}{Proportion of (gross) premiums refunded on
 #'               death (including additional risk, e.g. 1.10 = 110% of paid premiums)}
 #'     \item{\code{$premiumIncrease}}{The yearly growth factor of the premium,
@@ -544,12 +538,10 @@ InsuranceContract.ParameterDefaults = list(
         premiumFrequency = 1,                   # number of premium payments per year
         benefitFrequency = 1,                   # number of benefit payments per year (for annuities) or death benefit at the end of every 1/k-th year
 
-        widowProportion = 0,                    # widow transition factor (on sum insured)
-        deathBenefitProportion = 1,             # For endowments: Proportion of the death benefit relative to the life benefit
         premiumRefund = 0,                      # Proportion of premiums refunded on death (including additional risk, e.g. 1.10 = 110% of paid premiums)
         premiumIncrease = 1,                    # The yearly growth factor of the premium, i.e. 1.05 means +5% increase each year; a Vector describes the premiums for all years
         annuityIncrease = 1,                    # The yearly growth factor of the annuity payments, i.e. 1.05 means +5% incrase each year; a vector describes the annuity unit payments for all years
-        deathBenefit = 1,                        # The yearly relative death benefit (relative to the initial sum insured); Can be set to a function(len, params, values), e.g. deathBenefit = deathBenefit.linearDecreasing
+        deathBenefit = 1,                       # The yearly relative death benefit (relative to the initial sum insured); Can be fixed, e.g. 0.5 for 50% death cover, or  set to a function(len, params, values) like deathBenefit = deathBenefit.linearDecreasing
 
         costWaiver = 0                          # The cost waiver (up to minCosts, 0=no cost waiver, 1=full cost waiver down to minCosts)
     ),

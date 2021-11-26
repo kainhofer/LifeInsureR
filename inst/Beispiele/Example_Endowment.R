@@ -1,5 +1,7 @@
 library(LifeInsuranceContracts)
 library(MortalityTables)
+library(lubridate)
+mortalityTables.load("Austria_Census")
 
 ################################################################### #
 #              DEFINITION TARIF                                  ####
@@ -37,7 +39,6 @@ surrender.Bsp = function(surrenderReserve, params, values) {
   surrenderReserve * sf
 }
 
-#' @export
 Tarif.Bsp = InsuranceTarif$new(
   name = "Example Tariff - Standard Endowment",
   type = "endowment",
@@ -49,6 +50,7 @@ Tarif.Bsp = InsuranceTarif$new(
   mortalityTable = mort.AT.census.2011.unisex,
   i = 0.005,
   costs = costs.Bsp,
+  Costs = costs.Bsp,
   unitcosts = costs.Bsp.Stueckkosten,
 
   premiumFrequencyOrder = -1, # Unterjährige Prämienzahlung wird nicht im BW berücksichtigt, sondern durch Prämienaufschlag
@@ -75,6 +77,11 @@ contract.Bsp = InsuranceContract$
   )$
   addDynamics(t = 5, NewSumInsured = 200000, id = "Dynamik 1", i = 0.05, age = 70)$
   addDynamics(t = 10, NewSumInsured = 250000, id = "Dynamik 2", i = 0.01);
+
+options('LIC.debug.premiumCalculation' = TRUE)
+contract.Bsp$premiumWaiver(t = 13)
+
+options('LIC.debug.premiumCalculation' = FALSE)
 # exportInsuranceContractExample(contract.Bsp, t = 5);
 # showVmGlgExamples(contract.Bsp, t = 10)
 #

@@ -93,12 +93,6 @@ are paid in advance (default) or arrears. Value is of type
 "in arrears"}
 \item{\code{$premiumFrequency}}{Number of premium payments per year, default is 1.}
 \item{\code{$benefitFrequency}}{Number of benefit payments per year, default is 1.}
-\item{\code{$widowProportion}}{For annuities with a widow transition,
-this describes the factor of the widow benefits relative to
-the original benefit.}
-\item{\code{$deathBenefitProportion}}{For endowments with a death and
-survival benefit, this describes the proportion of the death
-benefit relative to the survival benefit.}
 \item{\code{$premiumRefund}}{Proportion of (gross) premiums refunded on
 death (including additional risk, e.g. 1.10 = 110\% of paid premiums)}
 \item{\code{$premiumIncrease}}{The yearly growth factor of the premium,

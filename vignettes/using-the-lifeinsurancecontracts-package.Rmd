@@ -637,7 +637,7 @@ However, the most important and often used parameters are:
 | `premiumPeriod` | how long premiums are paid (1 for single-premiumcontracts, equal to `policyPeriod` (default) for regular premiums) |
 | `premiumFrequency` | how often premiums are paid within a year (e.g.1 for yearly premiums, 4 for quarterly, 12 for monthly) |
 | `contractClosing` | the starting date of the contract |
-| `deathBenefitProportion` | gives the factor of death benefit relative to thesurvival benefit of endowments (1 means equal death and survival probabilities) |
+| `deathBenefit` | gives the factor of death benefit relative to the sum insured / survival benefit of endowments (1 means equal death and survival probabilities), can also be a function with non-constant values over time |
 | `noMedicalExam`, `noMedicalExamRelative`, `sumRebate`, `extraRebate`, `premiumRebate` | various types of rebates or charges. They can either be defined in general functional form in the tariff to apply to all contracts, or given individually for each contract. For the details, when each of these rebates are applied, check the formula reference document.|
   
 
@@ -1846,7 +1846,7 @@ that uses this profit scheme:
 contract.Endow.PP = InsuranceContract$new(
   tarif = Tarif.Endowment,
   sumInsured = 10000,
-  deathBenefitProportion = 5,
+  deathBenefit = 5,
   age = 50, policyPeriod = 15,
   
   profitParticipationScheme = ProfitScheme.example,
