@@ -1209,7 +1209,7 @@ InsuranceTarif = R6Class(
           freq = params$ContractData$premiumFrequency
           bm = month(params$ContractData$contractClosing)
 
-          fact = (month(factors$date) - bm + 12 + 1) %% (12/freq) * (freq/12)
+                    fact = (bm - month(factors$date) + 12 - 1) %% (12/freq) * (freq/12)
         }
         # TODO: We have no vector of actual written premiums (implicit assumption
         # seems to be that the premium stays constant!). Once we have such a vector,
