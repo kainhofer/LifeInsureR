@@ -372,7 +372,9 @@ InsuranceTarif = R6Class(
         browser();
       }
       costs = valueOrFunction(params$Costs, params = params, values = NULL)
+            costs = applyHook(params$Hooks$adjustCosts, costs, params = params, values = NULL);
       baseCost = valueOrFunction(params$minCosts, params = params, values = NULL, costs = costs)
+            baseCost = applyHook(params$Hooks$adjustMinCosts, baseCost, costs = costs, params = params, values = NULL);
       if (!is.null(baseCost)) {
         costWaiver = valueOrFunction(params$ContractData$costWaiver, params = params, values = NULL, costs = costs, minCosts = baseCost)
         if (is.numeric(costWaiver)) {

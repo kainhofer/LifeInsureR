@@ -163,6 +163,25 @@ costs.baseAlpha = function(alpha) {
   }
 }
 
+#' Helper function to modify alpha costs of an insurance contract individually
+#'
+#' Returns a function that modifies alpha (and Zillmer) costs by the given scale,
+#' but otherwise uses the full costs defined by the Costs parameter.
+#'
+#' This function can be set as adjustCosts or adjustMinCosts hook parameters
+#' for a tariff or contract and can be used to apply cost adjustments on a
+#' per-contract basis.
+#'
+#' @param scale The scale for  alpha / Zillmer cost
+#'
+#' @export
+costs.scaleAlpha = function(scale) {
+  function(costs, ...) {
+    costs[c("alpha", "Zillmer"),,] = costs[c("alpha", "Zillmer"),,] * scale
+    costs
+  }
+}
+
 
 #' Helper function to display all cost definitions in a concise table
 #'
@@ -492,6 +511,8 @@ InsuranceContract.Values = list(
 #' \describe{
 #'     \item{\code{$adjustCashFlows}}{Function with signature \code{function(x, params, values, ...)} to adjust the benefit/premium cash flows after their setup.}
 #'     \item{\code{$adjustCashFlowsCosts}}{Function with signature \code{function(x, params, values, ...)} to adjust the costs cash flows after their setup.}
+#'     \item{\code{$adjustCosts}}{Function with signature \code{function(costs, params, values, ...)} to adjust the tariff costs after their setup (e.g. contract-specific conditions/waivers, etc.).}
+#'     \item{\code{$adjustMinCosts}}{Function with signature \code{function(minCosts, costs, params, values, ...)} to adjust the tariff minimum (unwaivable) costs after their setup (e.g. contract-specific conditions/waivers, etc.).}
 #'     \item{\code{$adjustPremiumCoefficients}}{Function with signature \code{function(coeff, type, premiums, params, values, premiumCalculationTime)} to adjust the coefficients for premium calculation after their default setup. Use cases are e.g. term-fix tariffs where the Zillmer premium term contains the administration cost over the whole contract, but not other gamma- or beta-costs.}
 #' }
 #'
@@ -604,6 +625,8 @@ InsuranceContract.ParameterDefaults = list(
       # Functions with signature function(x, params, values, ...), default NULL is equivalent to function(x, ...) {x}
       adjustCashFlows = NULL,
       adjustCashFlowsCosts = NULL,
+      adjustCosts = NULL,
+      adjustMinCosts = NULL,
       adjustPremiumCoefficients = NULL # function(coeff, type = type, premiums = premiums, params = params, values = values, premiumCalculationTime = premiumCalculationTime)
     )
 );

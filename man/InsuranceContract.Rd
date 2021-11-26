@@ -632,13 +632,15 @@ that time will be left unchanged.}
 \subsection{Method \code{premiumWaiver()}}{
 Stop premium payments and re-calculate sumInsured of the paid-up contract
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{InsuranceContract$premiumWaiver(t)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{InsuranceContract$premiumWaiver(t, ...)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{t}}{Time of the premium waiver.}
+
+\item{\code{...}}{Further parameters (currently unused)}
 }
 \if{html}{\out{</div>}}
 }
