@@ -334,6 +334,9 @@ InsuranceContract.Values = list(
 #'               defining a corresponding \code{$minCosts}). Linearly interpolates
 #'               between \code{$Costs} and \code{$minCosts}, if the latter is set.
 #'               Otherwise is has no effect.}
+#'    \item{\code{$attributes}}{Additional custom attributes (as a named list),
+#'               which can be used for particular behaviour of different contracts
+#'               or contract slices.}
 #' }
 #'
 #' ## Elements of sublist \code{InsuranceContract.ParameterDefault$ContractState}
@@ -543,7 +546,8 @@ InsuranceContract.ParameterDefaults = list(
         annuityIncrease = 1,                    # The yearly growth factor of the annuity payments, i.e. 1.05 means +5% incrase each year; a vector describes the annuity unit payments for all years
         deathBenefit = 1,                       # The yearly relative death benefit (relative to the initial sum insured); Can be fixed, e.g. 0.5 for 50% death cover, or  set to a function(len, params, values) like deathBenefit = deathBenefit.linearDecreasing
 
-        costWaiver = 0                          # The cost waiver (up to minCosts, 0=no cost waiver, 1=full cost waiver down to minCosts)
+        costWaiver = 0,                         # The cost waiver (up to minCosts, 0=no cost waiver, 1=full cost waiver down to minCosts)
+        attributes = list()                     # List of additional attributes with custom meaning (not standardized, but can be used by any tariff to implement custom behavior for certain contracts or slices)
     ),
     ContractState = list(
         premiumWaiver = FALSE,                  # contract is paid-up
