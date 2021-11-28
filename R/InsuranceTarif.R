@@ -1015,11 +1015,10 @@ InsuranceTarif = R6Class(
 
             frequencyLoading = self$evaluateFrequencyLoading(loadings$premiumFrequencyLoading, params$ContractData$premiumFrequency, params = params, values = values)
       premiumBeforeTax = (values$premiums[["unit.gross"]]*(1 + noMedicalExam.relative + extraChargeGrossPremium) + noMedicalExam - sumRebate - extraRebate) * sumInsured * (1 - advanceProfitParticipation);
-      if (params$Features$unitcostsInGross) {
+      if (!params$Features$unitcostsInGross) {
         premiumBeforeTax = premiumBeforeTax + premium.unitcosts;
       }
       premiumBeforeTax = premiumBeforeTax * (1 - premiumRebate - advanceProfitParticipationUnitCosts - partnerRebate);
-      # TODO / FIXME: Add a check that frequencyLoading has an entry for the premiumFrequency -> Otherwise do not add any loading (currently NULL is returned, basically setting all premiums to NULL)
             premiumBeforeTax.y = premiumBeforeTax * (1 + frequencyLoading);
       premiumBeforeTax = premiumBeforeTax.y / params$ContractData$premiumFrequency;
       values$premiums[["written_yearly"]] = premiumBeforeTax.y * (1 + tax)
@@ -1329,8 +1328,13 @@ InsuranceTarif = R6Class(
       # unit costs
       unitCosts        = premiums[["unitcost"]];
       # unit costs are only charged if a premium is paid, so exclude all times with premium==0!
-      afterUnitCosts   = afterProfit + (afterProfit != 0)*unitCosts;
-      unitcosts        = afterUnitCosts - afterProfit;
+      if (!params$Features$unitcostsInGross) {
+          afterUnitCosts   = afterProfit + (afterProfit != 0)*unitCosts;
+          unitcosts        = afterUnitCosts - afterProfit;
+      } else {
+          afterUnitCosts   = afterProfit;
+          unitcosts        = 0;
+      }
 
       # advance profit participation, Part 2:
       advanceProfitParticipationUnitCosts = 0;
