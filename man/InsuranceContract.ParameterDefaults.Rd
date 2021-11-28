@@ -110,6 +110,9 @@ those cost components that are defined to be waivable, i.e. by
 defining a corresponding \code{$minCosts}). Linearly interpolates
 between \code{$Costs} and \code{$minCosts}, if the latter is set.
 Otherwise is has no effect.}
+\item{\code{$attributes}}{Additional custom attributes (as a named list),
+which can be used for particular behaviour of different contracts
+or contract slices.}
 }
 }
 

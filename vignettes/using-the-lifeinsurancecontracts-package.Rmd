@@ -27,6 +27,7 @@ library(kableExtra)
 library(LifeInsuranceContracts)
 library(dplyr)
 library(tibble)
+library(lubridate)
 options(scipen=5)
 
 library(pander)
