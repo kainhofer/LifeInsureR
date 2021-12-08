@@ -364,7 +364,7 @@ vmGlgExample.generateTest = function(contract, prf = 10, t = 10, t_prf = 12, ...
         names(cmpvals),
         sprintf("%.2f", cmpvals),
         sep = " = ", collapse = ", \n\t\t");
-    code = paste0(code, "\t\t", check.str, "\n\t);\n");
+    code = paste0(code, "\t\t", check.str, ",\n\tabsTolerance = 0.01\n\t);\n");
     code = paste0(code, "})\n");
     cat(code);
 }
