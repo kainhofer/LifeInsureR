@@ -174,11 +174,11 @@ deathBenefit.annuityDecreasing = function(interest) {
     protectionPeriod = params$ContractData$policyPeriod - params$ContractData$deferralPeriod;
     vk = 1/(1 + interest);
     if (interest == 0) {
-      sumInsured = (protectionPeriod:0) / protectionPeriod
+      benefit = (protectionPeriod:0) / protectionPeriod
     } else {
-      sumInsured = (vk ^ (protectionPeriod:0) - 1) / (vk ^ protectionPeriod - 1)
+      benefit = (vk ^ (protectionPeriod:0) - 1) / (vk ^ protectionPeriod - 1)
     }
-    pad0(sumInsured, l = len)
+    pad0(benefit, l = len)
   }
 }
 
