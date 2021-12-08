@@ -591,6 +591,9 @@ InsuranceTarif = R6Class(
 
       # Death Benefits
       cf$death_SumInsured = pad0(values$cashFlowsBasic$death, cflen);
+      if ((!is.null(params$Features$absPremiumRefund)) && (params$Features$absPremiumRefund > 0)) {
+        cf$death_SumInsured = cf$death_SumInsured + pad0(padLast(params$Features$absPremiumRefund, cflen - 1), cflen);
+      }
       cf$disease_SumInsured = pad0(values$cashFlowsBasic$disease, cflen);
       cf$death_PremiumFree = cf$death_SumInsured;
       # premium refund

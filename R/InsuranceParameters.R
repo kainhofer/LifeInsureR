@@ -467,6 +467,8 @@ InsuranceContract.Values = list(
 #'               surrender value before surrender penalties are applied)}
 #'     \item{\code{$unitcostsInGross}}{Whether unit costs are included in the
 #'               gross premium calculation or added after gross premiums. (default: FALSE)}
+#'     \item{\code{$absPremiumRefund}}{Constant death benefit (typically premium
+#'               refund of a previous contract), relative to the sum insured.}
 #' }
 #'
 #' ## Elements of sublist \code{InsuranceContract.ParameterDefault$ProfitParticipation}
@@ -591,7 +593,8 @@ InsuranceContract.ParameterDefaults = list(
         alphaRefundLinear  = TRUE,              # Whether the refund of alpha-costs on surrender is linear in t or follows the NPV of an annuity
         useUnearnedPremiums = isRegularPremiumContract, # Whether unearned premiums should be calculated in the balance sheet reserves. Otherwise, a premium paid at the beginning of the period is added to the reserve for balance-sheet purposes.
         surrenderIncludesCostsReserves = TRUE,  # Whether (administration) cost reserves are paid out on surrender (i.e. included in the surrender value before surrender penalties are applied)
-        unitcostsInGross = FALSE
+        unitcostsInGross = FALSE,
+        absPremiumRefund = 0                 # Constant death benefit (irrespective of the type of contract), typically a premium refund for a previous contract
     ),
 
     ProfitParticipation = list(
