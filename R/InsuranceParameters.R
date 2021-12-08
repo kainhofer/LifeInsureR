@@ -513,6 +513,8 @@ InsuranceContract.Values = list(
 #'     \item{\code{$adjustCosts}}{Function with signature \code{function(costs, params, values, ...)} to adjust the tariff costs after their setup (e.g. contract-specific conditions/waivers, etc.).}
 #'     \item{\code{$adjustMinCosts}}{Function with signature \code{function(minCosts, costs, params, values, ...)} to adjust the tariff minimum (unwaivable) costs after their setup (e.g. contract-specific conditions/waivers, etc.).}
 #'     \item{\code{$adjustPremiumCoefficients}}{Function with signature \code{function(coeff, type, premiums, params, values, premiumCalculationTime)} to adjust the coefficients for premium calculation after their default setup. Use cases are e.g. term-fix tariffs where the Zillmer premium term contains the administration cost over the whole contract, but not other gamma- or beta-costs.}
+#'     \item{\code{$adjustPVForReserves}}{Adjust the absolute present value vectors used to derive reserves (e.g. when a sum rebate is subtracted from the gamma-cost reserves without influencing the premium calculation). \code{function(absPV, params, values)}}
+#'     \item{\code{$premiumRebateCalculation}}{Calculate the actual premium rebate from the rebate rate (e.g. when the premium rate is given as a yearly cost reduction applied to a single-premium contract). \code{function(premiumRebateRate, params = params, values = values)}}
 #' }
 #'
 #'
@@ -626,7 +628,9 @@ InsuranceContract.ParameterDefaults = list(
       adjustCashFlowsCosts = NULL,
       adjustCosts = NULL,
       adjustMinCosts = NULL,
-      adjustPremiumCoefficients = NULL # function(coeff, type = type, premiums = premiums, params = params, values = values, premiumCalculationTime = premiumCalculationTime)
+      adjustPremiumCoefficients = NULL,  # function(coeff, type = type, premiums = premiums, params = params, values = values, premiumCalculationTime = premiumCalculationTime)
+      adjustPVForReserves = NULL,        # function(absPresentValues, params, values)
+      premiumRebateCalculation = NULL   # function(premiumRebateRate, params = params, values = values)
     )
 );
 

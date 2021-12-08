@@ -991,7 +991,9 @@ InsuranceTarif = R6Class(
       noMedicalExam.relative = valueOrFunction(loadings$noMedicalExamRelative,params = params, values = values);
       extraRebate   = valueOrFunction(loadings$extraRebate,  params = params, values = values);
       sumRebate     = valueOrFunction(loadings$sumRebate,    params = params, values = values);
-      premiumRebate = valueOrFunction(loadings$premiumRebate,params = params, values = values);
+      premiumRebateRate = valueOrFunction(loadings$premiumRebate,params = params, values = values);
+      premiumRebate = applyHook(params$Hooks$premiumRebateCalculation, premiumRebateRate, params = params, values = values);
+
       extraChargeGrossPremium = valueOrFunction(loadings$extraChargeGrossPremium, params = params, values = values);
       advanceProfitParticipation = 0;
       advanceProfitParticipationUnitCosts = 0;
@@ -1016,7 +1018,7 @@ InsuranceTarif = R6Class(
       values$premiums[["unitcost"]] = premium.unitcosts;
 
 
-            frequencyLoading = self$evaluateFrequencyLoading(loadings$premiumFrequencyLoading, params$ContractData$premiumFrequency, params = params, values = values)
+      frequencyLoading = self$evaluateFrequencyLoading(loadings$premiumFrequencyLoading, params$ContractData$premiumFrequency, params = params, values = values)
       premiumBeforeTax = (values$premiums[["unit.gross"]]*(1 + noMedicalExam.relative + extraChargeGrossPremium) + noMedicalExam - sumRebate - extraRebate) * sumInsured * (1 - advanceProfitParticipation);
       if (!params$Features$unitcostsInGross) {
         premiumBeforeTax = premiumBeforeTax + premium.unitcosts;
@@ -1045,20 +1047,22 @@ InsuranceTarif = R6Class(
       securityFactor = (1 + valueOrFunction(params$Loadings$security, params = params, values = values));
       ppScheme      = params$ProfitParticipation$profitParticipationScheme;
 
+      absPV = applyHook(params$Hooks$adjustPVForReserves, values$absPresentValues, params = params, values = values);
+
       # Net, Zillmer and Gross reserves
-      resNet = values$absPresentValues[,"benefitsAndRefund"] * securityFactor - values$premiums[["net"]] * values$absPresentValues[,"premiums.unit"];
-      BWZcorr = ifelse(values$absPresentValues[t, "premiums"] == 0, 0,
-                       values$absPresentValues[t, "Zillmer"] / values$absPresentValues[t, "premiums"]) * values$absPresentValues[,"premiums"];
+      resNet = absPV[,"benefitsAndRefund"] * securityFactor - values$premiums[["net"]] * absPV[,"premiums.unit"];
+      BWZcorr = ifelse(absPV[t, "premiums"] == 0, 0,
+                       absPV[t, "Zillmer"] / absPV[t, "premiums"]) * absPV[,"premiums"];
       resZ = resNet - BWZcorr;
 
-      resAdeq = values$absPresentValues[,"benefitsAndRefund"] * securityFactor +
-        values$absPresentValues[,"alpha"] + values$absPresentValues[,"beta"] + values$absPresentValues[,"gamma"] -
-        values$premiums[["gross"]] * values$absPresentValues[,"premiums.unit"];
+      resAdeq = absPV[,"benefitsAndRefund"] * securityFactor +
+          absPV[,"alpha"] + absPV[,"beta"] + absPV[,"gamma"] -
+        values$premiums[["gross"]] * absPV[,"premiums.unit"];
 
-      #values$premiums[["Zillmer"]] * values$absPresentValues[,"premiums"];
-      resGamma = values$absPresentValues[,"gamma"] -
-        ifelse(values$absPresentValues[t, "premiums"] == 0, 0,
-               values$absPresentValues[t, "gamma"] / values$absPresentValues[t, "premiums"]) * values$absPresentValues[,"premiums"]
+      #values$premiums[["Zillmer"]] * absPV[,"premiums"];
+      resGamma = absPV[,"gamma"] -
+        ifelse(absPV[t, "premiums"] == 0, 0,
+               absPV[t, "gamma"] / absPV[t, "premiums"]) * absPV[,"premiums"]
 
       advanceProfitParticipation = 0;
       if (!is.null(ppScheme)) {
@@ -1106,7 +1110,7 @@ InsuranceTarif = R6Class(
             "reduction"   = resReduction
             #, "Reserve.premiumfree"=res.premiumfree, "Reserve.gamma.premiumfree"=res.gamma.premiumfree);
       );
-      rownames(res) <- rownames(values$absPresentValues);
+      rownames(res) <- rownames(absPV);
       values$reserves = res;
 
       # The surrender value functions can have arbitrary form, so we store a function
@@ -1136,9 +1140,9 @@ InsuranceTarif = R6Class(
         premiumfreeValue = surrenderValue
       }
       Storno = 0; # TODO: Implement storno costs
-      premiumfreePV = (values$absPresentValues[, "benefits"] * securityFactor + values$absPresentValues[, "gamma_nopremiums"]); # PV of future premium free claims + costs
+      premiumfreePV = (absPV[, "benefits"] * securityFactor + absPV[, "gamma_nopremiums"]); # PV of future premium free claims + costs
       newSI = ifelse(premiumfreePV == 0, 0,
-        (premiumfreeValue - values$absPresentValues[,"death_Refund_past"] * securityFactor - c(Storno)) /
+        (premiumfreeValue - absPV[,"death_Refund_past"] * securityFactor - c(Storno)) /
         premiumfreePV * params$ContractData$sumInsured);
 
       cbind(res,
@@ -1348,7 +1352,9 @@ InsuranceTarif = R6Class(
       profits.advance  = profits.advance + afterProfit - afterUnitCosts;
 
       # premium rebate
-      premiumRebate    = valueOrFunction(loadings$premiumRebate,params = params, values = values);
+      premiumRebateRate = valueOrFunction(loadings$premiumRebate,params = params, values = values);
+      premiumRebate = applyHook(params$Hooks$premiumRebateCalculation, premiumRebateRate, params = params, values = values);
+
       afterPremiumRebate = afterUnitCosts * (1 - premiumRebate);
       rebate.premium   = afterPremiumRebate - afterUnitCosts;
 
