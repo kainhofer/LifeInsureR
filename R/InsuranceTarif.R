@@ -527,7 +527,7 @@ InsuranceTarif = R6Class(
         }
         if (self$tariffType == "endowment" || self$tariffType == "wholelife" || self$tariffType == "endowment + dread-disease") {
           cf$death = c(rep(0, deferralPeriod), deathCF, 0)
-          cf$sumInsured = c(rep(0, deferralPeriod), deathCF, 1);
+          # cf$sumInsured = c(rep(0, deferralPeriod), deathCF, 1);
         }
         if (self$tariffType == "endowment + dread-disease") {
           cf$disease = c(
