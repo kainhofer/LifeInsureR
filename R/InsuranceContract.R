@@ -376,7 +376,7 @@ InsuranceContract = R6Class(
         #'
         #' @examples
         #' # TODO
-        addBlock = function(id = NULL, block = NULL, t = block$Values$int$blockStart, comment = comment, ...) {
+        addBlock = function(id = NULL, block = NULL, t = block$Values$int$blockStart, comment = paste0("Additional block at time t=", t), ...) {
             if (getOption('LIC.debug.addBlock', FALSE)) {
                 browser();
             }
