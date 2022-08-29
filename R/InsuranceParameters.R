@@ -43,7 +43,7 @@ setCost = function(costs, type, basis = "SumInsured", frequency = "PolicyPeriod"
 #' \describe{
 #'     \item{CostType:}{alpha, Zillmer, beta, gamma, gamma_nopremiums, unitcosts}
 #'     \item{Basis:}{SumInsured, SumPremiums, GrossPremium, NetPremium, Constant}
-#'     \item{Period:}{once, PremiumPeriod, PremiumFree, PolicyPeriod}
+#'     \item{Period:}{once, PremiumPeriod, PremiumFree, PolicyPeriod, CommissionPeriod}
 #' }
 #' This cost structure can then be modified for non-standard costs using the [setCost()] function.
 #' The main purpose of this structure is to be passed to [InsuranceContract] or
@@ -90,12 +90,12 @@ setCost = function(costs, type, basis = "SumInsured", frequency = "PolicyPeriod"
 #'
 #'
 #' @export
-initializeCosts = function(costs, alpha, Zillmer, beta, gamma, gamma.paidUp, gamma.premiumfree, gamma.contract, gamma.afterdeath, gamma.fullcontract, unitcosts, unitcosts.PolicyPeriod) {
+initializeCosts = function(costs, alpha, Zillmer, alpha.commission, beta, gamma, gamma.paidUp, gamma.premiumfree, gamma.contract, gamma.afterdeath, gamma.fullcontract, unitcosts, unitcosts.PolicyPeriod) {
     if (missing(costs)) {
         dimnm = list(
             type = c("alpha", "Zillmer", "beta", "gamma", "gamma_nopremiums", "unitcosts"),
             basis = c("SumInsured", "SumPremiums", "GrossPremium", "NetPremium", "Constant", "Reserve"),
-            frequency = c("once", "PremiumPeriod", "PremiumFree", "PolicyPeriod", "AfterDeath", "FullContract")
+            frequency = c("once", "PremiumPeriod", "PremiumFree", "PolicyPeriod", "AfterDeath", "FullContract", "CommissionPeriod")
         );
         costs = array(
             0,
@@ -104,7 +104,11 @@ initializeCosts = function(costs, alpha, Zillmer, beta, gamma, gamma.paidUp, gam
         );
     }
     if (!missing(alpha)) {
-      costs = setCost(costs, "alpha",  "SumPremiums", "once", alpha)
+        costs = setCost(costs, "alpha",  "SumPremiums", "once", alpha)
+    }
+    if (!missing(alpha.commission)) {
+        costs = setCost(costs, "alpha",  "SumPremiums", "CommissionPeriod", alpha.commission)
+        costs = setCost(costs, "Zillmer",  "SumPremiums", "CommissionPeriod", alpha.commission)
     }
     if (!missing(Zillmer)) {
       costs = setCost(costs, "Zillmer","SumPremiums", "once", Zillmer)
@@ -328,6 +332,11 @@ InsuranceContract.Values = list(
 #'     \item{\code{$deathBenefit}}{The yearly relative death benefit (relative
 #'               to the initial sum insured); Can be set to a \code{function(len,
 #'               params, values)}, e.g. \code{deathBenefit = deathBenefit.linearDecreasing}}
+#'     \item{\code{$benefitParameter}}{(optional) Tariff-specific parameter to
+#'               indicate special benefit conditions (e.g. for non-constant benefits
+#'               the initial starting value, or a minimum benefit, etc.). This
+#'               parameter is not used automatically, but needs to be processed
+#'               by a custom \code{$deathBenefit} function.}
 #'
 #'    \item{\code{$costWaiver}}{The fraction of the costs that are waived (only
 #'               those cost components that are defined to be waivable, i.e. by
@@ -440,6 +449,10 @@ InsuranceContract.Values = list(
 #'               \code{list("1" = 0.0, "2" = 0.0, "4" = 0.0, "12" = 0.0)}}
 #'     \item{\code{$alphaRefundPeriod}}{How long the acquisition costs should be
 #'               (partially) refunded in case of surrender or premium waiver.}
+#'     \item{\code{$commissionPeriod}}{Period, over which the acquisition costs
+#'               are charged to the contract (if not fully up-front or over the
+#'               whole contract period). This has only an effect for cost definitions
+#'               with duration "CommissionPeriod". Default is 5 years.}
 #' }
 #'
 #'
@@ -469,6 +482,10 @@ InsuranceContract.Values = list(
 #'               gross premium calculation or added after gross premiums. (default: FALSE)}
 #'     \item{\code{$absPremiumRefund}}{Constant death benefit (typically premium
 #'               refund of a previous contract), relative to the sum insured.}
+#'     \item{\code{$alphaCostsCommission}}{Whether alpha costs over the commision
+#'               period are given as their actual yearly value ("actual"), or
+#'               whether the given value is the sum ("sum") or the present value
+#'               ("presentvalue") over the whole commission period.}
 #' }
 #'
 #' ## Elements of sublist \code{InsuranceContract.ParameterDefault$ProfitParticipation}
@@ -512,6 +529,8 @@ InsuranceContract.Values = list(
 #'     \item{\code{$adjustCashFlowsCosts}}{Function with signature \code{function(x, params, values, ...)} to adjust the costs cash flows after their setup.}
 #'     \item{\code{$adjustCosts}}{Function with signature \code{function(costs, params, values, ...)} to adjust the tariff costs after their setup (e.g. contract-specific conditions/waivers, etc.).}
 #'     \item{\code{$adjustMinCosts}}{Function with signature \code{function(minCosts, costs, params, values, ...)} to adjust the tariff minimum (unwaivable) costs after their setup (e.g. contract-specific conditions/waivers, etc.).}
+#'     \item{\code{$adjustPresentValues}}{Adjust the present value vectors that are later used to derive premiums and reserves. \code{function(presentValues, params, values)}}
+#'     \item{\code{$adjustPresentValuesCosts}}{Adjust the present value cost vectors used to derive premiums and reserves. \code{function(presentValuesCosts, params, values)}}
 #'     \item{\code{$adjustPremiumCoefficients}}{Function with signature \code{function(coeff, type, premiums, params, values, premiumCalculationTime)} to adjust the coefficients for premium calculation after their default setup. Use cases are e.g. term-fix tariffs where the Zillmer premium term contains the administration cost over the whole contract, but not other gamma- or beta-costs.}
 #'     \item{\code{$adjustPVForReserves}}{Adjust the absolute present value vectors used to derive reserves (e.g. when a sum rebate is subtracted from the gamma-cost reserves without influencing the premium calculation). \code{function(absPV, params, values)}}
 #'     \item{\code{$premiumRebateCalculation}}{Calculate the actual premium rebate from the rebate rate (e.g. when the premium rate is given as a yearly cost reduction applied to a single-premium contract). \code{function(premiumRebateRate, params = params, values = values)}}
@@ -549,6 +568,7 @@ InsuranceContract.ParameterDefaults = list(
         premiumIncrease = 1,                    # The yearly growth factor of the premium, i.e. 1.05 means +5% increase each year; a Vector describes the premiums for all years
         annuityIncrease = 1,                    # The yearly growth factor of the annuity payments, i.e. 1.05 means +5% incrase each year; a vector describes the annuity unit payments for all years
         deathBenefit = 1,                       # The yearly relative death benefit (relative to the initial sum insured); Can be fixed, e.g. 0.5 for 50% death cover, or  set to a function(len, params, values) like deathBenefit = deathBenefit.linearDecreasing
+        benefitParameter = NULL,                # Tariff-Specific additional parameter to define custom benefits (e.g. a minimum death benefit quota, an initial )
 
         costWaiver = 0,                         # The cost waiver (up to minCosts, 0=no cost waiver, 1=full cost waiver down to minCosts)
         attributes = list()                     # List of additional attributes with custom meaning (not standardized, but can be used by any tariff to implement custom behavior for certain contracts or slices)
@@ -588,7 +608,8 @@ InsuranceContract.ParameterDefaults = list(
         extraChargeGrossPremium = 0,            # extra charges on gross premium (smoker, leisure activities, BMI too high, etc.)
         benefitFrequencyLoading = NULL, # TODO: Properly implement this as a function
         premiumFrequencyLoading = NULL, # TODO: Properly implement this as a function
-        alphaRefundPeriod = 5                   # How long acquisition costs should be refunded in case of surrender
+        alphaRefundPeriod = 5,                   # How long acquisition costs should be refunded in case of surrender
+        commissionPeriod = 5
     ),
     Features = list(                            # Special cases for the calculations
         betaGammaInZillmer = FALSE,             # Whether beta and gamma-costs should be included in the Zillmer premium calculation
@@ -596,7 +617,8 @@ InsuranceContract.ParameterDefaults = list(
         useUnearnedPremiums = isRegularPremiumContract, # Whether unearned premiums should be calculated in the balance sheet reserves. Otherwise, a premium paid at the beginning of the period is added to the reserve for balance-sheet purposes.
         surrenderIncludesCostsReserves = TRUE,  # Whether (administration) cost reserves are paid out on surrender (i.e. included in the surrender value before surrender penalties are applied)
         unitcostsInGross = FALSE,
-        absPremiumRefund = 0                 # Constant death benefit (irrespective of the type of contract), typically a premium refund for a previous contract
+        absPremiumRefund = 0,                   # Constant death benefit (irrespective of the type of contract), typically a premium refund for a previous contract
+        alphaCostsCommission = "actual"         # Whether alpha costs over the commision period are given as their actual yearly value ("actual"), or whether the given value is the sum ("sum") or the present value ("presentvalue") over the whole commission period
     ),
 
     ProfitParticipation = list(
@@ -628,6 +650,8 @@ InsuranceContract.ParameterDefaults = list(
       adjustCashFlowsCosts = NULL,
       adjustCosts = NULL,
       adjustMinCosts = NULL,
+      adjustPresentValues = NULL,        # function(presentValues, params, values)
+      adjustPresentValuesCosts = NULL,        # function(presentValuesCosts, params, values)
       adjustPremiumCoefficients = NULL,  # function(coeff, type = type, premiums = premiums, params = params, values = values, premiumCalculationTime = premiumCalculationTime)
       adjustPVForReserves = NULL,        # function(absPresentValues, params, values)
       premiumRebateCalculation = NULL   # function(premiumRebateRate, params = params, values = values)

@@ -34,7 +34,7 @@ Imports:
     pander,
     tidyr
 License: GPL (>= 2)
-RoxygenNote: 7.1.1
+RoxygenNote: 7.1.2
 Collate:
     'HelperFunctions.R'
     'InsuranceParameters.R'

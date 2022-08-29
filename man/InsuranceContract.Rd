@@ -458,7 +458,7 @@ Add a child contract block (e.g. a dynamic increase or a rider) to an insurance 
   id = NULL,
   block = NULL,
   t = block$Values$int$blockStart,
-  comment = comment,
+  comment = paste0("Additional block at time t=", t),
   ...
 )}\if{html}{\out{</div>}}
 }

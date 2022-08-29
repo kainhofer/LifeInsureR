@@ -372,9 +372,9 @@ InsuranceTarif = R6Class(
         browser();
       }
       costs = valueOrFunction(params$Costs, params = params, values = NULL)
-            costs = applyHook(params$Hooks$adjustCosts, costs, params = params, values = NULL);
+      costs = applyHook(params$Hooks$adjustCosts, costs, params = params, values = NULL);
       baseCost = valueOrFunction(params$minCosts, params = params, values = NULL, costs = costs)
-            baseCost = applyHook(params$Hooks$adjustMinCosts, baseCost, costs = costs, params = params, values = NULL);
+      baseCost = applyHook(params$Hooks$adjustMinCosts, baseCost, costs = costs, params = params, values = NULL);
       if (!is.null(baseCost)) {
         costWaiver = valueOrFunction(params$ContractData$costWaiver, params = params, values = NULL, costs = costs, minCosts = baseCost)
         if (is.numeric(costWaiver)) {
@@ -642,6 +642,31 @@ InsuranceTarif = R6Class(
         cf[i,,,"after.death"] = params$Costs[,,"AfterDeath"]
       }
 
+      # Costs charged only for a specific time (i.e. acquisition costs / commissions)
+      # There are several conventions to scale alpha costs over the commision period:
+      # a) alpha cost once (i.e. not distributed), not scaled
+      # b) uniformly over the period (i.e. sum of k equal commisions is given as cost)
+      # c) by present value (i.e. present value of k equal commission is given as cost)
+      if (params$Features$alphaCostsCommission == "sum") {
+          params$Costs[,,"CommissionPeriod"] = params$Costs[,,"CommissionPeriod"] / params$Loadings$commissionPeriod
+      } else if (params$Features$alphaCostsCommission == "presentvalue") {
+          # Use yearly constant premiums in advance, irrespective of the actual
+          # contract. This is a simplification, but the actual present values
+          # are calculated later, so for now we just assume standard parameters!
+          len = params$Loadings$commissionPeriod;
+          q = self$getTransitionProbabilities(params);
+          px = pad0(c(1,q$p), len); # by defualt, premiums are in advance, so first payment has 100% probability
+          v = 1/(1 + params$ActuarialBases$i)^((1:len)-1)
+          params$Costs[,,"CommissionPeriod"] = params$Costs[,,"CommissionPeriod"] / sum(cumprod(px)*v)
+      } else if (params$Features$alphaCostsCommission == "actual") {
+          # NOP, nothing to do
+      } else {
+          warning("unrecognized value given for commissionPeriod: ",params$Features$alphaCostsCommission )
+      }
+      for (i in 1:params$Loadings$commissionPeriod) {
+          cf[i,,,"survival"] = cf[i,,,"survival"] + params$Costs[,,"CommissionPeriod"];
+      }
+
       # After premiums are waived, use the gamma_nopremiums instead of gamma:
       if (params$ContractState$premiumWaiver) {
         cf[,"gamma",,"survival"] = cf[,"gamma_nopremiums",,"survival"];
@@ -658,7 +683,7 @@ InsuranceTarif = R6Class(
     #' (cash flows already calculated and stored in the \code{cashFlows} data.frame)
     #' @details Not to be called directly, but implicitly by the [InsuranceContract] object.
     #' @param cashFlows data.frame of cash flows calculated by a call to \href{#method-getCashFlows}{\code{InsuranceTarif$getCashFlows()}}
-    presentValueCashFlows = function(cashFlows, params, values) {
+    presentValueCashFlows = function(params, values) {
       if (getOption('LIC.debug.presentValueCashFlows', FALSE)) {
         browser();
       }
@@ -716,14 +741,15 @@ InsuranceTarif = R6Class(
       );
 
       rownames(pv) <- pad0(rownames(qq), values$int$l);
-      pv
+      applyHook(hook = params$Hooks$adjustPresentValues, val = pv, params = params, values = values)
     },
 
     #' @description Calculates the present values of the cost cash flows of the
     #' contract (cost cash flows alreay calculated by \href{#method-getCashFlowsCosts}{\code{InsuranceTarif$getCashFlowsCosts()}}
     #' and stored in the \code{values} list
     #' @details Not to be called directly, but implicitly by the [InsuranceContract] object.
-    presentValueCashFlowsCosts = function(params, values) {
+    #' @param presentValues The present values of the insurance claims (without costs)
+    presentValueCashFlowsCosts = function(params, values, presentValues) {
       if (getOption('LIC.debug.presentValueCashFlowsCosts', FALSE)) {
         browser();
       }
@@ -733,7 +759,7 @@ InsuranceTarif = R6Class(
       px = pad0(q$p, len);
       v = 1/(1 + params$ActuarialBases$i)
       pvc = calculatePVCosts(px, qx, values$cashFlowsCosts, v = v);
-      pvc
+      applyHook(hook = params$Hooks$adjustPresentValuesCosts, val = pvc, params = params, values = values, presentValues = presentValues)
     },
 
     #' @description Calculate the cash flows in monetary terms of the insurance contract

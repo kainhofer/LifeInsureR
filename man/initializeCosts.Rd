@@ -8,6 +8,7 @@ initializeCosts(
   costs,
   alpha,
   Zillmer,
+  alpha.commission,
   beta,
   gamma,
   gamma.paidUp,
@@ -50,7 +51,7 @@ Initialize a cost matrix with dimensions: {CostType, Basis, Period}, where:
 \describe{
 \item{CostType:}{alpha, Zillmer, beta, gamma, gamma_nopremiums, unitcosts}
 \item{Basis:}{SumInsured, SumPremiums, GrossPremium, NetPremium, Constant}
-\item{Period:}{once, PremiumPeriod, PremiumFree, PolicyPeriod}
+\item{Period:}{once, PremiumPeriod, PremiumFree, PolicyPeriod, CommissionPeriod}
 }
 This cost structure can then be modified for non-standard costs using the \code{\link[=setCost]{setCost()}} function.
 The main purpose of this structure is to be passed to \link{InsuranceContract} or

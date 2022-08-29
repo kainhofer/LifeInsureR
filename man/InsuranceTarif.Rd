@@ -616,20 +616,20 @@ Not to be called directly, but implicitly by the \link{InsuranceContract} object
 Returns the present values of the cash flows of the contract
 (cash flows already calculated and stored in the \code{cashFlows} data.frame)
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{InsuranceTarif$presentValueCashFlows(cashFlows, params, values)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{InsuranceTarif$presentValueCashFlows(params, values)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{cashFlows}}{data.frame of cash flows calculated by a call to \href{#method-getCashFlows}{\code{InsuranceTarif$getCashFlows()}}}
-
 \item{\code{params}}{Contract-specific, full set of parameters of the contract
 (merged parameters of the defaults, the tariff, the profit participation
 scheme and the contract)}
 
 \item{\code{values}}{Contract values calculated so far (in the \code{contract$Values}
 list) then this method is called by the contract object}
+
+\item{\code{cashFlows}}{data.frame of cash flows calculated by a call to \href{#method-getCashFlows}{\code{InsuranceTarif$getCashFlows()}}}
 }
 \if{html}{\out{</div>}}
 }
@@ -646,7 +646,7 @@ Calculates the present values of the cost cash flows of the
 contract (cost cash flows alreay calculated by \href{#method-getCashFlowsCosts}{\code{InsuranceTarif$getCashFlowsCosts()}}
 and stored in the \code{values} list
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{InsuranceTarif$presentValueCashFlowsCosts(params, values)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{InsuranceTarif$presentValueCashFlowsCosts(params, values, presentValues)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -658,6 +658,8 @@ scheme and the contract)}
 
 \item{\code{values}}{Contract values calculated so far (in the \code{contract$Values}
 list) then this method is called by the contract object}
+
+\item{\code{presentValues}}{The present values of the insurance claims (without costs)}
 }
 \if{html}{\out{</div>}}
 }

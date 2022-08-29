@@ -595,7 +595,7 @@ InsuranceContract = R6Class(
 
             # Shall we re-calculate PV or preserve the old ones???
             pv = private$calculatePresentValues()
-            pvCost = private$calculatePresentValuesCosts()
+            pvCost = private$calculatePresentValuesCosts(presentValues = pv)
             oldPV = self$Values$presentValues
             if (preservePastPV) {
                 # Preserve past present values, i.e. the PV represents the PV
@@ -977,15 +977,15 @@ InsuranceContract = R6Class(
             # At least 1 year premium period!
             self$Parameters$ContractData$premiumPeriod = max(self$Parameters$ContractData$premiumPeriod, 1);
 
+            self$Parameters$Loadings$commissionPeriod = valueOrFunction(
+                self$Parameters$Loadings$commissionPeriod,
+                params = self$Parameters, values = self$Values);
+
+
             # Evaluate deferral period, i.e. if a function is used, calculate its numeric value from the other parameters
             self$Parameters$ContractData$deferralPeriod = valueOrFunction(
                 self$Parameters$ContractData$deferralPeriod,
                 params = self$Parameters, values = self$Values);
-
-            #### #
-            # COSTS PARAMETERS: can be a function => evaluate it to get the real costs
-            #### #
-            self$Parameters$Costs = private$evaluateCosts()
 
             #### #
             # AGES for multiple joint lives:
@@ -1028,6 +1028,13 @@ InsuranceContract = R6Class(
             self$Parameters$ActuarialBases$mortalityTable = valueOrFunction(
                 self$Parameters$ActuarialBases$mortalityTable,
                 params = self$Parameters, values = self$Values)
+
+            #### #
+            # COSTS PARAMETERS: can be a function => evaluate it to get the real costs
+            # This needs to be last, as the costs can depend on present values
+            # => mortality table is needed
+            #### #
+            self$Parameters$Costs = private$evaluateCosts()
 
             invisible(self)
         },

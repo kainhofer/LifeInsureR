@@ -104,6 +104,11 @@ describes the annuity unit payments for all years}
 \item{\code{$deathBenefit}}{The yearly relative death benefit (relative
 to the initial sum insured); Can be set to a \code{function(len,
               params, values)}, e.g. \code{deathBenefit = deathBenefit.linearDecreasing}}
+\item{\code{$benefitParameter}}{(optional) Tariff-specific parameter to
+indicate special benefit conditions (e.g. for non-constant benefits
+the initial starting value, or a minimum benefit, etc.). This
+parameter is not used automatically, but needs to be processed
+by a custom \code{$deathBenefit} function.}
 
 \item{\code{$costWaiver}}{The fraction of the costs that are waived (only
 those cost components that are defined to be waivable, i.e. by
@@ -219,6 +224,10 @@ payment frequencies of more than once a year. Format is
 \code{list("1" = 0.0, "2" = 0.0, "4" = 0.0, "12" = 0.0)}}
 \item{\code{$alphaRefundPeriod}}{How long the acquisition costs should be
 (partially) refunded in case of surrender or premium waiver.}
+\item{\code{$commissionPeriod}}{Period, over which the acquisition costs
+are charged to the contract (if not fully up-front or over the
+whole contract period). This has only an effect for cost definitions
+with duration "CommissionPeriod". Default is 5 years.}
 }
 }
 
@@ -248,6 +257,10 @@ surrender value before surrender penalties are applied)}
 gross premium calculation or added after gross premiums. (default: FALSE)}
 \item{\code{$absPremiumRefund}}{Constant death benefit (typically premium
 refund of a previous contract), relative to the sum insured.}
+\item{\code{$alphaCostsCommission}}{Whether alpha costs over the commision
+period are given as their actual yearly value ("actual"), or
+whether the given value is the sum ("sum") or the present value
+("presentvalue") over the whole commission period.}
 }
 }
 
@@ -293,6 +306,8 @@ participation rates are defined at the level of profit classes.}
 \item{\code{$adjustCashFlowsCosts}}{Function with signature \code{function(x, params, values, ...)} to adjust the costs cash flows after their setup.}
 \item{\code{$adjustCosts}}{Function with signature \code{function(costs, params, values, ...)} to adjust the tariff costs after their setup (e.g. contract-specific conditions/waivers, etc.).}
 \item{\code{$adjustMinCosts}}{Function with signature \code{function(minCosts, costs, params, values, ...)} to adjust the tariff minimum (unwaivable) costs after their setup (e.g. contract-specific conditions/waivers, etc.).}
+\item{\code{$adjustPresentValues}}{Adjust the present value vectors that are later used to derive premiums and reserves. \code{function(presentValues, params, values)}}
+\item{\code{$adjustPresentValuesCosts}}{Adjust the present value cost vectors used to derive premiums and reserves. \code{function(presentValuesCosts, params, values)}}
 \item{\code{$adjustPremiumCoefficients}}{Function with signature \code{function(coeff, type, premiums, params, values, premiumCalculationTime)} to adjust the coefficients for premium calculation after their default setup. Use cases are e.g. term-fix tariffs where the Zillmer premium term contains the administration cost over the whole contract, but not other gamma- or beta-costs.}
 \item{\code{$adjustPVForReserves}}{Adjust the absolute present value vectors used to derive reserves (e.g. when a sum rebate is subtracted from the gamma-cost reserves without influencing the premium calculation). \code{function(absPV, params, values)}}
 \item{\code{$premiumRebateCalculation}}{Calculate the actual premium rebate from the rebate rate (e.g. when the premium rate is given as a yearly cost reduction applied to a single-premium contract). \code{function(premiumRebateRate, params = params, values = values)}}
