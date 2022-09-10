@@ -2,7 +2,7 @@
 % Please edit documentation in R/InsuranceParameters.R
 \name{InsuranceContract.ParametersFallback}
 \alias{InsuranceContract.ParametersFallback}
-\title{InsuranceContract.ParametersFallback}
+\title{Use fallback values for missing contract parameters}
 \usage{
 InsuranceContract.ParametersFallback(params, fallback, ppParameters = TRUE)
 }

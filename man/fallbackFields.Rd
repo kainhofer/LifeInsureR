@@ -2,9 +2,7 @@
 % Please edit documentation in R/HelperFunctions.R
 \name{fallbackFields}
 \alias{fallbackFields}
-\title{Replace all missing values in fields (either missing or NA) with
-their corresponding values from fallback. Members in fallback that are missing
-in fields are inserted}
+\title{Replace missing values in ields by default fallback values}
 \usage{
 fallbackFields(fields, valuelist)
 }

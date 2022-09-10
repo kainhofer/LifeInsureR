@@ -2,12 +2,7 @@
 % Please edit documentation in R/HelperFunctions.R
 \name{freqCharge}
 \alias{freqCharge}
-\title{Defines a frequency charge (surcharge for monthly/quarterly/semiannual) premium payments #'
-Tariffs are typically calculated with yearly premium installments. When
-premiums are paid more often then one a year (in advance), the insurance
-receives part of the premium later (or not at all in case of death), so a
-surcharge for premium payment frequencies higher than yearly is applied to
-the  premium, typically in the form of a percentage of the premium.}
+\title{Defines a frequency charge (surcharge for monthly/quarterly/semiannual) premium payments}
 \usage{
 freqCharge(monthly = 0, quarterly = 0, semiannually = 0, yearly = 0)
 }
@@ -21,6 +16,12 @@ freqCharge(monthly = 0, quarterly = 0, semiannually = 0, yearly = 0)
 \item{yearly}{Surcharge for yearly premium payments (optiona, default is no surcharge)}
 }
 \description{
+Tariffs are typically calculated with yearly premium installments. When
+premiums are paid more often then one a year (in advance), the insurance
+receives part of the premium later (or not at all in case of death), so a
+surcharge for premium payment frequencies higher than yearly is applied to
+the  premium, typically in the form of a percentage of the premium.
+
 This function generates the internal data structure to define surcharges for
 monthly, quarterly and semiannual premium payments. The given surcharges can
 be either given as percentage points (e.g. 1.5 means 1.5\% = 0.015) or as
@@ -29,8 +30,7 @@ to distinguish percentage points and fractions is that all values larger than 0.
 are understood as percentage points and values 0.1 and lower are understood
 as fractions of 1.
 As a consequence, a frequency charge of 10\% or more MUST be given as percentage points.
-}
-\details{
+
 Currently, the frequency charges are internally represented as a named list,
 \code{list("1" = 0, "2" = 0.01, "4" = 0.02, "12" = 0.03)}, but that might
 change in the future, so it is advised to use this function rather than

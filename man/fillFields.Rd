@@ -2,10 +2,7 @@
 % Please edit documentation in R/HelperFunctions.R
 \name{fillFields}
 \alias{fillFields}
-\title{Overwrite all existing fields in the first argument with
-values given in valuelist. Members of valuelist that are not yet in
-fields are ignored. This allows a huge valuelist to be used to fill
-fields in multiple lists with given structure.}
+\title{Overwrite all existing fields with default values given}
 \usage{
 fillFields(fields, valuelist)
 }

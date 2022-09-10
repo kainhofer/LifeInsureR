@@ -3,9 +3,7 @@
 \docType{data}
 \name{InsuranceContract.ParameterDefaults}
 \alias{InsuranceContract.ParameterDefaults}
-\title{Default parameters for the InsuranceContract class. A new contract will be
-pre-filled with these values, and values passed in the constructor (or with
-other setter functions) will override these values.}
+\title{Default parameters for the InsuranceContract class.}
 \format{
 The parameter list is a list of lists with the following structure:
 
@@ -318,7 +316,7 @@ participation rates are defined at the level of profit classes.}
 InsuranceContract.ParameterDefaults
 }
 \description{
-Default parameters for the InsuranceContract class. A new contract will be
+A new contract will be
 pre-filled with these values, and values passed in the constructor (or with
 other setter functions) will override these values.
 }

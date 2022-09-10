@@ -2,6 +2,7 @@
 #'
 #' @import MortalityTables
 #' @import scales
+#' @importFrom methods is
 NULL
 
 # Internal helper function to calculate all values => will be used by
@@ -185,8 +186,8 @@ showVmGlgExamples = function(contract, prf = 10, t = 10, t_prf = 12, file = "", 
 #' @param t Time for which to check all values (except premium-free values)
 #' @param prf Time of premium waiver (premium-free)
 #' @param t_prf Time for which to check all values after the premium waiver
-#' @param net, Zillmer, gross, written, savings, risk, ZillmerRes, ZillmerRes.prf, VwKostenRes, VwKostenRes.prf, Bilanzreserve, Praemienuebertrag, Rueckkaufsreserve, Rueckkaufswert, Abschlusskostenruecktrag, Rueckkaufswert.prf, VS.prf Values as printed out by showVmGlgExamples
-#' @param tolerance If non-NULL, will ignore small floating point differences. It uses same algorithm as all.equal()
+#' @param net,Zillmer,gross,written,savings,risk,ZillmerRes,ZillmerRes.prf,VwKostenRes,VwKostenRes.prf,Bilanzreserve,Praemienuebertrag,Rueckkaufsreserve,Rueckkaufswert,Abschlusskostenruecktrag,Rueckkaufswert.prf,VS.prf Values as printed out by showVmGlgExamples
+#' @param absTolerance If non-NULL, will ignore small floating point differences. It uses same algorithm as all.equal()
 #' @param ... Further parameters for generating the contract for a tariff object
 #'
 #' @examples

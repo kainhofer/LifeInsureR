@@ -15,7 +15,9 @@ contractGrid(
 contractGridPremium(
   contractGrid = NULL,
   premium = "written",
-  .fun = function(cntr) {     cntr$Values$premiums[[premium]] },
+  .fun = function(cntr) {
+     cntr$Values$premiums[[premium]]
+ },
   ...
 )
 }

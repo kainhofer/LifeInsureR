@@ -2,11 +2,13 @@
 #' @importFrom objectProperties setSingleEnum
 #' @importFrom utils head tail
 #' @importFrom methods new
+#' @importFrom lubridate time_length interval
 NULL
 
 
 
 #' Enum to describe when a benefit or premium payment is due (in advance or in arrears)
+#'
 #' @details Currently, only two values are allowed;
 #' \itemize{
 #'     \item "in advance"
@@ -17,6 +19,7 @@ NULL
 PaymentTimeEnum = objectProperties::setSingleEnum("PaymentTime", levels = c("in advance", "in arrears"));
 
 #' Enum to describe possible sexes in an insurance contract or tariff.
+#'
 #' @details
 #' Currently, the only possible values are:
 #' * "unisex"
@@ -27,6 +30,7 @@ PaymentTimeEnum = objectProperties::setSingleEnum("PaymentTime", levels = c("in 
 SexEnum = objectProperties::setSingleEnum("Sex", levels = c("unisex", "male", "female"));
 
 #' Enum to define how much of a contract needs to be calculated automatically.
+#'
 #' @details
 #' When an [InsuranceContract] object is created, all time series are immediately
 #' calculated. However, sometimes, one only needs part of the values, so it
@@ -63,6 +67,7 @@ CalculationEnum = objectProperties::setSingleEnum("Calculation",
 
 
 #' Enum to define the different components of profit participation.
+#'
 #' @details
 #' Profit participation schemes typically consist of different components,
 #' which are calculated independently. Typical components are interest profit
@@ -208,8 +213,9 @@ age.yearDifference = function(params, values) {
 }
 
 
-#' Defines a frequency charge (surcharge for monthly/quarterly/semiannual) premium payments #'
-#' Tariffs are typically calculated with yearly premium installments. When
+#' Defines a frequency charge (surcharge for monthly/quarterly/semiannual) premium payments
+#'
+#' @description Tariffs are typically calculated with yearly premium installments. When
 #' premiums are paid more often then one a year (in advance), the insurance
 #' receives part of the premium later (or not at all in case of death), so a
 #' surcharge for premium payment frequencies higher than yearly is applied to
@@ -458,6 +464,7 @@ pad0 = function(v, l, value = 0, start = 0) {
 }
 
 #' Set all entries of the given vector to 0 up until index 'start'
+#'
 #' @param v the vector to modify
 #' @param start how many leading elements to zero out
 #'
@@ -586,7 +593,9 @@ applyHook = function(hook, val, ...) {
 
 
 
-#' Overwrite all existing fields in the first argument with
+#' Overwrite all existing fields with default values given
+#'
+#' @description Overwrite all existing fields in the first argument with
 #' values given in valuelist. Members of valuelist that are not yet in
 #' fields are ignored. This allows a huge valuelist to be used to fill
 #' fields in multiple lists with given structure.
@@ -601,7 +610,10 @@ fillFields = function(fields, valuelist) {
   fields
 }
 
-#' Replace all missing values in fields (either missing or NA) with
+
+#' Replace missing values in ields by default fallback values
+#'
+#' @description Replace all missing values in fields (either missing or NA) with
 #' their corresponding values from fallback. Members in fallback that are missing
 #' in fields are inserted
 #' @param fields existing list

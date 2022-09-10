@@ -7,7 +7,8 @@
 NULL
 
 #' An enum specifying the main characteristics of the tarif.
-#' Possible values are:
+#'
+#' @description Possible values are:
 #' \describe{
 #'   \item{annuity}{Whole life or term annuity (periodic survival benefits)
 #'        with flexible payouts (constand, increasing, decreasing, arbitrary,

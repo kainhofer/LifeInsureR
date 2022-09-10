@@ -230,7 +230,10 @@ InsuranceContract.Values = list(
 );
 
 # InsuranceContract.ParameterDefaults #######################################
-#' Default parameters for the InsuranceContract class. A new contract will be
+#
+#' Default parameters for the InsuranceContract class.
+#'
+#' A new contract will be
 #' pre-filled with these values, and values passed in the constructor (or with
 #' other setter functions) will override these values.
 #'
@@ -672,7 +675,7 @@ InsuranceContract.ParameterStructure$Loadings["benefitFrequencyLoading"] = list(
 InsuranceContract.ParameterStructure$Loadings["premiumFrequencyLoading"] = list(NULL)
 
 
-#' InsuranceContract.ParametersFill
+#' Initialize the insurance contract parameters from passed arguments
 #'
 #' Initialize the insurance contract parameters from the passed
 #' arguments. Arguments not given are left unchanged. If no existing parameter
@@ -701,7 +704,7 @@ InsuranceContract.ParametersFill = function(params = InsuranceContract.Parameter
     params
 }
 
-#' InsuranceContract.ParametersFallback
+#' Use fallback values for missing contract parameters
 #'
 #' Provide default values for the insurance contract parameters if any of the
 #' parameters is not explicitly set.

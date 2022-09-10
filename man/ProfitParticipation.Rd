@@ -97,22 +97,22 @@ be provided to calculate the benefit stemming from profit participation.}
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-new}{\code{ProfitParticipation$new()}}
-\item \href{#method-setParameters}{\code{ProfitParticipation$setParameters()}}
-\item \href{#method-setFunctions}{\code{ProfitParticipation$setFunctions()}}
-\item \href{#method-setFallbackParameters}{\code{ProfitParticipation$setFallbackParameters()}}
-\item \href{#method-createModification}{\code{ProfitParticipation$createModification()}}
-\item \href{#method-getAdvanceProfitParticipation}{\code{ProfitParticipation$getAdvanceProfitParticipation()}}
-\item \href{#method-getAdvanceProfitParticipationAfterUnitCosts}{\code{ProfitParticipation$getAdvanceProfitParticipationAfterUnitCosts()}}
-\item \href{#method-setupRates}{\code{ProfitParticipation$setupRates()}}
-\item \href{#method-adjustRates}{\code{ProfitParticipation$adjustRates()}}
-\item \href{#method-getProfitParticipation}{\code{ProfitParticipation$getProfitParticipation()}}
-\item \href{#method-clone}{\code{ProfitParticipation$clone()}}
+\item \href{#method-ProfitParticipation-new}{\code{ProfitParticipation$new()}}
+\item \href{#method-ProfitParticipation-setParameters}{\code{ProfitParticipation$setParameters()}}
+\item \href{#method-ProfitParticipation-setFunctions}{\code{ProfitParticipation$setFunctions()}}
+\item \href{#method-ProfitParticipation-setFallbackParameters}{\code{ProfitParticipation$setFallbackParameters()}}
+\item \href{#method-ProfitParticipation-createModification}{\code{ProfitParticipation$createModification()}}
+\item \href{#method-ProfitParticipation-getAdvanceProfitParticipation}{\code{ProfitParticipation$getAdvanceProfitParticipation()}}
+\item \href{#method-ProfitParticipation-getAdvanceProfitParticipationAfterUnitCosts}{\code{ProfitParticipation$getAdvanceProfitParticipationAfterUnitCosts()}}
+\item \href{#method-ProfitParticipation-setupRates}{\code{ProfitParticipation$setupRates()}}
+\item \href{#method-ProfitParticipation-adjustRates}{\code{ProfitParticipation$adjustRates()}}
+\item \href{#method-ProfitParticipation-getProfitParticipation}{\code{ProfitParticipation$getProfitParticipation()}}
+\item \href{#method-ProfitParticipation-clone}{\code{ProfitParticipation$clone()}}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-new"></a>}}
-\if{latex}{\out{\hypertarget{method-new}{}}}
+\if{html}{\out{<a id="method-ProfitParticipation-new"></a>}}
+\if{latex}{\out{\hypertarget{method-ProfitParticipation-new}{}}}
 \subsection{Method \code{new()}}{
 Create a new profit participation scheme
 \subsection{Usage}{
@@ -132,8 +132,8 @@ field}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-setParameters"></a>}}
-\if{latex}{\out{\hypertarget{method-setParameters}{}}}
+\if{html}{\out{<a id="method-ProfitParticipation-setParameters"></a>}}
+\if{latex}{\out{\hypertarget{method-ProfitParticipation-setParameters}{}}}
 \subsection{Method \code{setParameters()}}{
 Store all passed parameters in the \code{Parameters} field
 \subsection{Usage}{
@@ -150,8 +150,8 @@ Store all passed parameters in the \code{Parameters} field
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-setFunctions"></a>}}
-\if{latex}{\out{\hypertarget{method-setFunctions}{}}}
+\if{html}{\out{<a id="method-ProfitParticipation-setFunctions"></a>}}
+\if{latex}{\out{\hypertarget{method-ProfitParticipation-setFunctions}{}}}
 \subsection{Method \code{setFunctions()}}{
 Store all passed functions in the \code{Functions} field
 \subsection{Usage}{
@@ -168,8 +168,8 @@ arguments will be ignored}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-setFallbackParameters"></a>}}
-\if{latex}{\out{\hypertarget{method-setFallbackParameters}{}}}
+\if{html}{\out{<a id="method-ProfitParticipation-setFallbackParameters"></a>}}
+\if{latex}{\out{\hypertarget{method-ProfitParticipation-setFallbackParameters}{}}}
 \subsection{Method \code{setFallbackParameters()}}{
 Fill all missing parameters with the default fall-back values
 \subsection{Usage}{
@@ -178,8 +178,8 @@ Fill all missing parameters with the default fall-back values
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-createModification"></a>}}
-\if{latex}{\out{\hypertarget{method-createModification}{}}}
+\if{html}{\out{<a id="method-ProfitParticipation-createModification"></a>}}
+\if{latex}{\out{\hypertarget{method-ProfitParticipation-createModification}{}}}
 \subsection{Method \code{createModification()}}{
 create a copy of a profit scheme with certain parameters changed
 \subsection{Usage}{
@@ -198,8 +198,8 @@ defining the characteristics of the tariff.}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-getAdvanceProfitParticipation"></a>}}
-\if{latex}{\out{\hypertarget{method-getAdvanceProfitParticipation}{}}}
+\if{html}{\out{<a id="method-ProfitParticipation-getAdvanceProfitParticipation"></a>}}
+\if{latex}{\out{\hypertarget{method-ProfitParticipation-getAdvanceProfitParticipation}{}}}
 \subsection{Method \code{getAdvanceProfitParticipation()}}{
 Calculate and return the advance profit participation (to be
 applied on the actuarial gross premium)
@@ -228,8 +228,8 @@ of a vector of numerical values for the whole contract period
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-getAdvanceProfitParticipationAfterUnitCosts"></a>}}
-\if{latex}{\out{\hypertarget{method-getAdvanceProfitParticipationAfterUnitCosts}{}}}
+\if{html}{\out{<a id="method-ProfitParticipation-getAdvanceProfitParticipationAfterUnitCosts"></a>}}
+\if{latex}{\out{\hypertarget{method-ProfitParticipation-getAdvanceProfitParticipationAfterUnitCosts}{}}}
 \subsection{Method \code{getAdvanceProfitParticipationAfterUnitCosts()}}{
 Calculate and return the advance profit participation (to be
 applied after unit costs are added to the gross premium)
@@ -262,8 +262,8 @@ of a vector of numerical values for the whole contract period
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-setupRates"></a>}}
-\if{latex}{\out{\hypertarget{method-setupRates}{}}}
+\if{html}{\out{<a id="method-ProfitParticipation-setupRates"></a>}}
+\if{latex}{\out{\hypertarget{method-ProfitParticipation-setupRates}{}}}
 \subsection{Method \code{setupRates()}}{
 Set up the data.frame containing the profit participation rates
 \subsection{Usage}{
@@ -287,8 +287,8 @@ stored in the \code{Functions} field.}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-adjustRates"></a>}}
-\if{latex}{\out{\hypertarget{method-adjustRates}{}}}
+\if{html}{\out{<a id="method-ProfitParticipation-adjustRates"></a>}}
+\if{latex}{\out{\hypertarget{method-ProfitParticipation-adjustRates}{}}}
 \subsection{Method \code{adjustRates()}}{
 Adjust the data.frame of profit participation rates after their setup
 \subsection{Usage}{
@@ -311,8 +311,8 @@ insurance contract, including cash flows, premiums, reserves etc.).}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-getProfitParticipation"></a>}}
-\if{latex}{\out{\hypertarget{method-getProfitParticipation}{}}}
+\if{html}{\out{<a id="method-ProfitParticipation-getProfitParticipation"></a>}}
+\if{latex}{\out{\hypertarget{method-ProfitParticipation-getProfitParticipation}{}}}
 \subsection{Method \code{getProfitParticipation()}}{
 Calculation the full time series of profit participation for
 the given contract values
@@ -352,8 +352,8 @@ insurance contract, including cash flows, premiums, reserves etc.).}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-clone}{}}}
+\if{html}{\out{<a id="method-ProfitParticipation-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-ProfitParticipation-clone}{}}}
 \subsection{Method \code{clone()}}{
 The objects of this class are cloneable with this method.
 \subsection{Usage}{

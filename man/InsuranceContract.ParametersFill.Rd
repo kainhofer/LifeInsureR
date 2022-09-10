@@ -2,7 +2,7 @@
 % Please edit documentation in R/InsuranceParameters.R
 \name{InsuranceContract.ParametersFill}
 \alias{InsuranceContract.ParametersFill}
-\title{InsuranceContract.ParametersFill}
+\title{Initialize the insurance contract parameters from passed arguments}
 \usage{
 InsuranceContract.ParametersFill(
   params = InsuranceContract.ParameterStructure,

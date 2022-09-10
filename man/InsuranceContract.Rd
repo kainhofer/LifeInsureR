@@ -201,20 +201,24 @@ This method adds a new contract block describing a dynamic
 or sum increase (increasing the sum insured at a later time
 $t$ than contract inception). This increase is modelled by a
 separate \link{InsuranceContract} object with the sum difference
-as its own \code{sumInsured}.\preformatted{     By default, all parameters are taken from the main contract,
+as its own \code{sumInsured}.
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{     By default, all parameters are taken from the main contract,
      with the maturity adjusted to match the original contract's
      maturity.
 
      The main contract holds all child blocks, controls their
      valueation and aggregates all children's values to the
      total values of the overall contract.
-}
+}\if{html}{\out{</div>}}
 
 This method calculates all contract values (potentially
 starting from and preserving all values before a later time
 \code{valuesFrom}). This function is not meant to be called
 directly, but internally, whenever a contract is created or
-modified.\preformatted{     There is, hoever, a legitimate case to call this function
+modified.
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{     There is, hoever, a legitimate case to call this function
      when a contract was initially created with a value of
      \code{calculate} other than "all", so not all values of the
      contract were calculated. When one later needs more values
@@ -223,13 +227,15 @@ modified.\preformatted{     There is, hoever, a legitimate case to call this fun
      and reapplied again afterwards. So even in this case it is
      probably easier to create the contract object from scratch
      again.
-}
+}\if{html}{\out{</div>}}
 
 This function is an internal function for contracts with
 multiple child blocks (dynamic increases, sum increases, riders).
 It takes the values from all child blocks and calculates the
-overall values from all child blocks aggregated.\preformatted{   This function should not be called manually.
-}
+overall values from all child blocks aggregated.
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{   This function should not be called manually.
+}\if{html}{\out{</div>}}
 
 This function modifies the contract at time $t$ so that
 no further premiums are paid (i.e. a paid-up contract) and the
@@ -244,9 +250,11 @@ This function calculates one profit scenario with the
 provided profit participation parameters (all parameters
 not given in the call are taken from their values of the
 contract, profit participation scheme or tariff). The results
-are stored in a list of profit scenarios inside the contract.\preformatted{    This function can be chained to calculate and add multiple
+are stored in a list of profit scenarios inside the contract.
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{    This function can be chained to calculate and add multiple
     profit scenarios.
-}
+}\if{html}{\out{</div>}}
 }
 
 \examples{
@@ -337,21 +345,21 @@ contract state and its values before the change).}
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-new}{\code{InsuranceContract$new()}}
-\item \href{#method-addHistorySnapshot}{\code{InsuranceContract$addHistorySnapshot()}}
-\item \href{#method-addBlock}{\code{InsuranceContract$addBlock()}}
-\item \href{#method-addDynamics}{\code{InsuranceContract$addDynamics()}}
-\item \href{#method-calculateContract}{\code{InsuranceContract$calculateContract()}}
-\item \href{#method-consolidateBlocks}{\code{InsuranceContract$consolidateBlocks()}}
-\item \href{#method-premiumWaiver}{\code{InsuranceContract$premiumWaiver()}}
-\item \href{#method-profitScenario}{\code{InsuranceContract$profitScenario()}}
-\item \href{#method-addProfitScenario}{\code{InsuranceContract$addProfitScenario()}}
-\item \href{#method-clone}{\code{InsuranceContract$clone()}}
+\item \href{#method-InsuranceContract-new}{\code{InsuranceContract$new()}}
+\item \href{#method-InsuranceContract-addHistorySnapshot}{\code{InsuranceContract$addHistorySnapshot()}}
+\item \href{#method-InsuranceContract-addBlock}{\code{InsuranceContract$addBlock()}}
+\item \href{#method-InsuranceContract-addDynamics}{\code{InsuranceContract$addDynamics()}}
+\item \href{#method-InsuranceContract-calculateContract}{\code{InsuranceContract$calculateContract()}}
+\item \href{#method-InsuranceContract-consolidateBlocks}{\code{InsuranceContract$consolidateBlocks()}}
+\item \href{#method-InsuranceContract-premiumWaiver}{\code{InsuranceContract$premiumWaiver()}}
+\item \href{#method-InsuranceContract-profitScenario}{\code{InsuranceContract$profitScenario()}}
+\item \href{#method-InsuranceContract-addProfitScenario}{\code{InsuranceContract$addProfitScenario()}}
+\item \href{#method-InsuranceContract-clone}{\code{InsuranceContract$clone()}}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-new"></a>}}
-\if{latex}{\out{\hypertarget{method-new}{}}}
+\if{html}{\out{<a id="method-InsuranceContract-new"></a>}}
+\if{latex}{\out{\hypertarget{method-InsuranceContract-new}{}}}
 \subsection{Method \code{new()}}{
 Create a new insurance contract (for the given tariff/product) and calculate all time series
 \subsection{Usage}{
@@ -397,8 +405,8 @@ Possible values are all sub-fields of the
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-addHistorySnapshot"></a>}}
-\if{latex}{\out{\hypertarget{method-addHistorySnapshot}{}}}
+\if{html}{\out{<a id="method-InsuranceContract-addHistorySnapshot"></a>}}
+\if{latex}{\out{\hypertarget{method-InsuranceContract-addHistorySnapshot}{}}}
 \subsection{Method \code{addHistorySnapshot()}}{
 Add the current state of the contract to the history list
 \subsection{Usage}{
@@ -449,8 +457,8 @@ multiple insurance blocks (e.g. dynamic increases, riders, etc.)}
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-addBlock"></a>}}
-\if{latex}{\out{\hypertarget{method-addBlock}{}}}
+\if{html}{\out{<a id="method-InsuranceContract-addBlock"></a>}}
+\if{latex}{\out{\hypertarget{method-InsuranceContract-addBlock}{}}}
 \subsection{Method \code{addBlock()}}{
 Add a child contract block (e.g. a dynamic increase or a rider) to an insurance contract
 \subsection{Usage}{
@@ -497,8 +505,8 @@ created with overrides.}
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-addDynamics"></a>}}
-\if{latex}{\out{\hypertarget{method-addDynamics}{}}}
+\if{html}{\out{<a id="method-InsuranceContract-addDynamics"></a>}}
+\if{latex}{\out{\hypertarget{method-InsuranceContract-addDynamics}{}}}
 \subsection{Method \code{addDynamics()}}{
 Add a dynamic increase with the same parameters as the main contract part
 \subsection{Usage}{
@@ -549,8 +557,8 @@ they can be overridden per dynamic increase block.}
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-calculateContract"></a>}}
-\if{latex}{\out{\hypertarget{method-calculateContract}{}}}
+\if{html}{\out{<a id="method-InsuranceContract-calculateContract"></a>}}
+\if{latex}{\out{\hypertarget{method-InsuranceContract-calculateContract}{}}}
 \subsection{Method \code{calculateContract()}}{
 Calculate all time series of the contract from the parameters
 \subsection{Usage}{
@@ -609,8 +617,8 @@ sum when the premium is recalculated.}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-consolidateBlocks"></a>}}
-\if{latex}{\out{\hypertarget{method-consolidateBlocks}{}}}
+\if{html}{\out{<a id="method-InsuranceContract-consolidateBlocks"></a>}}
+\if{latex}{\out{\hypertarget{method-InsuranceContract-consolidateBlocks}{}}}
 \subsection{Method \code{consolidateBlocks()}}{
 Aggregate values from all child contract blocks (if any)
 \subsection{Usage}{
@@ -627,8 +635,8 @@ that time will be left unchanged.}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-premiumWaiver"></a>}}
-\if{latex}{\out{\hypertarget{method-premiumWaiver}{}}}
+\if{html}{\out{<a id="method-InsuranceContract-premiumWaiver"></a>}}
+\if{latex}{\out{\hypertarget{method-InsuranceContract-premiumWaiver}{}}}
 \subsection{Method \code{premiumWaiver()}}{
 Stop premium payments and re-calculate sumInsured of the paid-up contract
 \subsection{Usage}{
@@ -654,8 +662,8 @@ Stop premium payments and re-calculate sumInsured of the paid-up contract
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-profitScenario"></a>}}
-\if{latex}{\out{\hypertarget{method-profitScenario}{}}}
+\if{html}{\out{<a id="method-InsuranceContract-profitScenario"></a>}}
+\if{latex}{\out{\hypertarget{method-InsuranceContract-profitScenario}{}}}
 \subsection{Method \code{profitScenario()}}{
 Calculate one profit scenario and return all values
 \subsection{Usage}{
@@ -686,8 +694,8 @@ terminal bonus funds, profit in case of death/surrender/premium waiver)
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-addProfitScenario"></a>}}
-\if{latex}{\out{\hypertarget{method-addProfitScenario}{}}}
+\if{html}{\out{<a id="method-InsuranceContract-addProfitScenario"></a>}}
+\if{latex}{\out{\hypertarget{method-InsuranceContract-addProfitScenario}{}}}
 \subsection{Method \code{addProfitScenario()}}{
 Calculate one profit scenario and store it in the contract
 \subsection{Usage}{
@@ -717,8 +725,8 @@ in a profitScenario.}
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-clone}{}}}
+\if{html}{\out{<a id="method-InsuranceContract-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-InsuranceContract-clone}{}}}
 \subsection{Method \code{clone()}}{
 The objects of this class are cloneable with this method.
 \subsection{Usage}{

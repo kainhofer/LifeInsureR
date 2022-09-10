@@ -2,6 +2,11 @@
 #'
 #' @import MortalityTables
 #' @import R6
+#' @import lubridate
+#  Prevent spurious imports warnings in CRAN checks:
+#' @importFrom kableExtra kable
+#' @importFrom pander pander
+#' @importFrom rmarkdown render
 NULL
 
 
