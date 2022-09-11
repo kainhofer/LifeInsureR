@@ -28,11 +28,11 @@ dimnames for all entries of the axes of a \code{\link[=contractGrid]{contractGri
 }
 \section{Functions}{
 \itemize{
-\item \code{makeContractGridDimname}: Create a short, human-readable dimensional name for an object (default S3 method)
+\item \code{makeContractGridDimname()}: Create a short, human-readable dimensional name for an object (default S3 method)
 
-\item \code{makeContractGridDimnames}: Generate proper dimnames for all entries of the axes of a \code{\link[=contractGrid]{contractGrid()}}
+\item \code{makeContractGridDimnames()}: Generate proper dimnames for all entries of the axes of a \code{\link[=contractGrid]{contractGrid()}}
+
 }}
-
 \examples{
 library(MortalityTables)
 mortalityTables.load("Austria_Census")

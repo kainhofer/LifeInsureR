@@ -181,57 +181,57 @@ the rates and how the assigned profit is calculated.
 }
 \section{Functions}{
 \itemize{
-\item \code{PP.base.NULL}: Basis for profit: NONE (i.e. always returns 0)
+\item \code{PP.base.NULL()}: Basis for profit: NONE (i.e. always returns 0)
 
-\item \code{PP.base.PreviousZillmerReserve}: Basis for profit: Previous Zillmer reserve (no administration cost reserve)
+\item \code{PP.base.PreviousZillmerReserve()}: Basis for profit: Previous Zillmer reserve (no administration cost reserve)
 
-\item \code{PP.base.ZillmerReserveT2}: Basis for profit: Zillmer reserve (no administration cost reserve) at time t-2
+\item \code{PP.base.ZillmerReserveT2()}: Basis for profit: Zillmer reserve (no administration cost reserve) at time t-2
 
-\item \code{PP.base.contractualReserve}: Basis for profit: Contractual reserve (including administration costs) at time t
+\item \code{PP.base.contractualReserve()}: Basis for profit: Contractual reserve (including administration costs) at time t
 
-\item \code{PP.base.previousContractualReserve}: Basis for profit: Contractual reserve (including administration costs) at time t-1
+\item \code{PP.base.previousContractualReserve()}: Basis for profit: Contractual reserve (including administration costs) at time t-1
 
-\item \code{PP.base.meanContractualReserve}: Basis for profit: Contractual reserve (including administration costs) averaged over t and t-1
+\item \code{PP.base.meanContractualReserve()}: Basis for profit: Contractual reserve (including administration costs) averaged over t and t-1
 
-\item \code{PP.base.ZillmerRiskPremium}: Basis for risk/mortality profit: Zillmer Risk Premium of the past year
+\item \code{PP.base.ZillmerRiskPremium()}: Basis for risk/mortality profit: Zillmer Risk Premium of the past year
 
-\item \code{PP.base.sumInsured}: Basis for expense/sum profit: sum insured
+\item \code{PP.base.sumInsured()}: Basis for expense/sum profit: sum insured
 
-\item \code{PP.base.totalProfitAssignment}: Basis for Terminal Bonus Fund Assignment: total profit assignment of the year
+\item \code{PP.base.totalProfitAssignment()}: Basis for Terminal Bonus Fund Assignment: total profit assignment of the year
 
-\item \code{PP.rate.interestProfit}: Returns the array of interest profit rates (keyed by year)
+\item \code{PP.rate.interestProfit()}: Returns the array of interest profit rates (keyed by year)
 
-\item \code{PP.rate.riskProfit}: Returns the array of risk profit rates (keyed by year)
+\item \code{PP.rate.riskProfit()}: Returns the array of risk profit rates (keyed by year)
 
-\item \code{PP.rate.expenseProfit}: Returns the array of expense profit rates (keyed by year)
+\item \code{PP.rate.expenseProfit()}: Returns the array of expense profit rates (keyed by year)
 
-\item \code{PP.rate.sumProfit}: Returns the array of sum profit rates (keyed by year)
+\item \code{PP.rate.sumProfit()}: Returns the array of sum profit rates (keyed by year)
 
-\item \code{PP.rate.terminalBonus}: Returns the array of terminal bonus rates (keyed by year)
+\item \code{PP.rate.terminalBonus()}: Returns the array of terminal bonus rates (keyed by year)
 
-\item \code{PP.rate.terminalBonusFund}: Returns the array of terminal bonus rates (keyed by year) as the terminal bonus fund ratio
+\item \code{PP.rate.terminalBonusFund()}: Returns the array of terminal bonus rates (keyed by year) as the terminal bonus fund ratio
 
-\item \code{PP.rate.interestProfitPlusGuarantee}: Rate for interest on past profits: total credited rate, but at least the guarantee
+\item \code{PP.rate.interestProfitPlusGuarantee()}: Rate for interest on past profits: total credited rate, but at least the guarantee
 
-\item \code{PP.rate.interestProfit2PlusGuarantee}: Rate for interest on past profits: total creditedrate2, but at least the guarantee
+\item \code{PP.rate.interestProfit2PlusGuarantee()}: Rate for interest on past profits: total creditedrate2, but at least the guarantee
 
-\item \code{PP.rate.totalInterest}: Rate for interest on past profits: total interest rate
+\item \code{PP.rate.totalInterest()}: Rate for interest on past profits: total interest rate
 
-\item \code{PP.rate.totalInterest2}: Rate for interest on past profits: second total interest rate
+\item \code{PP.rate.totalInterest2()}: Rate for interest on past profits: second total interest rate
 
-\item \code{PP.rate.interestProfit2}: Rate for interest on past profits: second interest profit rate (not including guaranteed interest), keyed by year
+\item \code{PP.rate.interestProfit2()}: Rate for interest on past profits: second interest profit rate (not including guaranteed interest), keyed by year
 
-\item \code{getTerminalBonusReserve}: Calculate the terminal bonus reserve.
+\item \code{getTerminalBonusReserve()}: Calculate the terminal bonus reserve.
 
-\item \code{PP.calculate.RateOnBase}: Calculate profit by a simple rate applied on the basis (with an optional waiting vector of values 0 or 1)
+\item \code{PP.calculate.RateOnBase()}: Calculate profit by a simple rate applied on the basis (with an optional waiting vector of values 0 or 1)
 
-\item \code{PP.calculate.RateOnBaseMin0}: Calculate profit by a simple rate applied on the basis (with an optional waiting vector of values 0 or 1), bound below by 0
+\item \code{PP.calculate.RateOnBaseMin0()}: Calculate profit by a simple rate applied on the basis (with an optional waiting vector of values 0 or 1), bound below by 0
 
-\item \code{PP.calculate.RatePlusGuaranteeOnBase}: Calculate profit by a rate + guaranteed interest applied on the basis (with an optional waiting vector of values 0 or 1)
+\item \code{PP.calculate.RatePlusGuaranteeOnBase()}: Calculate profit by a rate + guaranteed interest applied on the basis (with an optional waiting vector of values 0 or 1)
 
-\item \code{PP.calculate.RateOnBaseSGFFactor}: Calculate profit by a simple rate applied on the basis (with only (1-SGFFactor) put into profit participation, and an optional waiting vector of values 0 or 1)
+\item \code{PP.calculate.RateOnBaseSGFFactor()}: Calculate profit by a simple rate applied on the basis (with only (1-SGFFactor) put into profit participation, and an optional waiting vector of values 0 or 1)
 
-\item \code{sumProfits}: Extract the given columns of the profit participation array of values and sum
+\item \code{sumProfits()}: Extract the given columns of the profit participation array of values and sum
 them up. Columns that do not exist, because the profit scheme does not
 provide the corresponding profit component will be silently ignored.
 This allows generic benefit calculation functions to be written that do
@@ -241,30 +241,30 @@ bonus fund is provided.
 This function is not meant to be called directly, but within a profit benefit
 calculation function.
 
-\item \code{PP.benefit.ProfitPlusTerminalBonusReserve}: Calculate survival benefit as total profit amount plus the terminal bonus reserve
+\item \code{PP.benefit.ProfitPlusTerminalBonusReserve()}: Calculate survival benefit as total profit amount plus the terminal bonus reserve
 
-\item \code{PP.benefit.Profit}: Calculate benefit as total profit accrued so far
+\item \code{PP.benefit.Profit()}: Calculate benefit as total profit accrued so far
 
-\item \code{PP.benefit.ProfitPlusGuaranteedInterest}: Calculate accrued death benefit as total profit with (guaranteed) interest for one year
+\item \code{PP.benefit.ProfitPlusGuaranteedInterest()}: Calculate accrued death benefit as total profit with (guaranteed) interest for one year
 
-\item \code{PP.benefit.ProfitPlusTotalInterest}: Calculate accrued death benefit as total profit with total interest (interest on profit rate) for one year
+\item \code{PP.benefit.ProfitPlusTotalInterest()}: Calculate accrued death benefit as total profit with total interest (interest on profit rate) for one year
 
-\item \code{PP.benefit.ProfitPlusHalfTotalInterest}: Calculate accrued benefit as total profit with total interest (interest on profit rate) for half a year
+\item \code{PP.benefit.ProfitPlusHalfTotalInterest()}: Calculate accrued benefit as total profit with total interest (interest on profit rate) for half a year
 
-\item \code{PP.benefit.ProfitPlusHalfGuaranteedInterest}: Calculate death benefit as total profit with (guaranteed) interest for one year
+\item \code{PP.benefit.ProfitPlusHalfGuaranteedInterest()}: Calculate death benefit as total profit with (guaranteed) interest for one year
 
-\item \code{PP.benefit.ProfitPlusInterestMinGuaranteeTotal}: Calculate accrued benefit as total profit with interest for one year (max of guarantee and total interest)
+\item \code{PP.benefit.ProfitPlusInterestMinGuaranteeTotal()}: Calculate accrued benefit as total profit with interest for one year (max of guarantee and total interest)
 
-\item \code{PP.benefit.ProfitPlusHalfInterestMinGuaranteeTotal}: Calculate accrued benefit as total profit with interest for half a year (max of guarantee and total interest)
+\item \code{PP.benefit.ProfitPlusHalfInterestMinGuaranteeTotal()}: Calculate accrued benefit as total profit with interest for half a year (max of guarantee and total interest)
 
-\item \code{PP.benefit.ProfitGuaranteeSupporting}: Calculate accrued benefit as regular profit, but used to cover initial Zillmerization
+\item \code{PP.benefit.ProfitGuaranteeSupporting()}: Calculate accrued benefit as regular profit, but used to cover initial Zillmerization
 
-\item \code{PP.benefit.TerminalBonus5YearsProRata}: Calculate benefit from terminal bonus as 1/n parts of the terminal bonus reserve during the last 5 years
+\item \code{PP.benefit.TerminalBonus5YearsProRata()}: Calculate benefit from terminal bonus as 1/n parts of the terminal bonus reserve during the last 5 years
 
-\item \code{PP.benefit.TerminalBonus5Years}: Terminal bonus is only paid out during the last 5 years of the contract (but never during the first 10 years)
+\item \code{PP.benefit.TerminalBonus5Years()}: Terminal bonus is only paid out during the last 5 years of the contract (but never during the first 10 years)
 
-\item \code{PP.benefit.TerminalBonus}: Calculate benefit from terminal bonus (full bonus), either old-style terminal bonus reserve or Terminal Bonus Fund (TBF)
+\item \code{PP.benefit.TerminalBonus()}: Calculate benefit from terminal bonus (full bonus), either old-style terminal bonus reserve or Terminal Bonus Fund (TBF)
 
-\item \code{PP.benefit.None}: No benefit paid out
+\item \code{PP.benefit.None()}: No benefit paid out
+
 }}
-

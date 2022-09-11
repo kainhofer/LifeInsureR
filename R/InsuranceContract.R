@@ -979,18 +979,32 @@ InsuranceContract = R6Class(
             self$Parameters$ContractData$premiumPeriod = valueOrFunction(
                 self$Parameters$ContractData$premiumPeriod,
                 params = self$Parameters, values = self$Values);
-            # At least 1 year premium period!
-            self$Parameters$ContractData$premiumPeriod = max(self$Parameters$ContractData$premiumPeriod, 1);
+            # At least 1 year premium period, at most contract duration!
+            self$Parameters$ContractData$premiumPeriod =
+                min(
+                    max(self$Parameters$ContractData$premiumPeriod, 1),
+                    self$Parameters$ContractData$policyPeriod
+                );
 
             self$Parameters$Loadings$commissionPeriod = valueOrFunction(
                 self$Parameters$Loadings$commissionPeriod,
                 params = self$Parameters, values = self$Values);
+            self$Parameters$Loadings$commissionPeriod =
+                min(
+                    self$Parameters$Loadings$commissionPeriod,
+                    self$Parameters$ContractData$policyPeriod
+                )
 
 
             # Evaluate deferral period, i.e. if a function is used, calculate its numeric value from the other parameters
             self$Parameters$ContractData$deferralPeriod = valueOrFunction(
                 self$Parameters$ContractData$deferralPeriod,
                 params = self$Parameters, values = self$Values);
+            self$Parameters$ContractData$deferralPeriod =
+                min(
+                    self$Parameters$ContractData$deferralPeriod,
+                    self$Parameters$ContractData$policyPeriod
+                )
 
             #### #
             # AGES for multiple joint lives:
