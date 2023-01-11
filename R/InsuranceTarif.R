@@ -334,29 +334,33 @@ InsuranceTarif = R6Class(
       if (getOption('LIC.debug.getTransitionProbabilities', FALSE)) {
         browser();
       }
-      age = params$ContractData$technicalAge;
-      ages = self$getAges(params);
-      q = MortalityTables::deathProbabilities(params$ActuarialBases$mortalityTable, YOB = year(params$ContractData$birthDate), ageDifferences = params$ContractData$ageDifferences);
-      if (age > 0) {
-        q    = q[-age:-1];
-      }
-      if (!is.null(params$ActuarialBases$invalidityTable)) {
-        i = MortalityTables::deathProbabilities(params$ActuarialBases$invalidityTable, YOB = year(params$ContractData$birthDate), ageDifferences = params$ContractData$ageDifferences);
+      if (!is.null(values$transitionProbabilities)) {
+        values$transitionProbabilities
+      } else {
+        age = params$ContractData$technicalAge;
+        ages = self$getAges(params);
+        qx = MortalityTables::deathProbabilities(params$ActuarialBases$mortalityTable, YOB = year(params$ContractData$birthDate), ageDifferences = params$ContractData$ageDifferences);
         if (age > 0) {
-          i    = i[-age:-1];
+          qx    = qx[-age:-1];
         }
-      } else {
-        i = rep(0, length(q));
+        if (!is.null(params$ActuarialBases$invalidityTable)) {
+          ix = MortalityTables::deathProbabilities(params$ActuarialBases$invalidityTable, YOB = year(params$ContractData$birthDate), ageDifferences = params$ContractData$ageDifferences);
+          if (age > 0) {
+            ix    = ix[-age:-1];
+          }
+        } else {
+          ix = rep(0, length(q));
+        }
+        ix = pad0(ix, length(q));
+        # invalidity/disease does NOT end the contract if flag is set!
+        if (params$ActuarialBases$invalidityEndsContract) {
+          px = 1 - qx - ix
+        } else {
+          px = 1 - qx
+        }
+        df = data.frame(age = ages, qx = qx, ix = ix, px = px, row.names = ages - age)
+        df
       }
-      i = pad0(i, length(q));
-      # invalidity/disease does NOT end the contract if flag is set!
-      if (params$ActuarialBases$invalidityEndsContract) {
-        p = 1 - q - i
-      } else {
-        p = 1 - q
-      }
-      df = data.frame(age = ages, q = q, i = i, p = p, row.names = ages - age)
-      df
     },
 
     #' @description Obtain the cost structure from the cost parameter and the
@@ -655,8 +659,8 @@ InsuranceTarif = R6Class(
           # contract. This is a simplification, but the actual present values
           # are calculated later, so for now we just assume standard parameters!
           len = params$Loadings$commissionPeriod;
-          q = self$getTransitionProbabilities(params);
-          px = pad0(c(1,q$p), len); # by defualt, premiums are in advance, so first payment has 100% probability
+          q = self$getTransitionProbabilities(params, values);
+          px = pad0(c(1,q$px), len); # by defualt, premiums are in advance, so first payment has 100% probability
           v = 1/(1 + params$ActuarialBases$i)^((1:len)-1)
           params$Costs[,,"CommissionPeriod"] = params$Costs[,,"CommissionPeriod"] / sum(cumprod(px)*v)
       } else if (params$Features$alphaCostsCommission == "actual") {
@@ -689,10 +693,10 @@ InsuranceTarif = R6Class(
         browser();
       }
 
-      qq = self$getTransitionProbabilities(params);
-      qx = pad0(qq$q, values$int$l);
-      ix = pad0(qq$i, values$int$l);
-      px = pad0(qq$p, values$int$l);
+      qq = self$getTransitionProbabilities(params, values);
+      qx = pad0(qq$qx, values$int$l);
+      ix = pad0(qq$ix, values$int$l);
+      px = pad0(qq$px, values$int$l);
 
       i = params$ActuarialBases$i;
       v = 1/(1 + i);
@@ -755,9 +759,9 @@ InsuranceTarif = R6Class(
         browser();
       }
       len = values$int$l;
-      q = self$getTransitionProbabilities(params);
-      qx = pad0(q$q, len);
-      px = pad0(q$p, len);
+      q = self$getTransitionProbabilities(params, values);
+      qx = pad0(q$qx, len);
+      px = pad0(q$px, len);
       v = 1/(1 + params$ActuarialBases$i)
       pvc = calculatePVCosts(px, qx, values$cashFlowsCosts, v = v);
       applyHook(hook = params$Hooks$adjustPresentValuesCosts, val = pvc, params = params, values = values, presentValues = presentValues)
@@ -1109,9 +1113,9 @@ InsuranceTarif = R6Class(
         if (params$Features$alphaRefundLinear) {
           ZillmerVerteilungCoeff = pad0((0:r)/r, len, 1);
         } else {
-          q = self$getTransitionProbabilities(params);
+          q = self$getTransitionProbabilities(params, values);
           # vector of all ä_{x+t, r-t}
-          pvAlphaTmp = calculatePVSurvival(q = pad0(q$q, len), advance = pad0(rep(1,r), len), v = 1/(1 + params$ActuarialBases$i));
+          pvAlphaTmp = calculatePVSurvival(q = pad0(q$qx, len), advance = pad0(rep(1,r), len), v = 1/(1 + params$ActuarialBases$i));
           ZillmerVerteilungCoeff = (1 - pvAlphaTmp/pvAlphaTmp[[1]]);
         }
         alphaRefund = ZillmerSoFar - ZillmerVerteilungCoeff * ZillmerTotal;
@@ -1424,12 +1428,13 @@ InsuranceTarif = R6Class(
       premium.net       = unit.premiumCF * premiums[["net"]];
 
       securityLoading   = valueOrFunction(params$Loadings$security, params = params, values = values);
-      premium.risk.actual   = v * (values$absCashFlows[,"death"] - c(values$reserves[,"net"][-1], 0)) * pad0(values$transitionProbabilities$q, l);
-      premium.risk.security = v * (values$absCashFlows[,"death"] * securityLoading) * pad0(values$transitionProbabilities$q, l);
+      qq = self$getTransitionProbabilities(params, values);
+      premium.risk.actual   = v * (values$absCashFlows[,"death"] - c(values$reserves[,"net"][-1], 0)) * pad0(qq$qx, l);
+      premium.risk.security = v * (values$absCashFlows[,"death"] * securityLoading) * pad0(qq$qx, l);
       premium.risk          = premium.risk.actual + premium.risk.security;
 
-      premium.risk.disease.actual   = v * (values$absCashFlows[,"disease_SumInsured"] - c(values$reserves[,"net"][-1], 0)) * pad0(values$transitionProbabilities$i, l);
-      premium.risk.disease.security = v * (values$absCashFlows[,"disease_SumInsured"] * securityLoading) * pad0(values$transitionProbabilities$i, l);
+      premium.risk.disease.actual   = v * (values$absCashFlows[,"disease_SumInsured"] - c(values$reserves[,"net"][-1], 0)) * pad0(qq$ix, l);
+      premium.risk.disease.security = v * (values$absCashFlows[,"disease_SumInsured"] * securityLoading) * pad0(qq$ix, l);
       premium.risk.disease          = premium.risk.disease.actual + premium.risk.disease.security;
       premium.savings       = getSavingsPremium(
           values$reserves[,"net"], v = v,
@@ -1437,11 +1442,11 @@ InsuranceTarif = R6Class(
           survival_arrears = values$absCashFlows[,"survival_arrears"] + values$absCashFlows[,"guaranteed_arrears"]
       )
 
-      premium.Zillmer.risk.actual   = v * (values$absCashFlows[,"death"] - c(values$reserves[,"contractual"][-1], 0)) * pad0(values$transitionProbabilities$q, l);
-      premium.Zillmer.risk.security = v * (values$absCashFlows[,"death"] * securityLoading) * pad0(values$transitionProbabilities$q, l);
+      premium.Zillmer.risk.actual   = v * (values$absCashFlows[,"death"] - c(values$reserves[,"contractual"][-1], 0)) * pad0(qq$qx, l);
+      premium.Zillmer.risk.security = v * (values$absCashFlows[,"death"] * securityLoading) * pad0(qq$qx, l);
       premium.Zillmer.risk          = premium.Zillmer.risk.actual + premium.Zillmer.risk.security;
-      premium.Zillmer.risk.disease.actual   = v * (values$absCashFlows[,"disease_SumInsured"] - c(values$reserves[,"contractual"][-1], 0)) * pad0(values$transitionProbabilities$i, l);
-      premium.Zillmer.risk.disease.security = v * (values$absCashFlows[,"disease_SumInsured"] * securityLoading) * pad0(values$transitionProbabilities$i, l);
+      premium.Zillmer.risk.disease.actual   = v * (values$absCashFlows[,"disease_SumInsured"] - c(values$reserves[,"contractual"][-1], 0)) * pad0(qq$ix, l);
+      premium.Zillmer.risk.disease.security = v * (values$absCashFlows[,"disease_SumInsured"] * securityLoading) * pad0(qq$ix, l);
       premium.Zillmer.risk.disease          = premium.Zillmer.risk.disease.actual + premium.Zillmer.risk.disease.security;
 
 
@@ -1505,22 +1510,22 @@ InsuranceTarif = R6Class(
 
 
     #' @description Generic function to calculate future sums of the values
-    #' @param values The time series, for which future sums at all times are desired
+    #' @param cf The time series, for which future sums at all times are desired
     #' @param ... currently unused
-    calculateFutureSums = function(values, ...) {
+    calculateFutureSums = function(cf, ...) {
       rcumsum = function(vec) rev(cumsum(rev(vec)))
-      apply(values, 2, rcumsum)
+      apply(cf, 2, rcumsum)
     },
     #' @description Calculate all present values for a given time series. The
     #' mortalities are taken from the contract's parameters.
-    #' @param values The time series, for which future present values at all
+    #' @param cf The time series, for which future present values at all
     #'      times are desired
     #' @param ... currently unused
-    calculatePresentValues = function(values, params) {
-      len = dim(values)[1];
-      q = self$getTransitionProbabilities(params);
-      pv = function(vec) calculatePVSurvival(px = pad0(q$p, len), advance = vec, v = 1/(1 + params$ActuarialBases$i));
-      apply(values, 2, pv)
+    calculatePresentValues = function(cf, params, values) {
+      len = dim(cf)[1];
+      q = self$getTransitionProbabilities(params, values)
+      pv = function(vec) calculatePVSurvival(px = pad0(q$px, len), advance = vec, v = 1/(1 + params$ActuarialBases$i));
+      apply(cf, 2, pv)
     },
 
         #' @description Calculate the premium frequency loading, i.e. the surcharge

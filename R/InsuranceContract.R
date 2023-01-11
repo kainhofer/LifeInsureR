@@ -1109,10 +1109,10 @@ InsuranceContract = R6Class(
             self$tarif$premiumDecomposition(params = self$Parameters, values = self$Values, ...);
         },
         premiumCompositionSums = function(...) {
-            self$tarif$calculateFutureSums(self$Values$premiumComposition, ...);
+            self$tarif$calculateFutureSums(cf = self$Values$premiumComposition, params = self$Parameters, values = self$Values, ...);
         },
         premiumCompositionPV = function(...) {
-            self$tarif$calculatePresentValues(self$Values$premiumComposition, params = self$Parameters, ...);
+            self$tarif$calculatePresentValues(self$Values$premiumComposition, params = self$Parameters, values = self$Values, ...);
         },
 
         profitParticipation = function(...) {
