@@ -1061,13 +1061,13 @@ All premiums, reserves and present values have already been calculated.
 \subsection{Method \code{calculateFutureSums()}}{
 Generic function to calculate future sums of the values
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{InsuranceTarif$calculateFutureSums(values, ...)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{InsuranceTarif$calculateFutureSums(cf, ...)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{values}}{The time series, for which future sums at all times are desired}
+\item{\code{cf}}{The time series, for which future sums at all times are desired}
 
 \item{\code{...}}{currently unused}
 }
@@ -1081,18 +1081,21 @@ Generic function to calculate future sums of the values
 Calculate all present values for a given time series. The
 mortalities are taken from the contract's parameters.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{InsuranceTarif$calculatePresentValues(values, params)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{InsuranceTarif$calculatePresentValues(cf, params, values)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{values}}{The time series, for which future present values at all
+\item{\code{cf}}{The time series, for which future present values at all
 times are desired}
 
 \item{\code{params}}{Contract-specific, full set of parameters of the contract
 (merged parameters of the defaults, the tariff, the profit participation
 scheme and the contract)}
+
+\item{\code{values}}{Contract values calculated so far (in the \code{contract$Values}
+list) then this method is called by the contract object}
 
 \item{\code{...}}{currently unused}
 }
