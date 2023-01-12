@@ -511,7 +511,7 @@ InsuranceTarif = R6Class(
           0), values$int$l)
 
         # start current contract block after deferral period
-        cf$sumInsured = c(rep(0, deferralPeriod), annuityCF, 0)
+#        cf$sumInsured = pad0(rep(#c(rep(0, deferralPeriod), annuityCF) # <= TODO!!!
 
 
       } else if (self$tariffType == "terme-fix") {
