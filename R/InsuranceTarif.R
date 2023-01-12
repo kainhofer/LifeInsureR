@@ -299,11 +299,13 @@ InsuranceTarif = R6Class(
       }
       age = params$ContractData$technicalAge
       maxAge = MortalityTables::getOmega(params$ActuarialBases$mortalityTable)
-      policyPeriod = params$ContractData$policyPeriod
+      policyTerm = min(maxAge + 1 - age, params$ContractData$policyPeriod)
       list(
-        l = min(maxAge - age, policyPeriod) + 1,
-        policyTerm = min(maxAge - age, policyPeriod),
-        premiumTerm = min(policyPeriod, params$ContractData$premiumPeriod)
+        l = min(maxAge +1 - age, policyTerm),
+        # maxAge is the last age with a given death probability, so it can be included in the policy term!
+        # The policy must end AFTER that final year, not at the beginning!
+        policyTerm = policyTerm,
+        premiumTerm = min(policyTerm, params$ContractData$premiumPeriod)
       )
     },
 
