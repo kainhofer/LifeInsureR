@@ -704,10 +704,16 @@ exportAbsCFTable = function(wb, sheet, contract, ccol = 1, crow = 1, styles = c(
   crow
 }
 
+# Return list of all column indices witout any non-zero entries => these columns are to be hidden later
+empty.col.indices = function(df) {
+  unname(which(colSums(df != 0) == 0))
+}
+
 exportPVTable = function(wb, sheet, contract, ccol = 1, crow = 1, styles = c(), seprows = 5, freeze = TRUE) {
   if (!is.null(contract$Values$presentValues)) {
     id = contract$Parameters$ContractData$id
     nrrow = contract$Values$int$l
+    empty.cols = c()
 
     blockid.row = crow
     crow = crow + 2
@@ -729,6 +735,7 @@ exportPVTable = function(wb, sheet, contract, ccol = 1, crow = 1, styles = c(), 
     w1 = writePremiumCoefficients(wb, sheet, contract$Values$premiumCoefficients, type = "benefits", crow = crow, ccol = cl - 2, tarif = contract$tarif);
     area.premiumcoeff = paste0(int2col(cl), "%d:", int2col(cl + w1 - 1), "%d");
     area.premiumvals  = paste0("$", int2col(cl), "$", crow + 6 + 2 + tPrem, ":$", int2col(cl + w1 - 1), "$", crow + 6 + 2 + tPrem);
+    empty.cols = c(empty.cols, empty.col.indices(contract$Values$presentValues) - 1 + cl)
     cl = cl + writeValuesTable(wb, sheet, as.data.frame(setInsuranceValuesLabels(contract$Values$presentValues)),
                                   crow = crow + 6, ccol = cl, tableName = tableName("PresentValues_Benefits_", id), styles = styles,
                                   caption = "Leistungsbarwerte", valueStyle = styles$pv0) + 1;
@@ -736,6 +743,7 @@ exportPVTable = function(wb, sheet, contract, ccol = 1, crow = 1, styles = c(), 
     w2 = writePremiumCoefficients(wb, sheet, contract$Values$premiumCoefficients, type = "costs", crow = crow, ccol = cl - 2, tarif = contract$tarif);
     area.costcoeff = paste0(int2col(cl), "%d:", int2col(cl + w2 - 1), "%d");
     area.costvals  = paste0("$", int2col(cl), "$", crow + 6 + 2 + tPrem, ":$", int2col(cl + w2 - 1), "$", crow + 6 + 2 + tPrem);
+    empty.cols = c(empty.cols, empty.col.indices(as.data.frame(costPV)) - 1 + cl)
     cl = cl + writeValuesTable(wb, sheet, as.data.frame(costPV),
                                crow = crow + 6, ccol = cl, tableName = tableName("PresentValues_Costs_", id), styles = styles,
                                caption = "Kostenbarwerte", valueStyle = styles$cost0) + 1;
@@ -762,11 +770,14 @@ exportPVTable = function(wb, sheet, contract, ccol = 1, crow = 1, styles = c(), 
   }
 
   for (b in contract$blocks) {
-    crow = exportPVTable(
+    res = exportPVTable(
       wb = wb, sheet = sheet, contract = b,
       ccol = ccol, crow = crow, styles = styles, seprows = seprows, freeze = FALSE)
+    # exportPVTable returns a list of the next excel table row and a list of all empty columns (to be hidden later on)
+    crow = res$crow
+    empty.cols = intersect(empty.cols, res$empty.cols)
   }
-  crow
+  list(crow = crow, empty.cols = empty.cols)
 }
 
 exportCFTable = function(wb, sheet, contract, ccol = 1, crow = 1, styles = c(), seprows = 5, freeze = TRUE) {
@@ -774,6 +785,7 @@ exportCFTable = function(wb, sheet, contract, ccol = 1, crow = 1, styles = c(), 
   if (!is.null(contract$Values$cashFlows)) {
     id = contract$Parameters$ContractData$id
     nrrow = contract$Values$int$l
+    empty.cols = c()
 
     blockid.row = crow
     crow = crow + 2
@@ -786,11 +798,13 @@ exportCFTable = function(wb, sheet, contract, ccol = 1, crow = 1, styles = c(), 
     cl = ccol
 
     cl = cl + writeAgeQTable(wb, sheet, probs = qp, crow = crow, ccol = cl, styles = styles);
+    empty.cols = c(empty.cols, empty.col.indices(contract$Values$cashFlows)- 1  + cl)
     cl = cl + writeValuesTable(
       wb, sheet, setInsuranceValuesLabels(contract$Values$cashFlows),
       crow = crow, ccol = cl, tableName = tableName("CF_", id), styles = styles,
       caption = "Leistungscashflows", valueStyle = styles$hide0) + 1;
     costCF = costValuesAsDF(setInsuranceValuesLabels(contract$Values$cashFlowsCosts))
+    empty.cols = c(empty.cols, empty.col.indices(costCF)- 1  + cl)
     cl = cl + writeValuesTable(
       wb, sheet, costCF,
       crow = crow, ccol = cl, tableName = tableName("CFcosts_", id), styles = styles,
@@ -801,11 +815,14 @@ exportCFTable = function(wb, sheet, contract, ccol = 1, crow = 1, styles = c(), 
   }
 
   for (b in contract$blocks) {
-    crow = exportCFTable(
+    res = exportCFTable(
       wb = wb, sheet = sheet, contract = b,
       ccol = ccol, crow = crow, styles = styles, seprows = seprows, freeze = FALSE)
+    # exportCFTable returns a list of the next excel table row and a list of all empty columns (to be hidden later on)
+    crow = res$crow
+    empty.cols = intersect(empty.cols, res$empty.cols)
   }
-  crow
+  list(crow = crow, empty.cols = empty.cols)
 }
 
 
@@ -976,9 +993,12 @@ exportInsuranceContract.xlsx = function(contract, filename) {
   # TODO-blocks
   sheet = "Barwerte";
   addValuesWorksheet(wb, sheet);
-  exportPVTable(
+  res = exportPVTable(
     wb = wb, sheet = sheet, contract = contract,
     ccol = 1, crow = 4,styles = styles)
+  if (length(res$empty.cols) > 0) {
+    setColWidths(wb, sheet = sheet, cols = res$empty.cols, hidden = TRUE)
+  }
 
 
   ############################################## #
@@ -987,9 +1007,12 @@ exportInsuranceContract.xlsx = function(contract, filename) {
 
   sheet = "Cash-Flows";
   addValuesWorksheet(wb, sheet);
-  exportCFTable(
+  res = exportCFTable(
     wb = wb, sheet = sheet, contract = contract,
     ccol = 1, crow = 4, styles = styles)
+  if (length(res$empty.cols) > 0) {
+    setColWidths(wb, sheet = sheet, cols = res$empty.cols, hidden = TRUE)
+  }
 
 
 
