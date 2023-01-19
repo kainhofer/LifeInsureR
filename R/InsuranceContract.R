@@ -381,13 +381,16 @@ InsuranceContract = R6Class(
         #'
         #' @examples
         #' # TODO
-        addBlock = function(id = NULL, block = NULL, t = block$Values$int$blockStart, comment = paste0("Additional block at time t=", t), ...) {
+        addBlock = function(id = NULL, block = NULL, t = block$Values$int$blockStart, comment = paste0("Additional block at time t=", t), blockType = "Dynamics", ...) {
             if (getOption('LIC.debug.addBlock', FALSE)) {
                 browser();
             }
             if (missing(block) || is.null(block) || !is(block, "InsuranceContract")) {
                 # Create a block with the same tariff and parameters as the main contract, but allow overriding params with the ... arguments
                 block = InsuranceContract$new(id = id, ...)
+            }
+            if (missing(t) || is.null(t)) {
+                t = 0
             }
             # declare as child of 'self', store the time offset to the parent contract
             block$parent = self
@@ -408,7 +411,7 @@ InsuranceContract = R6Class(
             self$consolidateBlocks(valuesFrom = t)
 
             self$addHistorySnapshot(time = t, comment = comment,
-                                    type = "Dynamics", params = self$Parameters, values = self$Values);
+                                    type = blockType, params = self$Parameters, values = self$Values);
 
             invisible(self)
         },
