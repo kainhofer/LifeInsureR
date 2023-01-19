@@ -286,13 +286,14 @@ as it is created. It is, however, also possible to modify a contract later on,
 e.g. by stopping premium payments and converting it to a paid-up contract.
 
 ```{r SimpleExampleRiskConversionCode, eval=F}
-contract.L71U = contract.L71U$premiumWaiver(t = 3)
-contract.L71U$Values$reserves
+contract.L71U.prf = contract.L71U$premiumWaiver(t = 3)
+contract.L71U.prf$Values$reserves
 ```
 ```{r SimpleExampleRiskConversionOut, echo=F}
-contract.L71U = contract.L71U$premiumWaiver(t = 3)
-contract.L71U$Values$reserves %>% pander()
+contract.L71U.prf = contract.L71U$premiumWaiver(t = 3)
+contract.L71U.prf$Values$reserves %>% pander()
 ```
+
 
 
 ## Creating tables with various parameters
