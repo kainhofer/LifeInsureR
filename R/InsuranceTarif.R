@@ -580,7 +580,13 @@ InsuranceTarif = R6Class(
         row.names          = ages - age
       );
 
-      cf$additional_capital = pad0(params$ContractData$initialCapital / params$ContractData$sumInsured, cflen)
+      if (is.null(params$ContractData$sumInsured)) {
+        # No sumInsured given, determine SI from premium provided
+        #
+        cf$additional_capital = pad0(params$ContractData$initialCapital, cflen)
+      } else {
+        cf$additional_capital = pad0(params$ContractData$initialCapital / params$ContractData$sumInsured, cflen)
+      }
       # Premiums:
       if (!params$ContractState$premiumWaiver) {
         premiums = self$getPremiumCF(len = cflen, params = params, values = values)
@@ -993,12 +999,95 @@ InsuranceTarif = R6Class(
       pvCost = values$presentValuesCosts[t,,,]
 
       if (pv[["premiums"]] == 0) {
-        return(list("premiums" = values$premiums, "coefficients" = coefficients))
+        return(list("premiums" = values$premiums, "coefficients" = coefficients, "sumInsured" = params$ContractData$sumInsured))
       }
+
+      #======================================================================== =
+      # Calculate sumInsured from Premium, if needed
+      # ======================================================================= =
+      if (is.null(sumInsured)) {
+        sumInsured = 1
+        params$ContractData$sumInsured = 1 # Temporarily set to 1!
+
+        # Premium type can be given using a named array, e.g. premium = c(gross = 1000)
+        premiumtype = names(params$ContractData$premium)
+        if (is.null(premiumtype)) premiumtype = "written";
+        premium = unname(params$ContractData$premium);
+        calculating = FALSE;
+
+
+        # Calculate unit gross premium (sumInsured=1)
+        values$premiums["additional_capital"] = values$cashFlows[t, "additional_capital"]
+        coeff = self$getPremiumCoefficients("gross", pv * 0, pvCost * 0, premiums = values$premiums, params = params, values = values, premiumCalculationTime = premiumCalculationTime)
+        enumerator  = sum(coeff[["SumInsured"]][["benefits"]] * pv) + sum(coeff[["SumInsured"]][["costs"]] * pvCost);
+        denominator = sum(coeff[["Premium"   ]][["benefits"]] * pv) + sum(coeff[["Premium"   ]][["costs"]] * pvCost);
+        values$premiums[["unit.gross"]] = enumerator/denominator * (1 + loadings$ongoingAlphaGrossPremium);
+
+        # Calculate other premium components:
+        # ATTENTION: This will not work if any of these depend on the absolute values of the premiums, or depend on net or Zillmer premium!
+        tax           = valueOrFunction(loadings$tax,          params = params, values = values);
+        unitCosts     = valueOrFunction(loadings$unitcosts,    params = params, values = values);
+        noMedicalExam = valueOrFunction(loadings$noMedicalExam,params = params, values = values);
+        noMedicalExam.relative = valueOrFunction(loadings$noMedicalExamRelative,params = params, values = values);
+        extraRebate   = valueOrFunction(loadings$extraRebate,  params = params, values = values);
+        sumRebate     = valueOrFunction(loadings$sumRebate,    params = params, values = values);
+        premiumRebateRate = valueOrFunction(loadings$premiumRebate,params = params, values = values);
+        premiumRebate = applyHook(params$Hooks$premiumRebateCalculation, premiumRebateRate, params = params, values = values);
+
+        extraChargeGrossPremium = valueOrFunction(loadings$extraChargeGrossPremium, params = params, values = values);
+        advanceProfitParticipation = 0;
+        advanceProfitParticipationUnitCosts = 0;
+        ppScheme      = params$ProfitParticipation$profitParticipationScheme;
+        if (!is.null(ppScheme)) {
+          advanceProfitParticipation = ppScheme$getAdvanceProfitParticipation(params = params, values = values)
+          advanceProfitParticipationUnitCosts = ppScheme$getAdvanceProfitParticipationAfterUnitCosts(params = params, values = values)
+        }
+        if (is.null(advanceProfitParticipation)) advanceProfitParticipation = 0;
+        if (is.null(advanceProfitParticipationUnitCosts)) advanceProfitParticipationUnitCosts = 0;
+
+        partnerRebate = valueOrFunction(loadings$partnerRebate, params = params, values = values);
+
+        # Start from the given premium to derive the sumInsured step-by-step:
+        #
+        # Written premium after tax
+        calculating = calculating | (premiumtype == "written");
+        if (calculating) {
+          premium = premium / (1 + tax);
+        }
+        # Written premium before tax
+        calculating = calculating | (premiumtype == "written_beforetax");
+        if (calculating) {
+          premium = premium / (1 - premiumRebate - advanceProfitParticipationUnitCosts - partnerRebate);
+
+          pv.unitcosts = sum(
+            pvCost["unitcosts","SumInsured",] * sumInsured +
+              pvCost["unitcosts","SumPremiums",] * values$unitPremiumSum * values$premiums[["gross"]] +
+              pvCost["unitcosts","GrossPremium",] * values$premiums[["gross"]] +
+              pvCost["unitcosts","NetPremium",] * values$premiums[["net"]] +
+              pvCost["unitcosts","Constant",]
+          )
+          premium.unitcosts = pv.unitcosts / pv[["premiums"]] + valueOrFunction(loadings$unitcosts, params = params, values = values);
+          if (!params$Features$unitcostsInGross) {
+            premium = premium - premium.unitcosts;
+          }
+          premium = premium / (1 - advanceProfitParticipation)
+        }
+        calculating = calculating | (premiumtype == "gross");
+        if (calculating) {
+          sumInsured = premium /
+            (values$premiums[["unit.gross"]]*(1 + noMedicalExam.relative + extraChargeGrossPremium) + noMedicalExam - sumRebate - extraRebate);
+        }
+        params$ContractData$sumInsured = sumInsured
+      }
+
 
       values$premiums["additional_capital"] = values$cashFlows[t, "additional_capital"] * sumInsured
 
+      #======================================================================== =
       # net, gross and Zillmer premiums are calculated from the present values using the coefficients on each present value as described in the formulas document
+      # ======================================================================= =
+      # GROSS Premium
+      # ----------------------------------------------------------------------- -
       coeff = self$getPremiumCoefficients("gross", pv * 0, pvCost * 0, premiums = values$premiums, params = params, values = values, premiumCalculationTime = premiumCalculationTime)
       enumerator  = sum(coeff[["SumInsured"]][["benefits"]] * pv) + sum(coeff[["SumInsured"]][["costs"]] * pvCost);
       denominator = sum(coeff[["Premium"   ]][["benefits"]] * pv) + sum(coeff[["Premium"   ]][["costs"]] * pvCost);
@@ -1006,6 +1095,9 @@ InsuranceTarif = R6Class(
       values$premiums[["gross"]] = values$premiums[["unit.gross"]] * sumInsured;
       coefficients[["gross"]] = coeff;
 
+      # ======================================================================= =
+      # NET Premium
+      # ----------------------------------------------------------------------- -
       coeff = self$getPremiumCoefficients("net", pv*0, pvCost*0, premiums = values$premiums, params = params, values = values, premiumCalculationTime = premiumCalculationTime)
       enumerator  = sum(coeff[["SumInsured"]][["benefits"]] * pv) + sum(coeff[["SumInsured"]][["costs"]] * pvCost);
       denominator = sum(coeff[["Premium"   ]][["benefits"]] * pv) + sum(coeff[["Premium"   ]][["costs"]] * pvCost);
@@ -1013,6 +1105,9 @@ InsuranceTarif = R6Class(
       values$premiums[["net"]] = values$premiums[["unit.net"]] * sumInsured;
       coefficients[["net"]] = coeff;
 
+      # ======================================================================= =
+      # ZILLMER Premium
+      # ----------------------------------------------------------------------- -
       coeff = self$getPremiumCoefficients("Zillmer", pv * 0, pvCost * 0, premiums = values$premiums, params = params, values = values, premiumCalculationTime = premiumCalculationTime);
       enumerator  = sum(coeff[["SumInsured"]][["benefits"]] * pv) + sum(coeff[["SumInsured"]][["costs"]] * pvCost);
       denominator = sum(coeff[["Premium"   ]][["benefits"]] * pv) + sum(coeff[["Premium"   ]][["costs"]] * pvCost);
@@ -1021,6 +1116,9 @@ InsuranceTarif = R6Class(
       coefficients[["Zillmer"]] = coeff;
 
 
+      # ======================================================================= =
+      # Additional premium components (after gross premium)
+      # ----------------------------------------------------------------------- -
       # The written premium is the gross premium with additional loadings, rebates, unit costs and taxes
       tax           = valueOrFunction(loadings$tax,          params = params, values = values);
       unitCosts     = valueOrFunction(loadings$unitcosts,    params = params, values = values);
@@ -1061,14 +1159,14 @@ InsuranceTarif = R6Class(
         premiumBeforeTax = premiumBeforeTax + premium.unitcosts;
       }
       premiumBeforeTax = premiumBeforeTax * (1 - premiumRebate - advanceProfitParticipationUnitCosts - partnerRebate);
-            premiumBeforeTax.y = premiumBeforeTax * (1 + frequencyLoading);
+      premiumBeforeTax.y = premiumBeforeTax * (1 + frequencyLoading);
       premiumBeforeTax = premiumBeforeTax.y / params$ContractData$premiumFrequency;
       values$premiums[["written_yearly"]] = premiumBeforeTax.y * (1 + tax)
       values$premiums[["written_beforetax"]] = premiumBeforeTax;
       values$premiums[["tax"]] = premiumBeforeTax * tax;
       values$premiums[["written"]] = premiumBeforeTax * (1 + tax);
 
-      list("premiums" = values$premiums, "coefficients" = coefficients)
+      list("premiums" = values$premiums, "coefficients" = coefficients, "sumInsured" = params$ContractData$sumInsured)
     },
 
     #' @description Calculate the reserves of the InsuranceContract given the

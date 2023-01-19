@@ -630,6 +630,7 @@ InsuranceContract = R6Class(
             # so we have to extract the coefficients and store them in a separate variable
             if (recalculatePremiums) {
                 res = private$calculatePremiums(premiumCalculationTime = premiumCalculationTime);
+                self$Parameters$ContractData$sumInsured = res[["sumInsured"]]
                 self$Values$premiumCoefficients = res[["coefficients"]];
                 # TODO: Store premiums in a data.frame, including the time they are calculated???
                 self$Values$premiums = res[["premiums"]]

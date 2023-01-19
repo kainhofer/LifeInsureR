@@ -733,6 +733,104 @@ all_equal(contract.PureEnd.SP1$Values$reserves, contract.PureEnd.SP2$Values$rese
 ```
 
 
+## Determining Sum Insured from the premium
+
+By default, the insurance contract is created for a given sum insured and the 
+premiums are calculated accordingly. Sometimes, the reverse is needed: The 
+premium (either actuarial gross premium, written premium before or after taxes) 
+is given and the corresponding sum insured should be determined automatically.
+
+The `InsuranceContract` constructor / parameter set has an additional field 
+`premium` to indicate the desired premium (written premium after tax by default) 
+from which the sum insured is then calculated:
+```{r PrescribePremium}
+# Premium calculated from sumInsured
+contract.End = InsuranceContract$new(
+  Tarif.Endowment, age = 35, policyPeriod = 10,
+  contractClosing = as.Date("2020-08-18"), 
+  sumInsured = 10000);
+
+# sumInsured derived from written premium
+contract.End.premium = InsuranceContract$new(
+  Tarif.Endowment, age = 35, policyPeriod = 10,
+  contractClosing = as.Date("2020-08-18"), 
+  premium = 1139.06);
+
+contract.End.premiumBeforeTax = InsuranceContract$new(
+  Tarif.Endowment, age = 35, policyPeriod = 10,
+  contractClosing = as.Date("2020-08-18"), 
+  premium = c(written_beforetax = 1095.25));
+
+contract.End.premiumGross = InsuranceContract$new(
+  Tarif.Endowment, age = 35, policyPeriod = 10,
+  contractClosing = as.Date("2020-08-18"), 
+  premium = c(gross = 1085.25));
+
+```
+```{r PrescribePremiumOUTPUT,echo = FALSE}
+bind_rows(
+  c(Contract = "contract.End", contract.End$Values$premiums[c("net", "Zillmer", "gross", "written_beforetax", "written")], sumInsured = contract.End$Parameters$ContractData$sumInsured),
+  c(Contract = "contract.End.premium", contract.End.premium$Values$premiums[c("net", "Zillmer", "gross", "written_beforetax", "written")], sumInsured = contract.End.premium$Parameters$ContractData$sumInsured),
+  c(Contract = "contract.End.premiumBeforeTax", contract.End.premiumBeforeTax$Values$premiums[c("net", "Zillmer", "gross", "written_beforetax", "written")], sumInsured = contract.End.premiumBeforeTax$Parameters$ContractData$sumInsured),
+  c(Contract = "contract.End.premiumGross", contract.End.premiumGross$Values$premiums[c("net", "Zillmer", "gross", "written_beforetax", "written")], sumInsured = contract.End.premiumGross$Parameters$ContractData$sumInsured)
+)
+```
+
+The final written premium can be directly passed as the `premium` argument. Other
+types of premium must be passed as a named number (i.e. a one-element vector with
+name "gross", "written_beforetax" or "written").
+
+If a premium is prescribed, a `sumInsured` must not be given. If both are given, 
+the sumInsured is used and the prescribed premium is silently ignored.
+
+The are cases, when the sumInsured cannot be derived from a prescribed premium.
+One relevant case is when a premium rebate depends on the sum insured, since in 
+this case we need the sumInsured to calculate the rebate and thus the premium.
+All rebates, add-ons and other parameters will temporarily use a sumInsured=1 
+during the calculation of the actual sumInsured!
+
+
+
+## Providing additional capital at contract inception
+
+Often, when a contract is changed significantly, this is modelled as a totally 
+new contract, with the existing reserve provided as additional one-time payment
+for the follow-up contract. This is different from a single-premium contract, 
+because the new contract can have regular premiums, just the existing reserve
+is used as the initial reserve of the new contract.
+
+The package provides the argument `initialCapital` to provide initial capital
+that is also included in the calculation of the premium of the contract.
+
+```{r InitialCapital}
+# Contract with initial capital of 5.000 EUR
+contract.Endow.initialCapital = InsuranceContract$new(
+  tarif = Tarif.Endowment,
+  sumInsured = 10000,
+  initialCapital = 5000,
+  age = 40, policyPeriod = 10,
+  contractClosing = as.Date("2020-09-01")
+)
+# For comparison: Contract without initial capital of 5.000 EUR
+contract.Endow = InsuranceContract$new(
+  tarif = Tarif.Endowment,
+  sumInsured = 10000,
+  age = 40, policyPeriod = 10,
+  contractClosing = as.Date("2020-09-01")
+)
+```
+Comparing the reserves, one can clearly see the initial capital used as initial reserve:
+
+```{r InitialCapitalOUTPUT}
+data.frame(
+  `Premium with initialCapital`= contract.Endow.initialCapital$Values$premiumComposition[,"charged"], 
+  `Premium without initialCapital`= contract.Endow$Values$premiumComposition[,"charged"], 
+  `Res.with initialCapital`= contract.Endow.initialCapital$Values$reserves[,"contractual"], 
+  `Res.without initialCapital`= contract.Endow$Values$reserves[,"contractual"]
+)
+```
+
+
 ## Premium Waivers
 
 After a while, many customers do not want to pay premiums for the contract any 
