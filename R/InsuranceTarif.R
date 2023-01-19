@@ -321,7 +321,9 @@ InsuranceTarif = R6Class(
       if (getOption('LIC.debug.getAges', FALSE)) {
         browser();
       }
-            ages = ages(params$ActuarialBases$mortalityTable, YOB = year(params$ContractData$birthDate));
+      ages = ages(params$ActuarialBases$mortalityTable, YOB = year(params$ContractData$birthDate));
+      # Append one last age, just in case we need to pad the qx with one more entry:
+      ages = c(ages, tail(ages, 1) + 1)
       age = params$ContractData$technicalAge;
       if (age > 0) {
         ages = ages[-age:-1];
@@ -346,15 +348,16 @@ InsuranceTarif = R6Class(
         if (age > 0) {
           qx    = qx[-age:-1];
         }
+        qx = pad0(qx, length(ages), value = 1)
         if (!is.null(params$ActuarialBases$invalidityTable)) {
           ix = MortalityTables::deathProbabilities(params$ActuarialBases$invalidityTable, YOB = year(params$ContractData$birthDate), ageDifferences = params$ContractData$ageDifferences);
           if (age > 0) {
             ix    = ix[-age:-1];
           }
         } else {
-          ix = rep(0, length(q));
+          ix = rep(0, length(qx));
         }
-        ix = pad0(ix, length(q));
+        ix = pad0(ix, length(qx));
         # invalidity/disease does NOT end the contract if flag is set!
         if (params$ActuarialBases$invalidityEndsContract) {
           px = 1 - qx - ix
@@ -697,7 +700,7 @@ InsuranceTarif = R6Class(
       }
 
       qq = self$getTransitionProbabilities(params, values);
-      qx = pad0(qq$qx, values$int$l);
+      qx = pad0(qq$qx, values$int$l, value = 1); # After maxAge of the table, use qx=1, also after contract period, just in case
       ix = pad0(qq$ix, values$int$l);
       px = pad0(qq$px, values$int$l);
 
