@@ -433,9 +433,11 @@ correctionPaymentFrequency = function(i, m = 1, order = 0) {
 #' @param l the desired (resulting) length of the vector
 #' @param value the value to pad with (if padding is needed). Default to 0, but
 #'     can be overridden to pad with any other value.
-#' @param start the first \code{start} values are always set to 0 (default is 0),
+#' @param start the first \code{start} values are always set to 0 (default is 0,
+#'     can be changed using the \code{value.start} argument),
 #'     the vector \code{v} starts only after these leading zeroes. The number of
 #'     leading zeroes counts towards the desired length
+#' @param value.start the value to insert before the start index.
 #'
 #' @return returns the vector \code{v} padded to length \code{l} with value \code{value} (default 0).
 #'
@@ -449,56 +451,57 @@ correctionPaymentFrequency = function(i, m = 1, order = 0) {
 #' # padding with value other than zero:
 #' pad0(1:5, 7, value = "pad")
 #' @export
-pad0 = function(v, l, value = 0, start = 0) {
-  # 3 cases: desired length<=start => only 0
+pad0 = function(v, l, value = 0, start = 0, value.start = 0) {
+  # 3 cases: desired length<=start => only 0/value.start
   #          desired length within start+v => cut v
   #          desired length longer than start+v => pad with 0/value
   if (l <= start) {
-    rep(0, l)
+    rep(value.start, l)
   } else if (start <= l && l <= start + length(v)) {
-    c(rep(0, start), v[0:(l - start)])
+    c(rep(value.start, start), v[0:(l - start)])
   } else {
     # Need padding
-    c(rep(0, start), v, rep(value, l - length(v) - start))
+    c(rep(value.start, start), v, rep(value, l - length(v) - start))
   }
 }
+
+
 
 #' Set all entries of the given vector to 0 up until index 'start'
 #'
 #' @param v the vector to modify
 #' @param start how many leading elements to zero out
+#' @param value.start the value to insert before the start index.
 #'
 #' @return the vector \code{v} with the first \code{start} elements replaced by 0.
 #'
 #' @examples
 #' head0(1:10, 3)
 #' @export
-head0 = function(v, start = 0) {
+head0 = function(v, start = 0, value.start = 0) {
   if (start == 0) {
     v
   } else {
-    c(rep(0, start), tail(v, -start))
+    c(rep(value.start, start), tail(v, -start))
   }
 }
 
 #' Pad the vector \code{v} to length \code{l} by repeating the last entry of the
 #' vector.
 #'
-#' This function callc [pad0()] with the last element of the vector as padding value
+#' This function is just a trivial wrapper around \code{pad0} and only calls [pad0()]
+#' with the last element of the vector as padding value instead of the default 0.
 #'
 #' @param v the vector to pad by repeating the last element
-#' @param l the desired (resulting) length of the vector
-#' @param start the first \code{start} values are always set to 0 (default is 0),
-#'     the vector \code{v} starts only after these leading zeroes. The number of
-#'     leading zeroes counts towards the desired length
+#' @param ... arguments passed through to \code{pad0}
 #'
 #' @examples
 #' padLast(1:5, 7) # 5 is repeated twice
 #' padLast(1:5, 3) # no padding needed
 #'
 #' @export
-padLast = function(v, l, start = 0) {
-    pad0(v, l, value = tail(v, n = 1), start = start)
+padLast = function(v, ...) {
+    pad0(v, value = tail(v, n = 1), ...)
 }
 
 #' Replace all \code{NA} entries of a vector with the previous non-NA value
@@ -659,13 +662,13 @@ plusNULL = function(v1, v2, ...) {
 # Functions for handling sub-contract blocks                        ####
 
 # Helper functions to prepend/append rows to the arrays and sum them up
-padArray = function(arr = NULL, pad = 0, len = 0) {
+padArray = function(arr = NULL, pad = 0, len = 0, value = 0) {
   padEnd = max(0, len - pad - NROW(arr)) # if len is too short, return an array containing at least the arr
   nrcols = ifelse(is.null(arr), 0, NCOL(arr))
   rbind(
-    array(0, dim = c(pad, nrcols)) %>% `colnames<-`(colnames(arr)),
+    array(value, dim = c(pad, nrcols)) %>% `colnames<-`(colnames(arr)),
     arr,
-    array(0, dim = c(padEnd, nrcols)) %>% `colnames<-`(colnames(arr))
+    array(value, dim = c(padEnd, nrcols)) %>% `colnames<-`(colnames(arr))
   ) %>% `colnames<-`(colnames(arr))
 }
 
