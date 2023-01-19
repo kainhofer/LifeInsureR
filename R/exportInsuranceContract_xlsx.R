@@ -710,10 +710,10 @@ empty.col.indices = function(df) {
 }
 
 exportPVTable = function(wb, sheet, contract, ccol = 1, crow = 1, styles = c(), seprows = 5, freeze = TRUE) {
+  empty.cols = NULL;
   if (!is.null(contract$Values$presentValues)) {
     id = contract$Parameters$ContractData$id
     nrrow = contract$Values$int$l
-    empty.cols = c()
 
     blockid.row = crow
     crow = crow + 2
@@ -775,13 +775,18 @@ exportPVTable = function(wb, sheet, contract, ccol = 1, crow = 1, styles = c(), 
       ccol = ccol, crow = crow, styles = styles, seprows = seprows, freeze = FALSE)
     # exportPVTable returns a list of the next excel table row and a list of all empty columns (to be hidden later on)
     crow = res$crow
-    empty.cols = intersect(empty.cols, res$empty.cols)
+    if (is.null(empty.cols)) {
+      empty.cols = res$empty.cols
+    } else {
+      empty.cols = intersect(empty.cols, res$empty.cols)
+    }
   }
   list(crow = crow, empty.cols = empty.cols)
 }
 
 exportCFTable = function(wb, sheet, contract, ccol = 1, crow = 1, styles = c(), seprows = 5, freeze = TRUE) {
-  # Write out only if the contract has unit cash flows (i.e. it is a leave contract block without children on its own!)
+  # Write out only if the contract has unit cash flows (i.e. it is a leaf contract block without children on its own!)
+  empty.cols = NULL;
   if (!is.null(contract$Values$cashFlows)) {
     id = contract$Parameters$ContractData$id
     nrrow = contract$Values$int$l
@@ -820,7 +825,11 @@ exportCFTable = function(wb, sheet, contract, ccol = 1, crow = 1, styles = c(), 
       ccol = ccol, crow = crow, styles = styles, seprows = seprows, freeze = FALSE)
     # exportCFTable returns a list of the next excel table row and a list of all empty columns (to be hidden later on)
     crow = res$crow
-    empty.cols = intersect(empty.cols, res$empty.cols)
+    if (is.null(empty.cols)) {
+      empty.cols = res$empty.cols
+    } else {
+      empty.cols = intersect(empty.cols, res$empty.cols)
+    }
   }
   list(crow = crow, empty.cols = empty.cols)
 }
