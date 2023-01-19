@@ -1530,8 +1530,7 @@ InsuranceTarif = R6Class(
     calculatePresentValues = function(cf, params, values) {
       len = dim(cf)[1];
       q = self$getTransitionProbabilities(params, values)
-      pv = function(vec) calculatePVSurvival(px = pad0(q$px, len), advance = vec, v = 1/(1 + params$ActuarialBases$i));
-      apply(cf, 2, pv)
+      calculatePVSurvival2D(px = pad0(q$px, len), advance = cf, v = 1/(1 + params$ActuarialBases$i));
     },
 
         #' @description Calculate the premium frequency loading, i.e. the surcharge
