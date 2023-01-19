@@ -279,31 +279,75 @@ mergeValues3D = function(starting, ending, t) {
   }
 }
 # Caution: px is not neccessarily 1-qx, because we might also have dread diseases so that px=1-qx-ix! However, the ix is not used for the survival present value
-calculatePVSurvival = function(px = 1 - qx, qx = 1 - px, advance, arrears = c(0), ..., m = 1, mCorrection = list(alpha = 1, beta = 0), v = 1, start = 0) {
-  # assuming advance and arrears have the same dimensions...
+calculatePVSurvival = function(px = 1 - qx, qx = 1 - px, advance = NULL, arrears = NULL, ..., m = 1, mCorrection = list(alpha = 1, beta = 0), v = 1, start = 0) {
   init = advance[1]*0;
-  l = max(length(qx), length(advance), length(arrears));
+  if (!any(advance != 0 ) && !any(arrears != 0)) {
+    return(init);
+  }
+  # assuming advance and arrears have the same dimensions...
+  l = max(length(qx), dim(advance)[[1]], dim(arrears)[[1]]);
   p = pad0(px, l, value=0);
-  advance = pad0(advance, l, value=init);
-  arrears = pad0(arrears, l, value=init);
+  if (missing(advance)) {
+    advance = arrears * 0
+  }
+  if (missing(arrears)) {
+    arrears = advance * 0
+  }
+  advance = pad0(advance, l, value = init);
+  arrears = pad0(arrears, l, value = init);
 
   # TODO: Make this work for matrices (i.e. currently advance and arrears are assumed to be one-dimensional vectors)
   # TODO: Replace loop by better way (using Reduce?)
-  res = rep(0, l+1);
+  res = rep(0, l + 1);
+  advcoeff = mCorrection$alpha - mCorrection$beta*(1-p*v);
+  arrcoeff = mCorrection$alpha - (mCorrection$beta + 1/m)*(1-p*v);
   for (i in l:(start + 1)) {
     # coefficients for the payments (including corrections for payments during the year (using the alpha(m) and beta(m)):
-    advcoeff = mCorrection$alpha - mCorrection$beta*(1-p[i]*v);
-    arrcoeff = mCorrection$alpha - (mCorrection$beta + 1/m)*(1-p[i]*v);
     # The actual recursion:
-    res[i] = advance[i]*advcoeff + arrears[i]*arrcoeff + v*p[i]*res[i+1];
+    res[i] = advance[i]*advcoeff[i] + arrears[i]*arrcoeff[i] + v*p[i]*res[i+1];
   }
   res[1:l]
+}
+# Caution: px is not neccessarily 1-qx, because we might also have dread diseases so that px=1-qx-ix! However, the ix is not used for the survival present value
+calculatePVSurvival2D = function(px = 1 - qx, qx = 1 - px, advance = NULL, arrears = NULL, ..., m = 1, mCorrection = list(alpha = 1, beta = 0), v = 1, start = 0) {
+# browser()
+  if (!any(advance != 0 ) && !any(arrears != 0)) {
+    return(advance * 0);
+  }
+
+  l = max(length(qx), dim(advance)[[1]], dim(arrears)[[1]]);
+  p = pad0(px, l, value=0);
+  if (missing(advance)) {
+    advance = arrears * 0
+  }
+  if (missing(arrears)) {
+    arrears = advance * 0
+  }
+  # assuming advance and arrears have the same dimensions...
+  advance = padArray(advance, len = l);
+  arrears = padArray(arrears, len = l);
+
+
+  # TODO: Make this work for arbitrary dimensions
+  # TODO: Replace loop by better way (using Reduce?)
+  res = advance * 0;
+  advcoeff = mCorrection$alpha - mCorrection$beta*(1-p*v);
+  arrcoeff = mCorrection$alpha - (mCorrection$beta + 1/m)*(1-p*v);
+  for (i in (l-1):start) {
+    # coefficients for the payments (including corrections for payments during the year (using the alpha(m) and beta(m)):
+    # The actual recursion:
+    res[i,] = advance[i,]*advcoeff[i] + arrears[i,]*arrcoeff[i] + v*p[i]*res[i+1,];
+  }
+  res[1:l,]
 }
 
 
 calculatePVGuaranteed = function(advance, arrears = c(0), ..., m = 1, mCorrection = list(alpha = 1, beta = 0), v = 1, start = 0) {
   # assuming advance and arrears have the same dimensions...
   init = advance[1]*0;
+  if (!any(advance != 0 ) && !any(arrears != 0)) {
+    return(init);
+  }
   l = max(length(advance), length(arrears));
   advance = pad0(advance, l, value = init);
   arrears = pad0(arrears, l, value = init);
@@ -311,10 +355,10 @@ calculatePVGuaranteed = function(advance, arrears = c(0), ..., m = 1, mCorrectio
   # TODO: Make this work for matrices (i.e. currently advance and arrears are assumed to be one-dimensional vectors)
   # TODO: Replace loop by better way (using Reduce?)
   res = rep(0, l + 1);
+  advcoeff = mCorrection$alpha - mCorrection$beta * (1 - v);
+  arrcoeff = mCorrection$alpha - (mCorrection$beta + 1 / m) * (1 - v);
   for (i in l:(start + 1)) {
     # coefficients for the payments (including corrections for payments during the year (using the alpha(m) and beta(m)):
-    advcoeff = mCorrection$alpha - mCorrection$beta * (1 - v);
-    arrcoeff = mCorrection$alpha - (mCorrection$beta + 1 / m) * (1 - v);
     # The actual recursion:
     res[i] = advance[i]*advcoeff + arrears[i]*arrcoeff + v*res[i + 1];
   }
@@ -322,45 +366,11 @@ calculatePVGuaranteed = function(advance, arrears = c(0), ..., m = 1, mCorrectio
 }
 
 
-# TODO: So far, we are assuming, the costs array has sufficient time steps and does not need to be padded!
-calculatePVCosts = function(px = 1 - qx, qx = 1 - px, costs, ..., v = 1, start = 0) {
-  l = max(length(qx), dim(costs)[1]);
-  p = pad0(px, l, value = 0);
-  costs = costs[1:l,,,];
-
-  # Take the array structure from the cash flow array and initialize it with 0
-  res = costs*0;
-  prev = res[1,,,"survival"]*0;
-  # Backward recursion starting from the last time:
-  # Survival Cash flows
-  for (i in l:(start + 1)) {
-    # cat("values at iteration ", i, ": ", v, q[i], costs[i,,], prev);
-    res[i,,,"survival"] = costs[i,,,"survival"] + v*p[i]*prev;
-    prev = res[i,,,"survival"];
-  }
-  # guaranteed cash flows (even after death)
-  prev = res[1,,,"guaranteed"]*0;
-  for (i in l:(start + 1)) {
-    res[i,,,"guaranteed"] = costs[i,,,"guaranteed"] + v*prev;
-    prev = res[i,,,"guaranteed"];
-  }
-  # Cash flows only after death
-    # This case is more complicated, as we have two possible states of
-    # payments (present value conditional on active, but payments only when
-    # dead => need to write the Thiele difference equations as a pair of
-    # recursive equations rather than a single recursive formula...)
-  prev = res[1,,,"after.death"]*0;
-  prev.dead = res[1,,,1]*0
-  for (i in l:(start + 1)) {
-    res[i,,,"after.death"] = p[i] * v * prev + (1 - p[i]) * v * prev.dead
-    prev = res[i,,,"after.death"]
-    prev.dead = costs[i,,,"after.death"] + v * prev.dead
-  }
-  res
-}
-
 calculatePVDeath = function(px, qx, benefits, ..., v = 1, start = 0) {
   init = benefits[1]*0; # Preserve the possible array structure of the benefits -> vectorized calculations possible!
+  if (!any(benefits != 0 )) {
+    return(init);
+  }
   l = max(length(qx), length(benefits));
   q = pad0(qx, l, value = 1);
   p = pad0(px, l, value = 0);
@@ -378,6 +388,9 @@ calculatePVDeath = function(px, qx, benefits, ..., v = 1, start = 0) {
 
 calculatePVDisease = function(px = 1 - qx - ix, qx = 1 - ix - px, ix = 1 - px - qx, benefits, ..., v = 1, start = 0) {
   init = benefits[1] * 0;
+  if (!any(benefits != 0 )) {
+    return(init);
+  }
   l = min(length(ix), length(qx), length(benefits));
   qx = pad0(qx, l, value = 1);
   ix = pad0(ix, l, value = 0);
@@ -391,6 +404,58 @@ calculatePVDisease = function(px = 1 - qx - ix, qx = 1 - ix - px, ix = 1 - px - 
     res[i] = v * ix[i] * benefits[i] + v * px[i] * res[i + 1];
   }
   res[1:l]
+}
+
+# TODO: So far, we are assuming, the costs array has sufficient time steps and does not need to be padded!
+calculatePVCosts = function(px = 1 - qx, qx = 1 - px, costs, ..., v = 1, start = 0) {
+  l = max(length(qx), dim(costs)[1]);
+  p = pad0(px, l, value = 0);
+  costs = costs[1:l,,,];
+
+  # NOTICE: Costs that apply to benefits are a special case and cannot be handled
+  # here. Instead, their PV is calculated like the death/survival/invalidity benefits
+  # in the tariff's PV calculation function. The values calculated here automatically
+  # WILL be ignored
+
+  # Take the array structure from the cash flow array and initialize it with 0
+  res = costs*0;
+
+  # only calculate the loop if we have any relevant cost parameter != 0...
+
+  # survival cash flows (until death)
+  if (any(costs[,,,"survival"] != 0)) {
+    prev = res[1,,,"survival"]*0;
+    # Backward recursion starting from the last time:
+    # Survival Cash flows
+    for (i in l:(start + 1)) {
+      # cat("values at iteration ", i, ": ", v, q[i], costs[i,,], prev);
+      res[i,,,"survival"] = costs[i,,,"survival"] + v*p[i]*prev;
+      prev = res[i,,,"survival"];
+    }
+  }
+  # guaranteed cash flows (even after death)
+  if (any(costs[,,,"guaranteed"] != 0)) {
+    prev = res[1,,,"guaranteed"]*0;
+    for (i in l:(start + 1)) {
+      res[i,,,"guaranteed"] = costs[i,,,"guaranteed"] + v*prev;
+      prev = res[i,,,"guaranteed"];
+    }
+  }
+  # Cash flows only after death
+  # This case is more complicated, as we have two possible states of
+  # payments (present value conditional on active, but payments only when
+  # dead => need to write the Thiele difference equations as a pair of
+  # recursive equations rather than a single recursive formula...)
+  if (any(costs[,,,"after.death"] != 0)) {
+    prev = res[1,,,"after.death"]*0;
+    prev.dead = res[1,,,1]*0
+    for (i in l:(start + 1)) {
+      res[i,,,"after.death"] = p[i] * v * prev + (1 - p[i]) * v * prev.dead
+      prev = res[i,,,"after.death"]
+      prev.dead = costs[i,,,"after.death"] + v * prev.dead
+    }
+  }
+  res
 }
 
 
