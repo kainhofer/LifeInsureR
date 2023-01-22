@@ -4,12 +4,14 @@
 \alias{head0}
 \title{Set all entries of the given vector to 0 up until index 'start'}
 \usage{
-head0(v, start = 0)
+head0(v, start = 0, value.start = 0)
 }
 \arguments{
 \item{v}{the vector to modify}
 
 \item{start}{how many leading elements to zero out}
+
+\item{value.start}{the value to insert before the start index.}
 }
 \value{
 the vector \code{v} with the first \code{start} elements replaced by 0.

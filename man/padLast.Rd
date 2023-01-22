@@ -5,19 +5,16 @@
 \title{Pad the vector \code{v} to length \code{l} by repeating the last entry of the
 vector.}
 \usage{
-padLast(v, l, start = 0)
+padLast(v, ...)
 }
 \arguments{
 \item{v}{the vector to pad by repeating the last element}
 
-\item{l}{the desired (resulting) length of the vector}
-
-\item{start}{the first \code{start} values are always set to 0 (default is 0),
-the vector \code{v} starts only after these leading zeroes. The number of
-leading zeroes counts towards the desired length}
+\item{...}{arguments passed through to \code{pad0}}
 }
 \description{
-This function callc \code{\link[=pad0]{pad0()}} with the last element of the vector as padding value
+This function is just a trivial wrapper around \code{pad0} and only calls \code{\link[=pad0]{pad0()}}
+with the last element of the vector as padding value instead of the default 0.
 }
 \examples{
 padLast(1:5, 7) # 5 is repeated twice

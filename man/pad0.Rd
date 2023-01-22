@@ -4,7 +4,7 @@
 \alias{pad0}
 \title{Pad a vector with 0 to a desired length}
 \usage{
-pad0(v, l, value = 0, start = 0)
+pad0(v, l, value = 0, start = 0, value.start = 0)
 }
 \arguments{
 \item{v}{the vector to pad with 0}
@@ -14,9 +14,12 @@ pad0(v, l, value = 0, start = 0)
 \item{value}{the value to pad with (if padding is needed). Default to 0, but
 can be overridden to pad with any other value.}
 
-\item{start}{the first \code{start} values are always set to 0 (default is 0),
+\item{start}{the first \code{start} values are always set to 0 (default is 0,
+can be changed using the \code{value.start} argument),
 the vector \code{v} starts only after these leading zeroes. The number of
 leading zeroes counts towards the desired length}
+
+\item{value.start}{the value to insert before the start index.}
 }
 \value{
 returns the vector \code{v} padded to length \code{l} with value \code{value} (default 0).

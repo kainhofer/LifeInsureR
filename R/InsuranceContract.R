@@ -227,7 +227,9 @@ InsuranceContract = R6Class(
         #'        \code{policyPeriod} for regular premium payments for the whole
         #'        contract period, while other premium payment durations indicate
         #'        premium payments only for shorter periods than the whole contract
-        #'        duration). Default is equal to \code{policyPeriod}
+        #'        duration. Contract extensions without any premium payments are
+        #'        indicated by \code{premiumPeriod}=0). Default is equal to
+        #'        \code{policyPeriod}
         #' * \code{sumInsured} ... The sum insured (i.e. survival benefit for
         #'         endowments, death benefit for whole/term life insurances,
         #'         annuity payments for annuities)
@@ -375,6 +377,8 @@ InsuranceContract = R6Class(
         #'        the child's values need to be translated to the parent contracts's
         #'        time frame using this parameter
         #' @param comment The comment to use in the history snapshot.
+        #' @param blockType The type of block to be added (e.g. Dynamics, Extension,
+        #'        etc.). Can be any (short) string.
         #' @param ... parameters to be passed to \ifelse{html}{\href{#method-new}{\code{InsuranceContract$new()}}}{\code{InsuranceContract$new()()}} when
         #'        \code{block} is not given and a copy of the parent should be
         #'        created with overrides.
@@ -469,7 +473,7 @@ InsuranceContract = R6Class(
             if (is.null(params)) params = list()
             if (!is.null(params$age)) params$age = params$age + t
             if (!is.null(params$policyPeriod)) params$policyPeriod = params$policyPeriod - t
-            if (!is.null(params$premiumPeriod)) params$premiumPeriod = max(1, params$premiumPeriod - t)
+            if (!is.null(params$premiumPeriod)) params$premiumPeriod = max(0, params$premiumPeriod - t)
             if (!is.null(params$deferralPeriod)) params$deferralPeriod = max(0, params$deferralPeriod - t)
             if (!is.null(params$contractClosing)) params$contractClosing = params$contractClosing + years(t)
             params$initialCapital = NULL
@@ -498,6 +502,88 @@ InsuranceContract = R6Class(
             arguments = list(...)
             params[names(arguments)] = arguments[names(arguments)]
             params$comment = sprintf("Dynamic increase at time %d to sum %0.2f", t, NewSumInsured)
+            params$blockType = "Dynamics";
+            do.call(self$addBlock, params)
+        },
+
+
+        #' @description Add a contract extension after the contract has ended
+        #' (existing reserve is used as initial capital of the follow-up contract).
+        #'
+        #' @details When a contract expires, this function adds a follow-up contract
+        #' (with either the same or a different tariff), using the existing
+        #' reserve as `additionalCapital` at inception.
+        #' Technically, a child block using the new contract data of the extension
+        #' is added to the original contract. The over-all contract values are then
+        #' the sum of the original contract (providing values until expiration)
+        #' and the extension (providing values after the extension).
+        #'
+        #'
+        #' @param id The identifier of the child block to be inserted
+        #' @param t The time of the extension (relative to the parent block),
+        #'        by default contract expiration of the parent block.
+        #'        The extension is calculated independently (with time 0
+        #'        describing its own start), but using the existing reserve as
+        #'        initialCapital and the parent's parameters as fall-back values.
+        #' @param comment The comment to use in the history snapshot.
+        #' @param ... Additional parameters to be passed to
+        #'        \ifelse{html}{\href{#method-new}{\code{InsuranceContract$new()}}}
+        #'        {\code{InsuranceContract$new()()}} to create the contract
+        #'        extension object.
+        #'
+        #' @examples
+        #' # TODO
+        addExtension = function(id = NULL, t = NULL, comment = paste0("Contract extension at time t=", t), ...) {
+            if (getOption('LIC.debug.addExtension', FALSE)) {
+                browser();
+            }
+            if (missing(id) | is.null(id)) {
+                # numbering extensions: Use nr. of blocks (except main) as a
+                # simplification => numbering is withint all dynamics,
+                # extensions, riders, etc.!
+                id = paste0("dyn", max(1, length(self$blocks)))
+            }
+            if (missing(t) | is.null(t)) {
+                # By default, use the parent's expiration, so the extension
+                # is appended after the original contract has ended.
+                t = self$Parameters$ContractData$policyPeriod
+            }
+
+            # TODO: Override only the required parameters
+            params = private$initParams
+            if (is.null(params)) params = list()
+            if (!is.null(params$age)) params$age = params$age + t
+            # Remaining premium period is kept, can be overwritten in the
+            # arguments to this method. If premiumPeriod has already ended,
+            # a premium-free extension is added by default
+            if (!is.null(params$premiumPeriod)) params$premiumPeriod = max(0, params$premiumPeriod - t)
+            if (!is.null(params$deferralPeriod)) params$deferralPeriod = max(0, params$deferralPeriod - t)
+            if (!is.null(params$contractClosing)) params$contractClosing = params$contractClosing + years(t)
+            # Use the existing reserve as initialCapital, reset premium parameter and sumInsured of the old contract
+            params$initialCapital = self$Values$reserves[t + 1, "contractual"]
+            params$sumInsured = NULL
+            params$premium = NULL
+
+
+            # TODO: Adjust non-constant parameters (e.g. profit rates or benefits given as vector) to the later start time
+
+
+            params$t = t
+            params$id = id
+            # Override with arguments explicitly given
+            arguments = list(...)
+            params[names(arguments)] = arguments[names(arguments)]
+            params$comment = comment
+            params$blockType = "Contract Extension"
+
+            # Two cases:
+            # 1) extension with premium => either premium or sumInsured must be given
+            # 2) premium-free extension => no premium, no sumInsured given => set premium to 0, calculate sumInsured
+
+            noPremiums = (is.null(params$sumInsured) || (params$sumInsured == 0)) && (is.null(params$premium) || (params$premium == 0));
+            if (noPremiums) {
+                params$premium = 0;
+            }
             do.call(self$addBlock, params)
         },
 
@@ -587,7 +673,7 @@ InsuranceContract = R6Class(
                 t = valuesFrom);
 
             if (additionalCapital > 0) {
-                self$values$cashFlows[as.character(premiumCalculationTime), "additional_capital"] = additionalCapital / self$values$ContractData$sumInsured
+                self$Values$cashFlows[as.character(premiumCalculationTime), "additional_capital"] = additionalCapital
             }
 
             if (recalculatePremiumSum) {
@@ -625,6 +711,13 @@ InsuranceContract = R6Class(
                 self$Values$presentValuesCosts = pvCost
             }
             if (calculate == "presentvalues") return(invisible(self));
+
+
+            # If we have the premium given, determine the sumInsured from it
+            # Since the cash flows depend on the sumInsured (in particular, )
+            if (is.null(self$Parameters$ContractData$sumInsured)) {
+                self$Parameters$ContractData$sumInsured = private$calculateSumInsured(calculationTime = premiumCalculationTime)
+            }
 
             # the premiumCalculation function returns the premiums AND the cofficients,
             # so we have to extract the coefficients and store them in a separate variable
@@ -754,12 +847,31 @@ InsuranceContract = R6Class(
             self$Values$reservesBalanceSheet   = consolidateField("reservesBalanceSheet", keyed = TRUE)
             # TODO: Basic Data cannot simply be summed, e.g. the interest rate!
             self$Values$basicData              = consolidateField("basicData")
-            # self$Values$basicData[,c("InterestRate", "PolicyDuration", "PremiumPeriod")] = NULL
 
             # Some fields can NOT be summed, but have to be left untouched.
             # Hard-code these to use the values from the main contract part:
-            self$Values$reservesBalanceSheet[,c("date", "time")]               = self$blocks[[1]]$Values$reservesBalanceSheet[,c("date", "time")]
-            self$Values$basicData[,c("InterestRate", "PolicyDuration", "PremiumPeriod")]               = self$blocks[[1]]$Values$basicData[,c("InterestRate", "PolicyDuration", "PremiumPeriod")]
+            rows = nrow(self$Values$reservesBalanceSheet)
+            colDt = rep(as.Date(NA), rows)
+            colTime = rep(NA_real_, rows)
+            colIntR = rep(NA_real_, rows)
+            colDur = rep(NA_real_, rows)
+            colPrem = rep(NA_real_, rows)
+            for (b in self$blocks) {
+                start = b$Parameters$ContractData$blockStart
+                colDt = coalesce(colDt, pad0(b$Values$reservesBalanceSheet[,"date"],     start = start, value = as.Date(NA), value.start = as.Date(NA), l = rows))
+                colTime = coalesce(colTime, pad0(b$Values$reservesBalanceSheet[,"time"] + start, start = start, value = NA, value.start = NA, l = rows))
+
+                colIntR = coalesce(colIntR, pad0(b$Values$basicData[,"InterestRate"],    start = start, value = NA, value.start = NA, l = rows))
+                colDur  = coalesce(colDur,  pad0(b$Values$basicData[,"PolicyDuration"],  start = start, value = NA, value.start = NA, l = rows))
+                colPrem = coalesce(colPrem, pad0(b$Values$basicData[,"PremiumPeriod"],   start = start, value = NA, value.start = NA, l = rows))
+            }
+            self$Values$reservesBalanceSheet[,"date"] = colDt;
+            self$Values$reservesBalanceSheet[,"time"] = colTime;
+            self$Values$basicData[,"InterestRate"] = colIntR
+            self$Values$basicData[,"PolicyDuration"] = colDur
+            self$Values$basicData[,"PremiumPeriod"] = colPrem
+
+            self$Values$int$l = rows
 
             invisible(self)
         },
@@ -958,10 +1070,10 @@ InsuranceContract = R6Class(
             self$Parameters$ContractData$premiumPeriod = valueOrFunction(
                 self$Parameters$ContractData$premiumPeriod,
                 params = self$Parameters, values = self$Values);
-            # At least 1 year premium period, at most contract duration!
+            # premium period is at most contract duration!
             self$Parameters$ContractData$premiumPeriod =
                 min(
-                    max(self$Parameters$ContractData$premiumPeriod, 1),
+                    self$Parameters$ContractData$premiumPeriod,
                     self$Parameters$ContractData$policyPeriod
                 );
 
@@ -1065,6 +1177,9 @@ InsuranceContract = R6Class(
         },
         calculatePresentValuesCosts = function(...) {
             self$tarif$presentValueCashFlowsCosts(params = self$Parameters, values = self$Values, ...);
+        },
+        calculateSumInsured = function(...) {
+            self$tarif$sumInsuredCalculation(params = self$Parameters, values = self$Values, ...)
         },
         calculatePremiums = function(...) {
             self$tarif$premiumCalculation(params = self$Parameters, values = self$Values, ...);

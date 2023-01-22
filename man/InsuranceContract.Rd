@@ -159,7 +159,9 @@ for single-premium contracts, \code{premiumPeriod} equals
 \code{policyPeriod} for regular premium payments for the whole
 contract period, while other premium payment durations indicate
 premium payments only for shorter periods than the whole contract
-duration). Default is equal to \code{policyPeriod}
+duration. Contract extensions without any premium payments are
+indicated by \code{premiumPeriod}=0). Default is equal to
+\code{policyPeriod}
 \item \code{sumInsured} ... The sum insured (i.e. survival benefit for
 endowments, death benefit for whole/term life insurances,
 annuity payments for annuities)
@@ -211,6 +213,14 @@ as its own \code{sumInsured}.
      valueation and aggregates all children's values to the
      total values of the overall contract.
 }\if{html}{\out{</div>}}
+
+When a contract expires, this function adds a follow-up contract
+(with either the same or a different tariff), using the existing
+reserve as \code{additionalCapital} at inception.
+Technically, a child block using the new contract data of the extension
+is added to the original contract. The over-all contract values are then
+the sum of the original contract (providing values until expiration)
+and the extension (providing values after the extension).
 
 This method calculates all contract values (potentially
 starting from and preserving all values before a later time
@@ -275,6 +285,12 @@ are stored in a list of profit scenarios inside the contract.
 
 ## ------------------------------------------------
 ## Method `InsuranceContract$addDynamics`
+## ------------------------------------------------
+
+# TODO
+
+## ------------------------------------------------
+## Method `InsuranceContract$addExtension`
 ## ------------------------------------------------
 
 # TODO
@@ -349,6 +365,7 @@ contract state and its values before the change).}
 \item \href{#method-InsuranceContract-addHistorySnapshot}{\code{InsuranceContract$addHistorySnapshot()}}
 \item \href{#method-InsuranceContract-addBlock}{\code{InsuranceContract$addBlock()}}
 \item \href{#method-InsuranceContract-addDynamics}{\code{InsuranceContract$addDynamics()}}
+\item \href{#method-InsuranceContract-addExtension}{\code{InsuranceContract$addExtension()}}
 \item \href{#method-InsuranceContract-calculateContract}{\code{InsuranceContract$calculateContract()}}
 \item \href{#method-InsuranceContract-consolidateBlocks}{\code{InsuranceContract$consolidateBlocks()}}
 \item \href{#method-InsuranceContract-premiumWaiver}{\code{InsuranceContract$premiumWaiver()}}
@@ -467,6 +484,7 @@ Add a child contract block (e.g. a dynamic increase or a rider) to an insurance 
   block = NULL,
   t = block$Values$int$blockStart,
   comment = paste0("Additional block at time t=", t),
+  blockType = "Dynamics",
   ...
 )}\if{html}{\out{</div>}}
 }
@@ -488,6 +506,9 @@ the child's values need to be translated to the parent contracts's
 time frame using this parameter}
 
 \item{\code{comment}}{The comment to use in the history snapshot.}
+
+\item{\code{blockType}}{The type of block to be added (e.g. Dynamics, Extension,
+etc.). Can be any (short) string.}
 
 \item{\code{...}}{parameters to be passed to \ifelse{html}{\href{#method-new}{\code{InsuranceContract$new()}}}{\code{InsuranceContract$new()()}} when
 \code{block} is not given and a copy of the parent should be
@@ -544,6 +565,50 @@ Excel export feature and in the history snapshot list.}
 \item{\code{...}}{Paramters to override in the dynamic block. By default,
 all parameters of the main contract block will be used, but
 they can be overridden per dynamic increase block.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Examples}{
+\if{html}{\out{<div class="r example copy">}}
+\preformatted{# TODO
+}
+\if{html}{\out{</div>}}
+
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-InsuranceContract-addExtension"></a>}}
+\if{latex}{\out{\hypertarget{method-InsuranceContract-addExtension}{}}}
+\subsection{Method \code{addExtension()}}{
+Add a contract extension after the contract has ended
+(existing reserve is used as initial capital of the follow-up contract).
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{InsuranceContract$addExtension(
+  id = NULL,
+  t = NULL,
+  comment = paste0("Contract extension at time t=", t),
+  ...
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{id}}{The identifier of the child block to be inserted}
+
+\item{\code{t}}{The time of the extension (relative to the parent block),
+by default contract expiration of the parent block.
+The extension is calculated independently (with time 0
+describing its own start), but using the existing reserve as
+initialCapital and the parent's parameters as fall-back values.}
+
+\item{\code{comment}}{The comment to use in the history snapshot.}
+
+\item{\code{...}}{Additional parameters to be passed to
+\ifelse{html}{\href{#method-new}{\code{InsuranceContract$new()}}}
+{\code{InsuranceContract$new()()}} to create the contract
+extension object.}
 }
 \if{html}{\out{</div>}}
 }

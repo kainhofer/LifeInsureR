@@ -823,6 +823,40 @@ argument.
 
 }
 \if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-InsuranceTarif-sumInsuredCalculation"></a>}}
+\if{latex}{\out{\hypertarget{method-InsuranceTarif-sumInsuredCalculation}{}}}
+\subsection{Method \code{sumInsuredCalculation()}}{
+Calculate the sumInsured of the InsuranceContract given the
+parameters and premiums given and teh , present values already calculated and
+stored in the \code{params} and \code{values} lists.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{InsuranceTarif$sumInsuredCalculation(
+  params,
+  values,
+  calculationTime = values$int$premiumCalculationTime
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{params}}{Contract-specific, full set of parameters of the contract
+(merged parameters of the defaults, the tariff, the profit participation
+scheme and the contract)}
+
+\item{\code{values}}{Contract values calculated so far (in the \code{contract$Values}
+list) then this method is called by the contract object}
+
+\item{\code{calculationTime}}{the time when the sumInsured should be recalculated from the given premium}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Details}{
+Not to be called directly, but implicitly by the \link{InsuranceContract} object.
+}
+
+}
+\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-InsuranceTarif-premiumCalculation"></a>}}
 \if{latex}{\out{\hypertarget{method-InsuranceTarif-premiumCalculation}{}}}
 \subsection{Method \code{premiumCalculation()}}{

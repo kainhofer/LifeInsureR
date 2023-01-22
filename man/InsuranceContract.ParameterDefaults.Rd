@@ -39,6 +39,7 @@ for single-premium contracts.
 contracts with multiple parts, e.g. dynamic increases),
 default = "Hauptvertrag"}
 \item{\code{$sumInsured}}{Sum insured, default = 100,000}
+\item{\code{$premium}}{Premium, given to determine the sumInsured (default: NULL)}
 \item{\code{$initialCapital}}{Reserve/Capital that is already available
 at contract inception, e.g. from a previous contract. No tax
 or acquisition costs are applied to this capital.}

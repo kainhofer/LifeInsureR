@@ -1342,6 +1342,192 @@ One can give a base name and an extra name to distinguish different calculations
 in the file names.
 
 
+# Contracts combining multiple contract layers / slices
+
+In real life, an insurance contract is not merely signed initially and then left 
+untouched until it expires or is surrendered. Rather, some contracts already have
+an automatic increase of the sumInsured or the premium (depending usually on some 
+kind of observed consumer price index) included in the contract. Other contracts
+have additional biometric riders like an additional death or disability cover. 
+Other contracts are extended after their expiration, using the existing reserve
+as a one-time payment (`initialCapital`) for the follow-up contract.
+
+In all these cases, the original contract can be calculated as an `InsuranceContract`, 
+but the additional dynamic increases, additional riders or extensions are mathematically
+calculated as separate contracts (potentiall using different tariffs / types of 
+insurance), although most parameters are shared from the original main contract.
+
+In addition to modelling one particular tariff, the LifeInsuranceContract class 
+can also act as a wrapper to bundle multiple related contracts / contract slices 
+together. The class provides several methods for this:
+* `$addDynamics(t, NewSumInsured, SumInsuredDelta, id, ...)`: 
+        Include (at time `t`) a dynamic increase of premium or sumInsured, but 
+        with the same basic parameters (age, tariff, maturity, 
+        interest rate, etc.) as the main contract. The increase can 
+        be given either as the new total sumInsured or as the 
+        increase in the sumInsured caused by that one increase. Other parameters
+        given as `...` are passed on to the `InsuranceContract$new` constructor
+        of the layer for the dynamic increase. This also means that one can
+        potentially override all parameters for the increase, including the 
+        tariff or the interest rate.
+* `$addExtension(t = NULL, policyPeriod, ...)`
+        After the original contracts maturity, append a follow-up contract (by 
+        default paid-up, i.e. no new premiums are paid) that uses the existing 
+        reserve as initial capital. By default, no further premiums are paid 
+        and the sumInsured is calculated from the existing reserve and the tariff
+        of the extension. One can, however, also provide either a sumInsured or 
+        a premium of the contract extension. In that case, the premium or the sumInsured
+        will be calculated, using the existing reserves as initialCapital.
+* `$addBlock(id = NULL, block = NULL, t, ...)`
+        Generic function to add a child block to the contract. If a block (object 
+        of type `LifeInsuranceContract` is passed, it is inserted and flagged as 
+        starting at time `t`. If no block is passed, a new insurance contract
+        is created using the arguments passed as `...`, combined with the
+        parameters of the main contract. If `t>0`, the child block starts later 
+        than the original contract. It is also possible that the child block extends
+        beyond the maturity of the original contract (e.g. contract extensions
+        are implemented this way).
+
+
+In these case, the main contract will have several child blocks (also
+LifeInsuranceContract objects), and the values of the main contract object will 
+be the aggregated values of all its children, rather than the results of a 
+calculation from an underlying tariff.
+
+## Dynamic increases
+
+To increase the sum insured or premium by a given value ()
+
+```{r contractLayers}
+# Contract with initial capital of 5.000 EUR
+ctr.dynInc = InsuranceContract$new(
+  tarif = Tarif.Endowment,
+  sumInsured = 10000,
+  age = 40, policyPeriod = 10,
+  contractClosing = as.Date("2020-09-01")
+)$
+  addDynamics(t = 1, SumInsuredDelta = 1000)$
+  addDynamics(t = 5, NewSumInsured = 15000)$
+  addDynamics(t = 8, SumInsuredDelta = 4000)
+
+
+ctr.dynInc$Values$basicData
+```
+As seen in this table, the sum insured increases and the premium with it. The 
+`PremiumPayment` column is no longer a 0/1-column indicating whether a premium is
+paid or not, but rather is the number of blocks/layers where a premium is paid.
+
+The individual blocks can be accessed with the `contract$blocks` list:
+```{r contractLayers.blocks}
+for (b in ctr.dynInc$blocks) {
+  cat(paste0("Block: ", b$Parameters$ContractData$id, ", starts at t=", b$Parameters$ContractData$blockStart, ", policyPeriod=", b$Parameters$ContractData$policyPeriod, "\n"))
+}
+```
+
+Each block is formally handled like a separate contract, each starting at its own time `t=0`.
+The over-all contract then takes care to correctly shift the child blocks to the
+time relative to the parent block, before aggregating the data:
+```{r contractLayers.blocks.data}
+ctr.dynInc$blocks$Hauptvertrag$Values$basicData
+ctr.dynInc$blocks$dyn1$Values$basicData
+ctr.dynInc$blocks$dyn2$Values$basicData
+ctr.dynInc$blocks$dyn3$Values$basicData
+```
+
+
+## General biometric riders
+
+Instead of adding a dynamic increase, which typically uses the same tariff as 
+the main contract, it is also possible to bundle e.g. a protection rider to a 
+saving product. The savings product and the protection rider are calculated 
+individually as child blocks, and the overall values of the contract are 
+obtained by aggregating the values from the two children (savings and protection
+part). Of course, in this scenario, the combined sumInsured of the overall contract 
+is not meaningful, but the sumInsured of the individual blocks is.
+
+```{r addBlock.rider}
+ctr.main = InsuranceContract$new(
+  tarif = Tarif.Endowment,
+  sumInsured = 10000,
+  age = 40, policyPeriod = 10,
+  contractClosing = as.Date("2020-09-01")
+)
+ctr.Rider = InsuranceContract$new(
+  tarif = Tarif.L71U, 
+  sumInsured = 100000, 
+  age = 40, policyPeriod = 10,
+  contractClosing = as.Date("2020-09-01")
+)
+ctr.main$addBlock(block = ctr.Rider)
+
+ctr.withRider = InsuranceContract$new(
+  tarif = Tarif.Endowment,
+  sumInsured = 10000,
+  age = 40, policyPeriod = 10,
+  contractClosing = as.Date("2020-09-01")
+)$
+  addBlock(tarif = Tarif.L71U, sumInsured = 100000, 
+           age = 40, policyPeriod = 10,
+           contractClosing = as.Date("2020-09-01"))
+```
+
+
+## Extending a contract beyond its maturity
+
+When a contract expires, many companies offer premium-free contract extensions,
+where the existing reserve is used as initial reserve for a follow-up contract
+(possibly with new terms and parameters like interest rate or mortalities).
+
+Instead of modifying the original contract and re-calculating it, it is easier 
+to model the extension as a new block with the existing reserve given as
+\code{initialCapital}. The extension will be calculated like a standalone-contract 
+and the overall contract will aggregate the values from the original contract
+and the extension. As the extension is a separate contract object, one can pass
+all contract parameters to the \code{$addExtension} method.
+
+The original premiumPeriod of the main contract is used, so by default the extension
+will be a premium-free extension, where the sumInsured is calculated from the 
+existing reserve and the benefits and costs of the extensions' tariff.
+
+To create a premium-free extension explicitly, one can pass \code{premiumPeriod=0} (which
+is the default anyway). To create an extension with regular (or single) premium
+payments, one can pass either a \code{sumInsured} or a \code{premium} to provide
+the sum insured and the premium and calculate the other from the given value
+
+```{r contractExtension}
+# original contract, expiring after 20 years
+ContractA = InsuranceContract$new(
+  tarif = Tarif.Endowment,
+  age = 40, policyPeriod = 20,
+  sumInsured = 10000,
+  contractClosing = as.Date("2000-07-01")
+)
+
+# premium-free extension
+ContractB = ContractA$clone()$
+  addExtension(id = "Verlängerung1", contractPeriod = 5, premiumPeriod = 0)
+# sumInsured calculated from existing reserve:
+ContractB$blocks$Verlängerung1$Parameters$ContractData$sumInsured
+ContractB$Values$basicData
+
+# extension with given sumInsured resulting in 0 (gross) premiums
+ContractC = ContractA$clone()$
+  addExtension(id = "Verlängerung1", contractPeriod = 5, sumInsured = 10723.07973354)
+ContractC$blocks$Verlängerung1$Values$premiums[["gross"]]
+ContractC$Values$basicData
+
+# extension with increased sumInsured: real premiums are charged, reserves start from the existing reserve:
+ContractD = ContractA$clone()$
+  addExtension(id = "Verlängerung1", contractPeriod = 5, sumInsured = 20000)
+ContractD$Values$basicData
+
+# extension with regular premiums, which are given: sumInsured is calculated from it, reserves start from the existing reserve:
+ContractD = ContractA$clone()$
+  addExtension(id = "Verlängerung1", contractPeriod = 5, premium = 597.8771)
+ContractD$Values$basicData
+```
+
+
 # Handling contracts with increases
 
 While many insurance contracts have a fixed sum insured and constant premium,
