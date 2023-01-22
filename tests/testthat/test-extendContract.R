@@ -40,4 +40,8 @@ test_that("Extend contract by $addExtension", {
     ContractD = ContractA$clone()$addExtension(id = "Verlängerung1", contractPeriod = 5, sumInsured = 20000)
     expect_equal(ContractD$blocks$Verlängerung1$Values$premiums[["written"]], 315.109)
     expect_equal(ContractD$blocks$Verlängerung1$Values$reserves[["0", "contractual"]], 10000)
+
+    # extension with increased sumInsured and different tariff: check whether interest rate has really changed
+    ContractE = ContractA$clone()$addExtension(id = "Verlängerung1", contractPeriod = 5, sumInsured = 20000, tarif = Tarif.EndowmentB)
+    expect_equal(unname(ContractE$Values$basicData[c(1,20,30,40), "InterestRate"]), c(0.03, 0.03, 0.01, 0.01))
 })

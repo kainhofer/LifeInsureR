@@ -856,8 +856,10 @@ InsuranceContract = R6Class(
             colIntR = rep(NA_real_, rows)
             colDur = rep(NA_real_, rows)
             colPrem = rep(NA_real_, rows)
+            polPeriod = self$Parameters$ContractData$policyPeriod
             for (b in self$blocks) {
                 start = b$Parameters$ContractData$blockStart
+                polPeriod = max(polPeriod, b$Parameters$ContractData$policyPeriod + start)
                 colDt = coalesce(colDt, pad0(b$Values$reservesBalanceSheet[,"date"],     start = start, value = as.Date(NA), value.start = as.Date(NA), l = rows))
                 colTime = coalesce(colTime, pad0(b$Values$reservesBalanceSheet[,"time"] + start, start = start, value = NA, value.start = NA, l = rows))
 
@@ -865,6 +867,7 @@ InsuranceContract = R6Class(
                 colDur  = coalesce(colDur,  pad0(b$Values$basicData[,"PolicyDuration"],  start = start, value = NA, value.start = NA, l = rows))
                 colPrem = coalesce(colPrem, pad0(b$Values$basicData[,"PremiumPeriod"],   start = start, value = NA, value.start = NA, l = rows))
             }
+            self$Parameters$ContractData$policyPeriod = polPeriod;
             self$Values$reservesBalanceSheet[,"date"] = colDt;
             self$Values$reservesBalanceSheet[,"time"] = colTime;
             self$Values$basicData[,"InterestRate"] = colIntR
