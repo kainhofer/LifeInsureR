@@ -228,7 +228,7 @@ starting from and preserving all values before a later time
 directly, but internally, whenever a contract is created or
 modified.
 
-\if{html}{\out{<div class="sourceCode">}}\preformatted{     There is, hoever, a legitimate case to call this function
+\if{html}{\out{<div class="sourceCode">}}\preformatted{     There is, however, a legitimate case to call this function
      when a contract was initially created with a value of
      \code{calculate} other than "all", so not all values of the
      contract were calculated. When one later needs more values
@@ -606,8 +606,7 @@ initialCapital and the parent's parameters as fall-back values.}
 \item{\code{comment}}{The comment to use in the history snapshot.}
 
 \item{\code{...}}{Additional parameters to be passed to
-\ifelse{html}{\href{#method-new}{\code{InsuranceContract$new()}}}
-{\code{InsuranceContract$new()()}} to create the contract
+\ifelse{html}{\href{#method-new}{\code{InsuranceContract$new}}}{\code{InsuranceContract$new}} to create the contract
 extension object.}
 }
 \if{html}{\out{</div>}}
@@ -674,7 +673,7 @@ at time \code{premiumCalculationTime} at all.}
 \item{\code{recalculatePremiumSum}}{Whether to recalculate the overall premium
 sum when the premium is recalculated.}
 
-\item{\code{history_comment}}{The comment for the history snapshot entyr}
+\item{\code{history_comment}}{The comment for the history snapshot entry}
 
 \item{\code{history_type}}{The type (free-form string) to record in the history snapshot}
 }

@@ -527,8 +527,7 @@ InsuranceContract = R6Class(
         #'        initialCapital and the parent's parameters as fall-back values.
         #' @param comment The comment to use in the history snapshot.
         #' @param ... Additional parameters to be passed to
-        #'        \ifelse{html}{\href{#method-new}{\code{InsuranceContract$new()}}}
-        #'        {\code{InsuranceContract$new()()}} to create the contract
+        #'        \ifelse{html}{\href{#method-new}{\code{InsuranceContract$new}}}{\code{InsuranceContract$new}} to create the contract
         #'        extension object.
         #'
         #' @examples
@@ -595,7 +594,7 @@ InsuranceContract = R6Class(
         #'          directly, but internally, whenever a contract is created or
         #'          modified.
         #'
-        #'          There is, hoever, a legitimate case to call this function
+        #'          There is, however, a legitimate case to call this function
         #'          when a contract was initially created with a value of
         #'          \code{calculate} other than "all", so not all values of the
         #'          contract were calculated. When one later needs more values
@@ -604,7 +603,6 @@ InsuranceContract = R6Class(
         #'          and reapplied again afterwards. So even in this case it is
         #'          probably easier to create the contract object from scratch
         #'          again.
-        #'
         #' @param calculate Which values to calculate. See [CalculationEnum]
         #' @param valuesFrom Calculate only values starting from this time step
         #'        on (all values before that time will be preserved). This is
@@ -629,7 +627,7 @@ InsuranceContract = R6Class(
         #'        at time \code{premiumCalculationTime} at all.
         #' @param recalculatePremiumSum Whether to recalculate the overall premium
         #'        sum when the premium is recalculated.
-        #' @param history_comment The comment for the history snapshot entyr
+        #' @param history_comment The comment for the history snapshot entry
         #' @param history_type The type (free-form string) to record in the history snapshot
         #'
         calculateContract = function(calculate = "all", valuesFrom = 0, premiumCalculationTime = 0, preservePastPV = TRUE, additionalCapital = 0, recalculatePremiums = TRUE, recalculatePremiumSum = TRUE, history_comment = NULL, history_type = "Contract") {

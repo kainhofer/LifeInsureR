@@ -32,37 +32,3 @@ test_that("Annuity Cash Flows", {
     # premium payment start immediately for the whole contract period
     expect_equal(Contract.Annuity$Values$cashFlows$survival_advance, c(rep(1, 55), 0))
 })
-
-Tarif.Annuity = InsuranceTarif$new(
-    name = "Example Tariff - Immediate Annuity",
-    type = "annuity",
-    tarif = "Ann1",
-    desc = "An annuity with single-premium",
-    premiumPeriod = 1,
-
-    mortalityTable = AVOe2005R.unisex,
-    i = 0.005
-)
-Contract.Annuity = InsuranceContract$new(
-    tarif = Tarif.Annuity,
-    age = 65, YOB = 1955,
-    sumInsured = 1200,
-    policyPeriod = 55,
-    contractClosing = as.Date("2020-09-01")
-)
-
-Contract.Annuity$Parameters$ContractData$sumInsured
-Contract.Annuity$Values$premiums
-
-
-Contract.Annuity1 = InsuranceContract$new(
-    tarif = Tarif.Annuity,
-    age = 65, YOB = 1955,
-    premium = 32004.67817,
-    # sumInsured = NULL,
-    policyPeriod = 55,
-    contractClosing = as.Date("2020-09-01")
-)
-Contract.Annuity1$Parameters$ContractData$sumInsured
-
-Contract.Annuity1$Values$premiums

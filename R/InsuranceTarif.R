@@ -809,20 +809,20 @@ InsuranceTarif = R6Class(
         browser();
       }
 
-        # TODO: Set up a nice list with coefficients for each type of cashflow,
-        # rather than multiplying each item manually (this also mitigates the risk
-        # of forgetting a dimension, because then the dimensions would not match,
-        # while here it's easy to overlook a multiplication)
-        # Multiply each CF column by the corresponding basis
-        #
-        # All propSI cash flows are already set up with the correct multiple
-        # of the sumInsured (in cashFlowsBasic) for non-constant sums insured.
-        # So here, we don't need to multiply with  values$cashFlowsBasic$sumInsured!
-        propGP = c("premiums_advance", "premiums_arrears");
-        propSI = c("guaranteed_advance", "guaranteed_arrears",
-                   "survival_advance", "survival_arrears", "death_SumInsured",
-                   "death_PremiumFree", "disease_SumInsured");
-        propPS = c("death_GrossPremium", "death_Refund_past");
+      # TODO: Set up a nice list with coefficients for each type of cashflow,
+      # rather than multiplying each item manually (this also mitigates the risk
+      # of forgetting a dimension, because then the dimensions would not match,
+      # while here it's easy to overlook a multiplication)
+      # Multiply each CF column by the corresponding basis
+      #
+      # All propSI cash flows are already set up with the correct multiple
+      # of the sumInsured (in cashFlowsBasic) for non-constant sums insured.
+      # So here, we don't need to multiply with  values$cashFlowsBasic$sumInsured!
+      propGP = c("premiums_advance", "premiums_arrears");
+      propSI = c("guaranteed_advance", "guaranteed_arrears",
+                 "survival_advance", "survival_arrears", "death_SumInsured",
+                 "death_PremiumFree", "disease_SumInsured");
+      propPS = c("death_GrossPremium", "death_Refund_past");
       values$cashFlows[,propGP] = values$cashFlows[,propGP] * values$premiums[["gross"]];
       values$cashFlows[,propSI] = values$cashFlows[,propSI] * params$ContractData$sumInsured;
       values$cashFlows[,propPS] = values$cashFlows[,propPS] * values$premiums[["gross"]] * params$ContractData$premiumRefund;
@@ -837,8 +837,8 @@ InsuranceTarif = R6Class(
       values$cashFlowsCosts = values$cashFlowsCosts[,,"SumInsured",] * params$ContractData$sumInsured +
         values$cashFlowsCosts[,,"SumPremiums",] * values$unitPremiumSum * values$premiums[["gross"]] +
         values$cashFlowsCosts[,,"GrossPremium",] * values$premiums[["gross"]] +
-          values$cashFlowsCosts[,,"NetPremium",] * values$premiums[["net"]] +
-          values$cashFlowsCosts[,,"Constant",];
+        values$cashFlowsCosts[,,"NetPremium",] * values$premiums[["net"]] +
+        values$cashFlowsCosts[,,"Constant",];
 
       # Handle survival CF differently, because we don't want ".survival" in the column names!
       cbind(values$cashFlows, values$cashFlowsCosts[,,"survival"], values$cashFlowsCosts[,,-1])
@@ -1703,29 +1703,29 @@ InsuranceTarif = R6Class(
       pvf$survival(advance = cf)
     },
 
-        #' @description Calculate the premium frequency loading, i.e. the surcharge
-        #' on the premium for those cases where the premium is not paid yearly.
-        #' Return values can be either a numeric value or a named list with all
-        #' possible premium frequencies as keys.
-        #' @param loading The premiumFrequencyLoading parameter of the Contract or Tariff to be evaluated
-        #' @param frequency The premiumFrequency parameter of the contract
-        evaluateFrequencyLoading = function(loading, frequency, params, values) {
-            frequencyLoading = valueOrFunction(loading, frequency = frequency, params = params, values = values);
-            if (is.null(frequencyLoading)) {
-              0
-            } else if (is.list(frequencyLoading)) {
-                if (as.character(frequency) %in% names(frequencyLoading)) {
-                    frequencyLoading[[as.character(frequency)]]
-                } else {
-                    warning("Unable to handle premium frequency ", frequency, " with the given loading ", frequencyLoading);
-                }
-            } else if (is.numeric(frequencyLoading)) {
-                frequencyLoading
-            } else {
-                warning("premiumFrequencyLoading must be a number or a named list, given: ", frequencyLoading);
-                0
-            }
-        },
+    #' @description Calculate the premium frequency loading, i.e. the surcharge
+    #' on the premium for those cases where the premium is not paid yearly.
+    #' Return values can be either a numeric value or a named list with all
+    #' possible premium frequencies as keys.
+    #' @param loading The premiumFrequencyLoading parameter of the Contract or Tariff to be evaluated
+    #' @param frequency The premiumFrequency parameter of the contract
+    evaluateFrequencyLoading = function(loading, frequency, params, values) {
+      frequencyLoading = valueOrFunction(loading, frequency = frequency, params = params, values = values);
+      if (is.null(frequencyLoading)) {
+        0
+      } else if (is.list(frequencyLoading)) {
+        if (as.character(frequency) %in% names(frequencyLoading)) {
+          frequencyLoading[[as.character(frequency)]]
+        } else {
+          warning("Unable to handle premium frequency ", frequency, " with the given loading ", frequencyLoading);
+        }
+      } else if (is.numeric(frequencyLoading)) {
+        frequencyLoading
+      } else {
+        warning("premiumFrequencyLoading must be a number or a named list, given: ", frequencyLoading);
+        0
+      }
+    },
 
 
 

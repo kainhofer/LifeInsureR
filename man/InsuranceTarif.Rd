@@ -155,6 +155,7 @@ all fields.}
 \item \href{#method-InsuranceTarif-getAbsPresentValues}{\code{InsuranceTarif$getAbsPresentValues()}}
 \item \href{#method-InsuranceTarif-presentValueBenefits}{\code{InsuranceTarif$presentValueBenefits()}}
 \item \href{#method-InsuranceTarif-getPremiumCoefficients}{\code{InsuranceTarif$getPremiumCoefficients()}}
+\item \href{#method-InsuranceTarif-sumInsuredCalculation}{\code{InsuranceTarif$sumInsuredCalculation()}}
 \item \href{#method-InsuranceTarif-premiumCalculation}{\code{InsuranceTarif$premiumCalculation()}}
 \item \href{#method-InsuranceTarif-reserveCalculation}{\code{InsuranceTarif$reserveCalculation()}}
 \item \href{#method-InsuranceTarif-getBalanceSheetReserveFactor}{\code{InsuranceTarif$getBalanceSheetReserveFactor()}}
