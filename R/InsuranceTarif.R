@@ -753,7 +753,7 @@ InsuranceTarif = R6Class(
       q = self$getTransitionProbabilities(params, values);
       i = params$ActuarialBases$i
       v = 1/(1 + i)
-      pvf = PVfactory(qx = q, v = v)
+      pvf = PVfactory$new(qx = q, v = v)
 
       costs = values$cashFlowsCosts;
       pvc = costs * 0;
@@ -788,10 +788,10 @@ InsuranceTarif = R6Class(
 
         # Guaranteed + Survival + Death cover + disease
         pvc[,,"Benefits",] =
-          pvf$guaranteed(cf$guaranteed_advance * cfCosts, cf$guaranteed_arrears * cfCosts) +
-          pvf$survival(cf$survival_advance * cfCosts, cf$survival_arrears * cfCosts) +
-          pvf$death(cf$death_SumInsured * cfCosts) +
-          pvf$disease(cf$disease_SumInsured * cfCosts);
+            pvfben$guaranteed(cf$guaranteed_advance * cfCosts, cf$guaranteed_arrears * cfCosts) +
+            pvfben$survival(cf$survival_advance * cfCosts, cf$survival_arrears * cfCosts) +
+            pvfben$death(cf$death_SumInsured * cfCosts) +
+            pvfben$disease(cf$disease_SumInsured * cfCosts);
       }
 
       applyHook(hook = params$Hooks$adjustPresentValuesCosts, val = pvc, params = params, values = values, presentValues = presentValues)
