@@ -706,55 +706,34 @@ InsuranceTarif = R6Class(
       }
 
       qq = self$getTransitionProbabilities(params, values);
-      qx = pad0(qq$qx, values$int$l, value = 1); # After maxAge of the table, use qx=1, also after contract period, just in case
-      ix = pad0(qq$ix, values$int$l);
-      px = pad0(qq$px, values$int$l);
 
       i = params$ActuarialBases$i;
       v = 1/(1 + i);
-            benefitFreqCorr = correctionPaymentFrequency(
-              i = i, m = params$ContractData$benefitFrequency,
-              order = valueOrFunction(params$ActuarialBases$benefitFrequencyOrder, params = params, values = values));
-            premiumFreqCorr = correctionPaymentFrequency(
-              i = i, m = params$ContractData$premiumFrequency,
-              order = valueOrFunction(params$ActuarialBases$premiumFrequencyOrder, params = params, values = values));
+      benefitFreqCorr = correctionPaymentFrequency(
+        i = i, m = params$ContractData$benefitFrequency,
+        order = valueOrFunction(params$ActuarialBases$benefitFrequencyOrder, params = params, values = values));
+      premiumFreqCorr = correctionPaymentFrequency(
+        i = i, m = params$ContractData$premiumFrequency,
+          order = valueOrFunction(params$ActuarialBases$premiumFrequencyOrder, params = params, values = values));
 
-      pvRefund = calculatePVDeath(px, qx, values$cashFlows$death_GrossPremium, v = v);
-      pvRefundPast = calculatePVDeath(
-        px, qx,
-        values$cashFlows$death_Refund_past,
-        v = v) *
+      pvf = PVfactory$new(qx = qq, m = params$ContractData$benefitFrequency, mCorrection = benefitFreqCorr, v = v);
+
+      pvRefund = pvf$death(values$cashFlows$death_GrossPremium);
+      pvRefundPast = pvf$death(values$cashFlows$death_Refund_past) *
         (values$cashFlows[,"death_GrossPremium"] - values$cashFlows[,"premiums_advance"]);
 
       pv = cbind(
-        premiums = calculatePVSurvival(
-          px, qx,
-          values$cashFlows$premiums_advance, values$cashFlows$premiums_arrears,
-          m = params$ContractData$premiumFrequency, mCorrection = premiumFreqCorr,
-          v = v),
-        additional_capital = calculatePVSurvival(px, qx, values$cashFlows$additional_capital, 0, v = v),
-        guaranteed = calculatePVGuaranteed(
-          values$cashFlows$guaranteed_advance, values$cashFlows$guaranteed_arrears,
-          m = params$ContractData$benefitFrequency, mCorrection = benefitFreqCorr,
-          v = v),
-        survival = calculatePVSurvival(
-          px, qx,
-          values$cashFlows$survival_advance, values$cashFlows$survival_arrears,
-          m = params$ContractData$benefitFrequency, mCorrection = benefitFreqCorr,
-          v = v),
-        death_SumInsured = calculatePVDeath(
-          px, qx,
-          values$cashFlows$death_SumInsured,
-          v = v),
-        disease_SumInsured = calculatePVDisease(
-          px, qx, ix,
-          values$cashFlows$disease_SumInsured, v = v),
+        premiums = pvf$survival(values$cashFlows$premiums_advance, values$cashFlows$premiums_arrears,
+          m = params$ContractData$premiumFrequency, mCorrection = premiumFreqCorr),
+        additional_capital = pvf$survival(advance = values$cashFlows$additional_capital),
+        guaranteed = pvf$guaranteed(values$cashFlows$guaranteed_advance, values$cashFlows$guaranteed_arrears),
+        survival = pvf$survival(values$cashFlows$survival_advance, values$cashFlows$survival_arrears),
+        death_SumInsured = pvf$death(values$cashFlows$death_SumInsured),
+        disease_SumInsured = pvf$disease(values$cashFlows$disease_SumInsured),
         death_GrossPremium = pvRefund,
         death_Refund_past = pvRefundPast,
         death_Refund_future = pvRefund - pvRefundPast,
-        death_PremiumFree = calculatePVDeath(
-          px, qx,
-          values$cashFlows$death_PremiumFree, v = v)
+        death_PremiumFree = pvf$death(values$cashFlows$death_PremiumFree)
       );
 
       rownames(pv) <- pad0(rownames(qq), values$int$l);
@@ -772,10 +751,49 @@ InsuranceTarif = R6Class(
       }
       len = values$int$l;
       q = self$getTransitionProbabilities(params, values);
-      qx = pad0(q$qx, len);
-      px = pad0(q$px, len);
-      v = 1/(1 + params$ActuarialBases$i)
-      pvc = calculatePVCosts(px, qx, values$cashFlowsCosts, v = v);
+      i = params$ActuarialBases$i
+      v = 1/(1 + i)
+      pvf = PVfactory(qx = q, v = v)
+
+      costs = values$cashFlowsCosts;
+      pvc = costs * 0;
+
+      # survival cash flows (until death)
+      if (any(costs[,,,"survival"] != 0)) {
+        pvc[,,,"survival"] = pvf$survival(advance = costs[,,,"survival"]);
+      }
+      # guaranteed cash flows (even after death)
+      if (any(costs[,,,"guaranteed"] != 0)) {
+        pvc[,,,"guaranteed"] = pvf$guaranteed(advance = costs[,,,"guaranteed"]);
+      }
+
+      # Cash flows only after death
+      if (any(costs[,,,"after.death"] != 0)) {
+        pvc[,,,"after.death"] = pvf$afterDeath(advance = costs[,,,"after.death"]);
+      }
+
+      # Costs based on actual benefits need to be calculated separately
+      # (need to be recalculated with the benefit CFs multiplied by the cost
+      # rate for each type and each year). In most cases, the cost rates will be
+      # constant, but in general we can not assume this => need to re-calculate
+      if (any(values$cashFlowsCosts[,,"Benefits",] != 0)) {
+        bFreq = params$ContractData$benefitFrequency
+        benefitFreqCorr = correctionPaymentFrequency(
+          i = i, m = bFreq,
+          order = valueOrFunction(params$ActuarialBases$benefitFrequencyOrder, params = params, values = values));
+        pvfben = PVfactory$new(qx = q, m = bFreq, mCorrection = benefitFreqCorr, v = v);
+
+        cfCosts = values$cashFlowsCosts[,,"Benefits",];
+        cf = values$cashFlows;
+
+        # Guaranteed + Survival + Death cover + disease
+        pvc[,,"Benefits",] =
+          pvf$guaranteed(cf$guaranteed_advance * cfCosts, cf$guaranteed_arrears * cfCosts) +
+          pvf$survival(cf$survival_advance * cfCosts, cf$survival_arrears * cfCosts) +
+          pvf$death(cf$death_SumInsured * cfCosts) +
+          pvf$disease(cf$disease_SumInsured * cfCosts);
+      }
+
       applyHook(hook = params$Hooks$adjustPresentValuesCosts, val = pvc, params = params, values = values, presentValues = presentValues)
     },
 
@@ -1264,8 +1282,9 @@ InsuranceTarif = R6Class(
           ZillmerVerteilungCoeff = pad0((0:r)/r, len, 1);
         } else {
           q = self$getTransitionProbabilities(params, values);
+          pvf = PVfactory$new(qx = q, v = 1/(1 + params$ActuarialBases$i))
           # vector of all ä_{x+t, r-t}
-          pvAlphaTmp = calculatePVSurvival(q = pad0(q$qx, len), advance = pad0(rep(1,r), len), v = 1/(1 + params$ActuarialBases$i));
+          pvAlphaTmp = pvf$survival(advance = pad0(rep(1,r), len))
           ZillmerVerteilungCoeff = (1 - pvAlphaTmp/pvAlphaTmp[[1]]);
         }
         alphaRefund = ZillmerSoFar - ZillmerVerteilungCoeff * ZillmerTotal;
@@ -1673,8 +1692,15 @@ InsuranceTarif = R6Class(
     #' @param ... currently unused
     calculatePresentValues = function(cf, params, values) {
       len = dim(cf)[1];
-      q = self$getTransitionProbabilities(params, values)
-      calculatePVSurvival2D(px = pad0(q$px, len), advance = cf, v = 1/(1 + params$ActuarialBases$i));
+      qq = self$getTransitionProbabilities(params, values);
+      i = params$ActuarialBases$i;
+      premFreq = params$ContractData$premiumFrequency;
+      premFreqCorr = correctionPaymentFrequency(
+        i = i, m = premFreq,
+        order = valueOrFunction(params$ActuarialBases$premiumFrequencyOrder, params = params, values = values));
+
+      pvf = PVfactory$new(qx = qq, m = premFreq, mCorrection = premFreqCorr, v = 1/(1 + i));
+      pvf$survival(advance = cf)
     },
 
         #' @description Calculate the premium frequency loading, i.e. the surcharge

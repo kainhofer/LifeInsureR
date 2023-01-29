@@ -278,185 +278,348 @@ mergeValues3D = function(starting, ending, t) {
     abind::abind(starting[1:t,,,], ending[-1:-t,,,], along = 1)
   }
 }
-# Caution: px is not neccessarily 1-qx, because we might also have dread diseases so that px=1-qx-ix! However, the ix is not used for the survival present value
-calculatePVSurvival = function(px = 1 - qx, qx = 1 - px, advance = NULL, arrears = NULL, ..., m = 1, mCorrection = list(alpha = 1, beta = 0), v = 1, start = 0) {
-  init = advance[1]*0;
-  if (!any(advance != 0 ) && !any(arrears != 0)) {
-    return(init);
-  }
-  # assuming advance and arrears have the same dimensions...
-  l = max(length(qx), dim(advance)[[1]], dim(arrears)[[1]]);
-  p = pad0(px, l, value=0);
-  if (missing(advance)) {
-    advance = arrears * 0
-  }
-  if (missing(arrears)) {
-    arrears = advance * 0
-  }
-  advance = pad0(advance, l, value = init);
-  arrears = pad0(arrears, l, value = init);
 
-  # TODO: Make this work for matrices (i.e. currently advance and arrears are assumed to be one-dimensional vectors)
-  # TODO: Replace loop by better way (using Reduce?)
-  res = rep(0, l + 1);
-  advcoeff = mCorrection$alpha - mCorrection$beta*(1-p*v);
-  arrcoeff = mCorrection$alpha - (mCorrection$beta + 1/m)*(1-p*v);
-  for (i in l:(start + 1)) {
-    # coefficients for the payments (including corrections for payments during the year (using the alpha(m) and beta(m)):
-    # The actual recursion:
-    res[i] = advance[i]*advcoeff[i] + arrears[i]*arrcoeff[i] + v*p[i]*res[i+1];
-  }
-  res[1:l]
-}
-# Caution: px is not neccessarily 1-qx, because we might also have dread diseases so that px=1-qx-ix! However, the ix is not used for the survival present value
-calculatePVSurvival2D = function(px = 1 - qx, qx = 1 - px, advance = NULL, arrears = NULL, ..., m = 1, mCorrection = list(alpha = 1, beta = 0), v = 1, start = 0) {
-# browser()
-  if (!any(advance != 0 ) && !any(arrears != 0)) {
-    return(advance * 0);
-  }
+# PVfactory (R6Class for present values with arbitrary dimensions) ####
+#' @export
+PVfactory = R6Class(
+  "PVfactory",
 
-  l = max(length(qx), dim(advance)[[1]], dim(arrears)[[1]]);
-  p = pad0(px, l, value=0);
-  if (missing(advance)) {
-    advance = arrears * 0
-  }
-  if (missing(arrears)) {
-    arrears = advance * 0
-  }
-  # assuming advance and arrears have the same dimensions...
-  advance = padArray(advance, len = l);
-  arrears = padArray(arrears, len = l);
+  ######################### PUBLIC METHODS ################################# #
+  public  = list(
+    initialize = function(qx, m = 1, mCorrection = list(alpha = 1, beta = 0), v = 1) {
+      private$qx = qx;
+      private$m = m;
+      private$mCorrection = mCorrection;
+      private$v = v;
+    },
+    guaranteed = function(advance = NULL, arrears = NULL, start = 0, ..., m = private$m, mCorrection = private$mCorrection, v = private$v) {
+      # General Note: Since the CF vectors can have an arbitrary number of
+      # dimensions, we cannot directly access them via advance[1,..]. Rather,
+      # we have to construct the `[` function manually as a quoted expression,
+      # inserting the required number of dimensions and then evaluating that
+      # expression. This makes this function a little harder to read, but the
+      # performance should not take a hit and it is implemented in a very
+      # general way.
 
+      cfs = list(advance, arrears)
+      # https://stackoverflow.com/a/16896422/920231
+      deflt = cfs[!unlist(lapply(cfs, is.null))][[1]] * 0
 
-  # TODO: Make this work for arbitrary dimensions
-  # TODO: Replace loop by better way (using Reduce?)
-  res = advance * 0;
-  advcoeff = mCorrection$alpha - mCorrection$beta*(1-p*v);
-  arrcoeff = mCorrection$alpha - (mCorrection$beta + 1/m)*(1-p*v);
-  for (i in (l-1):start) {
-    # coefficients for the payments (including corrections for payments during the year (using the alpha(m) and beta(m)):
-    # The actual recursion:
-    res[i,] = advance[i,]*advcoeff[i] + arrears[i,]*arrcoeff[i] + v*p[i]*res[i+1,];
-  }
-  res[1:l,]
-}
+      if (missing(advance)     || is.null(advance))     advance = deflt
+      if (missing(arrears)     || is.null(arrears))     arrears = deflt
 
+      l = max(unlist(lapply(cfs, function(cf) if(!is.null(dim(cf))) dim(cf)[[1]] else length(cf))))
 
-calculatePVGuaranteed = function(advance, arrears = c(0), ..., m = 1, mCorrection = list(alpha = 1, beta = 0), v = 1, start = 0) {
-  # assuming advance and arrears have the same dimensions...
-  init = advance[1]*0;
-  if (!any(advance != 0 ) && !any(arrears != 0)) {
-    return(init);
-  }
-  l = max(length(advance), length(arrears));
-  advance = pad0(advance, l, value = init);
-  arrears = pad0(arrears, l, value = init);
+      # TODO: Make sure all CF tensors have the same number of dimensions
+      dms = if (is.null(dim(advance))) length(advance + 1) else dim(advance);
 
-  # TODO: Make this work for matrices (i.e. currently advance and arrears are assumed to be one-dimensional vectors)
-  # TODO: Replace loop by better way (using Reduce?)
-  res = rep(0, l + 1);
-  advcoeff = mCorrection$alpha - mCorrection$beta * (1 - v);
-  arrcoeff = mCorrection$alpha - (mCorrection$beta + 1 / m) * (1 - v);
-  for (i in l:(start + 1)) {
-    # coefficients for the payments (including corrections for payments during the year (using the alpha(m) and beta(m)):
-    # The actual recursion:
-    res[i] = advance[i]*advcoeff + arrears[i]*arrcoeff + v*res[i + 1];
-  }
-  res[1:l]
-}
+      # Resulting PV tensor has one timestep more than the CF tensors!
+      dms[1] = dms[1] + 1
+      dmNr = if (is.null(dim(advance))) 1 else length(dim(advance))
 
+      # To be able to access the CF tensors in arbitrary dimensions, we
+      # construct the [..] operator manually by quoting it and then inserting
+      # arguments matching the number of dimensions
+      Qadv     = Quote(advance[]    )[c(1,2,rep(3, dmNr))];
+      Qarr     = Quote(arrears[]    )[c(1,2,rep(3, dmNr))];
+      Qres     = Quote(res[])[c(1,2,rep(3, dmNr))]; # Access the correct number of dimensions
+      QresAss  = Quote(res <- tmp)
 
-calculatePVDeath = function(px, qx, benefits, ..., v = 1, start = 0) {
-  init = benefits[1]*0; # Preserve the possible array structure of the benefits -> vectorized calculations possible!
-  if (!any(benefits != 0 )) {
-    return(init);
-  }
-  l = max(length(qx), length(benefits));
-  q = pad0(qx, l, value = 1);
-  p = pad0(px, l, value = 0);
-  benefits = pad0(benefits, l, value = init);
+      VL = function(quoted, time) {
+        eval(quoted %>% `[<-`(3, time))
+      }
 
-  # TODO: Make this work for matrices (i.e. currently benefits are assumed to be one-dimensional vectors)
-  # TODO: Replace loop by better way (using Reduce?)
-  res = rep(init, l + 1);
-  for (i in l:(start + 1)) {
-    # Caution: p_x is not neccessarily 1-q_x, because we might also have dread diseases, so that px=1-qx-ix!
-    res[i] = v * q[i] * benefits[i] + v * p[i] * res[i + 1];
-  }
-  res[1:l]
-}
+      init = VL(Qadv, 1) * 0;
 
-calculatePVDisease = function(px = 1 - qx - ix, qx = 1 - ix - px, ix = 1 - px - qx, benefits, ..., v = 1, start = 0) {
-  init = benefits[1] * 0;
-  if (!any(benefits != 0 )) {
-    return(init);
-  }
-  l = min(length(ix), length(qx), length(benefits));
-  qx = pad0(qx, l, value = 1);
-  ix = pad0(ix, l, value = 0);
-  px = pad0(px, l, value = 0);
-  benefits = pad0(benefits, l, value = init);
+      # assuming advance and arrears have the same dimensions...
+      # TODO: Pad to length l
+      # advance = pad0(advance, l, value = init);
+      # arrears = pad0(arrears, l, value = init);
 
-  # TODO: Make this work for matrices (i.e. currently benefits are assumed to be one-dimensional vectors)
-  # TODO: Replace loop by better way (using Reduce?)
-  res = rep(init, l + 1);
-  for (i in l:(start + 1)) {
-    res[i] = v * ix[i] * benefits[i] + v * px[i] * res[i + 1];
-  }
-  res[1:l]
-}
+      # TODO: Replace loop by better way (using Reduce?)
+      res = array(0, dim = dms)
 
-# TODO: So far, we are assuming, the costs array has sufficient time steps and does not need to be padded!
-calculatePVCosts = function(px = 1 - qx, qx = 1 - px, costs, ..., v = 1, start = 0) {
-  l = max(length(qx), dim(costs)[1]);
-  p = pad0(px, l, value = 0);
-  costs = costs[1:l,,,];
+      # Starting value for the recursion:
+      tmp = init
+      QresAss[[2]] = Qres %>% `[<-`(3, dms[[1]])
+      eval(QresAss)
 
-  # NOTICE: Costs that apply to benefits are a special case and cannot be handled
-  # here. Instead, their PV is calculated like the death/survival/invalidity benefits
-  # in the tariff's PV calculation function. The values calculated here automatically
-  # WILL be ignored
+      advcoeff = mCorrection$alpha - mCorrection$beta * (1 - v);
+      arrcoeff = mCorrection$alpha - (mCorrection$beta + 1/m) * ( 1 - v);
+      for (i in l:(start + 1)) {
+        # coefficients for the payments (including corrections for payments during the year (using the alpha(m) and beta(m)):
+        # The actual recursion:
+        tmp = VL(Qadv, i) * advcoeff + VL(Qarr, i) * arrcoeff + v * VL(Qres, i+1);
+        # Assign tmp to the slice res[i, ....]
+        QresAss[[2]] = Qres %>% `[<-`(3, i)
+        eval(QresAss)
+      }
+      VL(Qres, list(1:l))
+    },
 
-  # Take the array structure from the cash flow array and initialize it with 0
-  res = costs*0;
+    survival = function(advance = NULL, arrears = NULL, start = 0, ..., m = private$m, mCorrection = private$mCorrection, v = private$v) {
+      # General Note: Since the CF vectors can have an arbitrary number of
+      # dimensions, we cannot directly access them via advance[1,..]. Rather,
+      # we have to construct the `[` function manually as a quoted expression,
+      # inserting the required number of dimensions and then evaluating that
+      # expression. This makes this function a little harder to read, but the
+      # performance should not take a hit and it is implemented in a very
+      # general way.
 
-  # only calculate the loop if we have any relevant cost parameter != 0...
+      cfs = list(advance, arrears)
+      # https://stackoverflow.com/a/16896422/920231
+      deflt = cfs[!unlist(lapply(cfs, is.null))][[1]] * 0
 
-  # survival cash flows (until death)
-  if (any(costs[,,,"survival"] != 0)) {
-    prev = res[1,,,"survival"]*0;
-    # Backward recursion starting from the last time:
-    # Survival Cash flows
-    for (i in l:(start + 1)) {
-      # cat("values at iteration ", i, ": ", v, q[i], costs[i,,], prev);
-      res[i,,,"survival"] = costs[i,,,"survival"] + v*p[i]*prev;
-      prev = res[i,,,"survival"];
+      if (missing(advance)     || is.null(advance))     advance = deflt
+      if (missing(arrears)     || is.null(arrears))     arrears = deflt
+
+      l = max(unlist(lapply(cfs, function(cf) if(!is.null(dim(cf))) dim(cf)[[1]] else length(cf))))
+
+      # TODO: Make sure all CF tensors have the same number of dimensions
+      dms = if (is.null(dim(advance))) length(advance) else dim(advance);
+
+      # Resulting PV tensor has one timestep more than the CF tensors!
+      dms[1] = dms[1] + 1
+      dmNr = if (is.null(dim(advance))) 1 else length(dim(advance))
+
+      # To be able to access the CF tensors in arbitrary dimensions, we
+      # construct the [..] operator manually by quoting it and then inserting
+      # arguments matching the number of dimensions
+      Qadv     = Quote(advance[]    )[c(1,2,rep(3, dmNr))];
+      Qarr     = Quote(arrears[]    )[c(1,2,rep(3, dmNr))];
+      Qres     = Quote(res[])[c(1,2,rep(3, dmNr))]; # Access the correct number of dimensions
+      QresAss  = Quote(res <- tmp)
+
+      VL = function(quoted, time) {
+        eval(quoted %>% `[<-`(3, time))
+      }
+
+      init = VL(Qadv, 1) * 0;
+
+      # assuming advance and arrears have the same dimensions...
+      p = pad0(private$qx$px, l, value=0);
+      # TODO: Pad to length l
+      # advance = pad0(advance, l, value = init);
+      # arrears = pad0(arrears, l, value = init);
+
+      # TODO: Replace loop by better way (using Reduce?)
+      res = array(0, dim = dms)
+
+      # Starting value for the recursion:
+      tmp = init
+      QresAss[[2]] = Qres %>% `[<-`(3, dms[[1]])
+      eval(QresAss)
+
+      advcoeff = mCorrection$alpha - mCorrection$beta * (1 - p * v);
+      arrcoeff = mCorrection$alpha - (mCorrection$beta + 1/m) * (1 - p * v);
+      for (i in l:(start + 1)) {
+        # coefficients for the payments (including corrections for payments during the year (using the alpha(m) and beta(m)):
+        # The actual recursion:
+        tmp = VL(Qadv, i) * advcoeff[i] + VL(Qarr, i) * arrcoeff[i] + v * p[i] * VL(Qres, i+1);
+        # Assign tmp to the slice res[i, ....]
+        QresAss[[2]] = Qres %>% `[<-`(3, i)
+        eval(QresAss)
+      }
+      VL(Qres, list(1:l))
+    },
+
+    death = function(benefits, start = 0, ..., v = private$v) {
+      # General Note: Since the CF vectors can have an arbitrary number of
+      # dimensions, we cannot directly access them via advance[1,..]. Rather,
+      # we have to construct the `[` function manually as a quoted expression,
+      # inserting the required number of dimensions and then evaluating that
+      # expression. This makes this function a little harder to read, but the
+      # performance should not take a hit and it is implemented in a very
+      # general way.
+
+      cfs = list(benefits)
+      if (missing(benefits) || is.null(benefits)) return(0);
+
+      l = max(unlist(lapply(cfs, function(cf) if(!is.null(dim(cf))) dim(cf)[[1]] else length(cf))))
+
+      # TODO: Make sure all CF tensors have the same number of dimensions
+      dms = if (is.null(dim(benefits))) length(benefits) else dim(benefits);
+
+      # Resulting PV tensor has one timestep more than the CF tensors!
+      dms[1] = dms[1] + 1
+      dmNr = if (is.null(dim(benefits))) 1 else length(dim(benefits))
+
+      # To be able to access the CF tensors in arbitrary dimensions, we
+      # construct the [..] operator manually by quoting it and then inserting
+      # arguments matching the number of dimensions
+      Qben     = Quote(benefits[]    )[c(1,2,rep(3, dmNr))];
+      Qres     = Quote(res[])[c(1,2,rep(3, dmNr))]; # Access the correct number of dimensions
+      QresAss  = Quote(res <- tmp)
+
+      VL = function(quoted, time) {
+        eval(quoted %>% `[<-`(3, time))
+      }
+
+      init = VL(Qben, 1) * 0;
+
+      # assuming advance and arrears have the same dimensions...
+      p = pad0(private$qx$px, l, value = 0);
+      q = pad0(private$qx$qx, l, value = 1);
+      # TODO: Pad to length l
+      # benefits = pad0(benefits, l, value = init);
+
+      # TODO: Replace loop by better way (using Reduce?)
+      res = array(0, dim = dms)
+
+      # Starting value for the recursion:
+      tmp = init
+      QresAss[[2]] = Qres %>% `[<-`(3, dms[[1]])
+      eval(QresAss)
+
+      for (i in l:(start + 1)) {
+        # coefficients for the payments (including corrections for payments during the year (using the alpha(m) and beta(m)):
+        # The actual recursion:
+        tmp = v * q[i] * VL(Qben, i) + v * p[i] * VL(Qres, i+1);
+        # Assign tmp to the slice res[i, ....]
+        QresAss[[2]] = Qres %>% `[<-`(3, i)
+        eval(QresAss)
+      }
+      VL(Qres, list(1:l))
+    },
+    disease = function(benefits, start = 0, ..., v = private$v) {
+      # General Note: Since the CF vectors can have an arbitrary number of
+      # dimensions, we cannot directly access them via advance[1,..]. Rather,
+      # we have to construct the `[` function manually as a quoted expression,
+      # inserting the required number of dimensions and then evaluating that
+      # expression. This makes this function a little harder to read, but the
+      # performance should not take a hit and it is implemented in a very
+      # general way.
+
+      cfs = list(benefits)
+      if (missing(benefits) || is.null(benefits)) return(0);
+
+      l = max(unlist(lapply(cfs, function(cf) if(!is.null(dim(cf))) dim(cf)[[1]] else length(cf))))
+
+      # TODO: Make sure all CF tensors have the same number of dimensions
+      dms = if (is.null(dim(benefits))) length(benefits) else dim(benefits);
+
+      # Resulting PV tensor has one timestep more than the CF tensors!
+      dms[1] = dms[1] + 1
+      dmNr = if (is.null(dim(benefits))) 1 else length(dim(benefits))
+
+      # To be able to access the CF tensors in arbitrary dimensions, we
+      # construct the [..] operator manually by quoting it and then inserting
+      # arguments matching the number of dimensions
+      Qben     = Quote(benefits[]    )[c(1,2,rep(3, dmNr))];
+      Qres     = Quote(res[])[c(1,2,rep(3, dmNr))]; # Access the correct number of dimensions
+      QresAss  = Quote(res <- tmp)
+
+      VL = function(quoted, time) {
+        eval(quoted %>% `[<-`(3, time))
+      }
+
+      init = VL(Qben, 1) * 0;
+
+      # assuming advance and arrears have the same dimensions...
+      p = pad0(private$qx$px, l, value = 0);
+      ix = pad0(private$qx$ix, l, value = 0);
+      # TODO: Pad to length l
+      # benefits = pad0(benefits, l, value = init);
+
+      # TODO: Replace loop by better way (using Reduce?)
+      res = array(0, dim = dms)
+
+      # Starting value for the recursion:
+      tmp = init
+      QresAss[[2]] = Qres %>% `[<-`(3, dms[[1]])
+      eval(QresAss)
+
+      for (i in l:(start + 1)) {
+        # coefficients for the payments (including corrections for payments during the year (using the alpha(m) and beta(m)):
+        # The actual recursion:
+        tmp = v * ix[i] * VL(Qben, i) + v * p[i] * VL(Qres, i+1);
+        # Assign tmp to the slice res[i, ....]
+        QresAss[[2]] = Qres %>% `[<-`(3, i)
+        eval(QresAss)
+      }
+      VL(Qres, list(1:l))
+    },
+    # Cash flows only after death
+    # This case is more complicated, as we have two possible states of
+    # payments (present value conditional on active, but payments only when
+    # dead => need to write the Thiele difference equations as a pair of
+    # recursive equations rather than a single recursive formula...)
+    afterDeath = function(advance = NULL, arrears = NULL, start = 0, ..., m = private$m, mCorrection = private$mCorrection, v = private$v) {
+      # General Note: Since the CF vectors can have an arbitrary number of
+      # dimensions, we cannot directly access them via advance[1,..]. Rather,
+      # we have to construct the `[` function manually as a quoted expression,
+      # inserting the required number of dimensions and then evaluating that
+      # expression. This makes this function a little harder to read, but the
+      # performance should not take a hit and it is implemented in a very
+      # general way.
+
+      cfs = list(advance, arrears)
+      # https://stackoverflow.com/a/16896422/920231
+      deflt = cfs[!unlist(lapply(cfs, is.null))][[1]] * 0
+
+      if (missing(advance)     || is.null(advance))     advance = deflt
+      if (missing(arrears)     || is.null(arrears))     arrears = deflt
+
+      l = max(unlist(lapply(cfs, function(cf) if(!is.null(dim(cf))) dim(cf)[[1]] else length(cf))))
+
+      # TODO: Make sure all CF tensors have the same number of dimensions
+      dms = if (is.null(dim(advance))) length(advance) else dim(advance);
+
+      # Resulting PV tensor has one timestep more than the CF tensors!
+      dms[1] = dms[1] + 1
+      dmNr = if (is.null(dim(advance))) 1 else length(dim(advance))
+
+      # To be able to access the CF tensors in arbitrary dimensions, we
+      # construct the [..] operator manually by quoting it and then inserting
+      # arguments matching the number of dimensions
+      Qadv     = Quote(advance[]    )[c(1,2,rep(3, dmNr))];
+      Qarr     = Quote(arrears[]    )[c(1,2,rep(3, dmNr))];
+      Qres     = Quote(res[])[c(1,2,rep(3, dmNr))]; # Access the correct number of dimensions
+      QresAss  = Quote(res <- tmp)
+
+      VL = function(quoted, time) {
+        eval(quoted %>% `[<-`(3, time))
+      }
+
+      init = VL(Qadv, 1) * 0;
+
+      # assuming advance and arrears have the same dimensions...
+      p = pad0(private$qx$px, l, value=0);
+      q = pad0(private$qx$qx, l, value=0);
+      # TODO: Pad to length l
+      # advance = pad0(advance, l, value = init);
+      # arrears = pad0(arrears, l, value = init);
+
+      # TODO: Replace loop by better way (using Reduce?)
+      res = array(0, dim = dms)
+
+      # Starting value for the recursion:
+      prev = init;
+      prev.dead = init;
+      QresAss[[2]] = Qres %>% `[<-`(3, dms[[1]])
+      eval(QresAss)
+
+      advcoeff = mCorrection$alpha - mCorrection$beta * (1 - v);
+      arrcoeff = mCorrection$alpha - (mCorrection$beta + 1/m) * (1 - v);
+      for (i in l:(start + 1)) {
+        # The actual recursion:
+        tmp = p[i] * v * prev + q[i] * v * prev.dead;
+        # Assign tmp to the slice res[i, ....]
+        QresAss[[2]] = Qres %>% `[<-`(3, i)
+        eval(QresAss)
+        prev = tmp
+        prev.dead = VL(Qadv, i) * advcoeff[i] + VL(Qarr, i) * arrcoeff[i] + v * prev.dead;
+      }
+      VL(Qres, list(1:l))
     }
-  }
-  # guaranteed cash flows (even after death)
-  if (any(costs[,,,"guaranteed"] != 0)) {
-    prev = res[1,,,"guaranteed"]*0;
-    for (i in l:(start + 1)) {
-      res[i,,,"guaranteed"] = costs[i,,,"guaranteed"] + v*prev;
-      prev = res[i,,,"guaranteed"];
-    }
-  }
-  # Cash flows only after death
-  # This case is more complicated, as we have two possible states of
-  # payments (present value conditional on active, but payments only when
-  # dead => need to write the Thiele difference equations as a pair of
-  # recursive equations rather than a single recursive formula...)
-  if (any(costs[,,,"after.death"] != 0)) {
-    prev = res[1,,,"after.death"]*0;
-    prev.dead = res[1,,,1]*0
-    for (i in l:(start + 1)) {
-      res[i,,,"after.death"] = p[i] * v * prev + (1 - p[i]) * v * prev.dead
-      prev = res[i,,,"after.death"]
-      prev.dead = costs[i,,,"after.death"] + v * prev.dead
-    }
-  }
-  res
-}
+  ),
+  private = list(
+    qx = data.frame(Alter = c(), qx = c(), ix = c(), px = c()),
+    m = 1,
+    mCorrection = list(alpha = 1, beta = 0),
+    v = 1
+  )
+);
 
 
 

@@ -58,7 +58,7 @@ even if the insured has already dies (for term-fix insurances)}
 Initialize a cost matrix with dimensions: {CostType, Basis, Period}, where:
 \describe{
 \item{CostType:}{alpha, Zillmer, beta, gamma, gamma_nopremiums, unitcosts}
-\item{Basis:}{SumInsured, SumPremiums, GrossPremium, NetPremium, Constant}
+\item{Basis:}{SumInsured, SumPremiums, GrossPremium, NetPremium, Benefits, Constant}
 \item{Period:}{once, PremiumPeriod, PremiumFree, PolicyPeriod, CommissionPeriod}
 }
 This cost structure can then be modified for non-standard costs using the \code{\link[=setCost]{setCost()}} function.

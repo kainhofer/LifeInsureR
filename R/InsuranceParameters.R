@@ -42,7 +42,7 @@ setCost = function(costs, type, basis = "SumInsured", frequency = "PolicyPeriod"
 #' Initialize a cost matrix with dimensions: {CostType, Basis, Period}, where:
 #' \describe{
 #'     \item{CostType:}{alpha, Zillmer, beta, gamma, gamma_nopremiums, unitcosts}
-#'     \item{Basis:}{SumInsured, SumPremiums, GrossPremium, NetPremium, Constant}
+#'     \item{Basis:}{SumInsured, SumPremiums, GrossPremium, NetPremium, Benefits, Constant}
 #'     \item{Period:}{once, PremiumPeriod, PremiumFree, PolicyPeriod, CommissionPeriod}
 #' }
 #' This cost structure can then be modified for non-standard costs using the [setCost()] function.
@@ -100,8 +100,8 @@ setCost = function(costs, type, basis = "SumInsured", frequency = "PolicyPeriod"
 initializeCosts = function(costs, alpha, Zillmer, alpha.commission, beta, gamma, gamma.paidUp, gamma.premiumfree, gamma.contract, gamma.afterdeath, gamma.fullcontract, unitcosts, unitcosts.PolicyPeriod) {
     if (missing(costs)) {
         dimnm = list(
-            type = c("alpha", "Zillmer", "beta", "gamma", "gamma_nopremiums", "unitcosts"),
-            basis = c("SumInsured", "SumPremiums", "GrossPremium", "NetPremium", "Constant", "Reserve"),
+          type = c("alpha", "Zillmer", "beta", "gamma", "gamma_nopremiums", "unitcosts"),
+            basis = c("SumInsured", "SumPremiums", "GrossPremium", "NetPremium", "Benefits", "Constant", "Reserve"),
             frequency = c("once", "PremiumPeriod", "PremiumFree", "PolicyPeriod", "AfterDeath", "FullContract", "CommissionPeriod")
         );
         costs = array(
