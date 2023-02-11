@@ -607,7 +607,7 @@ InsuranceTarif = R6Class(
       # Death Benefits
       cf$death_SumInsured = pad0(values$cashFlowsBasic$death, cflen);
       if ((!is.null(params$Features$absPremiumRefund)) && (params$Features$absPremiumRefund > 0)) {
-        cf$death_SumInsured = cf$death_SumInsured + pad0(padLast(params$Features$absPremiumRefund, cflen - 1), cflen);
+        cf$death_SumInsured = cf$death_SumInsured + pad0(padLast(params$Features$absPremiumRefund, min(cflen - 1, params$ContractData$premiumRefundPeriod)), cflen);
       }
       cf$disease_SumInsured = pad0(values$cashFlowsBasic$disease, cflen);
       cf$death_PremiumFree = cf$death_SumInsured;
@@ -615,8 +615,8 @@ InsuranceTarif = R6Class(
       if (params$ContractData$premiumRefund != 0) {
         totalpremiumcf = cf$premiums_advance + pad0(c(0, cf$premiums_arrears), cflen);
 
-        # death benefit for premium refund is the sum of all premiums so far:
-        cf$death_GrossPremium = pad0(Reduce("+", totalpremiumcf[0:params$ContractData$policyPeriod], accumulate = TRUE), cflen)
+        # death benefit for premium refund is the sum of all premiums so far, but only during the premium refund period, afterwards it's 0:
+        cf$death_GrossPremium = pad0(pad0(Reduce("+", totalpremiumcf[0:params$ContractData$policyPeriod], accumulate = TRUE), params$ContractData$premiumRefundPeriod), cflen)
         cf$death_Refund_past = cf$death_GrossPremium
         cf$death_Refund_past[(cf$death_GrossPremium > 0)] = 1;
       }

@@ -1062,6 +1062,10 @@ InsuranceContract = R6Class(
                 self$Parameters$ContractData$policyPeriod,
                 params = self$Parameters, values = self$Values);
 
+            self$Parameters$ContractData$guaranteedPeriod = valueOrFunction(
+                self$Parameters$ContractData$guaranteedPeriod,
+                params = self$Parameters, values = self$Values);
+
             #### #
             # PREMIUM PAYMENT PERIOD (default: policyPeriod, can be given as function or numeric value)
             #### #
@@ -1097,6 +1101,11 @@ InsuranceContract = R6Class(
                     self$Parameters$ContractData$deferralPeriod,
                     self$Parameters$ContractData$policyPeriod
                 )
+
+            # Premium refund period (if applicable):
+            self$Parameters$ContractData$premiumRefundPeriod = valueOrFunction(
+                self$Parameters$ContractData$premiumRefundPeriod,
+                params = self$Parameters, values = self$Values);
 
             #### #
             # AGES for multiple joint lives:

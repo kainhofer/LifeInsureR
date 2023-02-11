@@ -94,6 +94,11 @@ are paid in advance (default) or arrears. Value is of type
 \item{\code{$benefitFrequency}}{Number of benefit payments per year, default is 1.}
 \item{\code{$premiumRefund}}{Proportion of (gross) premiums refunded on
 death (including additional risk, e.g. 1.10 = 110\% of paid premiums)}
+\item{\code{$premiumRefundPeriod}}{The period, during which the premium
+refund on death applies. By default, deferred contracts will
+refund premiums only during the deferral period, all other
+contracts during the whole contract. Default is
+\code{premiumRefundPeriod.default}}
 \item{\code{$premiumIncrease}}{The yearly growth factor of the premium,
 i.e. 1.05 means +5\% increase each year; a vector describes the
 premiums for all years}

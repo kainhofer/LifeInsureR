@@ -144,8 +144,24 @@ isRegularPremiumContract = function(params, values) { params$ContractData$premiu
 #'
 #' @export
 deathBenefit.linearDecreasing = function(len, params, values) {
-    protectionPeriod = params$ContractData$policyPeriod - params$ContractData$deferralPeriod;
-    pad0((protectionPeriod:0) / protectionPeriod, l = len)
+  protectionPeriod = params$ContractData$policyPeriod - params$ContractData$deferralPeriod;
+  pad0((protectionPeriod:0) / protectionPeriod, l = len)
+}
+
+
+#' Default premium refund period: for deferred contracts the deferral period, otherwise the whole contract
+#'
+#' If a premium refund is set for the tariff, the default is the full contract
+#' period, except for deferred contracts (typically deferred life annuities),
+#' for which the deferral period is the refund period.
+#'
+#' @param params The full parameter set of the insurance contract (including
+#'               all inherited values from the tariff and the profit participation)
+#' @param values The values calculated from the insurance contract so far
+#'
+#' @export
+premiumRefundPeriod.default = function(params, values) {
+  ifelse(params$ContractData$deferralPeriod > 0, params$ContractData$deferralPeriod, params$ContractData$policyPeriod)
 }
 
 

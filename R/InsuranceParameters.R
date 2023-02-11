@@ -334,6 +334,11 @@ InsuranceContract.Values = list(
 #'     \item{\code{$benefitFrequency}}{Number of benefit payments per year, default is 1.}
 #'     \item{\code{$premiumRefund}}{Proportion of (gross) premiums refunded on
 #'               death (including additional risk, e.g. 1.10 = 110% of paid premiums)}
+#'     \item{\code{$premiumRefundPeriod}}{The period, during which the premium
+#'               refund on death applies. By default, deferred contracts will
+#'               refund premiums only during the deferral period, all other
+#'               contracts during the whole contract. Default is
+#'               \code{premiumRefundPeriod.default}}
 #'     \item{\code{$premiumIncrease}}{The yearly growth factor of the premium,
 #'               i.e. 1.05 means +5% increase each year; a vector describes the
 #'               premiums for all years}
@@ -577,6 +582,7 @@ InsuranceContract.ParameterDefaults = list(
         benefitFrequency = 1,                   # number of benefit payments per year (for annuities) or death benefit at the end of every 1/k-th year
 
         premiumRefund = 0,                      # Proportion of premiums refunded on death (including additional risk, e.g. 1.10 = 110% of paid premiums)
+        premiumRefundPeriod = premiumRefundPeriod.default,  # The time period, during which the premium refund upon death will be paid (default: deferral period, otherwise whole contract)
         premiumIncrease = 1,                    # The yearly growth factor of the premium, i.e. 1.05 means +5% increase each year; a Vector describes the premiums for all years
         annuityIncrease = 1,                    # The yearly growth factor of the annuity payments, i.e. 1.05 means +5% incrase each year; a vector describes the annuity unit payments for all years
         deathBenefit = 1,                       # The yearly relative death benefit (relative to the initial sum insured); Can be fixed, e.g. 0.5 for 50% death cover, or  set to a function(len, params, values) like deathBenefit = deathBenefit.linearDecreasing

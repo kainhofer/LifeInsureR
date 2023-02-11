@@ -28,14 +28,14 @@ test_that("Deferred Annuity Cash Flows", {
     expect_equal(Contract.DefAnnuity$Parameters$ContractData$premiumPeriod, 25)
 
 
-    expect_true(all(Contract.DefAnnuity$Values$cashFlows %>% select(-premiums_advance, -survival_advance, -death_GrossPremium, -death_Refund_past) == 0))
+    expect_true(all(Contract.DefAnnuity$Values$cashFlows %>% dplyr::select(-premiums_advance, -survival_advance, -death_GrossPremium, -death_Refund_past) == 0))
 
     # 25 years premium cash flow
     expect_equal(Contract.DefAnnuity$Values$cashFlows$premiums_advance, c(rep(1, 25), rep(0, 56)))
     # premium payment start after 25 years
     expect_equal(Contract.DefAnnuity$Values$cashFlows$survival_advance, c(rep(0, 25), rep(1, 55),0))
     # premium payment start after 25 years
-    expect_equal(Contract.DefAnnuity$Values$cashFlows$death_GrossPremium, c(1:25, rep(25, 55),0))
+    expect_equal(Contract.DefAnnuity$Values$cashFlows$death_GrossPremium, c(1:25, rep(0, 56)))
     # death refund flag
-    expect_equal(Contract.DefAnnuity$Values$cashFlows$death_Refund_past, c(rep(1, 80), 0))
+    expect_equal(Contract.DefAnnuity$Values$cashFlows$death_Refund_past, c(rep(1, 25), rep(0, 56)))
 })
