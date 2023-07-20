@@ -475,6 +475,9 @@ InsuranceContract.Values = list(
 #' ## Elements of sublist \code{InsuranceContract.ParameterDefault$Features}
 #'
 #' \describe{
+#'     \item{\code{$zillmering}}{Whether the contract uses Zillmering (and bases
+#'               reserves on the Zillmer reserve as opposed to the adequate
+#'               reserve) (default: TRUE)}
 #'     \item{\code{$betaGammaInZillmer}}{Whether beta and gamma-costs should be
 #'               included in the Zillmer premium calculation}
 #'     \item{\code{$alphaRefundLinear}}{Whether the refund of alpha-costs on
@@ -548,6 +551,7 @@ InsuranceContract.Values = list(
 #'     \item{\code{$adjustPresentValues}}{Adjust the present value vectors that are later used to derive premiums and reserves. \code{function(presentValues, params, values)}}
 #'     \item{\code{$adjustPresentValuesCosts}}{Adjust the present value cost vectors used to derive premiums and reserves. \code{function(presentValuesCosts, params, values)}}
 #'     \item{\code{$adjustPremiumCoefficients}}{Function with signature \code{function(coeff, type, premiums, params, values, premiumCalculationTime)} to adjust the coefficients for premium calculation after their default setup. Use cases are e.g. term-fix tariffs where the Zillmer premium term contains the administration cost over the whole contract, but not other gamma- or beta-costs.}
+#'     \item{\code{$adjustPremiums}}{Adjust the resulting premiums. \code{function(premiums = list(premiums, coefficients, sumInsured), params, values)}}
 #'     \item{\code{$adjustPVForReserves}}{Adjust the absolute present value vectors used to derive reserves (e.g. when a sum rebate is subtracted from the gamma-cost reserves without influencing the premium calculation). \code{function(absPV, params, values)}}
 #'     \item{\code{$premiumRebateCalculation}}{Calculate the actual premium rebate from the rebate rate (e.g. when the premium rate is given as a yearly cost reduction applied to a single-premium contract). \code{function(premiumRebateRate, params = params, values = values)}}
 #' }
@@ -630,6 +634,7 @@ InsuranceContract.ParameterDefaults = list(
         commissionPeriod = 5
     ),
     Features = list(                            # Special cases for the calculations
+        zillmering = TRUE,                      # Whether the contract uses Zillmering (and bases reserves on the Zillmer reserve as opposed to the adequate reserve)
         betaGammaInZillmer = FALSE,             # Whether beta and gamma-costs should be included in the Zillmer premium calculation
         alphaRefundLinear  = TRUE,              # Whether the refund of alpha-costs on surrender is linear in t or follows the NPV of an annuity
         useUnearnedPremiums = isRegularPremiumContract, # Whether unearned premiums should be calculated in the balance sheet reserves. Otherwise, a premium paid at the beginning of the period is added to the reserve for balance-sheet purposes.
@@ -669,10 +674,11 @@ InsuranceContract.ParameterDefaults = list(
       adjustCosts = NULL,
       adjustMinCosts = NULL,
       adjustPresentValues = NULL,        # function(presentValues, params, values)
-      adjustPresentValuesCosts = NULL,        # function(presentValuesCosts, params, values)
+      adjustPresentValuesCosts = NULL,   # function(presentValuesCosts, params, values)
       adjustPremiumCoefficients = NULL,  # function(coeff, type = type, premiums = premiums, params = params, values = values, premiumCalculationTime = premiumCalculationTime)
+      adjustPremiums = NULL,             # function(premiums = list(premiums, coefficients, sumInsured), params, values)
       adjustPVForReserves = NULL,        # function(absPresentValues, params, values)
-      premiumRebateCalculation = NULL   # function(premiumRebateRate, params = params, values = values)
+      premiumRebateCalculation = NULL    # function(premiumRebateRate, params = params, values = values)
     )
 );
 

@@ -238,6 +238,9 @@ with duration "CommissionPeriod". Default is 5 years.}
 \subsection{Elements of sublist \code{InsuranceContract.ParameterDefault$Features}}{
 
 \describe{
+\item{\code{$zillmering}}{Whether the contract uses Zillmering (and bases
+reserves on the Zillmer reserve as opposed to the adequate
+reserve) (default: TRUE)}
 \item{\code{$betaGammaInZillmer}}{Whether beta and gamma-costs should be
 included in the Zillmer premium calculation}
 \item{\code{$alphaRefundLinear}}{Whether the refund of alpha-costs on

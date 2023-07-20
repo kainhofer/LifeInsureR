@@ -838,6 +838,7 @@ InsuranceTarif = R6Class(
         values$cashFlowsCosts[,,"SumPremiums",] * values$unitPremiumSum * values$premiums[["gross"]] +
         values$cashFlowsCosts[,,"GrossPremium",] * values$premiums[["gross"]] +
         values$cashFlowsCosts[,,"NetPremium",] * values$premiums[["net"]] +
+        # values$cashFlowsCosts[,,"Benefits",] * TODO!!!
         values$cashFlowsCosts[,,"Constant",];
 
       # Handle survival CF differently, because we don't want ".survival" in the column names!
@@ -975,6 +976,7 @@ InsuranceTarif = R6Class(
           affected = c(affected, "unitcosts")
         }
         coeff[["SumInsured"]][["costs"]][affected, "SumInsured",  ] = 1;
+        coeff[["SumInsured"]][["costs"]][affected, "Benefits",  ] = 1;
         # TODO: How to handle beta costs proportional to Sum Insured
         coeff[["Premium"]]   [["costs"]][affected, "SumPremiums", ] = -values$unitPremiumSum;
         coeff[["Premium"]]   [["costs"]][affected, "GrossPremium",] = -1;
@@ -1230,7 +1232,11 @@ InsuranceTarif = R6Class(
       values$premiums[["tax"]] = premiumBeforeTax * tax;
       values$premiums[["written"]] = premiumBeforeTax * (1 + tax);
 
-      list("premiums" = values$premiums, "coefficients" = coefficients, "sumInsured" = params$ContractData$sumInsured)
+      applyHook(
+        params$Hooks$adjustPremiums,
+        list("premiums" = values$premiums, "coefficients" = coefficients, "sumInsured" = params$ContractData$sumInsured),
+        params = params, values = values
+      )
     },
 
     #' @description Calculate the reserves of the InsuranceContract given the
@@ -1257,17 +1263,19 @@ InsuranceTarif = R6Class(
       resAdeq = absPV[,"benefitsAndRefund"] * securityFactor +
           absPV[,"alpha"] + absPV[,"beta"] + absPV[,"gamma"] -
         values$premiums[["gross"]] * absPV[,"premiums.unit"];
+      if (params$Features$unitcostsInGross) {
+          resAdeq = resAdeq + absPV[, "unitcosts"]
+      }
 
-      #values$premiums[["Zillmer"]] * absPV[,"premiums"];
       resGamma = absPV[,"gamma"] -
         ifelse(absPV[t, "premiums"] == 0, 0,
                absPV[t, "gamma"] / absPV[t, "premiums"]) * absPV[,"premiums"]
+
 
       advanceProfitParticipation = 0;
       if (!is.null(ppScheme)) {
           advanceProfitParticipation = ppScheme$getAdvanceProfitParticipation(params = params, values = values)
       }
-      resConversion = (resZ + resGamma) * (1 - advanceProfitParticipation);
 
       # Alpha refund: Distribute alpha-costs to 5 years (or if shorter, the policy period), always starting at time 0:
       # If alphaRefunded==TRUE, don't refund a second time!
@@ -1291,11 +1299,18 @@ InsuranceTarif = R6Class(
       }
 
       # Reduction Reserve: Reserve used for contract modifications:
-      resReduction = resZ + alphaRefund;
+      if (params$Features$zillmering) {
+        resContractual = resZ + resGamma
+        resReduction = resZ + alphaRefund;
+      } else {
+        resContractual = resAdeq + resGamma
+        resReduction = resAdeq + alphaRefund;
+      }
+      resConversion = resContractual * (1 - advanceProfitParticipation);
       if (params$Features$surrenderIncludesCostsReserves) {
         resReduction = resReduction + resGamma;
       }
-      resReduction = pmax(0,resReduction) # V_{x,n}^{Rkf}
+      resReduction = pmax(0, resReduction) # V_{x,n}^{Rkf}
 
       # Collect all reserves to one large matrix
       res = cbind(
@@ -1304,7 +1319,7 @@ InsuranceTarif = R6Class(
             "Zillmer"     = resZ,
             "adequate"    = resAdeq,
             "gamma"       = resGamma,
-            "contractual" = resZ + resGamma,
+            "contractual" = resContractual,
             "conversion"  = resConversion,
             "alphaRefund" = alphaRefund,
             "reduction"   = resReduction
@@ -1406,7 +1421,12 @@ InsuranceTarif = R6Class(
       resN_BS = (1 - baf) * (reserves[,"net"] + if (!useUnearnedPremiums) values$premiumComposition[,"net"] else 0) + baf * c(reserves[-1, "net"], 0)
       resZ_BS = (1 - baf) * (reserves[,"Zillmer"] + if (!useUnearnedPremiums) values$premiumComposition[,"Zillmer"] else 0) + baf * c(reserves[-1, "Zillmer"], 0)
       resGamma_BS = (1 - baf) * (reserves[,"gamma"] + if (!useUnearnedPremiums) values$premiumComposition[,"gamma"] else 0) + baf * c(reserves[-1, "gamma"], 0)
-      res_BS = resZ_BS + resGamma_BS;
+      resGross_BS = (1 - baf) * (reserves[,"adequate"] + if (!useUnearnedPremiums) sum(values$premiumComposition[,c("alpha", "beta", "gamma")]) else 0) + baf * c(reserves[-1, "adequate"], 0)
+      if (params$Features$zillmering) {
+        res_BS = resZ_BS + resGamma_BS;
+      } else {
+        res_BS = resGross_BS;
+      }
 
       # Premium transfer / unearned premium:
       if (useUnearnedPremiums) {
@@ -1438,6 +1458,7 @@ InsuranceTarif = R6Class(
                   "net"                   = pmax(resN_BS,0),
                   "Zillmer"               = pmax(resZ_BS,0),
                   "gamma"                 = pmax(resGamma_BS,0),
+                  "gross"                 = pmax(resGross_BS,0),
                   "Balance Sheet Reserve" = pmax(res_BS,0),
                   "unearned Premiums"     = unearnedPremiums
       );
