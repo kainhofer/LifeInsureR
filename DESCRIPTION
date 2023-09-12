@@ -45,6 +45,7 @@ Collate:
     'InsuranceContract.R'
     'addDataTableWorksheet.R'
     'contractGrid.R'
+    'create_LIC_project.R'
     'exportInsuranceContract_xlsx.R'
     'showVmGlgExamples.R'
     'exportInsuranceContractExample.R'

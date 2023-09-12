@@ -1,0 +1,8 @@
+^.*\.Rproj$
+^\.Rproj\.user$
+^Polizzeninfos/2020-
+^Polizzeninfos/2021-
+^Polizzeninfos/2022-
+^\.RData$
+^\.git$
+^Vergleichsrechner/

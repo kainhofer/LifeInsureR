@@ -1,0 +1,28 @@
+Package: LifeInsuranceContractsXXXCOMPANYXXX
+Type: Package
+Title: LifeInsuranceContract Implementation for XXXCOMPANYXXX
+Version: 0.1
+Date: 2023-12-31
+Description: Implementation of XXXCOMPANYXXX life insurance products.
+License: Proprietory (using XXXCOMPANYXXX's tariff plans)
+Authors@R: c(person("Firstname", "Lastname", role = c("aut", "cre"),
+                    email = "email@example.com"))
+Author: Firstname Lastname [aut, cre]
+Maintainer: Firstname Lastname <email@example.com>
+Depends: R (>= 3.1.0), 
+    LifeInsuranceContracts, 
+    MortalityTables,
+    here
+Encoding: UTF-8
+LazyData: true
+Recommends:
+    openxlsx
+URL:
+BugReports:
+RoxygenNote: 7.2.3
+Collate: 
+    'XXXCOMPANYXXX_General.R'
+    'XXXCOMPANYXXX_Tarif1.R'
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3

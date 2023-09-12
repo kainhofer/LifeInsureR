@@ -1,0 +1,10 @@
+Binding: create_LIC_project
+Title: LifeInsuranceContracts Implementation
+Subtitle: Company-specific product definitions using the LifeInsuranceContracts package
+OpenFiles: RechnungGesamtbestand.R
+Caption: Company-specific LifeInsuranceContracts product implementation
+
+Parameter: Company
+Widget: TextInput
+Label: Company (letters only, no spaces, special characters etc.)
+

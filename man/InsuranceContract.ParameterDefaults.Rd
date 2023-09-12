@@ -316,6 +316,7 @@ participation rates are defined at the level of profit classes.}
 \item{\code{$adjustPresentValues}}{Adjust the present value vectors that are later used to derive premiums and reserves. \code{function(presentValues, params, values)}}
 \item{\code{$adjustPresentValuesCosts}}{Adjust the present value cost vectors used to derive premiums and reserves. \code{function(presentValuesCosts, params, values)}}
 \item{\code{$adjustPremiumCoefficients}}{Function with signature \code{function(coeff, type, premiums, params, values, premiumCalculationTime)} to adjust the coefficients for premium calculation after their default setup. Use cases are e.g. term-fix tariffs where the Zillmer premium term contains the administration cost over the whole contract, but not other gamma- or beta-costs.}
+\item{\code{$adjustPremiums}}{Adjust the resulting premiums. \code{function(premiums = list(premiums, coefficients, sumInsured), params, values)}}
 \item{\code{$adjustPVForReserves}}{Adjust the absolute present value vectors used to derive reserves (e.g. when a sum rebate is subtracted from the gamma-cost reserves without influencing the premium calculation). \code{function(absPV, params, values)}}
 \item{\code{$premiumRebateCalculation}}{Calculate the actual premium rebate from the rebate rate (e.g. when the premium rate is given as a yearly cost reduction applied to a single-premium contract). \code{function(premiumRebateRate, params = params, values = values)}}
 }
