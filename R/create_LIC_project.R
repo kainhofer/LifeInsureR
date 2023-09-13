@@ -25,15 +25,16 @@ create_LIC_project <- function(path, ...) {
                     lib.loc = lib.loc, mustWork = mustWork)
     }
     from <- LIC.src("LifeInsuranceContracts")
-    copied_files <- fs::dir_copy(path = from, new_path = path, overwrite = TRUE)
+    fs::dir_copy(path = from, new_path = path, overwrite = TRUE)
 
 
     ########################################
     #####  3. Rename all files with XXXCOMPANYXXX -> CompanyName
 
-    LIC.replaceFilename <- function(...) {
-
-    }
+    patternFiles = list.files(path = path, pattern = "XXXCOMPANYXXX", full.names = TRUE, recursive = TRUE)
+    replacementFiles = str_replace(patternFiles, "XXXCOMPANYXXX", CompanyName)
+    file.rename(patternFiles, replacementFiles)
+    copied_files <- list.files(path = path, recursive = TRUE)
 
 
     ########################################
