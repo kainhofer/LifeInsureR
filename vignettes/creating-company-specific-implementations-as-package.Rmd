@@ -1,0 +1,46 @@
+---
+title: "Creating Company-Specific LifeInsuranceContracts Implementations (using an RStudio Package Template)"
+author:
+- name: Reinhold Kainhofer
+  affiliation: Open Tools
+  email: reinhold@kainhofer.com
+
+date: "`r Sys.Date()`"
+output:
+    rmarkdown::html_vignette:
+        toc: true
+        toc_depth: 3
+        fig_width: 7
+        fig_height: 5
+        number_sections: true
+vignette: >
+  %\VignetteIndexEntry{Using the LifeInsuranceContracts Package}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+
+```{r setup, echo = FALSE, message=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+library(knitr)
+library(kableExtra)
+library(LifeInsuranceContracts)
+library(dplyr)
+library(tibble)
+library(lubridate)
+options(scipen=5)
+
+library(pander)
+```
+
+The LifeInsuranceContracts package provides a full-featured framework to model classical life insurance contracts (non-unit linked). This is typically sufficient to implement simple example calculations or validate a single contract or tariff by a single individual.
+
+However, when working for a company (eith from inside the company or as an external consultant), one typically wants the implementation to be nicely structured, easily available for the whole team and still have the chance to improve the implementation.
+This can be achieved by encapsulating the company-specific tariff implementations
+in an R package that provides and exports the individual products of the company.
+
+The LifeInsuranceContracts package even provides an RStudio project template 
+to create a new skeleton of a company-specific implementation to use as the
+foundation of such an implementation.
+
+Once, 
