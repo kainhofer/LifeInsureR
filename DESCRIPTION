@@ -1,7 +1,7 @@
 Package: LifeInsuranceContracts
 Type: Package
-Version: 0.0.4
-Date: 2022-09-10
+Version: 0.0.5
+Date: 2023-10-18
 Title: Framework for Traditional Life Insurance Contracts
 Description: R6 classes to model traditional life insurance
     contracts like annuities, whole life insurances or endowments. Such life
@@ -53,7 +53,8 @@ Suggests:
     knitr,
     magrittr,
     tibble,
-    testthat
+    testthat,
+    fs
 VignetteBuilder: knitr
 Roxygen: list(markdown = TRUE)
 URL: https://gitlab.open-tools.net/R/r-life-insurance-contracts

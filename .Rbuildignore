@@ -5,5 +5,6 @@
 ^R/Companies
 ^Auswertungen
 ^BEISPIEL_Contract.xlsx
-
+^Examples
+.Rbuildignore$
 

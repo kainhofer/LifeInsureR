@@ -14,7 +14,7 @@
 #      expressed with other values than the package expects), update the
 #      VTmodify.* functions below correspondingly.
 #   5. Update the column types in the readXXXCOMPANYXXXBestand(..) function. This helps
-#      preventing errors, as these columnt are always cast to the required type.
+#      preventing errors, as these columns are always cast to the required type.
 #   6. The calculate_contract(..) function might need to some adjustments /
 #      modifications, in particular when modified contracts, premiums waivers,
 #      additional tariffs / single-payment add-ons etc. are present.
@@ -40,7 +40,7 @@
 #
 #
 # General Overview of the calculation procedure
-#   1. The contract data are read in from the filenames provided in the `files`
+#   1. The contract data are read in from the file names provided in the `files`
 #      list and stored in the data.frame called `bestandinfos.all`.
 #        a. Each file is read using the function `readXXXCOMPANYXXXBestand`.
 #        b. The `readXXXCOMPANYXXXBestand` function uses read_excel to read in the raw data,
@@ -54,10 +54,10 @@
 #      products and/or profit classes. Additionally, n_max can be used to
 #      calculate only the first n_max contracts.
 #      The `calculate_portfolio` function does its work with the following steps:
-#        a. The portfolio data is filted with the given tariff, GV, skip, n_max arguments
+#        a. The portfolio data is filtered with the given tariff, GV, skip, n_max arguments
 #        b. Only the relevant columns of the portfolio data are taken, some
 #           sanity checks (sumInsured > 0, premiumFrequency >= 0) are applied.
-#        c. Grouping happend by column SliceID. This allows humtiple portfolio
+#        c. Grouping happens by column SliceID. This allows multiple portfolio
 #           data rows to be combined to one contract with several slices / sum
 #           increases, which are calculated as one contract (see section "10.3
 #           Dynamic Increases" of the LifeInsuranceContracts vignette). If each

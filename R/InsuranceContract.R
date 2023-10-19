@@ -1156,6 +1156,21 @@ InsuranceContract = R6Class(
             #### #
             self$Parameters$Costs = private$evaluateCosts()
 
+
+            ##### #
+            # SUM INSURED: By default, sum insured is required and the premium
+            # is calculated from the SI. However, it is also possible (not yet
+            # fully implemented) to prescribe the premium and/or initial capital
+            # to determine the SI. If neither is given, a warning should be printed
+            # and a default of sumInsured=10000 should be applied
+            if (is.null(self$Parameters$ContractData$sumInsured) &&
+                is.null(self$Parameters$ContractData$premium) &&
+                (is.null(self$Parameters$ContractData$initialCapital) ||
+                 self$Parameters$ContractData$initialCapital == 0)) {
+                self$Parameters$ContractData$sumInsured = 10000
+                warning("InsuranceContract: Neither sumInsured nor premium nor initialCapital given! => Assuming default sum insured 10.000. Tariff: ", self$tarif$name)
+            }
+
             invisible(self)
         },
 

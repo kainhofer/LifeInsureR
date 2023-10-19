@@ -283,10 +283,10 @@ getContractBlockPremiums = function(contract) {
 #' @param costValues Cost definition data structure
 costValuesAsDF = function(costValues) {
   as.data.frame.table(costValues, responseName = "Value", stringsAsFactors = TRUE) %>%
-    mutate(Var4 = recode(Var4, "Erl." = "")) %>%
-    arrange(Var4, Var2, Var3, Var1) %>%
+    mutate(Var4 = recode(.data$Var4, "Erl." = "")) %>%
+    arrange(.data$Var4, .data$Var2, .data$Var3, .data$Var1) %>%
     unite("costtype", "Var2", "Var3", "Var4", sep = " ") %>%
-    pivot_wider(names_from = costtype, values_from = Value) %>%
+    pivot_wider(names_from = .data$costtype, values_from = .data$Value) %>%
     mutate(Var1 = NULL)
 }
 
@@ -350,10 +350,10 @@ exportContractDataTable = function(wb, sheet, contract, ccol = 1, crow = 1, styl
   tmp = contractValues %>%
     mutate(`Initial Capital` = additional_capital) %>%
     select(
-      Vertragsteil = ID, Beginn = `Start of Contract`, Tarif = Tariff, `Sum insured`,
-      `Initial Capital`,
-      `Mortality table`, i, Age, `Policy duration`, `Premium period`,
-      `Deferral period`, `Guaranteed payments`)
+      Vertragsteil = .data$ID, Beginn = .data$`Start of Contract`, Tarif = .data$Tariff, .data$`Sum insured`,
+      .data$`Initial Capital`,
+      .data$`Mortality table`, .data$i, .data$Age, .data$`Policy duration`, .data$`Premium period`,
+      .data$`Deferral period`, .data$`Guaranteed payments`)
   writeValuesTable(wb, sheet, values = setInsuranceValuesLabels(tmp),
                    caption = "Basisdaten der Vertragsteile", crow = crow, ccol = 1,
                    tableName = "BlocksBasicData", styles = styles)
@@ -365,7 +365,7 @@ exportContractDataTable = function(wb, sheet, contract, ccol = 1, crow = 1, styl
 
   # Unit Premiums ####
   tmp = contractPremiums %>%
-    select(Vertragsteil = ID, unit.net, unit.Zillmer, unit.gross)
+    select(Vertragsteil = .data$ID, .data$unit.net, .data$unit.Zillmer, .data$unit.gross)
   writeValuesTable(wb, sheet, values = setInsuranceValuesLabels(tmp),
                    caption = "Pr\u00e4miens\u00e4tze (auf VS 1)", crow = crow, ccol = 1,
                    tableName = "UnitPremiums", styles = styles, valueStyle = styles$unitpremiums)
@@ -373,7 +373,7 @@ exportContractDataTable = function(wb, sheet, contract, ccol = 1, crow = 1, styl
 
   # Yearly Premiums ####
   tmp = contractPremiums %>%
-    select(Vertragsteil = ID, net, Zillmer, gross, written_yearly)
+    select(Vertragsteil = .data$ID, .data$net, .data$Zillmer, .data$gross, .data$written_yearly)
   writeValuesTable(wb, sheet, values = setInsuranceValuesLabels(tmp),
                    caption = "Jahrespr\u00e4mien", crow = crow, ccol = 1,
                    tableName = "YearlyPremiums", styles = styles, valueStyle = styles$currency0)
@@ -381,7 +381,7 @@ exportContractDataTable = function(wb, sheet, contract, ccol = 1, crow = 1, styl
 
   # Written Premiums ####
   tmp = contractPremiums %>%
-    select(Vertragsteil = ID, written, unitcost, written_beforetax, tax)
+    select(Vertragsteil = .data$ID, .data$written, .data$unitcost, .data$written_beforetax, .data$tax)
   writeValuesTable(wb, sheet, values = setInsuranceValuesLabels(tmp),
                    caption = "Pr\u00e4mien (pro Zahlungsweise)", crow = crow, ccol = 1,
                    tableName = "WrittenPremiums", styles = styles, valueStyle = styles$currency0)

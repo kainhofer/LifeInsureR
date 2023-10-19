@@ -944,7 +944,11 @@ InsuranceTarif = R6Class(
       );
 
       coeff[["Premium"]][["benefits"]][["premiums"]]            = 1;
-      coeff[["SumInsured"]][["benefits"]][["additional_capital"]]            = -1 / params$ContractData$sumInsured;
+      if (!is.null(params$ContractData$sumInsured)) {
+          coeff[["SumInsured"]][["benefits"]][["additional_capital"]]            = -1 / params$ContractData$sumInsured;
+      } else {
+          coeff[["SumInsured"]][["benefits"]][["additional_capital"]]            = 0;
+      }
 
       # Costs proportional to NetPremium introduce a non-linearity, as the NP is not available when the gross premium is calculated
       # => the corresponding costs PV is included in the coefficient!
@@ -980,8 +984,11 @@ InsuranceTarif = R6Class(
         # TODO: How to handle beta costs proportional to Sum Insured
         coeff[["Premium"]]   [["costs"]][affected, "SumPremiums", ] = -values$unitPremiumSum;
         coeff[["Premium"]]   [["costs"]][affected, "GrossPremium",] = -1;
-        coeff[["SumInsured"]][["costs"]][affected, "Constant",    ] = 1 / params$ContractData$sumInsured;
-
+        if (!is.null(params$ContractData$sumInsured)) {
+            coeff[["SumInsured"]][["costs"]][affected, "Constant",    ] = 1 / params$ContractData$sumInsured;
+        } else {
+            coeff[["SumInsured"]][["costs"]][affected, "Constant",    ] = 0;
+        }
       } else if (type == "Zillmer") {
           # TODO: Include costs with basis NetPremium and fixed costs!
         affected = c("Zillmer")

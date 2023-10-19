@@ -16,7 +16,7 @@ NULL
 #' @export
 filterProfitRates = function(rates, classes) {
   rates %>%
-    dplyr::filter(profitClass %in% classes)
+    dplyr::filter(.data$profitClass %in% classes)
 }
 
 

@@ -295,19 +295,34 @@ mergeValues3D = function(starting, ending, t) {
   }
 }
 
-# PVfactory (R6Class for present values with arbitrary dimensions) ####
+#' PVfactory (R6Class for present values with arbitrary dimensions)
+#'
+#' provides functions to calculate present values for survival, death, dread
+#' disease, invalidity and guaranteed benefits in various dimensions
+#' @param qx the vector of mortality / death probabilities
+#' @param m the number of yearly payments
+#' @param mCorrection the list of alpha/beta to correct present values for multiple payments per year
+#' @param v the discount factor (1 / (1+i))
+#' @param advance the payment cashflows in advance
+#' @param arrears the payment cashflows in arrears
+#' @param start the time index, where the PV calculation should be based
+#' @param benefits the vector of death / invalidity / disease benefits
+#' @param ... other parameters (currently not used, for future use)
 #' @export
+#'
 PVfactory = R6Class(
   "PVfactory",
 
   ######################### PUBLIC METHODS ################################# #
   public  = list(
+    #' @description Initialize the present value factory with defaults for qx, interest and multiple payments per year
     initialize = function(qx, m = 1, mCorrection = list(alpha = 1, beta = 0), v = 1) {
       private$qx = qx;
       private$m = m;
       private$mCorrection = mCorrection;
       private$v = v;
     },
+    #' @description Present values of guaranteed benefits (paid in advance or arrears, possible multiple times per year)
     guaranteed = function(advance = NULL, arrears = NULL, start = 0, ..., m = private$m, mCorrection = private$mCorrection, v = private$v) {
       # General Note: Since the CF vectors can have an arbitrary number of
       # dimensions, we cannot directly access them via advance[1,..]. Rather,
@@ -373,6 +388,7 @@ PVfactory = R6Class(
       VL(Qres, list(1:l))
     },
 
+    #' @description Present values of survival benefits (paid in advance or arrears, possible multiple times per year)
     survival = function(advance = NULL, arrears = NULL, start = 0, ..., m = private$m, mCorrection = private$mCorrection, v = private$v) {
       # General Note: Since the CF vectors can have an arbitrary number of
       # dimensions, we cannot directly access them via advance[1,..]. Rather,
@@ -439,6 +455,7 @@ PVfactory = R6Class(
       VL(Qres, list(1:l))
     },
 
+    #' @description Present values of death benefits
     death = function(benefits, start = 0, ..., v = private$v) {
       # General Note: Since the CF vectors can have an arbitrary number of
       # dimensions, we cannot directly access them via advance[1,..]. Rather,
@@ -497,6 +514,7 @@ PVfactory = R6Class(
       }
       VL(Qres, list(1:l))
     },
+    #' @description Present values of disease benefits
     disease = function(benefits, start = 0, ..., v = private$v) {
       # General Note: Since the CF vectors can have an arbitrary number of
       # dimensions, we cannot directly access them via advance[1,..]. Rather,
@@ -560,6 +578,7 @@ PVfactory = R6Class(
     # payments (present value conditional on active, but payments only when
     # dead => need to write the Thiele difference equations as a pair of
     # recursive equations rather than a single recursive formula...)
+    #' @description Present values of guaranteed benefits after death (paid in advance or arrears, possible multiple times per year)
     afterDeath = function(advance = NULL, arrears = NULL, start = 0, ..., m = private$m, mCorrection = private$mCorrection, v = private$v) {
       # General Note: Since the CF vectors can have an arbitrary number of
       # dimensions, we cannot directly access them via advance[1,..]. Rather,
