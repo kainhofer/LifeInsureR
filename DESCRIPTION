@@ -1,61 +1,21 @@
 Package: LifeInsuranceContracts
 Type: Package
-Version: 0.0.5
-Date: 2023-10-18
+Version: 0.0.6
+Date: 2023-10-20
 Title: Framework for Traditional Life Insurance Contracts
-Description: R6 classes to model traditional life insurance
-    contracts like annuities, whole life insurances or endowments. Such life
-    insurance contracts provide a guaranteed interest and are not directly linked
-    to the performance of a particular investment vehicle. However, they typically
-    provide (discretionary) profit participation. This package provides a framework
-    to model such contracts in a very generic (cash-flow-based) way and includes
-    modelling profit participation schemes, dynamic increases or more general
-    contract layers, as well as contract changes (like sum increases or premium
-    waivers). All relevant quantities like premium decomposition, reserves and 
-    benefits over the whole contract period are calculated and potentially 
-    exported to excel. Mortalities are given using the 'MortalityTables' package.
+Description: This package has been renamed to LifeInsureR, please use that package.
 Authors@R: c(person("Reinhold", "Kainhofer", role=c("aut", "cre"), email="reinhold@kainhofer.com"))
 Author: Reinhold Kainhofer [aut, cre]
 Maintainer: Reinhold Kainhofer <reinhold@kainhofer.com>
 Encoding: UTF-8
 Imports:
-    R6,
-    MortalityTables,
-    objectProperties,
-    lubridate,
-    openxlsx,
-    dplyr,
-    scales,
-    abind,
-    stringr,
-    methods,
-    rlang,
-    rmarkdown,
-    kableExtra,
-    pander,
-    tidyr
+    LifeInsureR,
+    rmarkdown
 License: GPL (>= 2)
-RoxygenNote: 7.2.3
-Collate:
-    'HelperFunctions.R'
-    'InsuranceParameters.R'
-    'ProfitParticipation_Functions.R'
-    'ProfitParticipation.R'
-    'InsuranceTarif.R'
-    'InsuranceContract.R'
-    'addDataTableWorksheet.R'
-    'contractGrid.R'
-    'create_LIC_project.R'
-    'exportInsuranceContract_xlsx.R'
-    'showVmGlgExamples.R'
-    'exportInsuranceContractExample.R'
 Suggests:
-    knitr,
-    magrittr,
-    tibble,
-    testthat,
-    fs
+    knitr
 VignetteBuilder: knitr
 Roxygen: list(markdown = TRUE)
-URL: https://gitlab.open-tools.net/R/r-life-insurance-contracts
-BugReports: https://gitlab.open-tools.net/R/r-life-insurance-contracts/-/issues
+URL: https://gitlab.open-tools.net/R/LifeInsureR
+BugReports: https://gitlab.open-tools.net/R/LifeInsureR/-/issues
+RoxygenNote: 7.2.3
