@@ -21,7 +21,7 @@ setCost(costs, type, basis = "SumInsured", frequency = "PolicyPeriod", value)
 The modified cost structure
 }
 \description{
-Insurance tariff costs are defined by a cost matrix with dimensions: {CostType, Basis, Period}, where:
+Insurance tariff costs are defined by a cost matrix with dimensions: \{CostType, Basis, Period\}, where:
 \describe{
 \item{CostType:}{alpha, Zillmer, beta, gamma, gamma_nopremiums, unitcosts}
 \item{Basis:}{SumInsured, SumPremiums, GrossPremium, NetPremium, Constant}

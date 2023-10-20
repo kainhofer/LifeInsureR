@@ -13,7 +13,7 @@ Description: R6 classes to model traditional life insurance
     contract layers, as well as contract changes (like sum increases or premium
     waivers). All relevant quantities like premium decomposition, reserves and 
     benefits over the whole contract period are calculated and potentially 
-    exported to excel. Mortalities are given using the 'MortalityTables' package.
+    exported to excel. Mortality rates are given using the 'MortalityTables' package.
 Authors@R: c(person("Reinhold", "Kainhofer", role=c("aut", "cre"), email="reinhold@kainhofer.com"))
 Author: Reinhold Kainhofer [aut, cre]
 Maintainer: Reinhold Kainhofer <reinhold@kainhofer.com>

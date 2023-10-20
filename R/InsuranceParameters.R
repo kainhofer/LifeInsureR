@@ -3,7 +3,7 @@ NULL
 
 #' Update one component of an [InsuranceTarif]'s cost structure
 #'
-#' Insurance tariff costs are defined by a cost matrix with dimensions: {CostType, Basis, Period}, where:
+#' Insurance tariff costs are defined by a cost matrix with dimensions: \{CostType, Basis, Period\}, where:
 #' \describe{
 #'     \item{CostType:}{alpha, Zillmer, beta, gamma, gamma_nopremiums, unitcosts}
 #'     \item{Basis:}{SumInsured, SumPremiums, GrossPremium, NetPremium, Constant}
