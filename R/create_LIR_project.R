@@ -4,7 +4,7 @@
 #     https://blog.devgenius.io/make-your-own-rstudio-project-template-1f77c4888e79
 # and heavily modified
 
-create_LIC_project <- function(path, ...) {
+create_LIR_project <- function(path, ...) {
     dots <- list(...)
     CompanyName = dots$Company
 
@@ -21,10 +21,10 @@ create_LIC_project <- function(path, ...) {
 
     LIC.src <- function (..., lib.loc = NULL, mustWork = FALSE){
         system.file("rstudio", "templates", "project", ...,
-                    package = "LifeInsuranceContracts",
+                    package = "LifeInsureR",
                     lib.loc = lib.loc, mustWork = mustWork)
     }
-    from <- LIC.src("LifeInsuranceContracts")
+    from <- LIC.src("LifeInsureR")
     fs::dir_copy(path = from, new_path = path, overwrite = TRUE)
 
 

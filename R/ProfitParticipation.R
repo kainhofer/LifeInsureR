@@ -15,8 +15,8 @@ NULL
 #'
 #' @export
 filterProfitRates = function(rates, classes) {
-  rates %>%
-    dplyr::filter(.data$profitClass %in% classes)
+    rates %>%
+        dplyr::filter(.data$profitClass %in% classes)
 }
 
 
@@ -43,336 +43,336 @@ filterProfitRates = function(rates, classes) {
 #'
 #' @export
 ProfitParticipation = R6Class(
-  "ProfitParticipation",
-  public  = list(
-    #' @field name The human-readable name of the profit plan.
-    name  = "Name des Gewinnplans",
-    #' @field Parameters Parameter template for profit-participation-specific
-    #' parameters, i.e. the \code{ProfitParticipation} element of the
-    #' [InsuranceContract.ParameterStructure] data structure.
-    #'
-    #' All elements defined in the profit scheme can be overriden per contract
-    #' in the call to \code{[InsuranceContract]$new} or even in the explicit
-    #' call to \ifelse{html}{\href{../../LifeInsuranceContracts/html/InsuranceContract.html#method-profitScenario}{\code{InsuranceContract$profitScenario()}}}{\code{InsuranceContract$profitScenario()()}}
-    #' or \ifelse{html}{\href{../../LifeInsuranceContracts/html/InsuranceContract.html#method-addProfitScenario}{\code{InsuranceContract$addProfitScenario()}}}{\code{InsuranceContract$addProfitScenario()()}}.
-    #'
-    #'
-    Parameters = InsuranceContract.ParameterStructure$ProfitParticipation,
+    "ProfitParticipation",
+    public  = list(
+        #' @field name The human-readable name of the profit plan.
+        name  = "Name des Gewinnplans",
+        #' @field Parameters Parameter template for profit-participation-specific
+        #' parameters, i.e. the \code{ProfitParticipation} element of the
+        #' [InsuranceContract.ParameterStructure] data structure.
+        #'
+        #' All elements defined in the profit scheme can be overriden per contract
+        #' in the call to \code{[InsuranceContract]$new} or even in the explicit
+        #' call to \ifelse{html}{\href{../../LifeInsureR/html/InsuranceContract.html#method-profitScenario}{\code{InsuranceContract$profitScenario()}}}{\code{InsuranceContract$profitScenario()()}}
+        #' or \ifelse{html}{\href{../../LifeInsureR/html/InsuranceContract.html#method-addProfitScenario}{\code{InsuranceContract$addProfitScenario()}}}{\code{InsuranceContract$addProfitScenario()()}}.
+        #'
+        #'
+        Parameters = InsuranceContract.ParameterStructure$ProfitParticipation,
 
-    ########################################################################m#
-    # Function blocks (modular) to determine bases, rates and calculation ##m#
-    ########################################################################m#
-    #' @field Functions list of functions defined to calculate the individual
-    #' components. For each of the profit components
-    #' \itemize{
-    #'     \item interest profit
-    #'     \item risk profit
-    #'     \item expense profit
-    #'     \item sum profit
-    #'     \item terminal bonus
-    #'     \item terminal bonus fund
-    #' }
-    #' a rate,  a profit base and a calculation function can be defined, by assigning one of the pre-defined
-    #' [ProfitParticipationFunctions] or proving your own function with signature
-    #' \code{function(rates, params, values, ...)}. Additionally, for each of the
-    #' benefit types (survival, death, surrender, premium waiver) a function can
-    #' be provided to calculate the benefit stemming from profit participation.
-    Functions = list(
+        ########################################################################m#
+        # Function blocks (modular) to determine bases, rates and calculation ##m#
+        ########################################################################m#
+        #' @field Functions list of functions defined to calculate the individual
+        #' components. For each of the profit components
+        #' \itemize{
+        #'     \item interest profit
+        #'     \item risk profit
+        #'     \item expense profit
+        #'     \item sum profit
+        #'     \item terminal bonus
+        #'     \item terminal bonus fund
+        #' }
+        #' a rate,  a profit base and a calculation function can be defined, by assigning one of the pre-defined
+        #' [ProfitParticipationFunctions] or proving your own function with signature
+        #' \code{function(rates, params, values, ...)}. Additionally, for each of the
+        #' benefit types (survival, death, surrender, premium waiver) a function can
+        #' be provided to calculate the benefit stemming from profit participation.
+        Functions = list(
 
-        #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-        # Calculation bases for the various types of profit
-        # Can / shall be overridden in child classes that use other bases!
-        #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-        getInterestProfitBase   = PP.base.meanContractualReserve,
-        getRiskProfitBase       = PP.base.ZillmerRiskPremium,
-        getExpenseProfitBase    = PP.base.sumInsured,
-        getSumProfitBase        = PP.base.sumInsured,
-        getTerminalBonusBase    = PP.base.sumInsured,
-        getTerminalBonusFundBase = PP.base.totalProfitAssignment,
+            #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+            # Calculation bases for the various types of profit
+            # Can / shall be overridden in child classes that use other bases!
+            #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+            getInterestProfitBase   = PP.base.meanContractualReserve,
+            getRiskProfitBase       = PP.base.ZillmerRiskPremium,
+            getExpenseProfitBase    = PP.base.sumInsured,
+            getSumProfitBase        = PP.base.sumInsured,
+            getTerminalBonusBase    = PP.base.sumInsured,
+            getTerminalBonusFundBase = PP.base.totalProfitAssignment,
 
-        #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-        # Profit rates for the various types of profit
-        # Can / shall be overridden in child classes that use other schemes!
-        #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-        getInterestProfitRate   = PP.rate.interestProfit,
-        getRiskProfitRate       = PP.rate.riskProfit,
-        getExpenseProfitRate    = PP.rate.expenseProfit,
-        getSumProfitRate        = PP.rate.sumProfit,
-        getTerminalBonusRate    = PP.rate.terminalBonus,
-        getTerminalBonusFundRate= PP.rate.terminalBonusFund,
-
-
-        getInterestOnProfits    = PP.rate.totalInterest,
+            #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+            # Profit rates for the various types of profit
+            # Can / shall be overridden in child classes that use other schemes!
+            #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+            getInterestProfitRate   = PP.rate.interestProfit,
+            getRiskProfitRate       = PP.rate.riskProfit,
+            getExpenseProfitRate    = PP.rate.expenseProfit,
+            getSumProfitRate        = PP.rate.sumProfit,
+            getTerminalBonusRate    = PP.rate.terminalBonus,
+            getTerminalBonusFundRate= PP.rate.terminalBonusFund,
 
 
+            getInterestOnProfits    = PP.rate.totalInterest,
 
-        calculateInterestProfit = PP.calculate.RateOnBase,
-        calculateRiskProfit     = PP.calculate.RateOnBase,
-        calculateExpenseProfit  = PP.calculate.RateOnBase,
-        calculateSumProfit      = PP.calculate.RateOnBase,
 
-        calculateTerminalBonus  = PP.calculate.RateOnBase,
-        getTerminalBonusReserve = function(profits, rates, terminalBonus, terminalBonusAccount, params, values) {
-            n = length(terminalBonusAccount)
-            terminalBonusAccount * 1/(1.07) ^ ((n - 1):0)
+
+            calculateInterestProfit = PP.calculate.RateOnBase,
+            calculateRiskProfit     = PP.calculate.RateOnBase,
+            calculateExpenseProfit  = PP.calculate.RateOnBase,
+            calculateSumProfit      = PP.calculate.RateOnBase,
+
+            calculateTerminalBonus  = PP.calculate.RateOnBase,
+            getTerminalBonusReserve = function(profits, rates, terminalBonus, terminalBonusAccount, params, values) {
+                n = length(terminalBonusAccount)
+                terminalBonusAccount * 1/(1.07) ^ ((n - 1):0)
+            },
+            calculateTerminalBonusFund = PP.calculate.RateOnBase,
+
+            #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+            # Calculations of the assigned profit amounts, based on the bases and
+            # rates defined with the functions above.
+            # Can / shall be overridden in child classes that use other bases!
+            #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+            calculateSurvivalBenefit      = PP.benefit.ProfitPlusTerminalBonusReserve,
+            calculateDeathBenefitAccrued  = PP.benefit.ProfitPlusGuaranteedInterest,
+            calculateDeathBenefitTerminal = PP.benefit.TerminalBonus5YearsProRata,
+            calculateSurrenderBenefitAccrued = PP.benefit.ProfitPlusHalfGuaranteedInterest,
+            calculateSurrenderBenefitTerminal = PP.benefit.TerminalBonus5YearsProRata,
+            calculatePremiumWaiverBenefitAccrued = PP.benefit.Profit,
+            calculatePremiumWaiverBenefitTerminal = PP.benefit.TerminalBonus5YearsProRata,
+
+
+            dummy = 0
+        ),
+
+
+        #' @description Create a new profit participation scheme
+        #' @details This function is called when a new profit participation scheme
+        #' is created with a call to \code{ProfitParticipation$new(...)}. Possible
+        #' parameters to the \code{new}-Call are all parameters from the `ProfitParticipation` sublist of the
+        #' [InsuranceContract.ParameterStructure] parameter
+        #' structure (which are understood as template values that can be overridden
+        #' per contract or even per profit participation scenario) and the components
+        #' of the `Functions` field defining the functions to calculate the individual
+        #' components of the profit participation (rates, calculation bases, calculation, benefits)
+        #'
+        #' @param name The name of the profit scheme (typicall the name of the profit plan and its version)
+        #' @param ... profit participation parameters to be stored in the
+        #' `Parameters field or calculation functions to be stored in the `Functions`
+        #' field
+        initialize = function(name = NULL, ...) {
+            if (!missing(name))           self$name = name;
+            self$setParameters(...);
+            self$setFunctions(...);
+            self$setFallbackParameters();
         },
-        calculateTerminalBonusFund = PP.calculate.RateOnBase,
-
-        #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-        # Calculations of the assigned profit amounts, based on the bases and
-        # rates defined with the functions above.
-        # Can / shall be overridden in child classes that use other bases!
-        #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-        calculateSurvivalBenefit      = PP.benefit.ProfitPlusTerminalBonusReserve,
-        calculateDeathBenefitAccrued  = PP.benefit.ProfitPlusGuaranteedInterest,
-        calculateDeathBenefitTerminal = PP.benefit.TerminalBonus5YearsProRata,
-        calculateSurrenderBenefitAccrued = PP.benefit.ProfitPlusHalfGuaranteedInterest,
-        calculateSurrenderBenefitTerminal = PP.benefit.TerminalBonus5YearsProRata,
-        calculatePremiumWaiverBenefitAccrued = PP.benefit.Profit,
-        calculatePremiumWaiverBenefitTerminal = PP.benefit.TerminalBonus5YearsProRata,
 
 
-        dummy = 0
-    ),
+        #' @description Store all passed parameters in the `Parameters` field
+        #' @param ... any of the named fields defined in the `ProfitParticipation` sublist of the
+        #'      [InsuranceContract.ParameterStructure]. All other arguments will be ignored
+        setParameters = function(...) {
+            self$Parameters = fillFields(self$Parameters, list(...));
+        },
+
+        #' @description Store all passed functions in the `Functions` field
+        #' @param ... any of the functions defined in the `Functions` field. All other
+        #'     arguments will be ignored
+        setFunctions = function(...) {
+            self$Functions = fillFields(self$Functions, list(...));
+        },
+
+        #' @description Fill all missing parameters with the default fall-back values
+        setFallbackParameters = function() {
+            self$Parameters = fallbackFields(self$Parameters, list(profitParticipationScheme = self));
+            self$Parameters = fallbackFields(self$Parameters, InsuranceContract.ParameterDefaults$ProfitParticipation);
+        },
+
+        #' @description create a copy of a profit scheme with certain parameters changed
+        #' @details This method \code{createModification} returns a copy of the profit scheme
+        #' with all given arguments changed in the schmes's `Parameters`
+        #' parameter list.
+        #'
+        #' As ProfitParticipation is a R6 class with reference logic, simply assigning
+        #' the object to a new variable does not create a copy, but references the
+        #' original profit scheme object. To create an actual copy, one needs to call this
+        #' method, which first clones the whole object and then adjusts all parameters
+        #' to the values passed to this method.
+        #'
+        #' @param name The new name for the cloned [ProfitParticipation] object
+        #' @param ... Parameters for the [InsuranceContract.ParameterStructure],
+        #'            defining the characteristics of the tariff.
+        createModification = function(name  = NULL, ...) {
+            cloned = self$clone();
+            if (!missing(name)) cloned$name = name;
+            cloned$Parameters = fillFields(cloned$Parameters, list(...));
+            cloned$Functions  = fillFields(cloned$Functions, list(...));
+            cloned
+        },
 
 
-    #' @description Create a new profit participation scheme
-    #' @details This function is called when a new profit participation scheme
-    #' is created with a call to \code{ProfitParticipation$new(...)}. Possible
-    #' parameters to the \code{new}-Call are all parameters from the `ProfitParticipation` sublist of the
-    #' [InsuranceContract.ParameterStructure] parameter
-    #' structure (which are understood as template values that can be overridden
-    #' per contract or even per profit participation scenario) and the components
-    #' of the `Functions` field defining the functions to calculate the individual
-    #' components of the profit participation (rates, calculation bases, calculation, benefits)
-    #'
-    #' @param name The name of the profit scheme (typicall the name of the profit plan and its version)
-    #' @param ... profit participation parameters to be stored in the
-    #' `Parameters field or calculation functions to be stored in the `Functions`
-    #' field
-    initialize = function(name = NULL, ...) {
-      if (!missing(name))           self$name = name;
-      self$setParameters(...);
-      self$setFunctions(...);
-      self$setFallbackParameters();
-    },
+        ##########################################################################m#
+        # Advance Profit Participation                                          ####
+        ##########################################################################m#
+
+        #' @description Calculate and return the advance profit participation (to be
+        #' applied on the actuarial gross premium)
+        #'
+        #' @details The [InsuranceContract]'s param structure [InsuranceContract.ParameterStructure]
+        #'     contains the field \code{params$ProfitParticipation$advanceProfitParticipation},
+        #'     which can either be numeric rate for advance profit participation, or
+        #'     a function with signature \code{function(params, values, ...)} that
+        #'     returns the advance profit participation rate when called with the
+        #'     contract's parameters and the values calculated so far (cash flows and premiums)
+        #' @return Return either one numerical value (constant for the whole premium payment period)
+        #' of a vector of numerical values for the whole contract period
+        #'
+        #' @param ... optional parameters, to be passed to the advanceProfitParticipation
+        #'     field of the parameter structure (if that is a function)
+        getAdvanceProfitParticipation = function(params, values, ...) {
+            valueOrFunction(params$ProfitParticipation$advanceProfitParticipation, params, values, ...)
+        },
 
 
-    #' @description Store all passed parameters in the `Parameters` field
-    #' @param ... any of the named fields defined in the `ProfitParticipation` sublist of the
-    #'      [InsuranceContract.ParameterStructure]. All other arguments will be ignored
-    setParameters = function(...) {
-        self$Parameters = fillFields(self$Parameters, list(...));
-    },
-
-    #' @description Store all passed functions in the `Functions` field
-    #' @param ... any of the functions defined in the `Functions` field. All other
-    #'     arguments will be ignored
-    setFunctions = function(...) {
-        self$Functions = fillFields(self$Functions, list(...));
-    },
-
-    #' @description Fill all missing parameters with the default fall-back values
-    setFallbackParameters = function() {
-        self$Parameters = fallbackFields(self$Parameters, list(profitParticipationScheme = self));
-        self$Parameters = fallbackFields(self$Parameters, InsuranceContract.ParameterDefaults$ProfitParticipation);
-    },
-
-    #' @description create a copy of a profit scheme with certain parameters changed
-    #' @details This method \code{createModification} returns a copy of the profit scheme
-    #' with all given arguments changed in the schmes's `Parameters`
-    #' parameter list.
-    #'
-    #' As ProfitParticipation is a R6 class with reference logic, simply assigning
-    #' the object to a new variable does not create a copy, but references the
-    #' original profit scheme object. To create an actual copy, one needs to call this
-    #' method, which first clones the whole object and then adjusts all parameters
-    #' to the values passed to this method.
-    #'
-    #' @param name The new name for the cloned [ProfitParticipation] object
-    #' @param ... Parameters for the [InsuranceContract.ParameterStructure],
-    #'            defining the characteristics of the tariff.
-    createModification = function(name  = NULL, ...) {
-        cloned = self$clone();
-        if (!missing(name)) cloned$name = name;
-        cloned$Parameters = fillFields(cloned$Parameters, list(...));
-        cloned$Functions  = fillFields(cloned$Functions, list(...));
-        cloned
-    },
+        #' @description Calculate and return the advance profit participation (to be
+        #' applied after unit costs are added to the gross premium)
+        #'
+        #' @details The [InsuranceContract]'s param structure [InsuranceContract.ParameterStructure]
+        #'     contains the field \code{params$ProfitParticipation$advanceProfitParticipationInclUnitCost},
+        #'     which can either be numeric rate for advance profit participation, or
+        #'     a function with signature \code{function(params, values, ...)} that
+        #'     returns the advance profit participation rate when called with the
+        #'     contract's parameters and the values calculated so far (cash flows and premiums)
+        #' @return Return either one numerical value (constant for the whole premium payment period)
+        #' of a vector of numerical values for the whole contract period
+        #'
+        #' @param ... optional parameters, to be passed to the advanceProfitParticipationInclUnitCost
+        #'     field of the parameter structure (if that is a function)
+        getAdvanceProfitParticipationAfterUnitCosts = function(params, values, ...) {
+            valueOrFunction(params$ProfitParticipation$advanceProfitParticipationInclUnitCost, params, values, ...)
+        },
 
 
-    ##########################################################################m#
-    # Advance Profit Participation                                          ####
-    ##########################################################################m#
-
-    #' @description Calculate and return the advance profit participation (to be
-    #' applied on the actuarial gross premium)
-    #'
-    #' @details The [InsuranceContract]'s param structure [InsuranceContract.ParameterStructure]
-    #'     contains the field \code{params$ProfitParticipation$advanceProfitParticipation},
-    #'     which can either be numeric rate for advance profit participation, or
-    #'     a function with signature \code{function(params, values, ...)} that
-    #'     returns the advance profit participation rate when called with the
-    #'     contract's parameters and the values calculated so far (cash flows and premiums)
-    #' @return Return either one numerical value (constant for the whole premium payment period)
-    #' of a vector of numerical values for the whole contract period
-    #'
-    #' @param ... optional parameters, to be passed to the advanceProfitParticipation
-    #'     field of the parameter structure (if that is a function)
-    getAdvanceProfitParticipation = function(params, values, ...) {
-        valueOrFunction(params$ProfitParticipation$advanceProfitParticipation, params, values, ...)
-    },
+        ##########################################################################m#
+        # Traditional Profit participation:                                     ####
+        #   - Interest profit                                                   ##m#
+        #   - Risk profit                                                       ##m#
+        #   - Expense profit                                                    ##m#
+        #   - Sum profit                                                        ##m#
+        #   - Terminal bonus                                                    ##m#
+        ##########################################################################m#
 
 
-    #' @description Calculate and return the advance profit participation (to be
-    #' applied after unit costs are added to the gross premium)
-    #'
-    #' @details The [InsuranceContract]'s param structure [InsuranceContract.ParameterStructure]
-    #'     contains the field \code{params$ProfitParticipation$advanceProfitParticipationInclUnitCost},
-    #'     which can either be numeric rate for advance profit participation, or
-    #'     a function with signature \code{function(params, values, ...)} that
-    #'     returns the advance profit participation rate when called with the
-    #'     contract's parameters and the values calculated so far (cash flows and premiums)
-    #' @return Return either one numerical value (constant for the whole premium payment period)
-    #' of a vector of numerical values for the whole contract period
-    #'
-    #' @param ... optional parameters, to be passed to the advanceProfitParticipationInclUnitCost
-    #'     field of the parameter structure (if that is a function)
-    getAdvanceProfitParticipationAfterUnitCosts = function(params, values, ...) {
-        valueOrFunction(params$ProfitParticipation$advanceProfitParticipationInclUnitCost, params, values, ...)
-    },
+        #' @description Set up the data.frame containing the profit participation rates
+        #' @param ... additional parameters passed to the profit calculation functions
+        #'     stored in the `Functions` field.
+        setupRates = function(params, values, ...) {
+            # 1) Profit scheme or contract provides general company-wide profit rates for some years:
+            #       profitRates
+            # 2) Contract can override individual rates (either for calendar years or contract years):
+            #       guaranteedInterest, interestProfitRate, totalInterest, mortalityProfitRate,
+            #       expenseProfitRate, sumProfitRate, terminalBonusRate, terminalBonusFundRate
+            # 3) Explicit function arguments (either for calendar years or contract years).
+            # 4) Any missing values will be taken from the last given year
+            startYear = year(params$ContractData$contractClosing);
+            policyPeriod = params$ContractData$policyPeriod;
+            years = startYear:(startYear + policyPeriod);
 
+            columns = c(
+                "year",
+                "guaranteedInterest", "interestProfitRate", "totalInterest", "interestProfitRate2", "totalInterest2",
+                "mortalityProfitRate", "expenseProfitRate", "expenseProfitRate_premiumfree",
+                "sumProfitRate",
+                "terminalBonusRate", "terminalBonusFundRate")
+            rates = data.frame(matrix(ncol = length(columns), nrow = length(years), dimnames = list(years = years, rates = columns)))
+            rates$year = years;
 
-    ##########################################################################m#
-    # Traditional Profit participation:                                     ####
-    #   - Interest profit                                                   ##m#
-    #   - Risk profit                                                       ##m#
-    #   - Expense profit                                                    ##m#
-    #   - Sum profit                                                        ##m#
-    #   - Terminal bonus                                                    ##m#
-    ##########################################################################m#
+            # 1) profitRates are general company-wide tables with all default rates
+            # => use them as default, unless overridden
+            defrates = params$ProfitParticipation$profitRates
+            if (!is.null(defrates)) {
+                profclass = params$ProfitParticipation$profitClass
+                defrates = dplyr::filter(defrates, profitClass == profclass)
+                rownames(defrates) = defrates$year
 
+                defcols = intersect(columns, colnames(defrates))
 
-    #' @description Set up the data.frame containing the profit participation rates
-    #' @param ... additional parameters passed to the profit calculation functions
-      #'     stored in the `Functions` field.
-    setupRates = function(params, values, ...) {
-        # 1) Profit scheme or contract provides general company-wide profit rates for some years:
-        #       profitRates
-        # 2) Contract can override individual rates (either for calendar years or contract years):
-        #       guaranteedInterest, interestProfitRate, totalInterest, mortalityProfitRate,
-        #       expenseProfitRate, sumProfitRate, terminalBonusRate, terminalBonusFundRate
-        # 3) Explicit function arguments (either for calendar years or contract years).
-        # 4) Any missing values will be taken from the last given year
-        startYear = year(params$ContractData$contractClosing);
-        policyPeriod = params$ContractData$policyPeriod;
-        years = startYear:(startYear + policyPeriod);
+                rates[rownames(defrates), defcols] = defrates[, defcols]
+            }
 
-        columns = c(
-            "year",
-            "guaranteedInterest", "interestProfitRate", "totalInterest", "interestProfitRate2", "totalInterest2",
-            "mortalityProfitRate", "expenseProfitRate", "expenseProfitRate_premiumfree",
-            "sumProfitRate",
-            "terminalBonusRate", "terminalBonusFundRate")
-        rates = data.frame(matrix(ncol = length(columns), nrow = length(years), dimnames = list(years = years, rates = columns)))
-        rates$year = years;
-
-        # 1) profitRates are general company-wide tables with all default rates
-        # => use them as default, unless overridden
-        defrates = params$ProfitParticipation$profitRates
-        if (!is.null(defrates)) {
-            profclass = params$ProfitParticipation$profitClass
-            defrates = dplyr::filter(defrates, profitClass == profclass)
-            rownames(defrates) = defrates$year
-
-            defcols = intersect(columns, colnames(defrates))
-
-            rates[rownames(defrates), defcols] = defrates[, defcols]
-        }
-
-        # 2) Add the explicit overrides per profit rate (from the contract)
-        for (col in columns) {
-            if (!is.null(params$ProfitParticipation[[col]])) {
-                rt = valueOrFunction(params$ProfitParticipation[[col]], params = params, values = values);
-                if (is.null(names(rt))) {
-                    # numeric value or vector => assume values from the contract start year
-                    # and fill ALL policy years with the given rates (last entry repeated)
-                    rates[as.character(years), col] = padLast(rt, length(years));
-                } else {
-                    # values with years assigned => use them only for the given year(s), don't override any other year
-                    rates[names(rt), col] = rt;
-                    rates[names(rt), "year"] = names(rt);
+            # 2) Add the explicit overrides per profit rate (from the contract)
+            for (col in columns) {
+                if (!is.null(params$ProfitParticipation[[col]])) {
+                    rt = valueOrFunction(params$ProfitParticipation[[col]], params = params, values = values);
+                    if (is.null(names(rt))) {
+                        # numeric value or vector => assume values from the contract start year
+                        # and fill ALL policy years with the given rates (last entry repeated)
+                        rates[as.character(years), col] = padLast(rt, length(years));
+                    } else {
+                        # values with years assigned => use them only for the given year(s), don't override any other year
+                        rates[names(rt), col] = rt;
+                        rates[names(rt), "year"] = names(rt);
+                    }
                 }
             }
-        }
 
-        # 3) Use explicit function param overrides per profit rate (from this function call)
-        argcols = match.call(expand.dots = FALSE)$`...`;
-        matching.cols = intersect(columns, names(argcols))
-        for (col in matching.cols) {
-            rt = eval(argcols[[col]]);
-            if (!is.null(rt)) {
-                rt = valueOrFunction(rt, params = params, values = values);
-                if (is.null(names(rt))) {
-                    # numeric value or vector => assume values from the contract start year
-                    # and fill ALL policy years with the given rates (last entry repeated)
-                    rates[as.character(years), col] = padLast(rt, length(years));
-                } else {
-                    # values with years assigned => use them only for the given year(s), don't override any other year
-                    rates[names(rt), col] = rt;
-                    rates[names(rt), "year"] = names(rt);
+            # 3) Use explicit function param overrides per profit rate (from this function call)
+            argcols = match.call(expand.dots = FALSE)$`...`;
+            matching.cols = intersect(columns, names(argcols))
+            for (col in matching.cols) {
+                rt = eval(argcols[[col]]);
+                if (!is.null(rt)) {
+                    rt = valueOrFunction(rt, params = params, values = values);
+                    if (is.null(names(rt))) {
+                        # numeric value or vector => assume values from the contract start year
+                        # and fill ALL policy years with the given rates (last entry repeated)
+                        rates[as.character(years), col] = padLast(rt, length(years));
+                    } else {
+                        # values with years assigned => use them only for the given year(s), don't override any other year
+                        rates[names(rt), col] = rt;
+                        rates[names(rt), "year"] = names(rt);
+                    }
                 }
             }
-        }
-        rownames(rates) = rates[, "year"]
+            rownames(rates) = rates[, "year"]
 
-        # 4) Fill all NAs with the last known value
-        # First, make sure that all entries are in the correct order (sorted by year)
-        rates
-        newrates = rates %>% dplyr::arrange(year) %>% dplyr::mutate_all(fillNAgaps)
-        rownames(newrates) = newrates$year
+            # 4) Fill all NAs with the last known value
+            # First, make sure that all entries are in the correct order (sorted by year)
+            rates
+            newrates = rates %>% dplyr::arrange(year) %>% dplyr::mutate_all(fillNAgaps)
+            rownames(newrates) = newrates$year
 
-        # 5) Replace all NA values with 0, so we don't run into any problems later on
-        newrates[is.na(newrates)] <- 0
+            # 5) Replace all NA values with 0, so we don't run into any problems later on
+            newrates[is.na(newrates)] <- 0
 
-        # TODO: Fix guaranteedInterest + interestProfitRate = totalInterest, where one of them might be missing!
+            # TODO: Fix guaranteedInterest + interestProfitRate = totalInterest, where one of them might be missing!
 
-        # Return only the policy years...
-        self$adjustRates(newrates[as.character(years),], params = params, values = values)
-    },
+            # Return only the policy years...
+            self$adjustRates(newrates[as.character(years),], params = params, values = values)
+        },
 
-    #' @description Adjust the data.frame of profit participation rates after their setup
-    #' @details This function provides an easy way to modify the whole set of
-    #' profit rates after their initial setup. Possible applications are waiting
-    #' periods, which can be implemented once for all rates rather than inside
-    #' each individual calculation period.
-    #' @param rates data.frame of profit paticipation rates
-    adjustRates = function(rates, params, values) {
-        rates[1,] = 0;
-        rates
-    },
-
+        #' @description Adjust the data.frame of profit participation rates after their setup
+        #' @details This function provides an easy way to modify the whole set of
+        #' profit rates after their initial setup. Possible applications are waiting
+        #' periods, which can be implemented once for all rates rather than inside
+        #' each individual calculation period.
+        #' @param rates data.frame of profit paticipation rates
+        adjustRates = function(rates, params, values) {
+            rates[1,] = 0;
+            rates
+        },
 
 
 
 
-    #' @description Calculation the full time series of profit participation for
-    #' the given contract values
-    #'
-    #' @param calculateFrom The time from which to start calculating the profit
-    #' participation. When a contract is changed at some time t (possibly even
-    #' changing the profit scheme), all future profit participation needs to be
-    #' re-calculated from that time on, without changing past profit participation.
-    #' All values before \code{calculateFrom} will not be calculated.
-    #' @param profitScenario profit participation values from a previous calculation
-    #' (NULL if profit calculation is to be calculated from the contract inception).
-    #' Values before \code{calculateFrom} will be used from this data.frame.
-    #' @param ... additional parameters to be passed to \href{../../LifeInsuranceContracts/html/ProfitParticipation.html#method-setupRates}{\code{ProfitParticipation$setupRates()}}
-    getProfitParticipation = function(calculateFrom = 0, profitScenario = NULL, params, values, ...) {
-        waiting      = valueOrFunction(params$ProfitParticipation$waitingPeriod, params = params, values = values);
-        if (is.numeric(waiting) && waiting > 0) {
-            waitingFactor = c(rep(0, waiting + 1), rep(1, params$ContractData$policyPeriod - waiting));
+
+        #' @description Calculation the full time series of profit participation for
+        #' the given contract values
+        #'
+        #' @param calculateFrom The time from which to start calculating the profit
+        #' participation. When a contract is changed at some time t (possibly even
+        #' changing the profit scheme), all future profit participation needs to be
+        #' re-calculated from that time on, without changing past profit participation.
+        #' All values before \code{calculateFrom} will not be calculated.
+        #' @param profitScenario profit participation values from a previous calculation
+        #' (NULL if profit calculation is to be calculated from the contract inception).
+        #' Values before \code{calculateFrom} will be used from this data.frame.
+        #' @param ... additional parameters to be passed to \href{../../LifeInsureR/html/ProfitParticipation.html#method-setupRates}{\code{ProfitParticipation$setupRates()}}
+        getProfitParticipation = function(calculateFrom = 0, profitScenario = NULL, params, values, ...) {
+            waiting      = valueOrFunction(params$ProfitParticipation$waitingPeriod, params = params, values = values);
+            if (is.numeric(waiting) && waiting > 0) {
+                waitingFactor = c(rep(0, waiting + 1), rep(1, params$ContractData$policyPeriod - waiting));
         } else {
             waitingFactor = 1;
         }

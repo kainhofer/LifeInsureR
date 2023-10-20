@@ -32,14 +32,14 @@ NULL
 #'
 #' @export
 setCost = function(costs, type, basis = "SumInsured", frequency = "PolicyPeriod", value) {
-  costs[type, basis, frequency] = value
-  costs
+    costs[type, basis, frequency] = value
+    costs
 }
 
 
 #' Initialize or modify a data structure for the definition of [InsuranceTarif] costs
 #'
-#' Initialize a cost matrix with dimensions: {CostType, Basis, Period}, where:
+#' Initialize a cost matrix with dimensions: \{CostType, Basis, Period\}, where:
 #' \describe{
 #'     \item{CostType:}{alpha, Zillmer, beta, gamma, gamma_nopremiums, unitcosts}
 #'     \item{Basis:}{SumInsured, SumPremiums, GrossPremium, NetPremium, Benefits, Constant}
@@ -100,7 +100,7 @@ setCost = function(costs, type, basis = "SumInsured", frequency = "PolicyPeriod"
 initializeCosts = function(costs, alpha, Zillmer, alpha.commission, beta, gamma, gamma.paidUp, gamma.premiumfree, gamma.contract, gamma.afterdeath, gamma.fullcontract, unitcosts, unitcosts.PolicyPeriod) {
     if (missing(costs)) {
         dimnm = list(
-          type = c("alpha", "Zillmer", "beta", "gamma", "gamma_nopremiums", "unitcosts"),
+            type = c("alpha", "Zillmer", "beta", "gamma", "gamma_nopremiums", "unitcosts"),
             basis = c("SumInsured", "SumPremiums", "GrossPremium", "NetPremium", "Benefits", "Constant", "Reserve"),
             frequency = c("once", "PremiumPeriod", "PremiumFree", "PolicyPeriod", "AfterDeath", "FullContract", "CommissionPeriod")
         );
@@ -118,37 +118,37 @@ initializeCosts = function(costs, alpha, Zillmer, alpha.commission, beta, gamma,
         costs = setCost(costs, "Zillmer",  "SumPremiums", "CommissionPeriod", alpha.commission)
     }
     if (!missing(Zillmer)) {
-      costs = setCost(costs, "Zillmer","SumPremiums", "once", Zillmer)
+        costs = setCost(costs, "Zillmer","SumPremiums", "once", Zillmer)
     }
     if (!missing(beta))  {
-      costs = setCost(costs, "beta", "GrossPremium", "PremiumPeriod", beta)
+        costs = setCost(costs, "beta", "GrossPremium", "PremiumPeriod", beta)
     }
     if (!missing(gamma)) {
-      costs = setCost(costs, "gamma", "SumInsured", "PremiumPeriod", gamma)
+        costs = setCost(costs, "gamma", "SumInsured", "PremiumPeriod", gamma)
     }
     if (!missing(gamma.premiumfree)) {
-      costs = setCost(costs, "gamma", "SumInsured", "PremiumFree", gamma.premiumfree)
+        costs = setCost(costs, "gamma", "SumInsured", "PremiumFree", gamma.premiumfree)
     }
     if (!missing(gamma.paidUp))  {
-      costs = setCost(costs, "gamma_nopremiums", "SumInsured", "PolicyPeriod", gamma.paidUp)
+        costs = setCost(costs, "gamma_nopremiums", "SumInsured", "PolicyPeriod", gamma.paidUp)
     }
     if (!missing(gamma.contract))  {
-      costs = setCost(costs, "gamma", "SumInsured", "PolicyPeriod", gamma.contract)
-      # costs = setCost(costs, "gamma_nopremiums", "SumInsured", "PolicyPeriod", gamma.contract)
+        costs = setCost(costs, "gamma", "SumInsured", "PolicyPeriod", gamma.contract)
+        # costs = setCost(costs, "gamma_nopremiums", "SumInsured", "PolicyPeriod", gamma.contract)
     }
     if (!missing(gamma.afterdeath))  {
-      costs = setCost(costs, "gamma", "SumInsured", "AfterDeath", gamma.afterdeath)
-      costs = setCost(costs, "gamma_nopremiums", "SumInsured", "AfterDeath", gamma.afterdeath)
+        costs = setCost(costs, "gamma", "SumInsured", "AfterDeath", gamma.afterdeath)
+        costs = setCost(costs, "gamma_nopremiums", "SumInsured", "AfterDeath", gamma.afterdeath)
     }
     if (!missing(gamma.fullcontract))  {
-      costs = setCost(costs, "gamma", "SumInsured", "FullContract", gamma.fullcontract)
-      costs = setCost(costs, "gamma_nopremiums", "SumInsured", "FullContract", gamma.fullcontract)
+        costs = setCost(costs, "gamma", "SumInsured", "FullContract", gamma.fullcontract)
+        costs = setCost(costs, "gamma_nopremiums", "SumInsured", "FullContract", gamma.fullcontract)
     }
     if (!missing(unitcosts)) {
-      costs = setCost(costs, "unitcosts", "Constant", "PremiumPeriod", unitcosts)
+        costs = setCost(costs, "unitcosts", "Constant", "PremiumPeriod", unitcosts)
     }
     if (!missing(unitcosts.PolicyPeriod)) {
-      costs = setCost(costs, "unitcosts", "Constant", "PolicyPeriod", unitcosts.PolicyPeriod)
+        costs = setCost(costs, "unitcosts", "Constant", "PolicyPeriod", unitcosts.PolicyPeriod)
     }
     costs
 }
@@ -165,13 +165,13 @@ initializeCosts = function(costs, alpha, Zillmer, alpha.commission, beta, gamma,
 #'
 #' @export
 costs.baseAlpha = function(alpha) {
-  function(params, values, costs) {
-    costs = setCost(costs, "alpha", "SumPremiums", "once", alpha)
-    if (costs["Zillmer", "SumPremiums", "once"] != 0) {
-      costs = setCost(costs, "Zillmer", "SumPremiums", "once", alpha)
+    function(params, values, costs) {
+        costs = setCost(costs, "alpha", "SumPremiums", "once", alpha)
+        if (costs["Zillmer", "SumPremiums", "once"] != 0) {
+            costs = setCost(costs, "Zillmer", "SumPremiums", "once", alpha)
+        }
+        costs
     }
-    costs
-  }
 }
 
 #' Helper function to modify alpha costs of an insurance contract individually
@@ -187,10 +187,10 @@ costs.baseAlpha = function(alpha) {
 #'
 #' @export
 costs.scaleAlpha = function(scale) {
-  function(costs, ...) {
-    costs[c("alpha", "Zillmer"),,] = costs[c("alpha", "Zillmer"),,] * scale
-    costs
-  }
+    function(costs, ...) {
+        costs[c("alpha", "Zillmer"),,] = costs[c("alpha", "Zillmer"),,] * scale
+        costs
+    }
 }
 
 
@@ -201,9 +201,9 @@ costs.scaleAlpha = function(scale) {
 #' @param costs The cost structure to be displayed in a concise table style.
 #' @export
 costsDisplayTable = function(costs) {
-  costtable = as.data.frame.table(setInsuranceValuesLabels(costs) )
-  colnames(costtable) = c("Kostenart", "Basis", "Periode", "Kostensatz");
-  costtable[costtable[,"Kostensatz"] != 0.0000,]
+    costtable = as.data.frame.table(setInsuranceValuesLabels(costs) )
+    colnames(costtable) = c("Kostenart", "Basis", "Periode", "Kostensatz");
+    costtable[costtable[,"Kostensatz"] != 0.0000,]
 }
 
 

@@ -1,5 +1,5 @@
 ---
-title: "Creating Company-Specific LifeInsuranceContracts Implementations (using an RStudio Package Template)"
+title: "Creating Company-Specific LifeInsureR Implementations (using an RStudio Package Template)"
 author:
 - name: Reinhold Kainhofer
   affiliation: Open Tools
@@ -13,7 +13,7 @@ output:
         fig_height: 5
         number_sections: true
 vignette: >
-  %\VignetteIndexEntry{Creating Company-Specific LifeInsuranceContracts Implementations (using an RStudio Package Template)}
+  %\VignetteIndexEntry{Creating Company-Specific LifeInsureR Implementations (using an RStudio Package Template)}
   %\VignetteEncoding{UTF-8}
   %\VignetteEngine{knitr::rmarkdown}
 editor_options: 
@@ -25,7 +25,7 @@ editor_options:
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 library(knitr)
 library(kableExtra)
-library(LifeInsuranceContracts)
+library(LifeInsureR)
 library(dplyr)
 library(tibble)
 library(lubridate)
@@ -34,10 +34,10 @@ options(scipen=5)
 library(pander)
 ```
 
-The LifeInsuranceContracts package provides a full-featured framework to
-model classical life insurance contracts (non-unit linked). This is
-typically sufficient to implement simple example calculations or
-validate a single contract or tariff by a single individual.
+The LifeInsureR package provides a full-featured framework to model
+classical life insurance contracts (non-unit linked). This is typically
+sufficient to implement simple example calculations or validate a single
+contract or tariff by a single individual.
 
 However, when working for a company (either from inside the company or
 as an external consultant), one typically wants the implementation to be
@@ -47,16 +47,16 @@ encapsulating the company-specific tariff implementations in an R
 package that provides and exports the individual products of the
 company.
 
-The LifeInsuranceContracts package even provides an RStudio project
-template to create a new skeleton of a company-specific implementation
-to use as the foundation of such an implementation.
+The LifeInsureR package even provides an RStudio project template to
+create a new skeleton of a company-specific implementation to use as the
+foundation of such an implementation.
 
 # Creating an RStudio project from the template
 
-The `LifeInsuranceContracts` package provides an RStudio project
-template that sets up a package for a company-specific tariff
-implementation. After installing the package, simply create a new
-RStudio project from the template:
+The `LifeInsureR` package provides an RStudio project template that sets
+up a package for a company-specific tariff implementation. After
+installing the package, simply create a new RStudio project from the
+template:
 
 ![Menu item "File -\> New
 Project\..."](images/01_RStudio_ProjectTemplate_new.png){width="61%"}
@@ -64,8 +64,8 @@ Project\..."](images/01_RStudio_ProjectTemplate_new.png){width="61%"}
 ![Select "New
 Directory"](images/02_RStudio_ProjectTemplate_new.png){width="61%"}
 
-![Use the "LifeInsuranceContracts Implementation" project type![Name the
-directory and provide the company
+![Use the "LifeInsureR Implementation" project type![Name the directory
+and provide the company
 name](images/04_RStudio_ProjectTemplate_projectSettings.png){width="61%"}](images/03_RStudio_ProjectTemplate_selectTemplate.png){width="61%"}
 
 The resulting RStudio project will have the following file structure:
@@ -86,7 +86,7 @@ template](images/05_RStudio_ProjectTemplate_fileStructure.png)
     penalty functions, etc. and is typically sourced from each tariff's
     implementation file.
 
--    The files in the `tests/testthat/` directory are unit tests for the
+-   The files in the `tests/testthat/` directory are unit tests for the
     testthat package. Typically, you will use the example prescribed (by
     the regulator) in the official tariff definitions as test cases, so
     that the implementation will always correspond to the official
@@ -106,9 +106,8 @@ to validate the official numbers in the financial statements).
 ## Steps to implement batch-testing a whole (sub-)portfolio
 
 1.  Implement the corresponding products in the files in the `R/`
-    subdirectory. Use the LifeInsuranceContracts documentation available
-    at
-    <https://cran.r-project.org/web/packages/LifeInsuranceContracts/vignettes/using-the-lifeinsurancecontracts-package.html>
+    subdirectory. Use the LifeInsureR documentation available at
+    <https://cran.r-project.org/web/packages/LifeInsureR/vignettes/using-the-lifeinsurer-package.html>
 
 2.  Install the package (using the "Install" button in RStudio's "Build"
     pane)
@@ -153,7 +152,7 @@ openxlsx::write.xlsx(results, outfile("Prods-1-2"),
 openXL(outfile("Prods-1-2"))
 ```
 
-## General Overview of the batch-calculation procedure 
+## General Overview of the batch-calculation procedure
 
 1.  The contract data are read in from the filenames provided in the
     `files` list and stored in the data.frame called `bestandinfos.all`.
@@ -191,14 +190,14 @@ openXL(outfile("Prods-1-2"))
     3.  Grouping happens by column `SliceID`. This allows multiple
         portfolio data rows to be combined to one contract with several
         slices / sum increases, which are calculated as one contract
-        (see section "10.3 Dynamic Increases" of the
-        LifeInsuranceContracts vignette). If each slice / dynamic
-        increase is supposed to be calculated individually and
-        independent from the main contract / other increases, then the
-        column mapped to the `SliceID` column needs to have a different
-        value for each portfolio data row. If `SliceID` uses contract
-        numbers, all dynamics, etc. belonging to the same contract
-        number will be combined and calculated using `$addDynamics`
+        (see section "10.3 Dynamic Increases" of the LifeInsureR
+        vignette). If each slice / dynamic increase is supposed to be
+        calculated individually and independent from the main contract /
+        other increases, then the column mapped to the `SliceID` column
+        needs to have a different value for each portfolio data row. If
+        `SliceID` uses contract numbers, all dynamics, etc. belonging to
+        the same contract number will be combined and calculated using
+        `$addDynamics`
 
     4.  Each contract (entries with distinct `SliceID` value) is
         calculated in a loop using the `by_slice` function, which calls

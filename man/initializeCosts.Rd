@@ -55,7 +55,7 @@ even if the insured has already dies (for term-fix insurances)}
 \item{unitcosts.PolicyPeriod}{Unit costs (absolute monetary amount, during full contract period)}
 }
 \description{
-Initialize a cost matrix with dimensions: {CostType, Basis, Period}, where:
+Initialize a cost matrix with dimensions: \{CostType, Basis, Period\}, where:
 \describe{
 \item{CostType:}{alpha, Zillmer, beta, gamma, gamma_nopremiums, unitcosts}
 \item{Basis:}{SumInsured, SumPremiums, GrossPremium, NetPremium, Benefits, Constant}

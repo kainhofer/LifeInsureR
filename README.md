@@ -1,4 +1,4 @@
-# The *LifeInsuranceContracts* Package For Traditional Life Insurance with Guarantee and Profit Participation
+# The *LifeInsureR* Package For Traditional Life Insurance with Guarantee and Profit Participation
 R package implementing general life insurance contracts
 
 This package R6 classes to model traditional life insurance

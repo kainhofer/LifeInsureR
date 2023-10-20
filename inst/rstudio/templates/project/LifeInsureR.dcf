@@ -1,0 +1,10 @@
+Binding: create_LIR_project
+Title: LifeInsureR Implementation
+Subtitle: Company-specific product definitions using the LifeInsureR package
+OpenFiles: RechnungGesamtbestand.R
+Caption: Company-specific LifeInsureR product implementation
+
+Parameter: Company
+Widget: TextInput
+Label: Company (letters only, no spaces, special characters etc.)
+

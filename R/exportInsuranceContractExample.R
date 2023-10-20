@@ -10,10 +10,10 @@ NULL
 #' required by the Austrian regulation).
 #'
 #' Three output files are generated:
-#'   - {DATE}_{TARIFF}_Example.xlsx: Full history/timeseries
-#'   - {DATE}_{TARIFF}_Example_PremiumWaiver_t10.xlsx: Full history/timeseries
+#'   - \{DATE\}_\{TARIFF\}_Example.xlsx: Full history/timeseries
+#'   - \{DATE\}_\{TARIFF\}_Example_PremiumWaiver_t10.xlsx: Full history/timeseries
 #'                 after a premium waiver at the given time \code{prf}
-#'   - {DATE}_{TARIFF}_Examples_VmGlg.txt: Example calculation required for the
+#'   - \{DATE\}_\{TARIFF\}_Examples_VmGlg.txt: Example calculation required for the
 #'                 Austrian regulation (LV-VMGLV)
 #'
 #' @param contract The \code{\link{InsuranceContract}} object to be exported

@@ -1,12 +1,12 @@
-# This file was created from a template provided by the LifeInsuranceContracts
+# This file was created from a template provided by the LifeInsureR
 # package. It's purpose is to read in a set of contract data and calculate the
 # corresponding reserves (e.g. to validate the official numbers in the financial
 # statements).
 #
 # Steps:
 #   1. Implement the corresponding products in the files in the R/ subdirectory.
-#      Use the LifeInsuranceContracts documentation available at
-#      https://cran.r-project.org/web/packages/LifeInsuranceContracts/vignettes/using-the-lifeinsurancecontracts-package.html
+#      Use the LifeInsureR documentation available at
+#      https://cran.r-project.org/web/packages/LifeInsureR/vignettes/using-the-lifeinsurer-package.html
 #   2. Install the package (using the "Install" button in RStudio's "Build" pane)
 #   3. Set up the mapping of the columns of the contract data source to the package's arguments.
 #      The columns of the input data can be directly mapped to named arguments in LifeInsuranceContract$new(..) calls.
@@ -60,7 +60,7 @@
 #        c. Grouping happens by column SliceID. This allows multiple portfolio
 #           data rows to be combined to one contract with several slices / sum
 #           increases, which are calculated as one contract (see section "10.3
-#           Dynamic Increases" of the LifeInsuranceContracts vignette). If each
+#           Dynamic Increases" of the LifeInsureR vignette). If each
 #           slice / dynamic increase is supposed to be calculated individually
 #           and independent from the main contract / other increases, then the
 #           column mapped to the SliceID column needs to have a different value
@@ -136,7 +136,7 @@ library(purrrlyr)
 library(openxlsx)
 library(tictoc)
 library(tidyverse)
-library(LifeInsuranceContractsXXXCOMPANYXXX)
+library(LifeInsureRXXXCOMPANYXXX)
 mortalityTables.load("Austria_*")
 
 

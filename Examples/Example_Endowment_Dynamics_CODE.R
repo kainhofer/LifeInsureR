@@ -1,6 +1,6 @@
 library(magrittr)
 library(MortalityTables)
-library(LifeInsuranceContracts)
+library(LifeInsureR)
 mortalityTables.load("Austria_Census")
 
 # Costs: 4% acquisition, where 2.5% are zillmered, 5\% of each premium as beta costs,

@@ -1,7 +1,7 @@
 library(testthat)
-library(LifeInsuranceContracts)
+library(LifeInsureR)
 library(MortalityTables)
 mortalityTables.load("Austria_Census")
 mortalityTables.load("Austria_Annuities_AVOe2005R")
 
-test_check("LifeInsuranceContracts")
+test_check("LifeInsureR")

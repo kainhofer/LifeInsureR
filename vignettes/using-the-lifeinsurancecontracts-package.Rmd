@@ -1,5 +1,5 @@
 ---
-title: "Using the LifeInsuranceContracts Package"
+title: "Using the LifeInsureR Package"
 author:
 - name: Reinhold Kainhofer
   affiliation: Open Tools
@@ -14,7 +14,7 @@ output:
         fig_height: 5
         number_sections: true
 vignette: >
-  %\VignetteIndexEntry{Using the LifeInsuranceContracts Package}
+  %\VignetteIndexEntry{Using the LifeInsureR Package}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -24,7 +24,7 @@ vignette: >
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 library(knitr)
 library(kableExtra)
-library(LifeInsuranceContracts)
+library(LifeInsureR)
 library(dplyr)
 library(tibble)
 library(lubridate)
@@ -48,7 +48,7 @@ kableTable = function(grd, ...) {
 ```
 
 
-The LifeInsuranceContracts package provides a full-featured framework to model classical life insurance contracts (non-unit linked). Mathematically, a general life insurance contracts can be defined using death and survival (and disability) benefit vectors to define the cash flows and calculate all premiums and reserves recursively. This powerful approach is taken by the LifeInsuranceContracts package to provide the most flexible contract modelling framework in R.
+The LifeInsureR package provides a full-featured framework to model classical life insurance contracts (non-unit linked). Mathematically, a general life insurance contracts can be defined using death and survival (and disability) benefit vectors to define the cash flows and calculate all premiums and reserves recursively. This powerful approach is taken by the LifeInsureR package to provide the most flexible contract modelling framework in R.
 
 # General Overview of the Concepts
 
@@ -133,7 +133,7 @@ Surrender Value:
 ```{r SimpleExampleRiskTarif, warning=F, results="hide", message = F}
 library(magrittr)
 library(MortalityTables)
-library(LifeInsuranceContracts)
+library(LifeInsureR)
 mortalityTables.load("Austria_Census")
 
 Tarif.L71U = InsuranceTarif$new(
@@ -205,7 +205,7 @@ In our term life example, the insurance contract's unit cash flows are 1 for dea
 benefits (both when premiums are paid and when the contract is paid-up) and for
 premiums in advance. All other cash flows (guaranteed, survival or disease cash 
 flows) are zero. Similarly, the cost structure described above and implemented
-by the `LifeInsuranceContracts::initializeCosts()` function defines all cost cash
+by the `LifeInsureR::initializeCosts()` function defines all cost cash
 flows, which are the starting point for all further calculations (only relevant 
 columns of the data.frame are shown):
 
@@ -1256,7 +1256,7 @@ for (d in dimnames(grd)[[4]]) {
 
 # Exporting contract data to Excel
 
-The LifeInsuranceContracts package also provides a function to export a given 
+The LifeInsureR package also provides a function to export a given 
 contract to a spreadsheet in Excel format:
 
 * `exportInsuranceContract.xlsx(contract, filename)`
@@ -1971,7 +1971,7 @@ parameters take the corresponding functions (signature: `function(profits, rates
 While the details of a profit participation scheme are very specific and no two 
 profit schemes are exactly alike, the basic functionality to extract rates and 
 bases and the calculation functions are usually not so different. For this 
-reason, the `LifeInsuranceContracts` package provides several little helper functions
+reason, the `LifeInsureR` package provides several little helper functions
 that provide the most common functionality for the definition of rates, bases and
 the profit calculation. See `?ProfitParticipationFunctions` for the full list.
 

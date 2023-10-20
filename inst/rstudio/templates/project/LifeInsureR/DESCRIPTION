@@ -1,6 +1,6 @@
-Package: LifeInsuranceContractsXXXCOMPANYXXX
+Package: LifeInsureRXXXCOMPANYXXX
 Type: Package
-Title: LifeInsuranceContract Implementation for XXXCOMPANYXXX
+Title: LifeInsureR Implementation for XXXCOMPANYXXX
 Version: 0.1
 Date: 2023-12-31
 Description: Implementation of XXXCOMPANYXXX life insurance products.
@@ -10,7 +10,7 @@ Authors@R: c(person("Firstname", "Lastname", role = c("aut", "cre"),
 Author: Firstname Lastname [aut, cre]
 Maintainer: Firstname Lastname <email@example.com>
 Depends: R (>= 3.1.0), 
-    LifeInsuranceContracts, 
+    LifeInsureR, 
     MortalityTables,
     here
 Encoding: UTF-8

@@ -1,6 +1,6 @@
 library(magrittr)
 library(MortalityTables)
-library(LifeInsuranceContracts)
+library(LifeInsureR)
 mortalityTables.load("Austria_Census")
 
 Tarif.L71U = InsuranceTarif$new(

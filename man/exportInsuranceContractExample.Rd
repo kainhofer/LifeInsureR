@@ -40,10 +40,10 @@ required by the Austrian regulation).
 \details{
 Three output files are generated:
 \itemize{
-\item {DATE}_{TARIFF}_Example.xlsx: Full history/timeseries
-\item {DATE}_{TARIFF}_Example_PremiumWaiver_t10.xlsx: Full history/timeseries
+\item \{DATE\}_\{TARIFF\}_Example.xlsx: Full history/timeseries
+\item \{DATE\}_\{TARIFF\}_Example_PremiumWaiver_t10.xlsx: Full history/timeseries
 after a premium waiver at the given time \code{prf}
-\item {DATE}_{TARIFF}_Examples_VmGlg.txt: Example calculation required for the
+\item \{DATE\}_\{TARIFF\}_Examples_VmGlg.txt: Example calculation required for the
 Austrian regulation (LV-VMGLV)
 }
 }

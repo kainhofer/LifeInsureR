@@ -1,4 +1,4 @@
-library(LifeInsuranceContracts)
+library(LifeInsureR)
 library(MortalityTables)
 library(lubridate)
 mortalityTables.load("Austria_Census")

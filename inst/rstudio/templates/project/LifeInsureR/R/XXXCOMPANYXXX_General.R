@@ -36,25 +36,25 @@ XXXCOMPANYXXX.register = function(Tarif, Produkt, GV = NULL, AVB = NULL) {
     #       new products/tariffs cannot be added via XXXCOMPANYXXX.register.
     #       => Figure out a way to store all registered tariffs in a list
     #       that is not locked / that can be unlocked!
-    if ("package:LifeInsuranceContractsXXXCOMPANYXXX" %in% search()) {
-        pkgenv = as.environment("package:LifeInsuranceContractsXXXCOMPANYXXX")
+    if ("package:LifeInsureRXXXCOMPANYXXX" %in% search()) {
+        pkgenv = as.environment("package:LifeInsureRXXXCOMPANYXXX")
         locked = bindingIsLocked("XXXCOMPANYXXX.Tariffs", pkgenv)
         # if (locked) {
-            # unlockBinding("XXXCOMPANYXXX.Tariffs", pkgenv)
-            # locked = bindingIsLocked("XXXCOMPANYXXX.Tariffs", pkgenv)
+        # unlockBinding("XXXCOMPANYXXX.Tariffs", pkgenv)
+        # locked = bindingIsLocked("XXXCOMPANYXXX.Tariffs", pkgenv)
         # }
-        # nsenv = as.environment("namespace:LifeInsuranceContractsXXXCOMPANYXXX")
+        # nsenv = as.environment("namespace:LifeInsureRXXXCOMPANYXXX")
         # locked = bindingIsLocked("XXXCOMPANYXXX.Tariffs", pkgenv)
         # if (locked) {
         #     unlockBinding("XXXCOMPANYXXX.Tariffs", pkgenv)
         #     locked = bindingIsLocked("XXXCOMPANYXXX.Tariffs", pkgenv)
         # }
     }
-    # assign("XXXCOMPANYXXX.Tariffs", 123, -1, as.environment("package:LifeInsuranceContractsXXXCOMPANYXXX"))
+    # assign("XXXCOMPANYXXX.Tariffs", 123, -1, as.environment("package:LifeInsureRXXXCOMPANYXXX"))
     # if (locked) {
         # warning("")
     # }
-    # unlockBinding("XXXCOMPANYXXX.Tariffs", as.environment("package:LifeInsuranceContractsXXXCOMPANYXXX"))
+    # unlockBinding("XXXCOMPANYXXX.Tariffs", as.environment("package:LifeInsureRXXXCOMPANYXXX"))
     # unlockBinding(XXXCOMPANYXXX.Tariffs, pryr::where("XXXCOMPANYXXX.Tariffs"))
     if (!locked && !is.null(GV) && !is.null(AVB)) {
         XXXCOMPANYXXX.Tariffs[[paste0(Produkt, "/GV", GV, "/AVB", AVB)]] <<- Tarif

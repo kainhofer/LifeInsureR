@@ -1,4 +1,4 @@
-# LifeInsuranceContracts::vmGlgExample.generateTest(
+# LifeInsureR::vmGlgExample.generateTest(
 #     XXXCOMPANYXXX.Tarif2,
 #     age=35, policyPeriod = 85, sumInsured=100000,
 #     contractClosing = as.Date("2000-07-01"),

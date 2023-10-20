@@ -3,7 +3,7 @@
 library(magrittr)
 library(MortalityTables)
 library(lubridate)
-library(LifeInsuranceContracts)
+library(LifeInsureR)
 mortalityTables.load("Austria_Census")
 
 mort.AT.census.2011.male

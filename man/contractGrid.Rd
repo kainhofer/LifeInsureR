@@ -28,7 +28,7 @@ contractGridPremium(
 
 \item{observationYear}{The observation year, for which the grid shall be calculated. If given, the YOB is calculated from it, otherwise the contract's YOB is used}
 
-\item{...}{In \code{contractGrid}: Additional parameters to be passed to \ifelse{html}{\href{../../LifeInsuranceContracts/html/InsuranceContract.html#method-new}{\code{InsuranceContract$new()}}}{\code{InsuranceContract$new()()}}; In \code{contractGridPremium}: Additional parameters to be passed to \code{contractGrid}.}
+\item{...}{In \code{contractGrid}: Additional parameters to be passed to \ifelse{html}{\href{../../LifeInsureR/html/InsuranceContract.html#method-new}{\code{InsuranceContract$new()}}}{\code{InsuranceContract$new()()}}; In \code{contractGridPremium}: Additional parameters to be passed to \code{contractGrid}.}
 
 \item{contractGrid}{(optional) existing contract grid from which to derive
 premiums. If not given, \link{contractGrid} is called with all parameters, so
@@ -66,7 +66,7 @@ function \code{contractGridPremium}.
 The \code{axes} list describing the parameters changing along the axes of the
 resulting grid is internally expanded with \code{\link[=expand.grid]{expand.grid()}}. The resulting flat
 list of parameter (together with the fixed parameters passed as \code{...})
-is then passed to the \ifelse{html}{\href{../../LifeInsuranceContracts/html/InsuranceContract.html#method-new}{\code{InsuranceContract$new()}}}{\code{InsuranceContract$new()()}} call to create the corresponding
+is then passed to the \ifelse{html}{\href{../../LifeInsureR/html/InsuranceContract.html#method-new}{\code{InsuranceContract$new()}}}{\code{InsuranceContract$new()()}} call to create the corresponding
 contract object.
 
 To create the human-readable row-/columnnames of the resulting array,

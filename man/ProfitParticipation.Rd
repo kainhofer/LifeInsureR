@@ -71,8 +71,8 @@ parameters, i.e. the \code{ProfitParticipation} element of the
 
 All elements defined in the profit scheme can be overriden per contract
 in the call to \code{[InsuranceContract]$new} or even in the explicit
-call to \ifelse{html}{\href{../../LifeInsuranceContracts/html/InsuranceContract.html#method-profitScenario}{\code{InsuranceContract$profitScenario()}}}{\code{InsuranceContract$profitScenario()()}}
-or \ifelse{html}{\href{../../LifeInsuranceContracts/html/InsuranceContract.html#method-addProfitScenario}{\code{InsuranceContract$addProfitScenario()}}}{\code{InsuranceContract$addProfitScenario()()}}.}
+call to \ifelse{html}{\href{../../LifeInsureR/html/InsuranceContract.html#method-profitScenario}{\code{InsuranceContract$profitScenario()}}}{\code{InsuranceContract$profitScenario()()}}
+or \ifelse{html}{\href{../../LifeInsureR/html/InsuranceContract.html#method-addProfitScenario}{\code{InsuranceContract$addProfitScenario()}}}{\code{InsuranceContract$addProfitScenario()()}}.}
 
 \item{\code{Functions}}{list of functions defined to calculate the individual
 components. For each of the profit components
@@ -346,7 +346,7 @@ scheme and the contract)}
 \item{\code{values}}{Contract values calculated so far (guaranteed component of the
 insurance contract, including cash flows, premiums, reserves etc.).}
 
-\item{\code{...}}{additional parameters to be passed to \href{../../LifeInsuranceContracts/html/ProfitParticipation.html#method-setupRates}{\code{ProfitParticipation$setupRates()}}}
+\item{\code{...}}{additional parameters to be passed to \href{../../LifeInsureR/html/ProfitParticipation.html#method-setupRates}{\code{ProfitParticipation$setupRates()}}}
 }
 \if{html}{\out{</div>}}
 }
