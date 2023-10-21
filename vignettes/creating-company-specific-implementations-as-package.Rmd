@@ -107,7 +107,7 @@ to validate the official numbers in the financial statements).
 
 1.  Implement the corresponding products in the files in the `R/`
     subdirectory. Use the LifeInsureR documentation available at
-    <https://cran.r-project.org/web/packages/LifeInsureR/vignettes/using-the-lifeinsurer-package.html>
+    <https://cran.r-project.org/package=LifeInsureR/vignettes/using-the-lifeinsurer-package.html>
 
 2.  Install the package (using the "Install" button in RStudio's "Build"
     pane)
