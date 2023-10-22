@@ -76,16 +76,13 @@ template](images/05_RStudio_ProjectTemplate_fileStructure.png)
 -   The `DESCRIPTION` file provides the package name and its settings
     (author, explanation, dependencies, etc.). This is typically the
     first file to update.
-
 -   The `NAMESPACE` file will be automatically handled by roxygen
-
 -   The files in the `R/` subdirectory contain the tariff / product
     definitions, i.e. they implement the `LifeInsuranceTarif` objects
     for each product. The `*_General.R` file contains general
     definitions, like mortality tables, parameter / cost sets, surrender
     penalty functions, etc. and is typically sourced from each tariff's
     implementation file.
-
 -   The files in the `tests/testthat/` directory are unit tests for the
     testthat package. Typically, you will use the example prescribed (by
     the regulator) in the official tariff definitions as test cases, so
@@ -106,37 +103,30 @@ to validate the official numbers in the financial statements).
 ## Steps to implement batch-testing a whole (sub-)portfolio
 
 1.  Implement the corresponding products in the files in the `R/`
-    subdirectory. Use the LifeInsureR documentation available at
-    <https://cran.r-project.org/package=LifeInsureR/vignettes/using-the-lifeinsurer-package.html>
-
+    subdirectory. Use the LifeInsureR documentation for further details and guidance.
+    <!-- available at -->
+    <!-- <https://cran.r-project.org/package=LifeInsureR/vignettes/using-the-lifeinsurer-package.html> -->
 2.  Install the package (using the "Install" button in RStudio's "Build"
     pane)
-
 3.  Set up the mapping of the columns of the contract data source to the
     package's arguments. The columns of the input data can be directly
     mapped to named arguments in `LifeInsuranceContract$new(..)` calls.
-
 4.  If some columns need manual modifications (e.g. sex or frequencies
     expressed with other values than the package expects), update the
     `VTmodify.*` functions correspondingly.
-
 5.  Update the column types in the `readXXXCOMPANYXXXBestand(..)`
     function. This helps preventing errors, as these columns are always
     cast to the required type.
-
 6.  The `calculate_contract(..)` function might need to some adjustments
     / modifications, in particular when modified contracts, premiums
     waivers, additional tariffs / single-payment add-ons etc. are
     present.
-
 7.  Depending on which columns / data are available in the
     company-provided contract data, the column modifications /
     calculations of other reserves, etc. at the end of the
     `calculate_portfolio(…)` function might need to be adjusted.
-
 8.  Update the `files` and `outfile` variables to point to the input
     files ("Bestandsdaten") and the output file name
-
 9.  Call the `calculate_portfolio` function on the contract data set
     (potentially filtered to some subsets to prevent performance issues)
 
@@ -158,18 +148,13 @@ openXL(outfile("Prods-1-2"))
     `files` list and stored in the data.frame called `bestandinfos.all`.
 
     1.  Each file is read using the function `readXXXCOMPANYXXXBestand`.
-
     2.  The `readXXXCOMPANYXXXBestand` function uses read_excel to read
         in the raw data, then ensures the defined columns have the
         proper data type.
-
     3.  The columns are renamed according to the mapping in `colMapping`
-
     4.  All contracts are sorted by `Polizzennummer`
-
     5.  Additional modifications are done by the function
         `VTmodify.general`.
-
     6.  Further custom modifications can be manually added either in
         `readXXXCOMPANYXXXBestand` or in `VTmodify.general`
 
@@ -182,11 +167,9 @@ openXL(outfile("Prods-1-2"))
 
     1.  The portfolio data is filted with the given tariff, GV, skip,
         n_max arguments
-
     2.  Only the relevant columns of the portfolio data are taken, some
         sanity checks (sumInsured \> 0, premiumFrequency \>= 0) are
         applied.
-
     3.  Grouping happens by column `SliceID`. This allows multiple
         portfolio data rows to be combined to one contract with several
         slices / sum increases, which are calculated as one contract
@@ -198,7 +181,6 @@ openXL(outfile("Prods-1-2"))
         `SliceID` uses contract numbers, all dynamics, etc. belonging to
         the same contract number will be combined and calculated using
         `$addDynamics`
-
     4.  Each contract (entries with distinct `SliceID` value) is
         calculated in a loop using the `by_slice` function, which calls
         the `calculate_contract` function for each contract.
@@ -208,25 +190,20 @@ openXL(outfile("Prods-1-2"))
     as named parameters to the function.
 
     1.  A progress message is printed (if applicable)
-
     2.  All slices are arranged by date, with the slice starting first
         assumed to be the main contract part.
-
     3.  For the main contract, an instance of the
         `LifeInsuranceContract` (with the given tariff / product) is
         created and all values of the contract are automatically
         calculated by the package by default.
-
     4.  All additional slices (e.g. dynamic increases) with the same
         `SliceID` are added using the `$addDynamics` method of the
         `LifeInsuranceContract` class. The slice start date and duration
         are adjusted correspondingly.
-
     5.  The reserves are extracted from the contract and stored in the
         final `data.frame` z. If `debug=TRUE`, a column is added to the
         resulting data.frame containing the R code to reproduce with
         full contract.
-
     6.  The `calculate_portfolio` combines the `data.frame`s returned
         for each contract's `calculate_contract` call into one large
         data frame, adds some derived columns and returns the data frame
@@ -241,47 +218,27 @@ Additional arguments / columns are possible and will be preserved, even
 if they are not used by the contract.
 
 -   `Polizzennummer`
-
 -   `SliceID`
-
 -   `balanceSheetDate`
-
 -   `tarif`
-
 -   `GV`
-
 -   `i`
-
 -   `sex`
-
 -   `age`
-
 -   `contractClosing`
-
 -   `sliceDate`
-
 -   `policyPeriod`
-
 -   `premiumPeriod`
-
 -   `premiumFrequency`
-
 -   `annuityFrequency`
-
 -   `sumInsured`
 
 Columns used for comparison with the calculated values:
 
 -   `Bruttoprämie`
-
 -   `Sparprämie`
-
 -   `Risikoprämie`
-
 -   `Kostenprämie`
-
 -   `Bilanzreserve`
-
 -   `Gewinnreserve`
-
 -   `Prämienübertrag`
