@@ -15,9 +15,9 @@ makeContractGridDimnames(axes)
 \item{axes}{the axes with all names, for which a name should be generated}
 }
 \value{
-The name of the entry in the dimnames of \code{\link[=makeContractGrid]{makeContractGrid()}}
+The name of the entry in the dimnames of \code{\link[=contractGrid]{contractGrid()}}
 
-an array of dimnames derived from the axes definitions of \code{\link[=makeContractGrid]{makeContractGrid()}}
+an array of dimnames derived from the axes definitions of \code{\link[=contractGrid]{contractGrid()}}
 }
 \description{
 The function \code{makeContractGridDimname} generates a short, human-readable

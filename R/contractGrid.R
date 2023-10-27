@@ -40,7 +40,7 @@
 #
 # Params of the contractGridPreimium function:
 #' @param contractGrid (optional) existing contract grid from which to derive
-#' premiums. If not given, [contractGrid] is called with all parameters, so
+#' premiums. If not given, [contractGrid()] is called with all parameters, so
 #' \code{...} should contain an \code{axes} argument in that case.
 #' @param premium The type of premium to derive (key of the \code{contract$Values$premiums} list.
 #' @param .fun The function to extract the desired premium from a contract
@@ -53,7 +53,24 @@
 #' @rdname contractGrid
 #'
 #' @examples
-#' # TODO
+#' library("MortalityTables")
+#' mortalityTables.load("Austria_Annuities_AVOe2005R")
+#' # A trivial deferred annuity tariff with no costs, premiums during whole 
+#' # deferral period, 30 years annuity payments:
+#' tariff = InsuranceTarif$new(name="Test Annuity", type="annuity", tarif = "Annuity 1A",
+#'     mortalityTable = AVOe2005R.unisex, i=0.01, 
+#'     deferralPeriod = function(params, ...) { params$ContractData$premiumPeriod }, 
+#'     policyPeriod = function(params, ...) { params$ContractData$premiumPeriod + 30 }
+#' )
+#' contractGrid(
+#'     axes = list(
+#'         age = seq(20, 60, 10),
+#'         premiumPeriod = seq(5,30, 5)
+#'     ),
+#'     tarif = tariff,
+#'     sumInsured = 1000,
+#'     contractClosing = as.Date("2023-11-01")
+#' )
 #'
 #' @export
 contractGrid = function(axes = list(age = seq(20, 60, 10), policyPeriod = seq(5, 35, 5)), YOB = NULL, observationYear = NULL, ...) {
@@ -101,7 +118,7 @@ makeContractGridDimname.default = function(value) { value }
 #' representation for the axes in the grid.
 #'
 #' @param value the value along the axis, for which a name should be generated
-#' @returns The name of the entry in the dimnames of [makeContractGrid()]
+#' @returns The name of the entry in the dimnames of [contractGrid()]
 #' @describeIn makeContractGridDimname Create a short, human-readable dimensional name for an object (default S3 method)
 #' @examples
 #' library(MortalityTables)
@@ -121,7 +138,7 @@ makeContractGridDimname = function(value) { UseMethod("makeContractGridDimname",
 #' dimnames for all entries of the axes of a [contractGrid()] by calling
 #' \code{makeContractGridDimname} on each of the axes' values
 #' @param axes the axes with all names, for which a name should be generated
-#' @returns an array of dimnames derived from the axes definitions of [makeContractGrid()]
+#' @returns an array of dimnames derived from the axes definitions of [contractGrid()]
 #' @describeIn makeContractGridDimname Generate proper dimnames for all entries of the axes of a [contractGrid()]
 #' @export
 makeContractGridDimnames = function(axes) {
@@ -154,6 +171,28 @@ makeContractGridDimnames = function(axes) {
 #' @returns a array of premiums (or other contract-specific value) for the grid defined by the \code{axes} argument to \code{contractGrid}
 #'
 #' @rdname contractGrid
+#' 
+#' @example
+#' library("MortalityTables")
+#' mortalityTables.load("Austria_Annuities_AVOe2005R")
+#' # A trivial deferred annuity tariff with no costs, premiums during whole 
+#' # deferral period, 30 years annuity payments:
+#' tariff = InsuranceTarif$new(name="Test Annuity", type="annuity", tarif = "Annuity 1A",
+#'     mortalityTable = AVOe2005R.unisex, i=0.01, 
+#'     deferralPeriod = function(params, ...) { params$ContractData$premiumPeriod }, 
+#'     policyPeriod = function(params, ...) { params$ContractData$premiumPeriod + 30 }
+#' )
+#' contractGridPremium(
+#'     axes = list(
+#'         age = seq(20, 60, 10),
+#'         premiumPeriod = seq(5,30, 5)
+#'     ),
+#'     tarif = tariff,
+#'     sumInsured = 1000,
+#'     contractClosing = as.Date("2023-11-01")
+#' )
+#'
+#' 
 #' @export
 contractGridPremium = function(contractGrid = NULL, premium="written", .fun = function(cntr) { cntr$Values$premiums[[premium]] }, ...) {
     if (missing(contractGrid) || is.null(contractGrid)) {

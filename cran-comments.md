@@ -1,6 +1,12 @@
 ## R CMD check results
 
-0 errors | 0 warnings | 1 note
+❯ checking CRAN incoming feasibility ... NOTE
+  Maintainer: 'Reinhold Kainhofer <reinhold@kainhofer.com>'
+  
+  New submission
+
+0 errors ✔ | 0 warnings ✔ | 1 note ✖
+
 
 * Renamed the existing LifeInsuranceContracts package to LifeInsureR
   So this is not a complately new package, just a new name!
