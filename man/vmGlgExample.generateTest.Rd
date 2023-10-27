@@ -19,6 +19,9 @@ values is generated.}
 
 \item{...}{Further parameters for generating the contract for a tariff object}
 }
+\value{
+None (code is printed to the console, but no value returned)
+}
 \description{
 This function calculates the required reference values for the given
 insurance contract as required by the Austrian regulation (LV-VMGLV, "LV

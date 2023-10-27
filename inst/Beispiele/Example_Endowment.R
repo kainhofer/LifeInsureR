@@ -78,10 +78,8 @@ contract.Bsp = InsuranceContract$
   addDynamics(t = 5, NewSumInsured = 200000, id = "Dynamik 1", i = 0.05, age = 70)$
   addDynamics(t = 10, NewSumInsured = 250000, id = "Dynamik 2", i = 0.01);
 
-options('LIC.debug.premiumCalculation' = TRUE)
 contract.Bsp$premiumWaiver(t = 13)
 
-options('LIC.debug.premiumCalculation' = FALSE)
 # exportInsuranceContractExample(contract.Bsp, t = 5);
 # showVmGlgExamples(contract.Bsp, t = 10)
 #

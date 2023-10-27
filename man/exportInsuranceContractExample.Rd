@@ -32,6 +32,9 @@ multiple exports.}
 
 \item{...}{Further parameters (passed on to \code{\link{showVmGlgExamples}})}
 }
+\value{
+None
+}
 \description{
 Export the given contract to excel (full history/timeseries of all cash
 flows, reserves, premiums, etc.) and to a text file (sample calculation
@@ -60,6 +63,6 @@ contract = InsuranceContract$new(
     sumInsured = 1000,
     contractClosing = as.Date("2016-10-01")
 );
-\dontrun{exportInsuranceContractExample(contract, prf = 10)}
+\donttest{exportInsuranceContractExample(contract, prf = 10)}
 
 }

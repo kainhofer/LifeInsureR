@@ -16,6 +16,9 @@ all inherited values from the tariff and the profit participation)}
 
 \item{values}{The values calculated from the insurance contract so far}
 }
+\value{
+vector of linearly decreasing benefits over the whole insurance coverage period
+}
 \description{
 The death benefit will be the full sumInsured for the first year after the
 deferral period and then decrease linearly to 0 at the end of the policyPeriod.

@@ -29,7 +29,6 @@ library(LifeInsureR)
 library(dplyr)
 library(tibble)
 library(lubridate)
-options(scipen=5)
 
 library(pander)
 ```
@@ -103,9 +102,8 @@ to validate the official numbers in the financial statements).
 ## Steps to implement batch-testing a whole (sub-)portfolio
 
 1.  Implement the corresponding products in the files in the `R/`
-    subdirectory. Use the LifeInsureR documentation for further details and guidance.
-    <!-- available at -->
-    <!-- <https://cran.r-project.org/package=LifeInsureR/vignettes/using-the-lifeinsurer-package.html> -->
+    subdirectory. Use the (LifeInsureR documentation)<using-the-lifeinsurer-package.html> 
+    for further details and guidance.
 2.  Install the package (using the "Install" button in RStudio's "Build"
     pane)
 3.  Set up the mapping of the columns of the contract data source to the

@@ -28,7 +28,6 @@ library(LifeInsureR)
 library(dplyr)
 library(tibble)
 library(lubridate)
-options(scipen=5)
 
 library(pander)
 
@@ -1505,25 +1504,25 @@ ContractA = InsuranceContract$new(
 
 # premium-free extension
 ContractB = ContractA$clone()$
-  addExtension(id = "Verlängerung1", contractPeriod = 5, premiumPeriod = 0)
+  addExtension(id = "Verlaengerung1", contractPeriod = 5, premiumPeriod = 0)
 # sumInsured calculated from existing reserve:
-ContractB$blocks$Verlängerung1$Parameters$ContractData$sumInsured
+ContractB$blocks$Verlaengerung1$Parameters$ContractData$sumInsured
 ContractB$Values$basicData
 
 # extension with given sumInsured resulting in 0 (gross) premiums
 ContractC = ContractA$clone()$
-  addExtension(id = "Verlängerung1", contractPeriod = 5, sumInsured = 10723.07973354)
-ContractC$blocks$Verlängerung1$Values$premiums[["gross"]]
+  addExtension(id = "Verlaengerung1", contractPeriod = 5, sumInsured = 10723.07973354)
+ContractC$blocks$Verlaengerung1$Values$premiums[["gross"]]
 ContractC$Values$basicData
 
 # extension with increased sumInsured: real premiums are charged, reserves start from the existing reserve:
 ContractD = ContractA$clone()$
-  addExtension(id = "Verlängerung1", contractPeriod = 5, sumInsured = 20000)
+  addExtension(id = "Verlaengerung1", contractPeriod = 5, sumInsured = 20000)
 ContractD$Values$basicData
 
 # extension with regular premiums, which are given: sumInsured is calculated from it, reserves start from the existing reserve:
 ContractD = ContractA$clone()$
-  addExtension(id = "Verlängerung1", contractPeriod = 5, premium = 597.8771)
+  addExtension(id = "Verlaengerung1", contractPeriod = 5, premium = 597.8771)
 ContractD$Values$basicData
 ```
 

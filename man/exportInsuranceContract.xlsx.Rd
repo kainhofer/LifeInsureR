@@ -11,6 +11,9 @@ exportInsuranceContract.xlsx(contract, filename)
 
 \item{filename}{Target Excel filename for export}
 }
+\value{
+None
+}
 \description{
 Export an insurance act object tocontract (object of class \link{InsuranceContract}) to an Excel file
 }
@@ -37,5 +40,5 @@ contract = InsuranceContract$new(
     sumInsured = 1000,
     contractClosing = as.Date("2016-10-01")
 );
-\dontrun{exportInsuranceContract.xlsx(contract, "Example_annuity_contract.xlsx")}
+\donttest{exportInsuranceContract.xlsx(contract, "Example_annuity_contract.xlsx")}
 }

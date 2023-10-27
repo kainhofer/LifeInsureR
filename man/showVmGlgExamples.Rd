@@ -19,6 +19,9 @@ showVmGlgExamples(contract, prf = 10, t = 10, t_prf = 12, file = "", ...)
 
 \item{...}{Further parameters for generating the contract for a tariff object}
 }
+\value{
+Name of the output file (invisible) or empty if printed to console
+}
 \description{
 Display the values of the example calculation of the given insurance contract
 as required by the Austrian regulation (LV-VMGLV, "LV
@@ -40,7 +43,7 @@ contract = InsuranceContract$new(
 showVmGlgExamples(contract)
 
 # Optionally output to a file rather than the console:
-\dontrun{
-showVmGlgExamples(contract, file = "annuity-example.txt")
+\donttest{
+showVmGlgExamples(contract, file =  tempfile("annuity-example", fileext = ".txt"))
 }
 }

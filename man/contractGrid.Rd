@@ -42,6 +42,11 @@ type of premium given in the \code{premium} parameter. One can,
 however pass any other extractor function to access e.g. reserves,
 cash flows etc. at any desired time.}
 }
+\value{
+multi-dimensional array of insurance contracts (dimensions defined by the axes argument)
+
+a array of premiums (or other contract-specific value) for the grid defined by the \code{axes} argument to \code{contractGrid}
+}
 \description{
 The function \code{contractGrid} creates a (two- or multi-dimensional) grid
 of InsuranceContract objects, where each axis represents one of the insurance

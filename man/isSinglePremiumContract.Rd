@@ -11,6 +11,9 @@ isSinglePremiumContract(params, values)
 
 \item{values}{Unused by default (already calculated values of the contract)}
 }
+\value{
+TRUE or FALSE, indicating a single-premium contract or not
+}
 \description{
 Single premium contracts are identified by the parameter \code{premiumPeriod = 1}.
 }

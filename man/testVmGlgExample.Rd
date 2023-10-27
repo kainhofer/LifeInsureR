@@ -45,6 +45,9 @@ testVmGlgExample(
 
 \item{...}{Further parameters for generating the contract for a tariff object}
 }
+\value{
+None
+}
 \description{
 Check the values of the example calculation of the given insurance contract
 as required by the Austrian regulation (LV-VMGLV, "LV
@@ -57,13 +60,15 @@ The easiest way to write unit-tests is using the function \code{vmGlgExample.gen
 }
 \examples{
 library(MortalityTables)
+library(testthat)
 mortalityTables.load("Austria_Annuities_AVOe2005R")
 
-\dontrun{
 test_that("Testtarif", {
     # A trivial deferred annuity tariff with no costs:
+    library(MortalityTables)
+    mortalityTables.load("Austria_Annuities")
     tariff = InsuranceTarif$new(name="Test Annuity", type="annuity",
-        mortalityTable = AVOe2005R.unisex, i=0.01)
+        mortalityTable = AVOe2005R.unisex, i = 0.01)
     contract = InsuranceContract$new(
         tariff,
         age = 35, YOB = 1981,
@@ -83,14 +88,13 @@ test_that("Testtarif", {
         VwKostenRes = 0.00,
         VwKostenRes.prf = 0.00,
         Bilanzreserve = 9250.35,
-        Praemienuebertrag = 212.52,
+        Praemienuebertrag = 637.567,
         Rueckkaufsreserve = 9011.40,
         Rueckkaufswert = 9011.40,
         Abschlusskostenruecktrag = 0.00,
         Rueckkaufswert.prf = 9205.96,
-        VS.prf = 685.12
+        VS.prf = 684.117
     )
 })
-}
 
 }

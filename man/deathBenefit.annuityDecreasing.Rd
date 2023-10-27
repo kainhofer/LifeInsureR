@@ -9,6 +9,9 @@ deathBenefit.annuityDecreasing(interest)
 \arguments{
 \item{interest}{The interest rate of the loan, which is underlying the insurance.}
 }
+\value{
+vector of decreasing death benefits
+}
 \description{
 The death benefit will be the full sumInsured for the first year after the
 deferral period and then decrease like an annuity to 0 at the end of the policyPeriod.

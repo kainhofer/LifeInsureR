@@ -846,10 +846,10 @@ exportCFTable = function(wb, sheet, contract, ccol = 1, crow = 1, styles = c(), 
 #
 ############################################################################### #
 
-#' Export an insurance act object tocontract (object of class [InsuranceContract]) to an Excel file
+#' Export an insurance contract (object of class [InsuranceContract]) to an 'Excel' file
 #'
 #' @details The function \code{exportInsuranceContract.xlsx} exports an object
-#' of class [InsuranceContract] to an Excel file. All basic data, as well as
+#' of class [InsuranceContract] to an 'Excel' file. All basic data, as well as
 #' the time series of (absolute and unit) cash flows, reserves, premiums, premium
 #' composition and all profit participation scenarios are exported to the file
 #' in nicely looking tables.
@@ -858,7 +858,8 @@ exportCFTable = function(wb, sheet, contract, ccol = 1, crow = 1, styles = c(), 
 #' stored in \code{contract$Values}.
 #'
 #' @param contract The insurance contract to export
-#' @param filename Target Excel filename for export
+#' @param filename Target 'Excel' file name for export
+#' @returns None
 #'
 #' @examples
 #' library("MortalityTables")
@@ -873,7 +874,7 @@ exportCFTable = function(wb, sheet, contract, ccol = 1, crow = 1, styles = c(), 
 #'     sumInsured = 1000,
 #'     contractClosing = as.Date("2016-10-01")
 #' );
-#' \dontrun{exportInsuranceContract.xlsx(contract, "Example_annuity_contract.xlsx")}
+#' \donttest{exportInsuranceContract.xlsx(contract, "Example_annuity_contract.xlsx")}
 #' @export
 exportInsuranceContract.xlsx = function(contract, filename) {
   # TODO: argument checking for contract and filename

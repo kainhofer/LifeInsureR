@@ -12,6 +12,9 @@ age.yearDifference(params, values)
 
 \item{values}{Unused by default (already calculated values of the contract)}
 }
+\value{
+the resulting age
+}
 \description{
 Calculate the age of the insured based on the difference of the bith year and
 contract closing year.

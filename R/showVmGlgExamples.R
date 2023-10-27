@@ -82,6 +82,7 @@ calcVmGlgExample = function(contract, prf = 10, t = 10, t_prf = 12, ...) {
 #' @param t_prf Time for which to show all values after the premium waiver
 #' @param file If given, outputs all information to the file rather than the console
 #' @param ... Further parameters for generating the contract for a tariff object
+#' @returns Name of the output file (invisible) or empty if printed to console
 #'
 #' @examples
 #' library(MortalityTables)
@@ -99,8 +100,8 @@ calcVmGlgExample = function(contract, prf = 10, t = 10, t_prf = 12, ...) {
 #' showVmGlgExamples(contract)
 #'
 #' # Optionally output to a file rather than the console:
-#' \dontrun{
-#' showVmGlgExamples(contract, file = "annuity-example.txt")
+#' \donttest{
+#' showVmGlgExamples(contract, file =  tempfile("annuity-example", fileext = ".txt"))
 #' }
 #' @export
 showVmGlgExamples = function(contract, prf = 10, t = 10, t_prf = 12, file = "", ...) {
@@ -169,6 +170,7 @@ showVmGlgExamples = function(contract, prf = 10, t = 10, t_prf = 12, file = "", 
     );
     output.str = paste(output, collapse = '\r\n')
     cat(output.str, file = file)
+    invisible(file)
 }
 
 
@@ -189,16 +191,19 @@ showVmGlgExamples = function(contract, prf = 10, t = 10, t_prf = 12, file = "", 
 #' @param net,Zillmer,gross,written,savings,risk,ZillmerRes,ZillmerRes.prf,VwKostenRes,VwKostenRes.prf,Bilanzreserve,Praemienuebertrag,Rueckkaufsreserve,Rueckkaufswert,Abschlusskostenruecktrag,Rueckkaufswert.prf,VS.prf Values as printed out by showVmGlgExamples
 #' @param absTolerance If non-NULL, will ignore small floating point differences. It uses same algorithm as all.equal()
 #' @param ... Further parameters for generating the contract for a tariff object
+#' @returns None
 #'
 #' @examples
 #' library(MortalityTables)
+#' library(testthat)
 #' mortalityTables.load("Austria_Annuities_AVOe2005R")
 #'
-#' \dontrun{
 #' test_that("Testtarif", {
 #'     # A trivial deferred annuity tariff with no costs:
+#'     library(MortalityTables)
+#'     mortalityTables.load("Austria_Annuities")
 #'     tariff = InsuranceTarif$new(name="Test Annuity", type="annuity",
-#'         mortalityTable = AVOe2005R.unisex, i=0.01)
+#'         mortalityTable = AVOe2005R.unisex, i = 0.01)
 #'     contract = InsuranceContract$new(
 #'         tariff,
 #'         age = 35, YOB = 1981,
@@ -218,15 +223,14 @@ showVmGlgExamples = function(contract, prf = 10, t = 10, t_prf = 12, file = "", 
 #'         VwKostenRes = 0.00,
 #'         VwKostenRes.prf = 0.00,
 #'         Bilanzreserve = 9250.35,
-#'         Praemienuebertrag = 212.52,
+#'         Praemienuebertrag = 637.567,
 #'         Rueckkaufsreserve = 9011.40,
 #'         Rueckkaufswert = 9011.40,
 #'         Abschlusskostenruecktrag = 0.00,
 #'         Rueckkaufswert.prf = 9205.96,
-#'         VS.prf = 685.12
+#'         VS.prf = 684.117
 #'     )
 #' })
-#'}
 #'
 #' @export
 testVmGlgExample = function(contract, prf = 10, t = 10, t_prf = 12, net, Zillmer, gross, written, savings, risk,
@@ -318,6 +322,7 @@ testVmGlgExample = function(contract, prf = 10, t = 10, t_prf = 12, net, Zillmer
 #' @param prf Time of premium waiver (premium-free)
 #' @param t_prf Time for which to calculated all values after the premium waiver
 #' @param ... Further parameters for generating the contract for a tariff object
+#' @returns None (code is printed to the console, but no value returned)
 #'
 #' @examples
 #' library(MortalityTables)

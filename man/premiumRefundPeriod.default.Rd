@@ -12,6 +12,9 @@ all inherited values from the tariff and the profit participation)}
 
 \item{values}{The values calculated from the insurance contract so far}
 }
+\value{
+The length of the premium refund period (deferral period for deferred contracts, contract period otherwise)
+}
 \description{
 If a premium refund is set for the tariff, the default is the full contract
 period, except for deferred contracts (typically deferred life annuities),

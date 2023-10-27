@@ -5,7 +5,7 @@ NULL
 
 #' Export the example calculations of an insurance contract
 #'
-#' Export the given contract to excel (full history/timeseries of all cash
+#' Export the given contract to 'Excel' (full history/timeseries of all cash
 #' flows, reserves, premiums, etc.) and to a text file (sample calculation
 #' required by the Austrian regulation).
 #'
@@ -28,6 +28,7 @@ NULL
 #' @param extraname If basename is not given, this allows a suffix to distinguish
 #'       multiple exports.
 #' @param ... Further parameters (passed on to \code{\link{showVmGlgExamples}})
+#' @returns None
 #'
 #' @examples
 #' library("MortalityTables")
@@ -42,7 +43,7 @@ NULL
 #'     sumInsured = 1000,
 #'     contractClosing = as.Date("2016-10-01")
 #' );
-#' \dontrun{exportInsuranceContractExample(contract, prf = 10)}
+#' \donttest{exportInsuranceContractExample(contract, prf = 10)}
 #'
 #' @export
 exportInsuranceContractExample = function(contract, prf = 10, outdir = ".", basename=NULL, extraname = NULL, ...) {

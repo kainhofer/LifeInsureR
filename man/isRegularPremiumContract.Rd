@@ -11,6 +11,9 @@ isRegularPremiumContract(params, values)
 
 \item{values}{Unused by default (already calculated values of the contract)}
 }
+\value{
+TRUE or FALSE, indicating a contract with regular premiums
+}
 \description{
 Regular premium contracts are identified by the parameter \code{premiumPeriod > 1}.
 }

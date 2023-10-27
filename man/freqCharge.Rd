@@ -15,6 +15,9 @@ freqCharge(monthly = 0, quarterly = 0, semiannually = 0, yearly = 0)
 
 \item{yearly}{Surcharge for yearly premium payments (optiona, default is no surcharge)}
 }
+\value{
+a named list of surcharges for names 1 (yearly), 2 (semiannually), 4 (quarterly) and 12 (monthly) payments
+}
 \description{
 Tariffs are typically calculated with yearly premium installments. When
 premiums are paid more often then one a year (in advance), the insurance

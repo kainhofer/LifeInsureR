@@ -112,6 +112,7 @@ ProfitComponentsEnum = objectProperties::setMultipleEnum("ProfitComponents",
 #'
 #' @param params The parameters of the contract.
 #' @param values Unused by default (already calculated values of the contract)
+#' @returns TRUE or FALSE, indicating a single-premium contract or not
 #'
 #' @export
 isSinglePremiumContract = function(params, values) { params$ContractData$premiumPeriod <= 1 }
@@ -123,6 +124,7 @@ isSinglePremiumContract = function(params, values) { params$ContractData$premium
 #'
 #' @param params The parameters of the contract.
 #' @param values Unused by default (already calculated values of the contract)
+#' @returns TRUE or FALSE, indicating a contract with regular premiums
 #'
 #' @export
 isRegularPremiumContract = function(params, values) { params$ContractData$premiumPeriod > 1 }
@@ -141,6 +143,7 @@ isRegularPremiumContract = function(params, values) { params$ContractData$premiu
 #' @param params The full parameter set of the insurance contract (including
 #'               all inherited values from the tariff and the profit participation)
 #' @param values The values calculated from the insurance contract so far
+#' @returns vector of linearly decreasing benefits over the whole insurance coverage period
 #'
 #' @export
 deathBenefit.linearDecreasing = function(len, params, values) {
@@ -158,6 +161,7 @@ deathBenefit.linearDecreasing = function(len, params, values) {
 #' @param params The full parameter set of the insurance contract (including
 #'               all inherited values from the tariff and the profit participation)
 #' @param values The values calculated from the insurance contract so far
+#' @returns The length of the premium refund period (deferral period for deferred contracts, contract period otherwise)
 #'
 #' @export
 premiumRefundPeriod.default = function(params, values) {
@@ -187,6 +191,7 @@ premiumRefundPeriod.default = function(params, values) {
 #'
 #'
 #' @param interest The interest rate of the loan, which is underlying the insurance.
+#' @returns vector of decreasing death benefits
 #'
 #'
 #' @export
@@ -209,6 +214,7 @@ deathBenefit.annuityDecreasing = function(interest) {
 #'
 #' @param params The parameters of the contract.
 #' @param values Unused by default (already calculated values of the contract)
+#' @returns the resulting age
 #'
 #' @export
 age.exactRounded = function(params, values) {
@@ -222,6 +228,7 @@ age.exactRounded = function(params, values) {
 #'
 #' @param params The parameters of the contract.
 #' @param values Unused by default (already calculated values of the contract)
+#' @returns the resulting age
 #'
 #' @export
 age.yearDifference = function(params, values) {
@@ -255,6 +262,7 @@ age.yearDifference = function(params, values) {
 #' @param quarterly Surcharge for quarterly premium payments
 #' @param semiannually Surcharge for semi-annual premium payments
 #' @param yearly Surcharge for yearly premium payments (optiona, default is no surcharge)
+#' @returns a named list of surcharges for names 1 (yearly), 2 (semiannually), 4 (quarterly) and 12 (monthly) payments
 #'
 #' @export
 freqCharge = function(monthly = 0, quarterly = 0, semiannually = 0, yearly = 0) {

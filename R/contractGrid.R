@@ -48,6 +48,7 @@
 #'         type of premium given in the \code{premium} parameter. One can,
 #'         however pass any other extractor function to access e.g. reserves,
 #'         cash flows etc. at any desired time.
+#' @returns multi-dimensional array of insurance contracts (dimensions defined by the axes argument)
 #'
 #' @rdname contractGrid
 #'
@@ -100,6 +101,7 @@ makeContractGridDimname.default = function(value) { value }
 #' representation for the axes in the grid.
 #'
 #' @param value the value along the axis, for which a name should be generated
+#' @returns The name of the entry in the dimnames of [makeContractGrid()]
 #' @describeIn makeContractGridDimname Create a short, human-readable dimensional name for an object (default S3 method)
 #' @examples
 #' library(MortalityTables)
@@ -119,6 +121,7 @@ makeContractGridDimname = function(value) { UseMethod("makeContractGridDimname",
 #' dimnames for all entries of the axes of a [contractGrid()] by calling
 #' \code{makeContractGridDimname} on each of the axes' values
 #' @param axes the axes with all names, for which a name should be generated
+#' @returns an array of dimnames derived from the axes definitions of [makeContractGrid()]
 #' @describeIn makeContractGridDimname Generate proper dimnames for all entries of the axes of a [contractGrid()]
 #' @export
 makeContractGridDimnames = function(axes) {
@@ -148,6 +151,7 @@ makeContractGridDimnames = function(axes) {
 #'         type of premium given in the \code{premium} parameter. One can,
 #'         however pass any other extractor function to access e.g. reserves,
 #'         cash flows etc. at any desired time.
+#' @returns a array of premiums (or other contract-specific value) for the grid defined by the \code{axes} argument to \code{contractGrid}
 #'
 #' @rdname contractGrid
 #' @export

@@ -12,6 +12,9 @@ age.exactRounded(params, values)
 
 \item{values}{Unused by default (already calculated values of the contract)}
 }
+\value{
+the resulting age
+}
 \description{
 Calculate the age of the insured based on exact age at contract closing, rounded
 to the nearest birthday.
