@@ -1,8 +1,8 @@
 Package: LifeInsureR
 Type: Package
-Version: 1.0.0
-Date: 2023-10-20
-Title: Framework for Traditional Life Insurance Contracts
+Version: 0.0.0.9999
+Date: 2023-10-27
+Title: Modelling Traditional Life Insurance Contracts
 Description: R6 classes to model traditional life insurance
     contracts like annuities, whole life insurances or endowments. Such life
     insurance contracts provide a guaranteed interest and are not directly linked
@@ -14,8 +14,8 @@ Description: R6 classes to model traditional life insurance
     waivers). All relevant quantities like premium decomposition, reserves and 
     benefits over the whole contract period are calculated and potentially 
     exported to 'Excel'. Mortality rates are given using the 'MortalityTables' package.
-Authors@R: c(person("Reinhold", "Kainhofer", role=c("aut", "cre"), email="reinhold@kainhofer.com"))
-Author: Reinhold Kainhofer [aut, cre]
+Authors@R: c(person("Reinhold", "Kainhofer", role=c("aut", "cre", "cph"), email="reinhold@kainhofer.com"))
+Author: Reinhold Kainhofer [aut, cre, cph]
 Maintainer: Reinhold Kainhofer <reinhold@kainhofer.com>
 Encoding: UTF-8
 Imports:
@@ -43,7 +43,6 @@ Collate:
     'ProfitParticipation.R'
     'InsuranceTarif.R'
     'InsuranceContract.R'
-    'addDataTableWorksheet.R'
     'contractGrid.R'
     'create_LIR_project.R'
     'exportInsuranceContract_xlsx.R'

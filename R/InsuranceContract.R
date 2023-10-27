@@ -456,8 +456,8 @@ InsuranceContract = R6Class(
         #' @param id The identifier of the contract block describing the dynamic
         #'          increase. This is a free-form string that should be unique
         #'          within the list of child blocks. It will be displayed in the
-        #'          Excel export feature and in the history snapshot list.
-        #' @param ... Paramters to override in the dynamic block. By default,
+        #'          'Excel' export feature and in the history snapshot list.
+        #' @param ... Parameters to override in the dynamic block. By default,
         #'          all parameters of the main contract block will be used, but
         #'          they can be overridden per dynamic increase block.
         #'
@@ -951,7 +951,7 @@ InsuranceContract = R6Class(
         #'         profit scenarios.
         #'
         #' @param id The unique ID of the profit scenario. Will be used as key
-        #'         in the list of profit scenarios and printed out in the Excel
+        #'         in the list of profit scenarios and printed out in the 'Excel'
         #'         export.
         #' @param ... Scenario-specific profit sharing parameters, overriding
         #'         the default values. Typically, adjusted profit rates are required

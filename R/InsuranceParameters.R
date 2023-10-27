@@ -70,6 +70,8 @@ setCost = function(costs, type, basis = "SumInsured", frequency = "PolicyPeriod"
 #'                           even if the insured has already dies (for term-fix insurances)
 #' @param unitcosts Unit costs (absolute monetary amount, during premium period)
 #' @param unitcosts.PolicyPeriod Unit costs (absolute monetary amount, during full contract period)
+#' 
+#' @returns an insurance cost structure (multi-dimensional matrix)
 #'
 #' @examples
 #' # empty cost structure (only 0 costs)

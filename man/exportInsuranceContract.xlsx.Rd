@@ -2,24 +2,24 @@
 % Please edit documentation in R/exportInsuranceContract_xlsx.R
 \name{exportInsuranceContract.xlsx}
 \alias{exportInsuranceContract.xlsx}
-\title{Export an insurance act object tocontract (object of class \link{InsuranceContract}) to an Excel file}
+\title{Export an insurance contract (object of class \link{InsuranceContract}) to an 'Excel' file}
 \usage{
 exportInsuranceContract.xlsx(contract, filename)
 }
 \arguments{
 \item{contract}{The insurance contract to export}
 
-\item{filename}{Target Excel filename for export}
+\item{filename}{Target 'Excel' file name for export}
 }
 \value{
 None
 }
 \description{
-Export an insurance act object tocontract (object of class \link{InsuranceContract}) to an Excel file
+Export an insurance contract (object of class \link{InsuranceContract}) to an 'Excel' file
 }
 \details{
 The function \code{exportInsuranceContract.xlsx} exports an object
-of class \link{InsuranceContract} to an Excel file. All basic data, as well as
+of class \link{InsuranceContract} to an 'Excel' file. All basic data, as well as
 the time series of (absolute and unit) cash flows, reserves, premiums, premium
 composition and all profit participation scenarios are exported to the file
 in nicely looking tables.
@@ -40,5 +40,5 @@ contract = InsuranceContract$new(
     sumInsured = 1000,
     contractClosing = as.Date("2016-10-01")
 );
-\donttest{exportInsuranceContract.xlsx(contract, "Example_annuity_contract.xlsx")}
+\donttest{exportInsuranceContract.xlsx(contract, tempfile("Example_annuity_contract", fileext = ".xlsx"))}
 }

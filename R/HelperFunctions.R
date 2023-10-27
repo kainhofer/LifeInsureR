@@ -765,6 +765,7 @@ head0 = function(v, start = 0, value.start = 0) {
 #'
 #' @param v the vector to pad by repeating the last element
 #' @param ... arguments passed through to \code{pad0}
+#' @returns vector padded to the correct length
 #'
 #' @examples
 #' padLast(1:5, 7) # 5 is repeated twice
@@ -793,6 +794,7 @@ padLast = function(v, ...) {
 #' @param x The vector where NA-values should be filled by repeating the last preceeding non-NA value
 #' @param firstBack if \code{TRUE}, leading NAs are replaced by the first non-NA
 #'     value in the vector, otherwise leading NAs are left untouched.
+#' @returns vector with NAs properly replaced
 #'
 #' @export
 fillNAgaps <- function(x, firstBack=FALSE) {
@@ -832,6 +834,8 @@ fillNAgaps <- function(x, firstBack=FALSE) {
 #' If \code{val} is a function, evaluate it, otherwise return \code{val}
 #' @param val Function or value
 #' @param ... Argument passed to \code{val} if it is a function
+#' @returns the value, potentially with the given function applied
+#' 
 #' @examples
 #' valueOrFunction(3) # returns 3
 #' valueOrFunction(`+`, 1, 2) # also returns 3
@@ -850,6 +854,8 @@ valueOrFunction = function(val, ...) {
 #' @param hook (optional) function to apply to \code{val} and the other parameters
 #' @param val The value to which the hook is applied (ifgiven)
 #' @param ... optional parameters passed to the hook function (if it is a function)
+#' @returns the value with the hook function applied (if a function) or unchanged otherwiese
+#' 
 #' @examples
 #' applyHook(NULL, 3) # returns 3 unchanged
 #' applyHook(function(x) 2*x, 3) # applies the function, returns 6
@@ -862,6 +868,7 @@ applyHook = function(hook, val, ...) {
     val
   } else {
     warning("Hook function", hook, "is neither a function nor NULL. Please provide a function or leave it empty!")
+    val
   }
 }
 
@@ -876,6 +883,7 @@ applyHook = function(hook, val, ...) {
 #'
 #' @param fields existing list
 #' @param valuelist list of fields to replace in \code{fields}. Only keys that exist in \code{fields} are overwritten, no new fields are added to \code{fields}
+#' @returns updated fields list
 #'
 #' @export
 fillFields = function(fields, valuelist) {
@@ -892,6 +900,7 @@ fillFields = function(fields, valuelist) {
 #' in fields are inserted
 #' @param fields existing list
 #' @param valuelist list of fields to replace in \code{fields}. Only keys that are missing in \code{fields} are added, no existing fields in \code{fields} are overwritten
+#' @return fields with missing values filled from the fallback data
 #' @export
 fallbackFields = function(fields, valuelist) {
   keepFields = !sapply(fields, is.null);

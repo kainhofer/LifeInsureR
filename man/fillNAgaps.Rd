@@ -12,6 +12,9 @@ fillNAgaps(x, firstBack = FALSE)
 \item{firstBack}{if \code{TRUE}, leading NAs are replaced by the first non-NA
 value in the vector, otherwise leading NAs are left untouched.}
 }
+\value{
+vector with NAs properly replaced
+}
 \description{
 Sometimes one has a vector with some gaps (\code{NA}) values, which cause
 problems for several numeric functions. This function \code{fillNAgaps} fills

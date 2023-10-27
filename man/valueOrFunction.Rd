@@ -11,6 +11,9 @@ valueOrFunction(val, ...)
 
 \item{...}{Argument passed to \code{val} if it is a function}
 }
+\value{
+the value, potentially with the given function applied
+}
 \description{
 If \code{val} is a function, evaluate it, otherwise return \code{val}
 }

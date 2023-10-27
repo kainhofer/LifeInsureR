@@ -12,6 +12,9 @@ padLast(v, ...)
 
 \item{...}{arguments passed through to \code{pad0}}
 }
+\value{
+vector padded to the correct length
+}
 \description{
 This function is just a trivial wrapper around \code{pad0} and only calls \code{\link[=pad0]{pad0()}}
 with the last element of the vector as padding value instead of the default 0.

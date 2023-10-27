@@ -560,9 +560,9 @@ given, the \code{SumInsuredDelta} will take precedence.}
 \item{\code{id}}{The identifier of the contract block describing the dynamic
 increase. This is a free-form string that should be unique
 within the list of child blocks. It will be displayed in the
-Excel export feature and in the history snapshot list.}
+'Excel' export feature and in the history snapshot list.}
 
-\item{\code{...}}{Paramters to override in the dynamic block. By default,
+\item{\code{...}}{Parameters to override in the dynamic block. By default,
 all parameters of the main contract block will be used, but
 they can be overridden per dynamic increase block.}
 }
@@ -770,7 +770,7 @@ Calculate one profit scenario and store it in the contract
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{id}}{The unique ID of the profit scenario. Will be used as key
-in the list of profit scenarios and printed out in the Excel
+in the list of profit scenarios and printed out in the 'Excel'
 export.}
 
 \item{\code{...}}{Scenario-specific profit sharing parameters, overriding

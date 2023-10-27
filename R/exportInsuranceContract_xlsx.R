@@ -874,7 +874,7 @@ exportCFTable = function(wb, sheet, contract, ccol = 1, crow = 1, styles = c(), 
 #'     sumInsured = 1000,
 #'     contractClosing = as.Date("2016-10-01")
 #' );
-#' \donttest{exportInsuranceContract.xlsx(contract, "Example_annuity_contract.xlsx")}
+#' \donttest{exportInsuranceContract.xlsx(contract, tempfile("Example_annuity_contract", fileext = ".xlsx"))}
 #' @export
 exportInsuranceContract.xlsx = function(contract, filename) {
   # TODO: argument checking for contract and filename

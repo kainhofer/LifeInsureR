@@ -11,6 +11,9 @@ fillFields(fields, valuelist)
 
 \item{valuelist}{list of fields to replace in \code{fields}. Only keys that exist in \code{fields} are overwritten, no new fields are added to \code{fields}}
 }
+\value{
+updated fields list
+}
 \description{
 Overwrite all existing fields in the first argument with
 values given in valuelist. Members of valuelist that are not yet in

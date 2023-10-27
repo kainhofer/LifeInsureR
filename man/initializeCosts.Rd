@@ -54,6 +54,9 @@ even if the insured has already dies (for term-fix insurances)}
 
 \item{unitcosts.PolicyPeriod}{Unit costs (absolute monetary amount, during full contract period)}
 }
+\value{
+an insurance cost structure (multi-dimensional matrix)
+}
 \description{
 Initialize a cost matrix with dimensions: \{CostType, Basis, Period\}, where:
 \describe{

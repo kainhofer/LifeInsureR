@@ -43,7 +43,7 @@ NULL
 #'     sumInsured = 1000,
 #'     contractClosing = as.Date("2016-10-01")
 #' );
-#' \donttest{exportInsuranceContractExample(contract, prf = 10)}
+#' \donttest{exportInsuranceContractExample(contract, prf = 10, outdir = tempdir())}
 #'
 #' @export
 exportInsuranceContractExample = function(contract, prf = 10, outdir = ".", basename=NULL, extraname = NULL, ...) {

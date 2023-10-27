@@ -36,7 +36,7 @@ multiple exports.}
 None
 }
 \description{
-Export the given contract to excel (full history/timeseries of all cash
+Export the given contract to 'Excel' (full history/timeseries of all cash
 flows, reserves, premiums, etc.) and to a text file (sample calculation
 required by the Austrian regulation).
 }
@@ -63,6 +63,6 @@ contract = InsuranceContract$new(
     sumInsured = 1000,
     contractClosing = as.Date("2016-10-01")
 );
-\donttest{exportInsuranceContractExample(contract, prf = 10)}
+\donttest{exportInsuranceContractExample(contract, prf = 10, outdir = tempdir())}
 
 }

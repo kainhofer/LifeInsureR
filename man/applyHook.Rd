@@ -13,6 +13,9 @@ applyHook(hook, val, ...)
 
 \item{...}{optional parameters passed to the hook function (if it is a function)}
 }
+\value{
+the value with the hook function applied (if a function) or unchanged otherwiese
+}
 \description{
 If \code{hook} is a function, apply it to \code{val}, otherwise return \code{val} unchanged
 }
