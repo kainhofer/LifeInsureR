@@ -1,6 +1,6 @@
 Package: LifeInsureR
 Type: Package
-Version: 0.0.0.9999
+Version: 1.0.0
 Date: 2023-10-27
 Title: Modelling Traditional Life Insurance Contracts
 Description: R6 classes to model traditional life insurance
