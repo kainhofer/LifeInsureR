@@ -56,5 +56,5 @@ Suggests:
     fs
 VignetteBuilder: knitr
 Roxygen: list(markdown = TRUE)
-URL: https://gitlab.open-tools.net/R/LifeInsureR
+URL: https://gitlab.open-tools.net/R/LifeInsureR, https://github.com/kainhofer/LifeInsureR
 BugReports: https://gitlab.open-tools.net/R/LifeInsureR/-/issues
