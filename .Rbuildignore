@@ -8,3 +8,5 @@
 ^Examples
 .Rbuildignore$
 
+^CRAN-SUBMISSION$
+^cran-comments\.md$
