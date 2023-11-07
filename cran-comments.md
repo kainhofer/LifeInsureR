@@ -1,6 +1,6 @@
 ## R CMD check results
 
-0 errors | 0 warnings | 1 note
+0 errors | 0 warnings | 0 notes
 
 * Sunsetting the LifeInsuranceContracts packge in favor of LifeInsureR.
 This version ensures a seamless transition path for existing code using the 

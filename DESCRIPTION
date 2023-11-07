@@ -1,9 +1,9 @@
 Package: LifeInsuranceContracts
 Type: Package
 Version: 0.0.6
-Date: 2023-10-20
+Date: 2023-11-07
 Title: Framework for Traditional Life Insurance Contracts
-Description: This package has been renamed to LifeInsureR, please use its new name.
+Description: Use of this package is deprecated.  It has been renamed to 'LifeInsureR'.
 Authors@R: c(person("Reinhold", "Kainhofer", role=c("aut", "cre"), email="reinhold@kainhofer.com"))
 Author: Reinhold Kainhofer [aut, cre]
 Maintainer: Reinhold Kainhofer <reinhold@kainhofer.com>
@@ -13,3 +13,4 @@ Imports:
 License: GPL (>= 2)
 URL: https://gitlab.open-tools.net/R/LifeInsureR
 BugReports: https://gitlab.open-tools.net/R/LifeInsureR/-/issues
+RoxygenNote: 7.2.3
