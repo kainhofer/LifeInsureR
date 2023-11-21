@@ -354,7 +354,9 @@ vmGlgExample.generateTest = function(contract, prf = 10, t = 10, t_prf = 12, ...
                   paste(names(arguments), arguments, sep = " = ", collapse = ",\n\t\t")
            );
     code = paste0(code, "\n\t);\n")
-    code = paste0(code, "\t# showVmGlgExamples(contract, t = ", t, ", prf = ", prf, ", t_prf = ", t_prf, ");\n\n")
+    code = paste0(code, "\t# showVmGlgExamples(contract, t = ", t, ", prf = ", prf, ", t_prf = ", t_prf, ");\n")
+    code = paste0(code, "\t# exportInsuranceContract.xlsx(contract, filename = here(\"", cntr, ".xlsx\"));\n")
+    code = paste0(code, "\t# openxlsx::openXL(here(\"", cntr, ".xlsx\"));\n\n")
     code = paste0(code, "\ttestVmGlgExample(\n\t\tcontract, \n\t\tt = ", t, ", prf = ", prf, ", t_prf = ", t_prf, ",\n")
 
     check.keys = c("net", "Zillmer", "gross", "written", "savings", "risk",

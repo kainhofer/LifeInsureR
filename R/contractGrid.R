@@ -172,7 +172,7 @@ makeContractGridDimnames = function(axes) {
 #'
 #' @rdname contractGrid
 #' 
-#' @example
+#' @examples
 #' library("MortalityTables")
 #' mortalityTables.load("Austria_Annuities_AVOe2005R")
 #' # A trivial deferred annuity tariff with no costs, premiums during whole 

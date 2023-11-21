@@ -462,7 +462,7 @@ InsuranceTarif = R6Class(
     #'   - For constant death benefit it will be rep(1, policyPeriod),
     #'   - for linearly decreasing sum insured it will be (policyPeriod:0)/policyPeriod
     #' @details Not to be called directly, but implicitly by the [InsuranceContract] object.
-    #' @param len The desired length of the returned data frame (the number of contract periods desire)
+    #' @param len The desired length of the returned data frame (the number of contract periods desired)
     getDeathCF = function(len, params, values) {
       if (getOption('LIC.debug.getDeathCF', FALSE)) {
         browser();
