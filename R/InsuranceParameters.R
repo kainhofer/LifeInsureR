@@ -350,6 +350,16 @@ InsuranceContract.Values = list(
 #'     \item{\code{$deathBenefit}}{The yearly relative death benefit (relative
 #'               to the initial sum insured); Can be set to a \code{function(len,
 #'               params, values)}, e.g. \code{deathBenefit = deathBenefit.linearDecreasing}}
+#'     \item{\code{$survivalBenefit}}{The survival benefit (relative to the initial 
+#'               sum insured). By default, for (pure) endowments a survival benefit
+#'               of 1 is assumed at the end of the contract period. Other values 
+#'               (e.g. double survival benefit in endowments) or multiple survival 
+#'               payments during the contract period can be set with this parameter. 
+#'               A single numeric value indicates a single survival benefit at 
+#'               the end of the contract, a vector of numeric values indicates 
+#'               yearly survival benefits (not neccessarily with a survival 
+#'               payment at the end of the contract). Can be set to a \code{function(len,
+#'               params, values)} returning the benefit as a numeric value or vector.
 #'     \item{\code{$benefitParameter}}{(optional) Tariff-specific parameter to
 #'               indicate special benefit conditions (e.g. for non-constant benefits
 #'               the initial starting value, or a minimum benefit, etc.). This
@@ -592,6 +602,7 @@ InsuranceContract.ParameterDefaults = list(
         premiumIncrease = 1,                    # The yearly growth factor of the premium, i.e. 1.05 means +5% increase each year; a Vector describes the premiums for all years
         annuityIncrease = 1,                    # The yearly growth factor of the annuity payments, i.e. 1.05 means +5% incrase each year; a vector describes the annuity unit payments for all years
         deathBenefit = 1,                       # The yearly relative death benefit (relative to the initial sum insured); Can be fixed, e.g. 0.5 for 50% death cover, or  set to a function(len, params, values) like deathBenefit = deathBenefit.linearDecreasing
+        survivalBenefit = NULL,                 # The custom survival benefit (for endowments and pure endowments). By default, a single payment of 1 at the end of the contract is assumed, unless this parameter give a different value/vector.
         benefitParameter = NULL,                # Tariff-Specific additional parameter to define custom benefits (e.g. a minimum death benefit quota, an initial )
 
         costWaiver = 0,                         # The cost waiver (up to minCosts, 0=no cost waiver, 1=full cost waiver down to minCosts)

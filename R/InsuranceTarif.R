@@ -484,6 +484,29 @@ InsuranceTarif = R6Class(
       }
     },
 
+    #' @description Returns the unit survival cash flow profile for the whole contract
+    #' period (after potential deferral period!)
+    #'   - a single numeric value indicates a single survival payment at the end of the contract
+    #'   - a vector of numeric values indicates potentially multiple survival payments for the whole contract period (paddded with 0 to the full contract length if shorter)
+    #' @details Not to be called directly, but implicitly by the [InsuranceContract] object.
+    getSurvivalCF = function(len, params, values) {
+      if (getOption('LIC.debug.getSurvivalCF', FALSE)) {
+        browser();
+      }
+      benefit = valueOrFunction(params$ContractData$survivalBenefit, len = len, params = params, values = values)
+      if (is.null(benefit)) {
+        benefit = 1
+      }
+      
+      if (is.vector(benefit) && length(benefit) == 1) {
+        c(rep(0, len - 1), benefit)
+      } else {
+        # If survivalBenefit is (or returns) a vector, treat it as yearly 
+        # survival payments, pad it to the desired length
+        pad0(benefit, len)
+      }
+    },
+
     #' @description Returns the basic (unit) cash flows associated with the type
     #' of insurance given in the InsuranceTarif's `tariffType` field
     #' @details Not to be called directly, but implicitly by the [InsuranceContract] object.
@@ -537,7 +560,7 @@ InsuranceTarif = R6Class(
         deathCF = self$getDeathCF(values$int$l - 1 - deferralPeriod, params = params, values = values)
 
         if (self$tariffType == "endowment" || self$tariffType == "pureendowment" || self$tariffType == "endowment + dread-disease") {
-          cf$survival = c(rep(0, values$int$policyTerm), 1)
+          cf$survival = pad0(self$getSurvivalCF(len = values$int$l, params = params, values = values), values$int$l)
         }
         if (self$tariffType == "endowment" || self$tariffType == "wholelife" || self$tariffType == "endowment + dread-disease") {
           cf$death = c(rep(0, deferralPeriod), deathCF, 0)
