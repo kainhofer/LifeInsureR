@@ -1018,6 +1018,9 @@ InsuranceTarif = R6Class(
         if (params$Features$betaGammaInZillmer) {
           affected = c(affected, "beta", "gamma")
         }
+        if (params$Features$gammaInZillmer) {
+          affected = c(affected, "gamma")
+        }
         coeff[["SumInsured"]][["costs"]][affected,"SumInsured",  ] = 1;
         coeff[["SumInsured"]][["costs"]][affected,"SumPremiums", ] = values$unitPremiumSum * premiums[["unit.gross"]];
         coeff[["SumInsured"]][["costs"]][affected,"GrossPremium",] = premiums[["unit.gross"]];

@@ -243,6 +243,8 @@ reserves on the Zillmer reserve as opposed to the adequate
 reserve) (default: TRUE)}
 \item{\code{$betaGammaInZillmer}}{Whether beta and gamma-costs should be
 included in the Zillmer premium calculation}
+\item{\code{$gammaInZillmer}}{Whether gamma- (but not beta-) costs should be
+included in the Zillmer premium calculation}
 \item{\code{$alphaRefundLinear}}{Whether the refund of alpha-costs on
 surrender is linear in t or follows the NPV of an annuity}
 \item{\code{$useUnearnedPremiums}}{Whether unearned premiums should be

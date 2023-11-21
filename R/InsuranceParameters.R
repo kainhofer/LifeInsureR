@@ -492,6 +492,8 @@ InsuranceContract.Values = list(
 #'               reserve) (default: TRUE)}
 #'     \item{\code{$betaGammaInZillmer}}{Whether beta and gamma-costs should be
 #'               included in the Zillmer premium calculation}
+#'     \item{\code{$gammaInZillmer}}{Whether gamma- (but not beta-) costs should be
+#'               included in the Zillmer premium calculation}
 #'     \item{\code{$alphaRefundLinear}}{Whether the refund of alpha-costs on
 #'               surrender is linear in t or follows the NPV of an annuity}
 #'     \item{\code{$useUnearnedPremiums}}{Whether unearned premiums should be
@@ -649,6 +651,7 @@ InsuranceContract.ParameterDefaults = list(
     Features = list(                            # Special cases for the calculations
         zillmering = TRUE,                      # Whether the contract uses Zillmering (and bases reserves on the Zillmer reserve as opposed to the adequate reserve)
         betaGammaInZillmer = FALSE,             # Whether beta and gamma-costs should be included in the Zillmer premium calculation
+        gammaInZillmer = FALSE,                 # Whether gamma- (but not beta-) costs should be included in the Zillmer premium calculation
         alphaRefundLinear  = TRUE,              # Whether the refund of alpha-costs on surrender is linear in t or follows the NPV of an annuity
         useUnearnedPremiums = isRegularPremiumContract, # Whether unearned premiums should be calculated in the balance sheet reserves. Otherwise, a premium paid at the beginning of the period is added to the reserve for balance-sheet purposes.
         surrenderIncludesCostsReserves = TRUE,  # Whether (administration) cost reserves are paid out on surrender (i.e. included in the surrender value before surrender penalties are applied)
