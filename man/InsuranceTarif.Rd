@@ -146,6 +146,7 @@ all fields.}
 \item \href{#method-InsuranceTarif-getPremiumCF}{\code{InsuranceTarif$getPremiumCF()}}
 \item \href{#method-InsuranceTarif-getAnnuityCF}{\code{InsuranceTarif$getAnnuityCF()}}
 \item \href{#method-InsuranceTarif-getDeathCF}{\code{InsuranceTarif$getDeathCF()}}
+\item \href{#method-InsuranceTarif-getSurvivalCF}{\code{InsuranceTarif$getSurvivalCF()}}
 \item \href{#method-InsuranceTarif-getBasicCashFlows}{\code{InsuranceTarif$getBasicCashFlows()}}
 \item \href{#method-InsuranceTarif-getCashFlows}{\code{InsuranceTarif$getCashFlows()}}
 \item \href{#method-InsuranceTarif-getCashFlowsCosts}{\code{InsuranceTarif$getCashFlowsCosts()}}
@@ -514,8 +515,39 @@ period (after potential deferral period!)
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{len}}{The desired length of the returned data frame (the number of contract periods desire)}
+\item{\code{len}}{The desired length of the returned data frame (the number of contract periods desired)}
 
+\item{\code{params}}{Contract-specific, full set of parameters of the contract
+(merged parameters of the defaults, the tariff, the profit participation
+scheme and the contract)}
+
+\item{\code{values}}{Contract values calculated so far (in the \code{contract$Values}
+list) then this method is called by the contract object}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Details}{
+Not to be called directly, but implicitly by the \link{InsuranceContract} object.
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-InsuranceTarif-getSurvivalCF"></a>}}
+\if{latex}{\out{\hypertarget{method-InsuranceTarif-getSurvivalCF}{}}}
+\subsection{Method \code{getSurvivalCF()}}{
+Returns the unit survival cash flow profile for the whole contract
+period (after potential deferral period!)
+\itemize{
+\item a single numeric value indicates a single survival payment at the end of the contract
+\item a vector of numeric values indicates potentially multiple survival payments for the whole contract period (paddded with 0 to the full contract length if shorter)
+}
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{InsuranceTarif$getSurvivalCF(len, params, values)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
 \item{\code{params}}{Contract-specific, full set of parameters of the contract
 (merged parameters of the defaults, the tariff, the profit participation
 scheme and the contract)}

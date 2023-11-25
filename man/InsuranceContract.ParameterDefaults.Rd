@@ -108,6 +108,16 @@ describes the annuity unit payments for all years}
 \item{\code{$deathBenefit}}{The yearly relative death benefit (relative
 to the initial sum insured); Can be set to a \code{function(len,
               params, values)}, e.g. \code{deathBenefit = deathBenefit.linearDecreasing}}
+\item{\code{$survivalBenefit}}{The survival benefit (relative to the initial
+sum insured). By default, for (pure) endowments a survival benefit
+of 1 is assumed at the end of the contract period. Other values
+(e.g. double survival benefit in endowments) or multiple survival
+payments during the contract period can be set with this parameter.
+A single numeric value indicates a single survival benefit at
+the end of the contract, a vector of numeric values indicates
+yearly survival benefits (not neccessarily with a survival
+payment at the end of the contract). Can be set to a \code{function(len,
+              params, values)} returning the benefit as a numeric value or vector.
 \item{\code{$benefitParameter}}{(optional) Tariff-specific parameter to
 indicate special benefit conditions (e.g. for non-constant benefits
 the initial starting value, or a minimum benefit, etc.). This

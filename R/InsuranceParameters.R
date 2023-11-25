@@ -70,7 +70,7 @@ setCost = function(costs, type, basis = "SumInsured", frequency = "PolicyPeriod"
 #'                           even if the insured has already dies (for term-fix insurances)
 #' @param unitcosts Unit costs (absolute monetary amount, during premium period)
 #' @param unitcosts.PolicyPeriod Unit costs (absolute monetary amount, during full contract period)
-#' 
+#'
 #' @returns an insurance cost structure (multi-dimensional matrix)
 #'
 #' @examples
@@ -350,14 +350,14 @@ InsuranceContract.Values = list(
 #'     \item{\code{$deathBenefit}}{The yearly relative death benefit (relative
 #'               to the initial sum insured); Can be set to a \code{function(len,
 #'               params, values)}, e.g. \code{deathBenefit = deathBenefit.linearDecreasing}}
-#'     \item{\code{$survivalBenefit}}{The survival benefit (relative to the initial 
+#'     \item{\code{$survivalBenefit}}{The survival benefit (relative to the initial
 #'               sum insured). By default, for (pure) endowments a survival benefit
-#'               of 1 is assumed at the end of the contract period. Other values 
-#'               (e.g. double survival benefit in endowments) or multiple survival 
-#'               payments during the contract period can be set with this parameter. 
-#'               A single numeric value indicates a single survival benefit at 
-#'               the end of the contract, a vector of numeric values indicates 
-#'               yearly survival benefits (not neccessarily with a survival 
+#'               of 1 is assumed at the end of the contract period. Other values
+#'               (e.g. double survival benefit in endowments) or multiple survival
+#'               payments during the contract period can be set with this parameter.
+#'               A single numeric value indicates a single survival benefit at
+#'               the end of the contract, a vector of numeric values indicates
+#'               yearly survival benefits (not neccessarily with a survival
 #'               payment at the end of the contract). Can be set to a \code{function(len,
 #'               params, values)} returning the benefit as a numeric value or vector.
 #'     \item{\code{$benefitParameter}}{(optional) Tariff-specific parameter to
@@ -451,6 +451,8 @@ InsuranceContract.Values = list(
 #'               as third parameter, so the function can modify only those cost parts
 #'               that can be waived at all. }
 #' }
+#'
+#'
 #'
 #' ## Elements of sublist \code{InsuranceContract.ParameterDefault$Loadings}
 #'
@@ -568,6 +570,7 @@ InsuranceContract.Values = list(
 #'     \item{\code{$adjustPremiums}}{Adjust the resulting premiums. \code{function(premiums = list(premiums, coefficients, sumInsured), params, values)}}
 #'     \item{\code{$adjustPVForReserves}}{Adjust the absolute present value vectors used to derive reserves (e.g. when a sum rebate is subtracted from the gamma-cost reserves without influencing the premium calculation). \code{function(absPV, params, values)}}
 #'     \item{\code{$premiumRebateCalculation}}{Calculate the actual premium rebate from the rebate rate (e.g. when the premium rate is given as a yearly cost reduction applied to a single-premium contract). \code{function(premiumRebateRate, params = params, values = values)}}
+#'     \item{\code{$Rounding}}{A [RoundingHelper] object to specify rounding of intermediate values. Alternatively, a named list of rounding specifications can be given, which is used to construct a new [RoundingHelper] object.}}
 #' }
 #'
 #'
@@ -630,7 +633,7 @@ InsuranceContract.ParameterDefaults = list(
         benefitFrequencyOrder = function(params, ...) { if (is.null(params$Loadings$benefitFrequencyLoading)) 0 else -1}
     ),
     Costs = initializeCosts(),
-    minCosts = NULL,               # Base costs, which cannot be waived
+    minCosts = NULL,                            # Base costs, which cannot be waived
     Loadings = list( # Loadings can also be function(sumInsured, premiums)
         ongoingAlphaGrossPremium = 0,           # Acquisition cost that increase the gross premium
         tax = 0.04,                             # insurance tax, factor on each premium paid
@@ -694,7 +697,8 @@ InsuranceContract.ParameterDefaults = list(
       adjustPremiumCoefficients = NULL,  # function(coeff, type = type, premiums = premiums, params = params, values = values, premiumCalculationTime = premiumCalculationTime)
       adjustPremiums = NULL,             # function(premiums = list(premiums, coefficients, sumInsured), params, values)
       adjustPVForReserves = NULL,        # function(absPresentValues, params, values)
-      premiumRebateCalculation = NULL    # function(premiumRebateRate, params = params, values = values)
+      premiumRebateCalculation = NULL,   # function(premiumRebateRate, params = params, values = values)
+      Rounding = NULL                    # Rounding helper to specify particular rounding of values
     )
 );
 

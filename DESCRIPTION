@@ -43,6 +43,7 @@ Collate:
     'ProfitParticipation.R'
     'InsuranceTarif.R'
     'InsuranceContract.R'
+    'RoundingHelper.R'
     'contractGrid.R'
     'create_LIR_project.R'
     'exportInsuranceContract_xlsx.R'

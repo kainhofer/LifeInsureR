@@ -1133,6 +1133,89 @@ contractGridPremium(
 ) %>% kableTable(digits = 2)
 ```
 
+
+# Rounding values
+
+In an ideal world, all calculations would be done with perfect accuracy. However,
+in reality insurance tariffs are often implemented in systems that support only 
+a limited number of digits. Or it is company policy to round premiums to whole 
+Euro or Dollar amounts.
+
+For this reason, the package also provides a `RoundingHelper` class that provides
+an easy interfact for rounding intermediate values in the calculation. The 
+instance of this class is stored in the tariff (and the contract) as 
+`$Parameters$Hooks$Rounding` and the methods of the `InsuranceTarif` make use
+of it in all places where rounding can typicall happen.
+
+Each place where a number/vector/matrix is rounded in the package uses a separate
+ID, which can and must be used to adjust the rounding behavior at that position.
+If no rounding setting is set, no rounding occurs and no accuracy is lost.
+
+An easy example of how rounding works is:
+```{r RoundingHelper}
+# Define three different rounding IDs / instances: "raw" with rounding to
+# the nearest integer, "hundred" with rounding to the nearest multiple of 
+# 100 and "accurate" rounded to the nearest multiple of 0.0001:
+rounding = RoundingHelper$new(raw = 0, hundred = -2, accurate = 4)
+
+# The rounding IDs are used as first argument in the rounding$round function:
+rounding$round("raw", c(1234.567891, 0.00012345, 1234))
+rounding$round("hundred", c(1234.567891, 0.00012345, 1234))
+rounding$round("accurate", c(1234.567891, 0.00012345, 1234))
+
+# If the given spec does not exist, no rounding it applied
+rounding$round("non-existing", c(1234.567891, 0.00012345, 1234))
+
+# Add a new spec with different settings:
+rounding$setRounding("non-existing", 1)
+rounding$round("non-existing", c(1234.567891, 0.00012345, 1234))
+```
+
+
+The `InsuranceTarif` class makes heavy use of these rounding settings. For 
+example, to round the gross premium to Euros and the net premium to cent, 
+one can use the setting `Rounding = list("Premium gross" = 0, "Premium net" = 2)`:
+
+```{r RoundingHelper.Contract}
+Tarif.EndowmentSI = InsuranceTarif$new(
+    type = "endowment",
+    tarif = "Endow1",
+    age = 40, policyPeriod = 20,
+
+    mortalityTable = mort.AT.census.2011.unisex,
+    cost = initializeCosts(alpha = 0.04, gamma.contract = 0.0005),
+    i = 0.03,
+    sumInsured = 10000,
+    contractClosing = as.Date("2020-09-01")
+)
+Tarif.EndowmentSI.rounded = Tarif.EndowmentSI$createModification(
+    Rounding = list("Premium gross" = 0, "Premium net" = 2)
+)
+Contract.sumInsured = InsuranceContract$new(tarif = Tarif.EndowmentSI)
+Contract.sumInsured.rounded = InsuranceContract$new(tarif = Tarif.EndowmentSI.rounded)
+
+
+# premiums of the original tariff:
+Contract.sumInsured$Values$premiums[c("unit.net", "net", "unit.gross", "gross")]
+# premiums of the tariff with rounding applied:
+Contract.sumInsured.rounded$Values$premiums[c("unit.net", "net", "unit.gross", "gross")]
+
+```
+
+Here is a list of all rounding IDs used throughout the InsuranceTarif class. 
+Each of them can be used to adjust rounding just one particular value/vector:
+
+```{r eval=TRUE,echo=FALSE,result='asis'}
+src = list.files(path = here::here("R"), pattern = ".R$", full.names = TRUE)
+filecontents = purrr::map(src, readLines) %>% unlist %>% as.vector
+results = stringr::str_extract(filecontents, "\\$round\\(\"([^\"]*)\"", group = 1)
+results = results[!is.na(results)]
+results = results[!(results %in% c("raw", "hundred", "accurate", "non-existing"))] %>% sort
+cat(paste('-', results), sep = '\n')
+```
+
+
+
 # Creating premium and contract grids
 
 When developing a new product or comparing different products, it is often
