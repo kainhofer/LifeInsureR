@@ -1178,9 +1178,10 @@ one can use the setting `Rounding = list("Premium gross" = 0, "Premium net" = 2)
 
 ```{r RoundingHelper.Contract}
 Tarif.EndowmentSI = InsuranceTarif$new(
-    type = "endowment",
+    type = "pureendowment",
     tarif = "Endow1",
     age = 40, policyPeriod = 20,
+    premiumRefund = 1,
 
     mortalityTable = mort.AT.census.2011.unisex,
     cost = initializeCosts(alpha = 0.04, gamma.contract = 0.0005),
@@ -1189,18 +1190,22 @@ Tarif.EndowmentSI = InsuranceTarif$new(
     contractClosing = as.Date("2020-09-01")
 )
 Tarif.EndowmentSI.rounded = Tarif.EndowmentSI$createModification(
-    Rounding = list("Premium gross" = 0, "Premium net" = 2)
+    Rounding = list("Premium gross unit" = 3, "Premium net unit" = 6, "Premium net" = 2)
 )
 Contract.sumInsured = InsuranceContract$new(tarif = Tarif.EndowmentSI)
 Contract.sumInsured.rounded = InsuranceContract$new(tarif = Tarif.EndowmentSI.rounded)
 
 
 # premiums of the original tariff:
-Contract.sumInsured$Values$premiums[c("unit.net", "net", "unit.gross", "gross")]
-# premiums of the tariff with rounding applied:
-Contract.sumInsured.rounded$Values$premiums[c("unit.net", "net", "unit.gross", "gross")]
-
+Contract.sumInsured$Values$premiums[c("unit.net", "-1et", "unit.gross", "gross")]
 ```
+
+This rounding is applied immediately when the corresponding entity is calculated.
+As a consequence, all further calculations depending on the entity will also be 
+affected. This means that e.g. rounding only the gross premium will also have a
+slight effect on the net premium with contracts that grant premium refunds in 
+case of death, as the example above shows.
+
 
 Here is a list of all rounding IDs used throughout the InsuranceTarif class. 
 Each of them can be used to adjust rounding just one particular value/vector:

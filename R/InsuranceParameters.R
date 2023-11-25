@@ -359,7 +359,7 @@ InsuranceContract.Values = list(
 #'               the end of the contract, a vector of numeric values indicates
 #'               yearly survival benefits (not neccessarily with a survival
 #'               payment at the end of the contract). Can be set to a \code{function(len,
-#'               params, values)} returning the benefit as a numeric value or vector.
+#'               params, values)} returning the benefit as a numeric value or vector.}
 #'     \item{\code{$benefitParameter}}{(optional) Tariff-specific parameter to
 #'               indicate special benefit conditions (e.g. for non-constant benefits
 #'               the initial starting value, or a minimum benefit, etc.). This
@@ -570,7 +570,7 @@ InsuranceContract.Values = list(
 #'     \item{\code{$adjustPremiums}}{Adjust the resulting premiums. \code{function(premiums = list(premiums, coefficients, sumInsured), params, values)}}
 #'     \item{\code{$adjustPVForReserves}}{Adjust the absolute present value vectors used to derive reserves (e.g. when a sum rebate is subtracted from the gamma-cost reserves without influencing the premium calculation). \code{function(absPV, params, values)}}
 #'     \item{\code{$premiumRebateCalculation}}{Calculate the actual premium rebate from the rebate rate (e.g. when the premium rate is given as a yearly cost reduction applied to a single-premium contract). \code{function(premiumRebateRate, params = params, values = values)}}
-#'     \item{\code{$Rounding}}{A [RoundingHelper] object to specify rounding of intermediate values. Alternatively, a named list of rounding specifications can be given, which is used to construct a new [RoundingHelper] object.}}
+#'     \item{\code{$Rounding}}{A [RoundingHelper] object to specify rounding of intermediate values. Alternatively, a named list of rounding specifications can be given, which is used to construct a new [RoundingHelper] object.}
 #' }
 #'
 #'

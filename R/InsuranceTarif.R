@@ -501,6 +501,7 @@ InsuranceTarif = R6Class(
     #'   - a single numeric value indicates a single survival payment at the end of the contract
     #'   - a vector of numeric values indicates potentially multiple survival payments for the whole contract period (paddded with 0 to the full contract length if shorter)
     #' @details Not to be called directly, but implicitly by the [InsuranceContract] object.
+    #' @param len The desired length of the returned data frame (the number of contract periods desired)
     getSurvivalCF = function(len, params, values) {
       if (getOption('LIC.debug.getSurvivalCF', FALSE)) {
         browser();
@@ -509,11 +510,11 @@ InsuranceTarif = R6Class(
       if (is.null(benefit)) {
         benefit = 1
       }
-      
+
       if (is.vector(benefit) && length(benefit) == 1) {
         c(rep(0, len - 1), benefit)
       } else {
-        # If survivalBenefit is (or returns) a vector, treat it as yearly 
+        # If survivalBenefit is (or returns) a vector, treat it as yearly
         # survival payments, pad it to the desired length
         pad0(benefit, len)
       }

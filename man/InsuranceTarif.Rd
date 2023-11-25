@@ -548,6 +548,8 @@ period (after potential deferral period!)
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
+\item{\code{len}}{The desired length of the returned data frame (the number of contract periods desired)}
+
 \item{\code{params}}{Contract-specific, full set of parameters of the contract
 (merged parameters of the defaults, the tariff, the profit participation
 scheme and the contract)}
