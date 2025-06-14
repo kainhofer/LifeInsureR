@@ -389,9 +389,14 @@ InsuranceContract = R6Class(
             if (getOption('LIC.debug.addBlock', FALSE)) {
                 browser();
             }
+            if (missing(id) || is.null(id)) {
+                id = paste0("block", length(self$blocks) + 1)
+            }
             if (missing(block) || is.null(block) || !is(block, "InsuranceContract")) {
                 # Create a block with the same tariff and parameters as the main contract, but allow overriding params with the ... arguments
                 block = InsuranceContract$new(id = id, ...)
+            } else {
+                block$Parameters$ContractData$id = id
             }
             if (missing(t) || is.null(t)) {
                 t = 0
@@ -407,9 +412,6 @@ InsuranceContract = R6Class(
                 self$Parameters$ContractData$id = "Gesamt"
             }
 
-            if (missing(id) || is.null(id)) {
-                id = paste0("block", length(self$blocks) + 1)
-            }
             self$blocks[[id]] = block
             # recalculate the whole contract by consolidating values from each block
             self$consolidateBlocks(valuesFrom = t)
