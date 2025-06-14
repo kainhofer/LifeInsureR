@@ -55,11 +55,11 @@
 #' @examples
 #' library("MortalityTables")
 #' mortalityTables.load("Austria_Annuities_AVOe2005R")
-#' # A trivial deferred annuity tariff with no costs, premiums during whole 
+#' # A trivial deferred annuity tariff with no costs, premiums during whole
 #' # deferral period, 30 years annuity payments:
 #' tariff = InsuranceTarif$new(name="Test Annuity", type="annuity", tarif = "Annuity 1A",
-#'     mortalityTable = AVOe2005R.unisex, i=0.01, 
-#'     deferralPeriod = function(params, ...) { params$ContractData$premiumPeriod }, 
+#'     mortalityTable = AVOe2005R.unisex, i=0.01,
+#'     deferralPeriod = function(params, ...) { params$ContractData$premiumPeriod },
 #'     policyPeriod = function(params, ...) { params$ContractData$premiumPeriod + 30 }
 #' )
 #' contractGrid(
@@ -96,7 +96,7 @@ makeContractGridDimname.InsuranceTarif = function(value) { value$name }
 # describeIn makeContractGridDimname Create a dimensional name for an R6 object (using its \code{name} field)
 #' @export
 makeContractGridDimname.R6 = function(value) { value$name }
-# describeIn makeContractGridDimname Create a dimensional name for an [mortalityTable] object
+# describeIn makeContractGridDimname Create a dimensional name for an \link{MortalityTables}[mortalityTable] object
 #' @export
 makeContractGridDimname.mortalityTable = function(value) { value@name }
 # describeIn makeContractGridDimname Create a dimensional name for a numeric parameter value
@@ -113,7 +113,7 @@ makeContractGridDimname.default = function(value) { value }
 #' The function \code{makeContractGridDimname} generates a short, human-readable
 #' dimension label for the entries along the axes of a [contractGrid()].
 #' The default is to use the \code{value} unchanged as the row-/columnname, but
-#' for some parameter values (like a [InsuranceTarif] or [mortalityTable])
+#' for some parameter values (like a [InsuranceTarif] or \link{MortalityTables}[mortalityTable])
 #' a custom method of this function is needed to create the (short) human-readable
 #' representation for the axes in the grid.
 #'
@@ -171,15 +171,15 @@ makeContractGridDimnames = function(axes) {
 #' @returns a array of premiums (or other contract-specific value) for the grid defined by the \code{axes} argument to \code{contractGrid}
 #'
 #' @rdname contractGrid
-#' 
+#'
 #' @examples
 #' library("MortalityTables")
 #' mortalityTables.load("Austria_Annuities_AVOe2005R")
-#' # A trivial deferred annuity tariff with no costs, premiums during whole 
+#' # A trivial deferred annuity tariff with no costs, premiums during whole
 #' # deferral period, 30 years annuity payments:
 #' tariff = InsuranceTarif$new(name="Test Annuity", type="annuity", tarif = "Annuity 1A",
-#'     mortalityTable = AVOe2005R.unisex, i=0.01, 
-#'     deferralPeriod = function(params, ...) { params$ContractData$premiumPeriod }, 
+#'     mortalityTable = AVOe2005R.unisex, i=0.01,
+#'     deferralPeriod = function(params, ...) { params$ContractData$premiumPeriod },
 #'     policyPeriod = function(params, ...) { params$ContractData$premiumPeriod + 30 }
 #' )
 #' contractGridPremium(
@@ -192,7 +192,7 @@ makeContractGridDimnames = function(axes) {
 #'     contractClosing = as.Date("2023-11-01")
 #' )
 #'
-#' 
+#'
 #' @export
 contractGridPremium = function(contractGrid = NULL, premium="written", .fun = function(cntr) { cntr$Values$premiums[[premium]] }, ...) {
     if (missing(contractGrid) || is.null(contractGrid)) {

@@ -157,10 +157,10 @@ these values are set by the tariff, but can be overridden by contract (e.g.
 while prototyping a new product or a product change).
 
 \describe{
-\item{\code{$mortalityTable}}{The \link{mortalityTable} object describing the
+\item{\code{$mortalityTable}}{The \link[MortalityTables]{mortalityTable} object describing the
 mortality of the insured}
 \item{\code{$invalidityTable}}{For contracts with invalidity benefits,
-the \link{mortalityTable} object describing the probabilities of
+the \link[MortalityTables]{mortalityTable} object describing the probabilities of
 invalidity}
 \item{\code{$invalidityEndsContract}}{For contracts with invalidity
 benefits, whether a payment of an invalidity benefit ends the

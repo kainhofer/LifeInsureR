@@ -23,7 +23,7 @@ an array of dimnames derived from the axes definitions of \code{\link[=contractG
 The function \code{makeContractGridDimname} generates a short, human-readable
 dimension label for the entries along the axes of a \code{\link[=contractGrid]{contractGrid()}}.
 The default is to use the \code{value} unchanged as the row-/columnname, but
-for some parameter values (like a \link{InsuranceTarif} or \link{mortalityTable})
+for some parameter values (like a \link{InsuranceTarif} or \link{MortalityTables}\link{mortalityTable})
 a custom method of this function is needed to create the (short) human-readable
 representation for the axes in the grid.
 

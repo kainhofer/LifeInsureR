@@ -54,7 +54,9 @@ Suggests:
     magrittr,
     tibble,
     testthat,
-    fs
+    fs,
+    here,
+    purrr
 VignetteBuilder: knitr
 Roxygen: list(markdown = TRUE)
 URL: https://gitlab.open-tools.net/R/LifeInsureR, https://github.com/kainhofer/LifeInsureR

@@ -59,6 +59,7 @@ not cause unit test failures.
 The easiest way to write unit-tests is using the function \code{vmGlgExample.generateTest}
 }
 \examples{
+\dontrun{
 library(MortalityTables)
 library(testthat)
 mortalityTables.load("Austria_Annuities_AVOe2005R")
@@ -96,5 +97,6 @@ test_that("Testtarif", {
         VS.prf = 684.117
     )
 })
+}
 
 }

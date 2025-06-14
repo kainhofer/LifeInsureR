@@ -194,6 +194,7 @@ showVmGlgExamples = function(contract, prf = 10, t = 10, t_prf = 12, file = "", 
 #' @returns None
 #'
 #' @examples
+#' \dontrun{
 #' library(MortalityTables)
 #' library(testthat)
 #' mortalityTables.load("Austria_Annuities_AVOe2005R")
@@ -231,6 +232,7 @@ showVmGlgExamples = function(contract, prf = 10, t = 10, t_prf = 12, file = "", 
 #'         VS.prf = 684.117
 #'     )
 #' })
+#' }
 #'
 #' @export
 testVmGlgExample = function(contract, prf = 10, t = 10, t_prf = 12, net, Zillmer, gross, written, savings, risk,
