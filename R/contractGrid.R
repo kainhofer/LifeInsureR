@@ -96,7 +96,7 @@ makeContractGridDimname.InsuranceTarif = function(value) { value$name }
 # describeIn makeContractGridDimname Create a dimensional name for an R6 object (using its \code{name} field)
 #' @export
 makeContractGridDimname.R6 = function(value) { value$name }
-# describeIn makeContractGridDimname Create a dimensional name for an \link{MortalityTables}[mortalityTable] object
+# describeIn makeContractGridDimname Create a dimensional name for an \link[MortalityTables]{mortalityTable} object
 #' @export
 makeContractGridDimname.mortalityTable = function(value) { value@name }
 # describeIn makeContractGridDimname Create a dimensional name for a numeric parameter value
@@ -113,7 +113,7 @@ makeContractGridDimname.default = function(value) { value }
 #' The function \code{makeContractGridDimname} generates a short, human-readable
 #' dimension label for the entries along the axes of a [contractGrid()].
 #' The default is to use the \code{value} unchanged as the row-/columnname, but
-#' for some parameter values (like a [InsuranceTarif] or \link{MortalityTables}[mortalityTable])
+#' for some parameter values (like a [InsuranceTarif] or \link[MortalityTables]{mortalityTable})
 #' a custom method of this function is needed to create the (short) human-readable
 #' representation for the axes in the grid.
 #'

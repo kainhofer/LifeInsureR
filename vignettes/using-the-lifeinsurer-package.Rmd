@@ -1211,8 +1211,8 @@ Here is a list of all rounding IDs used throughout the InsuranceTarif class.
 Each of them can be used to adjust rounding just one particular value/vector:
 
 ```{r eval=TRUE,echo=FALSE,result='asis'}
-src = list.files(path = here::here("R"), pattern = ".R$", full.names = TRUE)
-filecontents = purrr::map(src, readLines) %>% unlist %>% as.vector
+src = list.files(path = file.path(getwd(), "R"), pattern = ".R$", full.names = TRUE)
+filecontents = unlist(lapply(src, readLines, warn = FALSE), use.names = FALSE)
 results = stringr::str_extract(filecontents, "\\$round\\(\"([^\"]*)\"", group = 1)
 results = results[!is.na(results)]
 results = results[!(results %in% c("raw", "hundred", "accurate", "non-existing"))] %>% sort
