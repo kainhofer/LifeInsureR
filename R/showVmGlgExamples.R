@@ -249,59 +249,59 @@ testVmGlgExample = function(contract, prf = 10, t = 10, t_prf = 12, net, Zillmer
     has.prf = prf < contract$Parameters$ContractData$premiumPeriod;
 
     if (!missing(net)) {
-        eval(bquote(expect_equal(vals$net, .(net), tolerance = abs(absTolerance / .(net)))))
+        eval(bquote(expect_equal_abs(vals$net, .(net), tolerance = absTolerance)))
     }
     if (!missing(Zillmer)) {
-        eval(bquote(expect_equal(vals$Zillmer, .(Zillmer), tolerance = abs(absTolerance / .(Zillmer)))))
+        eval(bquote(expect_equal_abs(vals$Zillmer, .(Zillmer), tolerance = absTolerance)))
     }
     if (!missing(gross)) {
-        eval(bquote(expect_equal(vals$gross, .(gross), tolerance = abs(absTolerance / .(gross)))))
+        eval(bquote(expect_equal_abs(vals$gross, .(gross), tolerance = absTolerance)))
     }
     if (!missing(written)) {
-        eval(bquote(expect_equal(vals$written, .(written), tolerance = abs(absTolerance / .(written)))))
+        eval(bquote(expect_equal_abs(vals$written, .(written), tolerance = absTolerance)))
     }
     if (!missing(savings)) {
-        eval(bquote(expect_equal(vals$savings, .(savings), tolerance = abs(absTolerance / .(savings)))))
+        eval(bquote(expect_equal_abs(vals$savings, .(savings), tolerance = absTolerance)))
     }
     if (!missing(risk)) {
-        eval(bquote(expect_equal(vals$risk, .(risk), tolerance = abs(absTolerance / .(risk)))))
+        eval(bquote(expect_equal_abs(vals$risk, .(risk), tolerance = absTolerance)))
     }
 
     if (!missing(ZillmerRes)) {
-        eval(bquote(expect_equal(vals$ZillmerRes, .(ZillmerRes), tolerance = abs(absTolerance / .(ZillmerRes)))))
+        eval(bquote(expect_equal_abs(vals$ZillmerRes, .(ZillmerRes), tolerance = absTolerance)))
     }
     if (!missing(ZillmerRes.prf)) {
-        eval(bquote(expect_equal(vals$ZillmerRes.prf, .(ZillmerRes.prf), tolerance = abs(absTolerance / .(ZillmerRes.prf)))))
+        eval(bquote(expect_equal_abs(vals$ZillmerRes.prf, .(ZillmerRes.prf), tolerance = absTolerance)))
     }
     if (!missing(VwKostenRes)) {
-        eval(bquote(expect_equal(vals$VwKostenRes, .(VwKostenRes), tolerance = abs(absTolerance / .(VwKostenRes)))))
+        eval(bquote(expect_equal_abs(vals$VwKostenRes, .(VwKostenRes), tolerance = absTolerance)))
     }
     if (!missing(VwKostenRes.prf)) {
-        eval(bquote(expect_equal(vals$VwKostenRes.prf, .(VwKostenRes.prf), tolerance = abs(absTolerance / .(VwKostenRes.prf)))))
+        eval(bquote(expect_equal_abs(vals$VwKostenRes.prf, .(VwKostenRes.prf), tolerance = absTolerance)))
     }
 
 
     if (!missing(Bilanzreserve)) {
-        eval(bquote(expect_equal(vals$Bilanzreserve, .(Bilanzreserve), tolerance = abs(absTolerance / .(Bilanzreserve)))))
+        eval(bquote(expect_equal_abs(vals$Bilanzreserve, .(Bilanzreserve), tolerance = absTolerance)))
     }
     if (!missing(Praemienuebertrag)) {
-        eval(bquote(expect_equal(vals$Praemienuebertrag, .(Praemienuebertrag), tolerance = abs(absTolerance / .(Praemienuebertrag)))))
+        eval(bquote(expect_equal_abs(vals$Praemienuebertrag, .(Praemienuebertrag), tolerance = absTolerance)))
     }
 
     if (!missing(Rueckkaufsreserve)) {
-        eval(bquote(expect_equal(vals$Rueckkaufsreserve, .(Rueckkaufsreserve), tolerance = abs(absTolerance / .(Rueckkaufsreserve)))))
+        eval(bquote(expect_equal_abs(vals$Rueckkaufsreserve, .(Rueckkaufsreserve), tolerance = absTolerance)))
     }
     if (!missing(Rueckkaufswert)) {
-        eval(bquote(expect_equal(vals$Rueckkaufswert, .(Rueckkaufswert), tolerance = abs(absTolerance / .(Rueckkaufswert)))))
+        eval(bquote(expect_equal_abs(vals$Rueckkaufswert, .(Rueckkaufswert), tolerance = absTolerance)))
     }
     if (!missing(Abschlusskostenruecktrag)) {
-        eval(bquote(expect_equal(vals$Abschlusskostenruecktrag, .(Abschlusskostenruecktrag), tolerance = abs(absTolerance / .(Abschlusskostenruecktrag)))))
+        eval(bquote(expect_equal_abs(vals$Abschlusskostenruecktrag, .(Abschlusskostenruecktrag), tolerance = absTolerance)))
     }
     if (!missing(Rueckkaufswert.prf)) {
-        eval(bquote(expect_equal(vals$Rueckkaufswert.prf, .(Rueckkaufswert.prf), tolerance = abs(absTolerance / .(Rueckkaufswert.prf)))))
+        eval(bquote(expect_equal_abs(vals$Rueckkaufswert.prf, .(Rueckkaufswert.prf), tolerance = absTolerance)))
     }
     if (!missing(VS.prf)) {
-        eval(bquote(expect_equal(vals$VS.prf, .(VS.prf), tolerance = abs(absTolerance / .(VS.prf)))))
+        eval(bquote(expect_equal_abs(vals$VS.prf, .(VS.prf), tolerance = absTolerance)))
         # OR: contract$Values$reserves[t + 1, "PremiumFreeSumInsured"]
     }
 }

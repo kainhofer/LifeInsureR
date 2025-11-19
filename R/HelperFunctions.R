@@ -836,7 +836,7 @@ fillNAgaps <- function(x, firstBack=FALSE) {
 #' @param val Function or value
 #' @param ... Argument passed to \code{val} if it is a function
 #' @returns the value, potentially with the given function applied
-#' 
+#'
 #' @examples
 #' valueOrFunction(3) # returns 3
 #' valueOrFunction(`+`, 1, 2) # also returns 3
@@ -856,7 +856,7 @@ valueOrFunction = function(val, ...) {
 #' @param val The value to which the hook is applied (ifgiven)
 #' @param ... optional parameters passed to the hook function (if it is a function)
 #' @returns the value with the hook function applied (if a function) or unchanged otherwiese
-#' 
+#'
 #' @examples
 #' applyHook(NULL, 3) # returns 3 unchanged
 #' applyHook(function(x) 2*x, 3) # applies the function, returns 6
@@ -972,3 +972,99 @@ sumPaddedArrays = function(arr1 = NULL, arr2 = NULL, pad1 = 0, pad2 = 0) {
 
 
 
+
+
+######################################################################=#
+# Functions for unit tests                                          ####
+
+#' Expect approximate equality by absolute tolerance
+#'
+#' Checks that `object` and `expected` are approximately equal using an
+#' element-wise absolute tolerance. This is similar to
+#' [testthat::expect_equal()], but uses `abs(x - y) <= tolerance` as the
+#' element-wise criterion and treats missing reference values as a no-op.
+#'
+#' @param object Expression or value producing the actual result.
+#' @param expected Expression or value producing the reference result.
+#'   If `expected` is `NULL` or entirely `NA`, the expectation succeeds
+#'   silently (useful when reference data are not available).
+#' @param ... Additional arguments forwarded to [waldo::compare()] for
+#'   generating diffs in failure messages (not used in the tolerance check).
+#' @param tolerance A non-negative numeric scalar. The maximum allowed
+#'   absolute difference per element. Default: `0.01`.
+#' @param info A character string appended to the failure message.
+#' @param label,expected.label Optional labels used in messages to describe
+#'   `object` and `expected`. By default they are derived from the expressions.
+#'
+#' @details
+#' The comparison is vectorised and applies the rule `abs(x - y) <= tolerance`
+#' element-wise. All elements must satisfy the rule for the expectation to pass.
+#' The function mirrors testthat conventions:
+#' * On success, it succeeds silently and returns `object` invisibly.
+#' * On failure, it throws an expectation error with a `waldo` diff.
+#'
+#' Special handling:
+#' * If `expected` is `NULL` or all values in `expected` are `NA`, the check
+#'   is skipped and the expectation succeeds silently.
+#'
+#' @return Invisibly returns `object` on success; otherwise signals a testthat
+#' expectation failure.
+#'
+#' @seealso [testthat::expect_equal()], [waldo::compare()]
+#'
+#' @examples
+#' # Passes: absolute differences ≤ 0.01
+#' expect_equal_abs(c(1, 2, 3), c(1.001, 1.999, 3.0001), tolerance = 0.01)
+#'
+#' # Fails with a waldo diff when any element exceeds tolerance
+#' \dontrun{
+#' expect_equal_abs(c(1, 2, 3), c(1.1, 2, 3), tolerance = 0.05)
+#' }
+#'
+#' # Skips check when expected is NULL or all NA
+#' expect_equal_abs(1:3, NULL)
+#' expect_equal_abs(1:3, c(NA, NA, NA))
+#'
+#' # Forward options to waldo::compare for clearer diffs
+#' \dontrun{
+#' expect_equal_abs(1:3, 1:3 + 1e-4, tolerance = 0,
+#'                  ignore_attr = TRUE, max_diffs = 10)
+#' }
+#' @export
+expect_equal_abs <- function (object, expected, ..., tolerance = 0.01, info = NULL, label = NULL, expected.label = NULL)
+{
+    act <- testthat::quasi_label(rlang::enquo(object), label, arg = "object")
+    exp <- testthat::quasi_label(rlang::enquo(expected), expected.label, arg = "expected")
+    x <- act$val
+    y <- exp$val
+
+    dif <- abs(x - y);
+    pass <- all(dif <= tolerance);
+
+    # If no reference values are given (all NA or NULL), silently succeed!
+    if (all(is.na(y)) || is.null(y) || (!is.na(pass) && pass)) {
+        # mirror expect_* behavior: succeed silently and return `object`
+        testthat::succeed()
+        return(invisible(x))
+    }
+
+    # Build a waldo-formatted diff (same renderer as expect_equal)
+    comp <- waldo::compare(
+        x, y, ...,
+        x_arg = "actual",
+        y_arg = "expected"
+    )
+
+    testthat::expect(
+        FALSE,
+        sprintf(
+            "%s (`actual`) not equal (absolute tolerance = %g) to %s (`expected`).\n\n%s",
+            act$lab, tolerance, exp$lab,
+            paste0(comp, collapse = "\n\n")
+        ),
+        info = info,
+        trace_env = rlang::caller_env()
+    )
+
+    invisible(x)
+}
