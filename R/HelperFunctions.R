@@ -1068,3 +1068,107 @@ expect_equal_abs <- function (object, expected, ..., tolerance = 0.01, info = NU
 
     invisible(x)
 }
+
+#' Test profit participation values against reference data
+#'
+#' Compares the calculated profit participation values in an
+#' \code{InsuranceContract} object with reference values (typically read from
+#' an Excel sheet). The comparison is column-wise and uses
+#' [expect_equal_abs()] to allow for small numeric deviations.
+#'
+#' @param contract Optional \code{InsuranceContract} object. If not supplied,
+#'   a new contract is constructed by calling \code{InsuranceContract$new(...)}
+#'   with any additional arguments passed via \code{...}.
+#' @param tolerance Numeric scalar giving the absolute tolerance allowed
+#'   for value comparisons (see [expect_equal_abs()]). Default: \code{0.01}.
+#' @param path Character string giving the path to the Excel file containing
+#'   reference values. Default: \code{"RefValues.xlsx"}.
+#' @param sheet Character string giving the sheet name within the Excel file.
+#'   Defaults to \code{contract$tarif$name}.
+#' @param scenario Character string identifying the profit scenario within
+#'   the contract. Defaults to \code{"default"}. If \code{NULL}, a new scenario
+#'   ID such as \code{"Scenario1"}, \code{"Scenario2"}, ... is automatically
+#'   generated. If the scenario does not yet exist, it is created by calling
+#'   \code{contract$addProfitScenario(scenario, ...)}.
+#' @param ... Additional arguments forwarded to
+#'   \code{InsuranceContract$new()}, \code{contract$addProfitScenario()}, or
+#'   [readxl::read_excel()] as appropriate.
+#'
+#' @details
+#' The function performs the following steps:
+#' \enumerate{
+#'   \item If no contract is provided, creates one using the supplied tariff
+#'         parameters via \code{InsuranceContract$new(...)}.
+#'   \item If \code{scenario} is missing or not yet present in
+#'         \code{contract$Values$profitScenarios}, generates or adds it.
+#'   \item Reads reference data from the specified Excel sheet using
+#'         [readxl::read_excel()].
+#'   \item For each column present in both the reference data and the
+#'         scenario matrix, compares corresponding numeric values using
+#'         [expect_equal_abs()], with the specified tolerance.
+#' }
+#'
+#' Columns not present in both datasets are ignored. Missing or malformed
+#' scenario matrices trigger a warning (to be implemented).
+#'
+#' @return Invisibly returns \code{contract}. The function is primarily used
+#'   for validation inside testthat test suites; each column comparison
+#'   generates a \code{testthat} expectation.
+#'
+#' @seealso [expect_equal_abs()], [readxl::read_excel()],
+#'   [testthat::expect_equal()]
+#'
+#' @examples
+#' \dontrun{
+#' # Compare profit participation results to reference values
+#' testProfitParticipation(
+#'   contract = my_contract,
+#'   path = system.file("extdata", "RefValues.xlsx", package = "LifeInsureR"),
+#'   sheet = "Tariff12",
+#'   scenario = "Scenario1",
+#'   tolerance = 0.001
+#' )
+#'
+#' # Create and test a new contract on the fly
+#' testProfitParticipation(
+#'   tariff = "GB",
+#'   startAge = 30,
+#'   sumInsured = 100000,
+#'   path = "RefValues.xlsx"
+#' )
+#' }
+#'
+#' @export
+testProfitParticipation = function(contract = NULL, tolerance = 0.01, path = "RefValues.xlsx", sheet = contract$tarif$name, scenario = "default", ...) {
+	# if no contract is given, the optional arguments can specify tariff parameters
+	if (is.null(contract)) {
+		contract = InsuranceContract$new(...);
+	}
+
+	# if the profit scenario does not yet exist, the optional arguments can specify its parameters
+	if (is.null(scenario)) {
+		# Choose a profit scenario ID that does not yet exist:
+		ids = names(contract$Values$profitScenarios);
+		nums = as.integer(gsub("^Scenario", "", ids))
+		next_num = if (length(nums) == 0 || all(is.na(nums))) 1 else max(nums, na.rm = TRUE) + 1
+		scenario <- paste0("Scenario", next_num)
+	}
+	if (is.null(contract$Values$profitScenarios[scenario])) {
+		contract$addProfitScenario(scenario, ...);
+	}
+	ref = readxl::read_excel(path = path, sheet = sheet, ...);
+	# ref = readxl::read_excel(path =  file.path(here(), "tests", "testthat", "Referenzwerte_SVers_GB.xlsx"), sheet = "12");
+	if (!is.matrix(contract$Values$profitScenarios[[scenario]])) {
+		# TODO_RK: WARNING
+	}
+
+	common_cols <- intersect(colnames(ref), colnames(contract$Values$profitScenarios[[scenario]]))
+
+	browser()
+	for (col in common_cols) {
+		actual <- contract$Values$profitScenarios[[scenario]][, col, drop = TRUE]
+		expected <- ref[[col]]
+		expect_equal_abs(as.numeric(actual), as.numeric(expected), tolerance = tolerance,
+						 info = paste0("Mismatch in column '", col, "' of scenario '", scenario, "'."))
+	}
+}
