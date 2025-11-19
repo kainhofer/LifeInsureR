@@ -986,8 +986,9 @@ sumPaddedArrays = function(arr1 = NULL, arr2 = NULL, pad1 = 0, pad2 = 0) {
 #'
 #' @param object Expression or value producing the actual result.
 #' @param expected Expression or value producing the reference result.
-#'   If `expected` is `NULL` or entirely `NA`, the expectation succeeds
-#'   silently (useful when reference data are not available).
+#'   If `expected` is `NULL` or `NA`, the expectation succeeds
+#'   silently (useful when reference data are not available). Even single `NA`
+#'   entries in matrices are ignored and can be anyhing in `object`.
 #' @param ... Additional arguments forwarded to [waldo::compare()] for
 #'   generating diffs in failure messages (not used in the tolerance check).
 #' @param tolerance A non-negative numeric scalar. The maximum allowed
@@ -1005,7 +1006,8 @@ sumPaddedArrays = function(arr1 = NULL, arr2 = NULL, pad1 = 0, pad2 = 0) {
 #'
 #' Special handling:
 #' * If `expected` is `NULL` or all values in `expected` are `NA`, the check
-#'   is skipped and the expectation succeeds silently.
+#'   is skipped and the expectation succeeds silently. Similarly, individual
+#'   `NA` entries in `expected` are skipped and allow any value in `object`.
 #'
 #' @return Invisibly returns `object` on success; otherwise signals a testthat
 #' expectation failure.
@@ -1038,14 +1040,57 @@ expect_equal_abs <- function (object, expected, ..., tolerance = 0.01, info = NU
     x <- act$val
     y <- exp$val
 
-    dif <- abs(x - y);
-    pass <- all(dif <= tolerance);
+
+    stopifnot(identical(dim(x), dim(y)))
+
+    # ignore all NA values from `expected` and NA them out in the object to test, too
+    na_mask <- is.na(y)
+    x2 <- x
+    x2[na_mask] <- NA_real_
+
+    pass <- FALSE
+    maxdif <- NA_real_
+    maxpos <- NULL
+
+    if (is.numeric(x2) && is.numeric(y)) {
+    	dif <- abs(x2 - y)
+    	dif[na_mask] <- 0
+    	pass <- all(dif <= tolerance | is.na(dif))
+    	if (!all(is.na(dif))) {
+    		maxdif <- max(dif, na.rm = TRUE)
+    		# which.max doesn't handle NAs; replace with -Inf to pick the right index
+    		w <- which.max(replace(dif, is.na(dif), -Inf))
+    		maxpos <- arrayInd(w, .dim = dim(dif))
+    	}
+    } else {
+    	pass <- identical(x2, y)
+    }
 
     # If no reference values are given (all NA or NULL), silently succeed!
     if (all(is.na(y)) || is.null(y) || (!is.na(pass) && pass)) {
         # mirror expect_* behavior: succeed silently and return `object`
         testthat::succeed()
         return(invisible(x))
+    }
+
+    # Build coordinates label (if we have dimnames, use them)
+    coord_label <- ""
+    if (!is.null(maxpos)) {
+    	dn <- dimnames(y)
+    	if (!is.null(dn)) {
+    		# dimension names (age, policyPeriod, ...) if available
+    		dnames <- names(dn)
+    		parts <- character(ncol(maxpos))
+    		for (k in seq_len(ncol(maxpos))) {
+    			lab_k <- if (!is.null(dnames) && nzchar(dnames[k])) dnames[k] else paste0("dim", k)
+    			val_k <- if (!is.null(dn[[k]])) dn[[k]][maxpos[1, k]] else maxpos[1, k]
+    			parts[k] <- paste0(lab_k, "=", val_k)
+    		}
+    		coord_label <- paste(parts, collapse = ", ")
+    	} else {
+    		# fall back to raw indices
+    		coord_label <- paste(paste0("dim", seq_len(ncol(maxpos)), "=", maxpos[1, ]), collapse = ", ")
+    	}
     }
 
     # Build a waldo-formatted diff (same renderer as expect_equal)
@@ -1058,8 +1103,10 @@ expect_equal_abs <- function (object, expected, ..., tolerance = 0.01, info = NU
     testthat::expect(
         FALSE,
         sprintf(
-            "%s (`actual`) not equal (absolute tolerance = %g) to %s (`expected`).\n\n%s",
+            "%s (`actual`) not equal (absolute tolerance = %g) to %s (`expected`)\nMaximum deviation: %s at position %s.\n\n%s",
             act$lab, tolerance, exp$lab,
+            if(is.na(maxdif)) "NA" else format(maxdif, digits=3, trim = TRUE),
+            coord_label, #format(maxpos),
             paste0(comp, collapse = "\n\n")
         ),
         info = info,
@@ -1164,7 +1211,6 @@ testProfitParticipation = function(contract = NULL, tolerance = 0.01, path = "Re
 
 	common_cols <- intersect(colnames(ref), colnames(contract$Values$profitScenarios[[scenario]]))
 
-	browser()
 	for (col in common_cols) {
 		actual <- contract$Values$profitScenarios[[scenario]][, col, drop = TRUE]
 		expected <- ref[[col]]
