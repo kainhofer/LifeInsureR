@@ -373,204 +373,204 @@ ProfitParticipation = R6Class(
             waiting      = valueOrFunction(params$ProfitParticipation$waitingPeriod, params = params, values = values);
             if (is.numeric(waiting) && waiting > 0) {
                 waitingFactor = c(rep(0, waiting + 1), rep(1, params$ContractData$policyPeriod - waiting));
-        } else {
-            waitingFactor = 1;
-        }
-        rates        = self$setupRates(params = params, values = values, ...)
+            } else {
+                waitingFactor = 1;
+            }
+            rates        = self$setupRates(params = params, values = values, ...)
 
-        # Initialize all rates, bases and calc functions to NULL and then set
-        # only those that are actually used in this profit scheme (all values
-        # with NULL will silently be ignored in the cbind call)
-        intBase      = riskBase     = expenseBase   = sumBase      = NULL;
-        intRate      = riskRate     = expenseRate   = sumRate      = NULL;
-        intProfit    = riskProfit   = expenseProfit = sumProfit   = NULL
+            # Initialize all rates, bases and calc functions to NULL and then set
+            # only those that are actually used in this profit scheme (all values
+            # with NULL will silently be ignored in the cbind call)
+            intBase      = riskBase     = expenseBase   = sumBase      = NULL;
+            intRate      = riskRate     = expenseRate   = sumRate      = NULL;
+            intProfit    = riskProfit   = expenseProfit = sumProfit   = NULL
 
-        interestOnProfitRate = self$Functions$getInterestOnProfits(rates = rates, params = params, values = values);
-        if ("interest" %in% params$ProfitParticipation$profitComponents) {
-          intBase      = self$Functions$getInterestProfitBase(rates = rates, params = params, values = values);
-          intRate      = self$Functions$getInterestProfitRate(rates = rates, params = params, values = values);
-          intProfit     = self$Functions$calculateInterestProfit(base = intBase, rate = intRate, waiting = waitingFactor, rates = rates, params = params, values = values);
-        }
-        if ("risk" %in% params$ProfitParticipation$profitComponents) {
-          riskBase     = self$Functions$getRiskProfitBase(rates = rates, params = params, values = values);
-          riskRate     = self$Functions$getRiskProfitRate(rates = rates, params = params, values = values);
-          riskProfit    = self$Functions$calculateRiskProfit(base = riskBase, rate = riskRate, waiting = waitingFactor, rates = rates, params = params, values = values);
-        }
-        if ("expense" %in% params$ProfitParticipation$profitComponents) {
-          expenseBase  = self$Functions$getExpenseProfitBase(rates = rates, params = params, values = values);
-          expenseRate  = self$Functions$getExpenseProfitRate(rates = rates, params = params, values = values);
-          expenseProfit = self$Functions$calculateExpenseProfit(base = expenseBase, rate = expenseRate, waiting = waitingFactor, rates = rates, params = params, values = values);
-        }
-        if ("sum" %in% params$ProfitParticipation$profitComponents) {
-          sumBase      = self$Functions$getSumProfitBase(rates = rates, params = params, values = values);
-          sumRate      = self$Functions$getSumProfitRate(rates = rates, params = params, values = values);
-          sumProfit     = self$Functions$calculateSumProfit(base = sumBase, rate = sumRate, waiting = waitingFactor, rates = rates, params = params, values = values);
-        }
+            interestOnProfitRate = self$Functions$getInterestOnProfits(rates = rates, params = params, values = values);
+            if ("interest" %in% params$ProfitParticipation$profitComponents) {
+                intBase      = self$Functions$getInterestProfitBase(rates = rates, params = params, values = values);
+                intRate      = self$Functions$getInterestProfitRate(rates = rates, params = params, values = values);
+                intProfit     = self$Functions$calculateInterestProfit(base = intBase, rate = intRate, waiting = waitingFactor, rates = rates, params = params, values = values);
+            }
+            if ("risk" %in% params$ProfitParticipation$profitComponents) {
+                riskBase     = self$Functions$getRiskProfitBase(rates = rates, params = params, values = values);
+                riskRate     = self$Functions$getRiskProfitRate(rates = rates, params = params, values = values);
+                riskProfit    = self$Functions$calculateRiskProfit(base = riskBase, rate = riskRate, waiting = waitingFactor, rates = rates, params = params, values = values);
+            }
+            if ("expense" %in% params$ProfitParticipation$profitComponents) {
+                expenseBase  = self$Functions$getExpenseProfitBase(rates = rates, params = params, values = values);
+                expenseRate  = self$Functions$getExpenseProfitRate(rates = rates, params = params, values = values);
+                expenseProfit = self$Functions$calculateExpenseProfit(base = expenseBase, rate = expenseRate, waiting = waitingFactor, rates = rates, params = params, values = values);
+            }
+            if ("sum" %in% params$ProfitParticipation$profitComponents) {
+                sumBase      = self$Functions$getSumProfitBase(rates = rates, params = params, values = values);
+                sumRate      = self$Functions$getSumProfitRate(rates = rates, params = params, values = values);
+                sumProfit     = self$Functions$calculateSumProfit(base = sumBase, rate = sumRate, waiting = waitingFactor, rates = rates, params = params, values = values);
+            }
 
-        res = cbind(
-            # Profit Calculation Bases
-            interestBase = c(intBase),
-            riskBase = c(riskBase),
-            expenseBase = c(expenseBase),
-            sumBase = c(sumBase),
+            res = cbind(
+                # Profit Calculation Bases
+                interestBase = c(intBase),
+                riskBase = c(riskBase),
+                expenseBase = c(expenseBase),
+                sumBase = c(sumBase),
 
-            # Profit Rates
-            guaranteedInterest = c(rates$guaranteedInterest),
-            totalInterest = c(rates$totalInterest),
-            interestProfitRate = c(intRate),
-            riskProfitRate = c(riskRate),
-            expenseProfitRate = c(expenseRate),
-            sumProfitRate = c(sumRate),
-            interestOnProfitRate = c(interestOnProfitRate),
+                # Profit Rates
+                guaranteedInterest = c(rates$guaranteedInterest),
+                totalInterest = c(rates$totalInterest),
+                interestProfitRate = c(intRate),
+                riskProfitRate = c(riskRate),
+                expenseProfitRate = c(expenseRate),
+                sumProfitRate = c(sumRate),
+                interestOnProfitRate = c(interestOnProfitRate),
 
-            # Profit components
-            interestProfit = c(intProfit),
-            riskProfit = c(riskProfit),
-            expenseProfit = c(expenseProfit),
-            sumProfit = c(sumProfit),
-            componentsProfit = plusNULL(intProfit, riskProfit, expenseProfit, sumProfit),
-            interestOnProfit = c(0),
-            totalProfitAssignment = c(0),
+                # Profit components
+                interestProfit = c(intProfit),
+                riskProfit = c(riskProfit),
+                expenseProfit = c(expenseProfit),
+                sumProfit = c(sumProfit),
+                componentsProfit = plusNULL(intProfit, riskProfit, expenseProfit, sumProfit),
+                interestOnProfit = c(0),
+                totalProfitAssignment = c(0),
 
-            totalProfit = c(0)
-        );
+                totalProfit = c(0)
+            );
 
-        # Use only newly calculated values starting at 'calculateFrom', but use
-        # old values up to that moment (might be a contract change with a
-        # completely different profit participation system before!)
-        res = mergeValues(starting = profitScenario[,colnames(res)], ending = res, t = calculateFrom);
+            # Use only newly calculated values starting at 'calculateFrom', but use
+            # old values up to that moment (might be a contract change with a
+            # completely different profit participation system before!)
+            res = mergeValues(starting = profitScenario[,colnames(res)], ending = res, t = calculateFrom);
 
-        if (calculateFrom > 0 && !is.null(profitScenario)) {
-          prev = profitScenario[calculateFrom - 1, "totalProfit"]
-        } else {
-          prev = 0;
-        }
-        # TODO: turn the interest on profit into a calculator function!
-        # res = self$Functions$calculateInterestOnProfit(base = sumBase, rate = sumRate, waiting = waitingFactor, rates = rates, params = params, values = values);
-        for (i in (calculateFrom + 1):nrow(res)) {
-            res[i,"interestOnProfit"] = res[i,"interestOnProfitRate"] * prev;
-            res[i,"totalProfitAssignment"] = res[i, "componentsProfit"] + res[i,"interestOnProfit"];
-            res[i,"totalProfit"] = prev + res[i,"totalProfitAssignment"];
-            prev = res[i,"totalProfit"];
-        }
-        regularBonusAssignment = res[,"totalProfitAssignment"]
+            if (calculateFrom > 0 && !is.null(profitScenario)) {
+                prev = profitScenario[calculateFrom - 1, "totalProfit"]
+            } else {
+                prev = 0;
+            }
+            # TODO: turn the interest on profit into a calculator function!
+            # res = self$Functions$calculateInterestOnProfit(base = sumBase, rate = sumRate, waiting = waitingFactor, rates = rates, params = params, values = values);
+            for (i in (calculateFrom + 1):nrow(res)) {
+                res[i,"interestOnProfit"] = res[i,"interestOnProfitRate"] * prev;
+                res[i,"totalProfitAssignment"] = res[i, "componentsProfit"] + res[i,"interestOnProfit"];
+                res[i,"totalProfit"] = prev + res[i,"totalProfitAssignment"];
+                prev = res[i,"totalProfit"];
+            }
+            regularBonusAssignment = res[,"totalProfitAssignment"]
 
-        ###########################################################################################################%#
-        #### OLD Terminal bonus (not through terminal bonus fund, i.e. part of ongoing profits, but in addition) ####
-        #### Terminal Bonus calculations (might depend on the individual profit assignments calculated above!
-        ###########################################################################################################%#
-        #### => TODO: Pass the current profit calculation inside the values!)
-        if ("terminal" %in% params$ProfitParticipation$profitComponents) {
-          terminalBase = self$Functions$getTerminalBonusBase(res, rates = rates, params = params, values = values);
-          terminalRate = self$Functions$getTerminalBonusRate(res, rates = rates, params = params, values = values);
-          terminalBonus = self$Functions$calculateTerminalBonus(res,
-                  base = terminalBase, rate = terminalRate, calculateFrom = calculateFrom,
-                  waiting = waitingFactor, rates = rates, params = params, values = values); # TODO: Add the AF(v) factor!
+            ###########################################################################################################%#
+            #### OLD Terminal bonus (not through terminal bonus fund, i.e. part of ongoing profits, but in addition) ####
+            #### Terminal Bonus calculations (might depend on the individual profit assignments calculated above!
+            ###########################################################################################################%#
+            #### => TODO: Pass the current profit calculation inside the values!)
+            if ("terminal" %in% params$ProfitParticipation$profitComponents) {
+                terminalBase = self$Functions$getTerminalBonusBase(res, rates = rates, params = params, values = values);
+                terminalRate = self$Functions$getTerminalBonusRate(res, rates = rates, params = params, values = values);
+                terminalBonus = self$Functions$calculateTerminalBonus(res,
+                                                                      base = terminalBase, rate = terminalRate, calculateFrom = calculateFrom,
+                                                                      waiting = waitingFactor, rates = rates, params = params, values = values); # TODO: Add the AF(v) factor!
 
-          if (calculateFrom == 0) {
-            terminalBonusAccount = cumsum(terminalBonus); # TODO: Generalize! Not every scheme uses a cumulative account!
-          } else {
-            past = profitScenario[1:calculateFrom, "terminalBonusAccount"]
-            # Preserve values up to calculateFrom, start from the last known value at calculateFrom-1 and sum all further contributions:
-            terminalBonusAccount = c(head(past, -1), cumsum(c(tail(past,1), tail(terminalBonus, -calculateFrom))))
-          }
-          terminalBonusReserve = self$Functions$getTerminalBonusReserve(res, rates = rates, terminalBonus, terminalBonusAccount, params = params, values = values)
+                if (calculateFrom == 0) {
+                    terminalBonusAccount = cumsum(terminalBonus); # TODO: Generalize! Not every scheme uses a cumulative account!
+                } else {
+                    past = profitScenario[1:calculateFrom, "terminalBonusAccount"]
+                    # Preserve values up to calculateFrom, start from the last known value at calculateFrom-1 and sum all further contributions:
+                    terminalBonusAccount = c(head(past, -1), cumsum(c(tail(past,1), tail(terminalBonus, -calculateFrom))))
+                }
+                terminalBonusReserve = self$Functions$getTerminalBonusReserve(res, rates = rates, terminalBonus, terminalBonusAccount, params = params, values = values)
 
-          resTerminal = cbind(
-            terminalBase,
-            terminalRate,
-            terminalBonus,
-            terminalBonusAccount,
-            terminalBonusReserve
-          )
-          resTerminal = mergeValues(starting = profitScenario[,colnames(resTerminal)], ending = resTerminal, t = calculateFrom)
-          # Add the terminal bonus values to the array:
-          res = cbind(res, resTerminal)
-        }
+                resTerminal = cbind(
+                    terminalBase,
+                    terminalRate,
+                    terminalBonus,
+                    terminalBonusAccount,
+                    terminalBonusReserve
+                )
+                resTerminal = mergeValues(starting = profitScenario[,colnames(resTerminal)], ending = resTerminal, t = calculateFrom)
+                # Add the terminal bonus values to the array:
+                res = cbind(res, resTerminal)
+            }
 
-        ###########################################################################################################%#
-        #### NEW Terminal bonus fund (part of regular profits, but not paid out on surrender, reserved as part of the free RfB) ####
-        ###########################################################################################################%#
-        if ("TBF" %in% params$ProfitParticipation$profitComponents) {
-          TBFBase = self$Functions$getTerminalBonusFundBase(res, rates = rates, params = params, values = values);
-          TBFRate = self$Functions$getTerminalBonusFundRate(res, rates = rates, params = params, values = values);
-          TBFBonusAssignment = self$Functions$calculateTerminalBonusFund(res,
-                base = TBFBase, rate = TBFRate, calculateFrom = calculateFrom,
-                waiting = waitingFactor, rates = rates, params = params, values = values);
-          regularBonusAssignment = res[,"totalProfitAssignment"] - TBFBonusAssignment
+            ###########################################################################################################%#
+            #### NEW Terminal bonus fund (part of regular profits, but not paid out on surrender, reserved as part of the free RfB) ####
+            ###########################################################################################################%#
+            if ("TBF" %in% params$ProfitParticipation$profitComponents) {
+                TBFBase = self$Functions$getTerminalBonusFundBase(res, rates = rates, params = params, values = values);
+                TBFRate = self$Functions$getTerminalBonusFundRate(res, rates = rates, params = params, values = values);
+                TBFBonusAssignment = self$Functions$calculateTerminalBonusFund(res,
+                                                                               base = TBFBase, rate = TBFRate, calculateFrom = calculateFrom,
+                                                                               waiting = waitingFactor, rates = rates, params = params, values = values);
+                regularBonusAssignment = res[,"totalProfitAssignment"] - TBFBonusAssignment
 
-          # Calculate TBF and regular bonus as cumulative sum  of the assignments starting at t = calculateFrom plus the previous value!
-          if (calculateFrom == 0) {
-            TBF = cumsum(TBFBonusAssignment)
-          } else {
-            past = profitScenario[1:calculateFrom, "TBF"]
-            # Preserve values up to calculateFrom, start from the last known value at calculateFrom-1 and sum all further contributions:
-            TBF = c(head(past, -1), cumsum(c(tail(past,1), tail(TBFBonusAssignment, -calculateFrom))))
-          }
-
-
-          resTBF = cbind(
-            TBFBase,
-            TBFRate,
-            TBFBonusAssignment,
-            TBF
-          )
-          resTBF = mergeValues(starting = profitScenario[,colnames(resTBF)], ending = resTBF, t = calculateFrom)
-          # Add the terminal bonus fund values to the array:
-          res = cbind(res, resTBF)
-        }
-
-        ###########################################################################################################%#
-        #### Regular bonus assignment / accrued regular bonus AFTER TBF                                          ####
-        ###########################################################################################################%#
-        # Calculate regular bonus (after potential TBF subtraction) as cumulative sum  of the assignments starting at t = calculateFrom plus the previous value!
-        if (calculateFrom == 0) {
-          regularBonus = cumsum(regularBonusAssignment)
-        } else {
-          past = profitScenario[1:calculateFrom, "regularBonus"]
-          regularBonus = c(head(past, -1), cumsum(c(tail(past,1), tail(regularBonusAssignment, -calculateFrom))))
-        }
-        resRegular = cbind(regularBonusAssignment, regularBonus)
-        resRegular = mergeValues(starting = profitScenario[,colnames(resRegular)], ending = resRegular, t = calculateFrom)
-        res = cbind(res, resRegular)
+                # Calculate TBF and regular bonus as cumulative sum  of the assignments starting at t = calculateFrom plus the previous value!
+                if (calculateFrom == 0) {
+                    TBF = cumsum(TBFBonusAssignment)
+                } else {
+                    past = profitScenario[1:calculateFrom, "TBF"]
+                    # Preserve values up to calculateFrom, start from the last known value at calculateFrom-1 and sum all further contributions:
+                    TBF = c(head(past, -1), cumsum(c(tail(past,1), tail(TBFBonusAssignment, -calculateFrom))))
+                }
 
 
-        ###########################################################################################################%#
-        #### BENEFITS                                                                                            ####
-        ###########################################################################################################%#
+                resTBF = cbind(
+                    TBFBase,
+                    TBFRate,
+                    TBFBonusAssignment,
+                    TBF
+                )
+                resTBF = mergeValues(starting = profitScenario[,colnames(resTBF)], ending = resTBF, t = calculateFrom)
+                # Add the terminal bonus fund values to the array:
+                res = cbind(res, resTBF)
+            }
 
-        survival       = self$Functions$calculateSurvivalBenefit(res, rates = rates, params = params, values = values);
+            ###########################################################################################################%#
+            #### Regular bonus assignment / accrued regular bonus AFTER TBF                                          ####
+            ###########################################################################################################%#
+            # Calculate regular bonus (after potential TBF subtraction) as cumulative sum  of the assignments starting at t = calculateFrom plus the previous value!
+            if (calculateFrom == 0) {
+                regularBonus = cumsum(regularBonusAssignment)
+            } else {
+                past = profitScenario[1:calculateFrom, "regularBonus"]
+                regularBonus = c(head(past, -1), cumsum(c(tail(past,1), tail(regularBonusAssignment, -calculateFrom))))
+            }
+            resRegular = cbind(regularBonusAssignment, regularBonus)
+            resRegular = mergeValues(starting = profitScenario[,colnames(resRegular)], ending = resRegular, t = calculateFrom)
+            res = cbind(res, resRegular)
 
-        deathAccrued   = self$Functions$calculateDeathBenefitAccrued(res, rates = rates, params = params, values = values);
-        deathTerminalBonus = self$Functions$calculateDeathBenefitTerminal(res, rates = rates, params = params, values = values);
 
-        surrenderAccrued  = self$Functions$calculateSurrenderBenefitAccrued(res, rates = rates, params = params, values = values);
-        surrenderTerminalBonus = self$Functions$calculateSurrenderBenefitTerminal(res, rates = rates, params = params, values = values);
+            ###########################################################################################################%#
+            #### BENEFITS                                                                                            ####
+            ###########################################################################################################%#
 
-        premiumWaiverAccrued  = self$Functions$calculatePremiumWaiverBenefitAccrued(res, rates = rates, params = params, values = values);
-        premiumWaiverTerminalBonus = self$Functions$calculatePremiumWaiverBenefitTerminal(res, rates = rates, params = params, values = values);
+            survival       = self$Functions$calculateSurvivalBenefit(res, rates = rates, params = params, values = values);
 
-        resBenefit = cbind(
-          survival = survival,
+            deathAccrued   = self$Functions$calculateDeathBenefitAccrued(res, rates = rates, params = params, values = values);
+            deathTerminalBonus = self$Functions$calculateDeathBenefitTerminal(res, rates = rates, params = params, values = values);
 
-          deathAccrued = deathAccrued,
-          deathTerminalBonus = deathTerminalBonus,
-          death = deathAccrued + deathTerminalBonus,
+            surrenderAccrued  = self$Functions$calculateSurrenderBenefitAccrued(res, rates = rates, params = params, values = values);
+            surrenderTerminalBonus = self$Functions$calculateSurrenderBenefitTerminal(res, rates = rates, params = params, values = values);
 
-          surrenderAccrued  = surrenderAccrued,
-          surrenderTerminalBonus = surrenderTerminalBonus,
-          surrender      = surrenderAccrued + surrenderTerminalBonus,
+            premiumWaiverAccrued  = self$Functions$calculatePremiumWaiverBenefitAccrued(res, rates = rates, params = params, values = values);
+            premiumWaiverTerminalBonus = self$Functions$calculatePremiumWaiverBenefitTerminal(res, rates = rates, params = params, values = values);
 
-          premiumWaiverAccrued  = premiumWaiverAccrued,
-          premiumWaiverTerminalBonus = premiumWaiverTerminalBonus,
-          premiumWaiver  = premiumWaiverAccrued + premiumWaiverTerminalBonus
-        )
-        # Preserve values up to time t=calculateFrom of the old scenario values
-        resBenefit = mergeValues(starting = profitScenario[,colnames(resBenefit)], ending = resBenefit, t = calculateFrom)
+            resBenefit = cbind(
+                survival = survival,
 
-        res = cbind(res, resBenefit);
-        res
-    },
+                deathAccrued = deathAccrued,
+                deathTerminalBonus = deathTerminalBonus,
+                death = deathAccrued + deathTerminalBonus,
+
+                surrenderAccrued  = surrenderAccrued,
+                surrenderTerminalBonus = surrenderTerminalBonus,
+                surrender      = surrenderAccrued + surrenderTerminalBonus,
+
+                premiumWaiverAccrued  = premiumWaiverAccrued,
+                premiumWaiverTerminalBonus = premiumWaiverTerminalBonus,
+                premiumWaiver  = premiumWaiverAccrued + premiumWaiverTerminalBonus
+            )
+            # Preserve values up to time t=calculateFrom of the old scenario values
+            resBenefit = mergeValues(starting = profitScenario[,colnames(resBenefit)], ending = resBenefit, t = calculateFrom)
+
+            res = cbind(res, resBenefit);
+            res
+        },
 
 
 
