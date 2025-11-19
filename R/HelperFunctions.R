@@ -1033,88 +1033,101 @@ sumPaddedArrays = function(arr1 = NULL, arr2 = NULL, pad1 = 0, pad2 = 0) {
 #'                  ignore_attr = TRUE, max_diffs = 10)
 #' }
 #' @export
-expect_equal_abs <- function (object, expected, ..., tolerance = 0.01, info = NULL, label = NULL, expected.label = NULL)
+expect_equal_abs <- function (object, expected, ..., tolerance = 0.01,
+							  info = NULL, label = NULL, expected.label = NULL)
 {
-    act <- testthat::quasi_label(rlang::enquo(object), label, arg = "object")
-    exp <- testthat::quasi_label(rlang::enquo(expected), expected.label, arg = "expected")
-    x <- act$val
-    y <- exp$val
+	act <- testthat::quasi_label(rlang::enquo(object), label, arg = "object")
+	exp <- testthat::quasi_label(rlang::enquo(expected), expected.label, arg = "expected")
+	x <- act$val
+	y <- exp$val
 
+	stopifnot(identical(dim(x), dim(y)))
 
-    stopifnot(identical(dim(x), dim(y)))
+	# Ignore all NA values from `expected` by NA-ing them out in actual too
+	na_mask <- is.na(y)
+	x2 <- x
+	x2[na_mask] <- NA_real_
 
-    # ignore all NA values from `expected` and NA them out in the object to test, too
-    na_mask <- is.na(y)
-    x2 <- x
-    x2[na_mask] <- NA_real_
+	pass   <- FALSE
+	maxdif <- NA_real_
+	maxpos <- NULL
 
-    pass <- FALSE
-    maxdif <- NA_real_
-    maxpos <- NULL
+	if (is.numeric(x2) && is.numeric(y)) {
+		dif <- abs(x2 - y)
+		dif[na_mask] <- NA_real_  # ignored cells
 
-    if (is.numeric(x2) && is.numeric(y)) {
-    	dif <- abs(x2 - y)
-    	dif[na_mask] <- 0
-    	pass <- all(dif <= tolerance | is.na(dif))
-    	if (!all(is.na(dif))) {
-    		maxdif <- max(dif, na.rm = TRUE)
-    		# which.max doesn't handle NAs; replace with -Inf to pick the right index
-    		w <- which.max(replace(dif, is.na(dif), -Inf))
-    		maxpos <- arrayInd(w, .dim = dim(dif))
-    	}
-    } else {
-    	pass <- identical(x2, y)
-    }
+		pass <- all(dif <= tolerance | is.na(dif))
 
-    # If no reference values are given (all NA or NULL), silently succeed!
-    if (all(is.na(y)) || is.null(y) || (!is.na(pass) && pass)) {
-        # mirror expect_* behavior: succeed silently and return `object`
-        testthat::succeed()
-        return(invisible(x))
-    }
+		if (!all(is.na(dif))) {
+			maxdif <- max(dif, na.rm = TRUE)
+			# linear index of the maximum, safely ignoring NAs
+			idx_lin <- which.max(replace(dif, is.na(dif), -Inf))
+			# coordinates robustly for vector vs array/matrix
+			if (is.null(dim(dif))) {
+				maxpos <- matrix(idx_lin, nrow = 1, ncol = 1)
+			} else {
+				maxpos <- arrayInd(idx_lin, .dim = dim(dif))
+			}
+		}
+	} else {
+		pass <- identical(x2, y)
+	}
 
-    # Build coordinates label (if we have dimnames, use them)
-    coord_label <- ""
-    if (!is.null(maxpos)) {
-    	dn <- dimnames(y)
-    	if (!is.null(dn)) {
-    		# dimension names (age, policyPeriod, ...) if available
-    		dnames <- names(dn)
-    		parts <- character(ncol(maxpos))
-    		for (k in seq_len(ncol(maxpos))) {
-    			lab_k <- if (!is.null(dnames) && nzchar(dnames[k])) dnames[k] else paste0("dim", k)
-    			val_k <- if (!is.null(dn[[k]])) dn[[k]][maxpos[1, k]] else maxpos[1, k]
-    			parts[k] <- paste0(lab_k, "=", val_k)
-    		}
-    		coord_label <- paste(parts, collapse = ", ")
-    	} else {
-    		# fall back to raw indices
-    		coord_label <- paste(paste0("dim", seq_len(ncol(maxpos)), "=", maxpos[1, ]), collapse = ", ")
-    	}
-    }
+	# If no reference values are given (all NA or NULL), or within tolerance, succeed
+	if (all(is.na(y)) || is.null(y) || (!is.na(pass) && pass)) {
+		testthat::succeed()
+		return(invisible(x))
+	}
 
-    # Build a waldo-formatted diff (same renderer as expect_equal)
-    comp <- waldo::compare(
-        x, y, ...,
-        x_arg = "actual",
-        y_arg = "expected"
-    )
+	# Coordinate label (vector- and array-safe)
+	coord_label <- ""
+	if (!is.null(maxpos)) {
+		if (is.null(dim(y))) {
+			# vector
+			idx <- maxpos[1, 1]
+			nm  <- names(y)
+			if (!is.null(nm) && length(nm) >= idx && nzchar(nm[idx])) {
+				coord_label <- sprintf("index=%d, name=%s", idx, nm[idx])
+			} else {
+				coord_label <- sprintf("index=%d", idx)
+			}
+		} else {
+			# matrix/array/data frame
+			dn <- dimnames(y)
+			dnames <- names(dn)
+			parts <- character(ncol(maxpos))
+			for (k in seq_len(ncol(maxpos))) {
+				lab_k <- if (!is.null(dnames) && !is.na(dnames[k]) && nzchar(dnames[k])) dnames[k] else paste0("i", k)
+				val_k <- if (!is.null(dn[[k]])) dn[[k]][maxpos[1, k]] else maxpos[1, k]
+				parts[k] <- paste0(lab_k, "=", val_k)
+			}
+			coord_label <- paste(parts, collapse = ", ")
+		}
+	}
 
-    testthat::expect(
-        FALSE,
-        sprintf(
-            "%s (`actual`) not equal (absolute tolerance = %g) to %s (`expected`)\nMaximum deviation: %s at position %s.\n\n%s",
-            act$lab, tolerance, exp$lab,
-            if(is.na(maxdif)) "NA" else format(maxdif, digits=3, trim = TRUE),
-            coord_label, #format(maxpos),
-            paste0(comp, collapse = "\n\n")
-        ),
-        info = info,
-        trace_env = rlang::caller_env()
-    )
+	# waldo-formatted diff; compare masked actual to expected
+	comp <- waldo::compare(
+		x2, y, ...,
+		x_arg = "actual",
+		y_arg = "expected"
+	)
 
-    invisible(x)
+	testthat::expect(
+		FALSE,
+		sprintf(
+			"%s (`actual`) not equal (absolute tolerance = %g) to %s (`expected`).\nMaximum deviation: %s at %s.\n\n%s",
+			act$lab, tolerance, exp$lab,
+			if (is.na(maxdif)) "NA" else format(maxdif, digits = 6, trim = TRUE),
+			if (nzchar(coord_label)) paste0("[", coord_label, "]") else "[?]",
+			paste0(comp, collapse = "\n\n")
+		),
+		info = info,
+		trace_env = rlang::caller_env()
+	)
+
+	invisible(x)
 }
+
 
 #' Test profit participation values against reference data
 #'
