@@ -277,6 +277,7 @@ freqCharge = function(monthly = 0, quarterly = 0, semiannually = 0, yearly = 0) 
 }
 
 
+`%||%` <- function(x, y) if (is.null(x)) y else x  # base R
 
 mergeValues = function(starting, ending, t) {
   # if either starting or ending is missing, always use the other, irrespective of t:

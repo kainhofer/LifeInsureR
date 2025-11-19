@@ -1249,27 +1249,25 @@ InsuranceTarif = R6Class(
       # ----------------------------------------------------------------------- -
       # The written premium is the gross premium with additional loadings, rebates, unit costs and taxes
       # TODO: Think through, how each of the components should / could be rounded
-      tax           = valueOrFunction(loadings$tax,          params = params, values = values);
-      unitCosts     = valueOrFunction(loadings$unitcosts,    params = params, values = values);
-      noMedicalExam = valueOrFunction(loadings$noMedicalExam,params = params, values = values);
-      noMedicalExam.relative = valueOrFunction(loadings$noMedicalExamRelative,params = params, values = values);
-      extraRebate   = valueOrFunction(loadings$extraRebate,  params = params, values = values);
-      sumRebate     = valueOrFunction(loadings$sumRebate,    params = params, values = values);
-      premiumRebateRate = valueOrFunction(loadings$premiumRebate,params = params, values = values);
-      premiumRebate = applyHook(params$Hooks$premiumRebateCalculation, premiumRebateRate, params = params, values = values);
+      tax           = valueOrFunction(loadings$tax,      params = params, values = values) %||% 0;
+      unitCosts     = valueOrFunction(loadings$unitcosts,    params = params, values = values) %||% 0;
+      noMedicalExam = valueOrFunction(loadings$noMedicalExam,params = params, values = values) %||% 0;
+      noMedicalExam.relative = valueOrFunction(loadings$noMedicalExamRelative,params = params, values = values) %||% 0;
+      extraRebate   = valueOrFunction(loadings$extraRebate,  params = params, values = values) %||% 0;
+      sumRebate     = valueOrFunction(loadings$sumRebate,    params = params, values = values) %||% 0;
+      premiumRebateRate = valueOrFunction(loadings$premiumRebate,params = params, values = values) %||% 0;
+      premiumRebate = applyHook(params$Hooks$premiumRebateCalculation, premiumRebateRate, params = params, values = values) %||% 0;
 
-      extraChargeGrossPremium = valueOrFunction(loadings$extraChargeGrossPremium, params = params, values = values);
+      extraChargeGrossPremium = valueOrFunction(loadings$extraChargeGrossPremium, params = params, values = values) %||% 0;
       advanceProfitParticipation = 0;
       advanceProfitParticipationUnitCosts = 0;
       ppScheme      = params$ProfitParticipation$profitParticipationScheme;
       if (!is.null(ppScheme)) {
-          advanceProfitParticipation = ppScheme$getAdvanceProfitParticipation(params = params, values = values)
-          advanceProfitParticipationUnitCosts = ppScheme$getAdvanceProfitParticipationAfterUnitCosts(params = params, values = values)
+          advanceProfitParticipation = ppScheme$getAdvanceProfitParticipation(params = params, values = values) %||% 0
+          advanceProfitParticipationUnitCosts = ppScheme$getAdvanceProfitParticipationAfterUnitCosts(params = params, values = values) %||% 0
       }
-      if (is.null(advanceProfitParticipation)) advanceProfitParticipation = 0;
-      if (is.null(advanceProfitParticipationUnitCosts)) advanceProfitParticipationUnitCosts = 0;
 
-      partnerRebate = valueOrFunction(loadings$partnerRebate, params = params, values = values);
+      partnerRebate = valueOrFunction(loadings$partnerRebate, params = params, values = values) %||% 0;
 
       pv.unitcosts = sum(
         pvCost["unitcosts","SumInsured",] * sumInsured +
@@ -1278,10 +1276,10 @@ InsuranceTarif = R6Class(
         pvCost["unitcosts","NetPremium",] * values$premiums[["net"]] +
         pvCost["unitcosts","Constant",]
       )
-      premium.unitcosts = ifelse(pv[["premiums"]] == 0, 0, pv.unitcosts / pv[["premiums"]] + valueOrFunction(loadings$unitcosts, params = params, values = values));
+      premium.unitcosts = ifelse(pv[["premiums"]] == 0, 0, pv.unitcosts / pv[["premiums"]] + valueOrFunction(loadings$unitcosts, params = params, values = values)) %||% 0;
 
 
-      frequencyLoading = self$evaluateFrequencyLoading(loadings$premiumFrequencyLoading, params$ContractData$premiumFrequency, params = params, values = values)
+      frequencyLoading = self$evaluateFrequencyLoading(loadings$premiumFrequencyLoading, params$ContractData$premiumFrequency, params = params, values = values) %||% 0
       premiumBeforeTax = (values$premiums[["unit.gross"]]*(1 + noMedicalExam.relative + extraChargeGrossPremium) + noMedicalExam - sumRebate - extraRebate) * sumInsured * (1 - advanceProfitParticipation);
       if (!params$Features$unitcostsInGross) {
         premiumBeforeTax = premiumBeforeTax + premium.unitcosts;
@@ -1591,7 +1589,7 @@ InsuranceTarif = R6Class(
         browser();
       }
       loadings   = params$Loadings;
-      sumInsured = params$ContractData$sumInsured;
+      sumInsured = params$ContractData$sumInsured %||% 0;
       premiums   = values$premiums;
       v          = 1/(1 + params$ActuarialBases$i);
       l          = dim(values$reserves)[[1]];
@@ -1604,22 +1602,22 @@ InsuranceTarif = R6Class(
       # First get the charges and rebates that are added to the gross premium to obtain the charged premium:
 
       # charge for no medical exam:
-      extraChargeGrossPremium = valueOrFunction(loadings$extraChargeGrossPremium, params = params, values = values);
-      noMedExam        = valueOrFunction(loadings$noMedicalExam,params = params, values = values);
-      noMedExam.rel    = valueOrFunction(loadings$noMedicalExamRelative,params = params, values = values);
+      extraChargeGrossPremium = valueOrFunction(loadings$extraChargeGrossPremium, params = params, values = values) %||% 0;
+      noMedExam        = valueOrFunction(loadings$noMedicalExam,params = params, values = values) %||% 0;
+      noMedExam.rel    = valueOrFunction(loadings$noMedicalExamRelative,params = params, values = values) %||% 0;
       withMedExam      = premium.gross * (1 + noMedExam.rel + extraChargeGrossPremium) + noMedExam * sumInsured;
       charge.noMedicalExam = withMedExam - premium.gross;
 
       # sum rebate:
-      sumRebate        = valueOrFunction(loadings$sumRebate,    params = params, values = values);
-      extraRebate      = valueOrFunction(loadings$extraRebate,  params = params, values = values);
+      sumRebate        = valueOrFunction(loadings$sumRebate,    params = params, values = values) %||% 0;
+      extraRebate      = valueOrFunction(loadings$extraRebate,  params = params, values = values) %||% 0;
       afterSumRebate   = withMedExam - (sumRebate + extraRebate) * sumInsured; # calculate the charge as the difference, because we want a vector!
       rebate.sum       = afterSumRebate - withMedExam;
 
       # advance profit participation has two parts, one before and one after unit costs. Part 1:
       advanceProfitParticipation = 0;
       if (!is.null(ppScheme)) {
-          advanceProfitParticipation = ppScheme$getAdvanceProfitParticipation(params = params, values = values)
+          advanceProfitParticipation = ppScheme$getAdvanceProfitParticipation(params = params, values = values) %||% 0
       }
       afterProfit      = afterSumRebate * (1 - advanceProfitParticipation);
       profits.advance  = afterProfit - afterSumRebate;
@@ -1638,20 +1636,20 @@ InsuranceTarif = R6Class(
       # advance profit participation, Part 2:
       advanceProfitParticipationUnitCosts = 0;
       if (!is.null(ppScheme)) {
-          advanceProfitParticipationUnitCosts = ppScheme$getAdvanceProfitParticipationAfterUnitCosts(params = params, values = values)
+          advanceProfitParticipationUnitCosts = ppScheme$getAdvanceProfitParticipationAfterUnitCosts(params = params, values = values) %||% 0
       }
       afterProfit      = afterUnitCosts * (1 - advanceProfitParticipationUnitCosts);
       profits.advance  = profits.advance + afterProfit - afterUnitCosts;
 
       # premium rebate
-      premiumRebateRate = valueOrFunction(loadings$premiumRebate,params = params, values = values);
-      premiumRebate = applyHook(params$Hooks$premiumRebateCalculation, premiumRebateRate, params = params, values = values);
+      premiumRebateRate = valueOrFunction(loadings$premiumRebate, params = params, values = values) %||% 0;
+      premiumRebate = applyHook(params$Hooks$premiumRebateCalculation, premiumRebateRate, params = params, values = values) %||% 0;
 
       afterPremiumRebate = afterUnitCosts * (1 - premiumRebate);
       rebate.premium   = afterPremiumRebate - afterUnitCosts;
 
       # partner rebate
-      partnerRebate    = valueOrFunction(loadings$partnerRebate,params = params, values = values);
+      partnerRebate    = valueOrFunction(loadings$partnerRebate, params = params, values = values) %||% 0;
       afterPartnerRebate = afterUnitCosts * (1 - partnerRebate);
       rebate.partner   = afterPartnerRebate - afterUnitCosts;
 
@@ -1659,13 +1657,13 @@ InsuranceTarif = R6Class(
       afterRebates     = afterProfit + rebate.premium + rebate.partner;
 
       # premium frequency loading
-            frequencyLoading = self$evaluateFrequencyLoading(loadings$premiumFrequencyLoading, params$ContractData$premiumFrequency, params = params, values = values)
+      frequencyLoading = self$evaluateFrequencyLoading(loadings$premiumFrequencyLoading, params$ContractData$premiumFrequency, params = params, values = values) %||% 0
 
             afterFrequency   = afterRebates * (1 + frequencyLoading);
       charge.frequency = afterFrequency - afterRebates;
 
       # insurance tax
-      taxRate          = valueOrFunction(loadings$tax,          params = params, values = values);
+      taxRate          = valueOrFunction(loadings$tax, params = params, values = values) %||% 0;
       premium.charged  = afterFrequency * (1 + taxRate);
       tax              = premium.charged - afterFrequency;
 
@@ -1688,7 +1686,7 @@ InsuranceTarif = R6Class(
 
       premium.net       = unit.premiumCF * premiums[["net"]];
 
-      securityLoading   = valueOrFunction(params$Loadings$security, params = params, values = values);
+      securityLoading   = valueOrFunction(params$Loadings$security, params = params, values = values) %||% 0;
       qq = self$getTransitionProbabilities(params, values);
       premium.risk.actual   = v * (values$absCashFlows[,"death"] - c(values$reserves[,"net"][-1], 0)) * pad0(qq$qx, l);
       premium.risk.security = v * (values$absCashFlows[,"death"] * securityLoading) * pad0(qq$qx, l);
