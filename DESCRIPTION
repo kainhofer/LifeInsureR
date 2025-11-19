@@ -1,7 +1,7 @@
 Package: LifeInsureR
 Type: Package
-Version: 1.0.1
-Date: 2025-06-10
+Version: 1.0.2
+Date: 2025-10-23
 Title: Modelling Traditional Life Insurance Contracts
 Description: R6 classes to model traditional life insurance
     contracts like annuities, whole life insurances or endowments. Such life
@@ -34,8 +34,8 @@ Imports:
     kableExtra,
     pander,
     tidyr
-License: GPL (>= 2)
-RoxygenNote: 7.3.2
+License: MIT + file LICENSE
+RoxygenNote: 7.3.3
 Collate:
     'HelperFunctions.R'
     'InsuranceParameters.R'
