@@ -8,6 +8,8 @@
 \alias{PP.base.contractualReserve}
 \alias{PP.base.previousContractualReserve}
 \alias{PP.base.meanContractualReserve}
+\alias{PP.base.meanZillmerReserve}
+\alias{PP.base.meanZillmerReserveForward}
 \alias{PP.base.ZillmerRiskPremium}
 \alias{PP.base.sumInsured}
 \alias{PP.base.totalProfitAssignment}
@@ -54,6 +56,10 @@ PP.base.contractualReserve(rates, params, values, ...)
 PP.base.previousContractualReserve(rates, params, values, ...)
 
 PP.base.meanContractualReserve(rates, params, values, ...)
+
+PP.base.meanZillmerReserve(rates, params, values, ...)
+
+PP.base.meanZillmerReserveForward(rates, params, values, ...)
 
 PP.base.ZillmerRiskPremium(rates, params, values, ...)
 
@@ -192,6 +198,10 @@ the rates and how the assigned profit is calculated.
 \item \code{PP.base.previousContractualReserve()}: Basis for profit: Contractual reserve (including administration costs) at time t-1
 
 \item \code{PP.base.meanContractualReserve()}: Basis for profit: Contractual reserve (including administration costs) averaged over t and t-1
+
+\item \code{PP.base.meanZillmerReserve()}: Basis for profit: Zillmer reserve (excluding administration costs) averaged over t and t-1
+
+\item \code{PP.base.meanZillmerReserveForward()}: Basis for profit: Zillmer reserve (excluding administration costs) averaged over t+1 and t
 
 \item \code{PP.base.ZillmerRiskPremium()}: Basis for risk/mortality profit: Zillmer Risk Premium of the past year
 

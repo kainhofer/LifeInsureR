@@ -79,6 +79,23 @@ PP.base.meanContractualReserve = function(rates, params, values, ...) {
 };
 
 #' @describeIn ProfitParticipationFunctions
+#' Basis for profit: Zillmer reserve (excluding administration costs) averaged over t and t-1
+#' @export
+PP.base.meanZillmerReserve = function(rates, params, values, ...) {
+    # Rolling mean of the value for the current and previous year.
+    pmax(0, rollingmean(c(0, values$reserves[,"Zillmer"])))
+}
+
+#' @describeIn ProfitParticipationFunctions
+#' Basis for profit: Zillmer reserve (excluding administration costs) averaged over t+1 and t
+#' @export
+PP.base.meanZillmerReserveForward = function(rates, params, values, ...) {
+    # Rolling mean of the value for the current and next year.
+    pmax(0, rollingmean(c(values$reserves[,"Zillmer"], last(values$reserves[,"Zillmer"]))))
+}
+
+
+#' @describeIn ProfitParticipationFunctions
 #' Basis for risk/mortality profit: Zillmer Risk Premium of the past year
 #' @export
 PP.base.ZillmerRiskPremium = function(rates, params, values, ...) {
