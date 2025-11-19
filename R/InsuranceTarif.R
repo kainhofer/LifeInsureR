@@ -751,7 +751,7 @@ InsuranceTarif = R6Class(
         order = valueOrFunction(params$ActuarialBases$benefitFrequencyOrder, params = params, values = values));
       premiumFreqCorr = correctionPaymentFrequency(
         i = i, m = params$ContractData$premiumFrequency,
-          order = valueOrFunction(params$ActuarialBases$premiumFrequencyOrder, params = params, values = values));
+        order = valueOrFunction(params$ActuarialBases$premiumFrequencyOrder, params = params, values = values));
 
       pvf = PVfactory$new(qx = qq, m = params$ContractData$benefitFrequency, mCorrection = benefitFreqCorr, v = v);
 
@@ -1437,7 +1437,13 @@ InsuranceTarif = R6Class(
     #' @description Calculate the (linear) interpolation factors for the balance
     #' sheet reserve (Dec. 31) between the yearly contract closing dates
     #' @details Not to be called directly, but implicitly by the [InsuranceContract] object.
-    #' @param method The method for the balance sheet interpolation (30/360, act/act, act/360, act/365 or a function)
+    #' @param method The method for the balance sheet interpolation (30/360,
+    #'           act/act, act/360, act/365 or a function(params, contractDates,
+    #'           balanceDates) or a numeric scalar or vector). The function
+    #'           needs to return a numeric vector with values from 0 to 1, which
+    #'           will be used as the interpolation factors between the contractual
+    #'           reserves of t-1 and t. Similarly, a numeric scalar or vector
+    #'           gives the constant interpolation factors.
     #' @param years how many years to calculate (for some usances, the factor
     #'      is different in leap years!)
     getBalanceSheetReserveFactor = function(method, params, years = 1) {
@@ -1457,6 +1463,8 @@ InsuranceTarif = R6Class(
 
       if (is.function(method)) {
         baf = method(params = params, contractDates = contractDates, balanceDates = balanceDates)
+      } else if (is.numeric(method)) {
+        baf = method
       } else if (method == "30/360") {
         baf = ((month(balanceDates + days(1)) - month(contractDates) - 1) %% 12 + 1) / 12
       } else if (method == "act/act") {
@@ -1503,7 +1511,7 @@ InsuranceTarif = R6Class(
           freq = params$ContractData$premiumFrequency
           bm = month(params$ContractData$contractClosing)
 
-                    fact = (bm - month(factors$date) + 12 - 1) %% (12/freq) * (freq/12)
+          fact = (bm - month(factors$date) + 12 - 1) %% (12/freq) * (freq/12)
         }
         # TODO: We have no vector of actual written premiums (implicit assumption
         # seems to be that the premium stays constant!). Once we have such a vector,
@@ -1545,9 +1553,9 @@ InsuranceTarif = R6Class(
         browser();
       }
       ppScheme = params$ProfitParticipation$profitParticipationScheme;
-        if (!is.null(ppScheme)) {
-            ppScheme$getProfitParticipation(params = params, ...)
-        }
+      if (!is.null(ppScheme)) {
+        ppScheme$getProfitParticipation(params = params, ...)
+      }
     },
 
     #' @description Calculate the reserves after profit participation for the given profit scenario
@@ -1575,9 +1583,9 @@ InsuranceTarif = R6Class(
             "InterestRate" = rep(params$ActuarialBases$i, values$int$l),
             "PolicyDuration" = rep(values$int$policyTerm, values$int$l),
             "PremiumPeriod" = rep(values$int$premiumTerm, values$int$l)
-        );
-        rownames(res) = 0:(values$int$l-1);
-        res
+      );
+      rownames(res) = 0:(values$int$l-1);
+      res
     },
 
     #' @description Calculate the time series of the premium decomposition of the contract
@@ -1626,11 +1634,11 @@ InsuranceTarif = R6Class(
       unitCosts        = premiums[["unitcost"]];
       # unit costs are only charged if a premium is paid, so exclude all times with premium==0!
       if (!params$Features$unitcostsInGross) {
-          afterUnitCosts   = afterProfit + (afterProfit != 0)*unitCosts;
-          unitcosts        = afterUnitCosts - afterProfit;
+        afterUnitCosts    = afterProfit + (afterProfit != 0)*unitCosts;
+        unitcosts         = afterUnitCosts - afterProfit;
       } else {
-          afterUnitCosts   = afterProfit;
-          unitcosts        = 0;
+        afterUnitCosts    = afterProfit;
+        unitcosts         = 0;
       }
 
       # advance profit participation, Part 2:
@@ -1659,7 +1667,7 @@ InsuranceTarif = R6Class(
       # premium frequency loading
       frequencyLoading = self$evaluateFrequencyLoading(loadings$premiumFrequencyLoading, params$ContractData$premiumFrequency, params = params, values = values) %||% 0
 
-            afterFrequency   = afterRebates * (1 + frequencyLoading);
+      afterFrequency   = afterRebates * (1 + frequencyLoading);
       charge.frequency = afterFrequency - afterRebates;
 
       # insurance tax
@@ -1681,7 +1689,7 @@ InsuranceTarif = R6Class(
         premium.alpha    = unit.premiumCF * values$absPresentValues[t, "alpha"] / values$absPresentValues[t, "premiums.unit"];
         premium.alpha.Zillmer = unit.premiumCF * values$absPresentValues[t, "Zillmer"] / values$absPresentValues[t, "premiums.unit"];
       }
-      premium.Zillmer  = unit.premiumCF * premiums[["Zillmer"]];
+      premium.Zillmer   = unit.premiumCF * premiums[["Zillmer"]];
       premium.alpha.noZ = premium.alpha - premium.alpha.Zillmer; # ungezillmerter Teil der Abschlusskosten
 
       premium.net       = unit.premiumCF * premiums[["net"]];
@@ -1715,12 +1723,12 @@ InsuranceTarif = R6Class(
           survival_arrears = values$absCashFlows[,"survival_arrears"] + values$absCashFlows[,"guaranteed_arrears"]
       )
       premium.Zillmer.amortization = getSavingsPremium(
-              pmin(0, values$reserves[,"contractual"]), v = v
+          pmin(0, values$reserves[,"contractual"]), v = v
       )
       premium.Zillmer.actsavings = getSavingsPremium(
-              pmax(0, values$reserves[,"contractual"]), v = v,
-              survival_advance = values$absCashFlows[,"survival_advance"] + values$absCashFlows[,"guaranteed_advance"],
-              survival_arrears = values$absCashFlows[,"survival_arrears"] + values$absCashFlows[,"guaranteed_arrears"]
+          pmax(0, values$reserves[,"contractual"]), v = v,
+          survival_advance = values$absCashFlows[,"survival_advance"] + values$absCashFlows[,"guaranteed_advance"],
+          survival_arrears = values$absCashFlows[,"survival_arrears"] + values$absCashFlows[,"guaranteed_arrears"]
       )
 
       res = cbind(
@@ -1786,8 +1794,8 @@ InsuranceTarif = R6Class(
       i = params$ActuarialBases$i;
       premFreq = params$ContractData$premiumFrequency;
       premFreqCorr = correctionPaymentFrequency(
-        i = i, m = premFreq,
-        order = valueOrFunction(params$ActuarialBases$premiumFrequencyOrder, params = params, values = values));
+      	i = i, m = premFreq,
+      	order = valueOrFunction(params$ActuarialBases$premiumFrequencyOrder, params = params, values = values));
 
       pvf = PVfactory$new(qx = qq, m = premFreq, mCorrection = premFreqCorr, v = 1/(1 + i));
       pvf$survival(advance = cf)
@@ -1802,7 +1810,7 @@ InsuranceTarif = R6Class(
     evaluateFrequencyLoading = function(loading, frequency, params, values) {
       frequencyLoading = valueOrFunction(loading, frequency = frequency, params = params, values = values);
       if (is.null(frequencyLoading)) {
-        0
+      	0
       } else if (is.list(frequencyLoading)) {
         if (as.character(frequency) %in% names(frequencyLoading)) {
           frequencyLoading[[as.character(frequency)]]
@@ -1810,10 +1818,10 @@ InsuranceTarif = R6Class(
           warning("Unable to handle premium frequency ", frequency, " with the given loading ", frequencyLoading);
         }
       } else if (is.numeric(frequencyLoading)) {
-        frequencyLoading
+      	frequencyLoading
       } else {
-        warning("premiumFrequencyLoading must be a number or a named list, given: ", frequencyLoading);
-        0
+      	warning("premiumFrequencyLoading must be a number or a named list, given: ", frequencyLoading);
+      	0
       }
     },
 

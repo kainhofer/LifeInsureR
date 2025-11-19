@@ -970,7 +970,13 @@ sheet reserve (Dec. 31) between the yearly contract closing dates
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{method}}{The method for the balance sheet interpolation (30/360, act/act, act/360, act/365 or a function)}
+\item{\code{method}}{The method for the balance sheet interpolation (30/360,
+act/act, act/360, act/365 or a function(params, contractDates,
+balanceDates) or a numeric scalar or vector). The function
+needs to return a numeric vector with values from 0 to 1, which
+will be used as the interpolation factors between the contractual
+reserves of t-1 and t. Similarly, a numeric scalar or vector
+gives the constant interpolation factors.}
 
 \item{\code{params}}{Contract-specific, full set of parameters of the contract
 (merged parameters of the defaults, the tariff, the profit participation
