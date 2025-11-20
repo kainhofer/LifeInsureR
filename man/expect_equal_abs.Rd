@@ -18,8 +18,9 @@ expect_equal_abs(
 \item{object}{Expression or value producing the actual result.}
 
 \item{expected}{Expression or value producing the reference result.
-If \code{expected} is \code{NULL} or entirely \code{NA}, the expectation succeeds
-silently (useful when reference data are not available).}
+If \code{expected} is \code{NULL} or \code{NA}, the expectation succeeds
+silently (useful when reference data are not available). Even single \code{NA}
+entries in matrices are ignored and can be anyhing in \code{object}.}
 
 \item{...}{Additional arguments forwarded to \code{\link[waldo:compare]{waldo::compare()}} for
 generating diffs in failure messages (not used in the tolerance check).}
@@ -54,7 +55,8 @@ The function mirrors testthat conventions:
 Special handling:
 \itemize{
 \item If \code{expected} is \code{NULL} or all values in \code{expected} are \code{NA}, the check
-is skipped and the expectation succeeds silently.
+is skipped and the expectation succeeds silently. Similarly, individual
+\code{NA} entries in \code{expected} are skipped and allow any value in \code{object}.
 }
 }
 \examples{

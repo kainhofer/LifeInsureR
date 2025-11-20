@@ -371,10 +371,13 @@ ProfitParticipation = R6Class(
         #' @param ... additional parameters to be passed to \href{../../LifeInsureR/html/ProfitParticipation.html#method-setupRates}{\code{ProfitParticipation$setupRates()}}
         getProfitParticipation = function(calculateFrom = 0, profitScenario = NULL, params, values, ...) {
             waiting      = valueOrFunction(params$ProfitParticipation$waitingPeriod, params = params, values = values);
-            if (is.numeric(waiting) && waiting > 0) {
-                waitingFactor = c(rep(0, waiting + 1), rep(1, params$ContractData$policyPeriod - waiting));
-            } else {
-                waitingFactor = 1;
+            if (!is.numeric(waiting))
+            	waiting = -1;
+            waitingFactor= c(rep(0, waiting + 1), rep(1, params$ContractData$policyPeriod - waiting));
+            if (!params$ProfitParticipation$profitAttributionAtExpiration) {
+            	# no profit attribution at expiration -> set  waiting vector
+            	# to 0 at expiration to prevent a profit assignment at that time
+            	waitingFactor[params$ContractData$policyPeriod + 1] = 0
             }
             rates        = self$setupRates(params = params, values = values, ...)
 
@@ -448,7 +451,7 @@ ProfitParticipation = R6Class(
             # TODO: turn the interest on profit into a calculator function!
             # res = self$Functions$calculateInterestOnProfit(base = sumBase, rate = sumRate, waiting = waitingFactor, rates = rates, params = params, values = values);
             for (i in (calculateFrom + 1):nrow(res)) {
-                res[i,"interestOnProfit"] = res[i,"interestOnProfitRate"] * prev;
+                res[i,"interestOnProfit"] = res[i,"interestOnProfitRate"] * prev * waitingFactor[i];
                 res[i,"totalProfitAssignment"] = res[i, "componentsProfit"] + res[i,"interestOnProfit"];
                 res[i,"totalProfit"] = prev + res[i,"totalProfitAssignment"];
                 prev = res[i,"totalProfit"];
@@ -461,11 +464,12 @@ ProfitParticipation = R6Class(
             ###########################################################################################################%#
             #### => TODO: Pass the current profit calculation inside the values!)
             if ("terminal" %in% params$ProfitParticipation$profitComponents) {
+            	# Note: No waiting factor on the terminal bonus!
                 terminalBase = self$Functions$getTerminalBonusBase(res, rates = rates, params = params, values = values);
                 terminalRate = self$Functions$getTerminalBonusRate(res, rates = rates, params = params, values = values);
                 terminalBonus = self$Functions$calculateTerminalBonus(res,
                                                                       base = terminalBase, rate = terminalRate, calculateFrom = calculateFrom,
-                                                                      waiting = waitingFactor, rates = rates, params = params, values = values); # TODO: Add the AF(v) factor!
+                                                                      waiting = 1, rates = rates, params = params, values = values); # TODO: Add the AF(v) factor!
 
                 if (calculateFrom == 0) {
                     terminalBonusAccount = cumsum(terminalBonus); # TODO: Generalize! Not every scheme uses a cumulative account!

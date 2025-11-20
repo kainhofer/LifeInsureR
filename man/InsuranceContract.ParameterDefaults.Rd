@@ -314,6 +314,10 @@ is assigned to. Profit classes are used to bundle similar
 contracts (e.g. following similar risks) together. Profit
 participation rates are defined at the level of profit classes.}
 \item{\code{$profitRates}}{General, company-wide profit rates, key columns are year and profitClass}
+\item{\code{$profitAttributionAtExpiration}}{Whether the profit attribution
+at expiration is relevant or should be zeroed out. The latter
+is needed when profits are calculated at the balance sheet
+date and assigned on the next policy anniversarz}
 \item{\code{$scenarios}}{profit participation scenarios (list of overridden parameters for each scenario)}
 }
 }
