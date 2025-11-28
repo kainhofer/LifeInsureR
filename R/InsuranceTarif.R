@@ -1417,8 +1417,10 @@ InsuranceTarif = R6Class(
       # Calculate new sum insured after premium waiver
       if (!is.null(params$ActuarialBases$premiumWaiverValueCalculation)) {
         premiumfreeValue = params$ActuarialBases$premiumWaiverValueCalculation(resReduction, params, values);
-      } else {
+      } else if (params$Features$surrenderPenaltyOnPremiumWaiver) {
         premiumfreeValue = surrenderValue
+      } else {
+        premiumfreeValue = resReduction
       }
       Storno = 0; # TODO: Implement storno costs
       premiumfreePV = (absPV[, "benefits"] * securityFactor + absPV[, "gamma_nopremiums"]); # PV of future premium free claims + costs

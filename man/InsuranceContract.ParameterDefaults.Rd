@@ -280,6 +280,10 @@ refund of a previous contract), relative to the sum insured.}
 period are given as their actual yearly value ("actual"), or
 whether the given value is the sum ("sum") or the present value
 ("presentvalue") over the whole commission period.}
+\item{\code{$surrenderPenaltyOnPremiumWaiver}}{Whether the surrender penalty
+is also applied to premium waivers (but no longer on surrenders
+after a premium waiver), or only on surrenders (with or without
+a preceding premium waiver). (default: TRUE)}
 }
 }
 

@@ -903,7 +903,9 @@ InsuranceContract = R6Class(
                 self$Parameters$ContractData$sumInsured = newSumInsured;
             }
             self$Parameters$ContractState$premiumWaiver = TRUE;
-            self$Parameters$ContractState$surrenderPenalty = FALSE; # Surrender penalty has already been applied, don't apply a second time
+            if (self$Parameters$Features$surrenderPenaltyOnPremiumWaiver) {
+	            self$Parameters$ContractState$surrenderPenalty = FALSE; # Surrender penalty has already been applied, don't apply a second time
+            }
             self$Parameters$ContractState$alphaRefunded = TRUE;     # Alpha cost (if applicable) have already been refunded partially, don't refund again
             # TODO: Extract current amount of premium refund and feed that into the calculateContract function...
 

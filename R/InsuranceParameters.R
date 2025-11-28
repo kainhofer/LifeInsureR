@@ -521,6 +521,10 @@ InsuranceContract.Values = list(
 #'               period are given as their actual yearly value ("actual"), or
 #'               whether the given value is the sum ("sum") or the present value
 #'               ("presentvalue") over the whole commission period.}
+#'     \item{\code{$surrenderPenaltyOnPremiumWaiver}}{Whether the surrender penalty
+#'  			 is also applied to premium waivers (but no longer on surrenders
+#'  			 after a premium waiver), or only on surrenders (with or without
+#'  			 a preceding premium waiver). (default: TRUE)}
 #' }
 #'
 #' ## Elements of sublist \code{InsuranceContract.ParameterDefault$ProfitParticipation}
@@ -664,7 +668,8 @@ InsuranceContract.ParameterDefaults = list(
         surrenderIncludesCostsReserves = TRUE,  # Whether (administration) cost reserves are paid out on surrender (i.e. included in the surrender value before surrender penalties are applied)
         unitcostsInGross = FALSE,
         absPremiumRefund = 0,                   # Constant death benefit (irrespective of the type of contract), typically a premium refund for a previous contract
-        alphaCostsCommission = "actual"         # Whether alpha costs over the commision period are given as their actual yearly value ("actual"), or whether the given value is the sum ("sum") or the present value ("presentvalue") over the whole commission period
+        alphaCostsCommission = "actual",        # Whether alpha costs over the commision period are given as their actual yearly value ("actual"), or whether the given value is the sum ("sum") or the present value ("presentvalue") over the whole commission period
+        surrenderPenaltyOnPremiumWaiver = TRUE # Whether the surrender penalty is also applied to premium waivers (but no longer on surrenders after a premium waiver), or only on surrenders (with or without a preceding premium waiver)
     ),
 
     ProfitParticipation = list(
