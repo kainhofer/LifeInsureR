@@ -423,6 +423,14 @@ PVfactory = R6Class(
       dms[1] = dms[1] + 1
       dmNr = if (is.null(dim(advance))) 1 else length(dim(advance))
 
+      # extract the input dimnames from the advance vector -> assign it later on to the result
+      in_dn <- if (!is.null(dim(advance))) dimnames(advance) else list(names(advance))
+      if (is.null(in_dn)) in_dn <- vector("list", dmNr)
+      # time dimension names: expect length l; if missing/mismatched, synthesize 1..l
+      if (is.null(in_dn[[1]]) || length(in_dn[[1]]) != l) in_dn[[1]] <- as.character(seq_len(l))
+      # Append one dummy entry to the time dimension
+      in_dn[[1]] <- c(in_dn[[1]], paste0(in_dn[[1]][length(in_dn[[1]])], "+1"))
+
       # To be able to access the CF tensors in arbitrary dimensions, we
       # construct the [..] operator manually by quoting it and then inserting
       # arguments matching the number of dimensions
@@ -444,7 +452,7 @@ PVfactory = R6Class(
       # arrears = pad0(arrears, l, value = init);
 
       # TODO: Replace loop by better way (using Reduce?)
-      res = array(0, dim = dms)
+      res = array(0, dim = dms, dimnames = in_dn)
 
       # Starting value for the recursion:
       tmp = init
