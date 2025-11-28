@@ -21,7 +21,7 @@ NULL
 #'   \item{pureendowment}{A pure endowment with only a survival benefit at
 #'        the end of the contract. Optionally, in case of death, all or part
 #'        of the premiums paid may be refunded.}
-#'   \item{terme-fix}{A terme-fix insurance with a fixed payout at the end
+#'   \item{terme-fix or termfix}{A terme-fix insurance with a fixed payout at the end
 #'        of the contract, even if the insured dies before that time.
 #'        Premiums are paid until death of the insured.}
 #'   \item{dread-disease}{A dread-disease insurance, which pays in case of
@@ -40,6 +40,7 @@ TariffTypeEnum = objectProperties::setSingleEnum(
     "endowment",
     "pureendowment",
     "terme-fix",
+    "termfix",
     "dread-disease",
     "endowment + dread-disease"
   ))
@@ -160,7 +161,7 @@ InsuranceTarif = R6Class(
     #'   \item{pureendowment}{A pure endowment with only a survival benefit at
     #'        the end of the contract. Optionally, in case of death, all or part
     #'        of the premiums paid may be refunded.}
-    #'   \item{terme-fix}{A terme-fix insurance with a fixed payout at the end
+    #'   \item{terme-fix or termfix}{A terme-fix insurance with a fixed payout at the end
     #'        of the contract, even if the insured dies before that time.
     #'        Premiums are paid until death of the insured.}
     #'   \item{dread-disease}{A dread-disease insurance, which pays in case of
@@ -557,7 +558,7 @@ InsuranceTarif = R6Class(
 #        cf$sumInsured = pad0(rep(#c(rep(0, deferralPeriod), annuityCF) # <= TODO!!!
 
 
-      } else if (self$tariffType == "terme-fix") {
+      } else if (self$tariffType == "terme-fix" || self$tariffType == "termfix") {
         # Begin of bock does not have any influence
         cf$guaranteed = c(rep(0, values$int$policyTerm), 1)
 

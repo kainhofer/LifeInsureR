@@ -113,7 +113,7 @@ potentially with different benefits.}
 \item{pureendowment}{A pure endowment with only a survival benefit at
 the end of the contract. Optionally, in case of death, all or part
 of the premiums paid may be refunded.}
-\item{terme-fix}{A terme-fix insurance with a fixed payout at the end
+\item{terme-fix or termfix}{A terme-fix insurance with a fixed payout at the end
 of the contract, even if the insured dies before that time.
 Premiums are paid until death of the insured.}
 \item{dread-disease}{A dread-disease insurance, which pays in case of

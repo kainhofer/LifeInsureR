@@ -130,7 +130,7 @@ benefit.:
 \item death benefit cash flows: 1, 2, 3, 4, 5, ..., 0, 0, ...
 }
 
-A \emph{\strong{terme-fix insurance}} has a guaranteed payment at maturity, even if the insured
+A \emph{\strong{terme-fix (termfix) insurance}} has a guaranteed payment at maturity, even if the insured
 has already died. The premiums, however, are only paid until death (which is
 not reflected in the contingent cash flows, but rather in the transition
 probabilities):
