@@ -20,6 +20,7 @@ test_that("Deferred Annuity Cash Flows", {
         tarif = Tarif.DefAnnuity,
         age = 40, YOB = 1980,
         sumInsured = 1200,
+        guaranteedPeriod = 15,
         contractClosing = as.Date("2020-09-01"),
         calculate = "cashflows"
     )
@@ -38,4 +39,24 @@ test_that("Deferred Annuity Cash Flows", {
     expect_equal(Contract.DefAnnuity$Values$cashFlows$death_GrossPremium, c(1:25, rep(0, 56)))
     # death refund flag
     expect_equal(Contract.DefAnnuity$Values$cashFlows$death_Refund_past, c(rep(1, 25), rep(0, 56)))
+
+    Contract.DefAnnuity.costs = InsuranceContract$new(
+    	tarif = Tarif.DefAnnuity,
+    	age = 40, YOB = 1980,
+    	sumInsured = 1200,
+    	contractClosing = as.Date("2020-09-01"),
+    	calculate = "cashflows",
+    	# 20 years contract, with 10 years deferral (7 premium payments), and 10 year term annuity (5 guaranteed)
+    	policyPeriod = 20,
+    	deferralPeriod = 10,
+    	premiumPeriod = 7,
+    	guaranteedPeriod = 5,
+    	costs = initializeCosts(alpha = 0.02, alpha.ongoing = 0.01, gamma = 0.02, gamma.premiumfree = 0.025) %>%
+    		setCost("gamma", "SumInsured", "PaymentPeriod", 0.005)
+    )
+
+    # Gamma costs: 0.02 during premium payments, 0.025 after premium payments, additionally 0.005 during annuity phase
+    gamma.expected = c(rep(0.02, 7), rep(0.025, 3), rep(0.03, 10), 0);
+    names(gamma.expected) = 0:20
+    expect_equal(Contract.DefAnnuity.costs$Values$cashFlowsCosts[,"gamma", "SumInsured", "survival"], gamma.expected)
 })

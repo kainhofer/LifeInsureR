@@ -686,6 +686,9 @@ InsuranceTarif = R6Class(
           cf[i,,,"survival"] = cf[i,,,"survival"] + params$Costs[,,"PremiumFree"];
         }
       }
+      for (i in (params$ContractData$deferralPeriod+1):values$int$policyTerm) {
+      	cf[i,,,"survival"] = cf[i,,,"survival"] + params$Costs[,,"PaymentPeriod"];
+      }
       for (i in 1:values$int$policyTerm) {
         cf[i,,,"survival"] = cf[i,,,"survival"] + params$Costs[,,"PolicyPeriod"];
 

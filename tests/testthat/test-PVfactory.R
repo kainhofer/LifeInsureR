@@ -1,4 +1,4 @@
-test_that("multiplication works", {
+test_that("PV Factory", {
     library(MortalityTables)
     mortalityTables.load("Austria_Census")
 

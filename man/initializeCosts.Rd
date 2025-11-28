@@ -8,6 +8,7 @@ initializeCosts(
   costs,
   alpha,
   Zillmer,
+  alpha.ongoing,
   alpha.commission,
   beta,
   gamma,
@@ -26,6 +27,8 @@ initializeCosts(
 \item{alpha}{Alpha costs (charged once, relative to sum of premiums)}
 
 \item{Zillmer}{Zillmer costs (charged once, relative to sum of premiums)}
+
+\item{alpha.ongoing}{Alpha costs charged with every premium (relative to gross premium)}
 
 \item{alpha.commission}{Alpha costs (charged during the commission period,
 relative to sum of premiums; Use the \code{commissionPeriod}

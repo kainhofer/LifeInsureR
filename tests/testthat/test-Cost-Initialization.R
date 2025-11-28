@@ -1,4 +1,4 @@
-test_that("multiplication works", {
+test_that("Costs initialization", {
     c1 = initializeCosts(
         alpha = 0.04,
         Zillmer = 0.025,

@@ -52,6 +52,7 @@ setCost = function(costs, type, basis = "SumInsured", frequency = "PolicyPeriod"
 #'
 #' @param costs (optional) existing cost structure to duplicate / use as a starting point
 #' @param alpha Alpha costs (charged once, relative to sum of premiums)
+#' @param alpha.ongoing Alpha costs charged with every premium (relative to gross premium)
 #' @param alpha.commission Alpha costs (charged during the commission period,
 #'                         relative to sum of premiums; Use the \code{commissionPeriod}
 #'                         and \code{alphaCostsCommission} contract parameters
@@ -99,12 +100,12 @@ setCost = function(costs, type, basis = "SumInsured", frequency = "PolicyPeriod"
 #'
 #'
 #' @export
-initializeCosts = function(costs, alpha, Zillmer, alpha.commission, beta, gamma, gamma.paidUp, gamma.premiumfree, gamma.contract, gamma.afterdeath, gamma.fullcontract, unitcosts, unitcosts.PolicyPeriod) {
+initializeCosts = function(costs, alpha, Zillmer, alpha.ongoing, alpha.commission, beta, gamma, gamma.paidUp, gamma.premiumfree, gamma.contract, gamma.afterdeath, gamma.fullcontract, unitcosts, unitcosts.PolicyPeriod) {
     if (missing(costs)) {
         dimnm = list(
             type = c("alpha", "Zillmer", "beta", "gamma", "gamma_nopremiums", "unitcosts"),
             basis = c("SumInsured", "SumPremiums", "GrossPremium", "NetPremium", "Benefits", "Constant", "Reserve"),
-            frequency = c("once", "PremiumPeriod", "PremiumFree", "PolicyPeriod", "AfterDeath", "FullContract", "CommissionPeriod")
+            frequency = c("once", "PremiumPeriod", "PremiumFree", "PaymentPeriod", "PolicyPeriod", "AfterDeath", "FullContract", "CommissionPeriod")
         );
         costs = array(
             0,
@@ -114,6 +115,9 @@ initializeCosts = function(costs, alpha, Zillmer, alpha.commission, beta, gamma,
     }
     if (!missing(alpha)) {
         costs = setCost(costs, "alpha",  "SumPremiums", "once", alpha)
+    }
+    if (!missing(alpha.ongoing)) {
+        costs = setCost(costs, "alpha",  "GrossPremium", "PremiumPeriod", alpha)
     }
     if (!missing(alpha.commission)) {
         costs = setCost(costs, "alpha",  "SumPremiums", "CommissionPeriod", alpha.commission)
