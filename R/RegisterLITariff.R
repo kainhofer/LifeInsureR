@@ -36,7 +36,7 @@ register.company = function(Company, ...) {
         warning("Company missing in call to register.company!");
         return();
     }
-    if (is.null(.LIR.Companies[[Company]])) {
+    if (is.null(.pkgenv$Companies[[Company]])) {
         .pkgenv$Companies[[Company]] = list(...)
     } else {
         .pkgenv$Companies[[Company]] = modifyList(.pkgenv$Companies[[Company]], list(...))
@@ -52,12 +52,12 @@ register.company = function(Company, ...) {
 #' While the package allows individual tariff object to be created and used,
 #' one can also register the tariffs for each company with the package.
 #'
-#' This function registers a [LifeInsuranceTarif] object with the `LiveInsureR`
+#' This function registers a [InsuranceTarif] object with the `LiveInsureR`
 #' package using a given ID, so automated scripts can then retrieve the
 #' products/tariffs based on those IDs (e.g. tariff IDs used in the policy
 #' administration systems) using the function [get.tariff()].
 #'
-#' @param Tarif The [LifeInsuranceTarif] object defining the tariff/product.
+#' @param Tarif The [InsuranceTarif] object defining the tariff/product.
 #' @param Company The (short) identifier for the company. Must contain only letters, digits and periods (i.e. a valid R identifier, given as string).
 #' @param Produkt The short product/tariff ID to identify the tariff.
 #' @param GV The (optional) profit group ("Gewinnverband") for the product.
@@ -108,7 +108,7 @@ register.tariff = function(Tarif, Company, Produkt, GV = NULL, AV = NULL) {
 #' one can also register the tariffs for each company with the package.
 #'
 #' After registering the tariff/product with the function [register.tariff()],
-#' this function can be used to retrieve the [LifeInsuranceTarif] object using
+#' this function can be used to retrieve the [InsuranceTarif] object using
 #' the given ID.
 #'
 #' @param Company The (short) identifier for the company. Must contain only letters, digits and periods (i.e. a valid R identifier, given as string).
@@ -116,7 +116,7 @@ register.tariff = function(Tarif, Company, Produkt, GV = NULL, AV = NULL) {
 #' @param GV The (optional) profit group ("Gewinnverband") for the product.
 #' @param AV The (optional) profit sub-group ("Abrechnungsveband") for the product
 #'
-#' @return  The [LifeInsuranceTarif] object defining the tariff/product.
+#' @return  The [InsuranceTarif] object defining the tariff/product.
 #'
 #' @examples
 #' library(MortalityTables)
@@ -160,7 +160,7 @@ get.tariff = function(Company, Produkt, GV = NULL, AV = NULL) {
 #' one can also register the tariffs for each company with the package.
 #'
 #' After registering the tariff/product with the function [register.tariff()],
-#' this function can be used to retrieve the [LifeInsuranceTarif] object using
+#' this function can be used to retrieve the [InsuranceTarif] object using
 #' the given ID.
 #'
 #' @param Company The (short) identifier for the company. Must contain only
@@ -168,7 +168,7 @@ get.tariff = function(Company, Produkt, GV = NULL, AV = NULL) {
 #'                as string). If NULL, the list of all tariffs for all companies
 #'                is returned.
 #'
-#' @return  The list of [LifeInsuranceTarif] objects registered for the company
+#' @return  The list of [InsuranceTarif] objects registered for the company
 #'
 #' @examples
 #' library(MortalityTables)

@@ -16,7 +16,7 @@ get.tariff(Company, Produkt, GV = NULL, AV = NULL)
 \item{AV}{The (optional) profit sub-group ("Abrechnungsveband") for the product}
 }
 \value{
-The \link{LifeInsuranceTarif} object defining the tariff/product.
+The \link{InsuranceTarif} object defining the tariff/product.
 }
 \description{
 While the package allows individual tariff object to be created and used,
@@ -24,7 +24,7 @@ one can also register the tariffs for each company with the package.
 }
 \details{
 After registering the tariff/product with the function \code{\link[=register.tariff]{register.tariff()}},
-this function can be used to retrieve the \link{LifeInsuranceTarif} object using
+this function can be used to retrieve the \link{InsuranceTarif} object using
 the given ID.
 }
 \examples{

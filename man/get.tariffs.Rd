@@ -13,7 +13,7 @@ as string). If NULL, the list of all tariffs for all companies
 is returned.}
 }
 \value{
-The list of \link{LifeInsuranceTarif} objects registered for the company
+The list of \link{InsuranceTarif} objects registered for the company
 }
 \description{
 While the package allows individual tariff object to be created and used,
@@ -21,7 +21,7 @@ one can also register the tariffs for each company with the package.
 }
 \details{
 After registering the tariff/product with the function \code{\link[=register.tariff]{register.tariff()}},
-this function can be used to retrieve the \link{LifeInsuranceTarif} object using
+this function can be used to retrieve the \link{InsuranceTarif} object using
 the given ID.
 }
 \examples{

@@ -1,4 +1,7 @@
 #' @include RegisterLITariff.R
+#'
+#' @import dplyr
+NULL
 
 #' Create template code files for a new tarif
 #'
@@ -6,7 +9,7 @@
 #' one can also register the tariffs for each company with the package.
 #'
 #' After registering the tariff/product with the function [register.tariff()],
-#' this function can be used to retrieve the [LifeInsuranceTarif] object using
+#' this function can be used to retrieve the [InsuranceTarif] object using
 #' the given ID.
 #'
 #' @param Company The (short) identifier for the company. Must contain only letters, digits and periods (i.e. a valid R identifier, given as string).
@@ -14,7 +17,7 @@
 #' @param GV The (optional) profit group ("Gewinnverband") for the product.
 #' @param AV The (optional) profit sub-group ("Abrechnungsveband") for the product
 #'
-#' @return  The [LifeInsuranceTarif] object defining the tariff/product.
+#' @return  The [InsuranceTarif] object defining the tariff/product.
 #'
 #' @examples
 #' library(MortalityTables)
@@ -42,7 +45,7 @@ prepare.tariff = function(Company, Tariff, type = "endowment", destfile = NULL) 
         modifyList(.pkgenv$Companies[[Company]]) %>%
         modifyList(list(company = Company, tarif = Tariff, type = type, destfile = destfile))
 
-    do_replacements = function(text, replacements = replacements) {
+    do_replacements = function(text, replacements) {
         pattern = "\\{\\{([-.0-9a-zA-Z]+)\\}\\}"
         str_replace_all(
             text,
@@ -64,7 +67,7 @@ prepare.tariff = function(Company, Tariff, type = "endowment", destfile = NULL) 
     }
 
     # Replacements (e.g. company-specific include file) can contain other replacements
-    replacements = do_replacements(replacements)
+    replacements = replacements %>% do_replacements(replacements)
 
 
     template.tarifHeader = system.file("templates", "template-tarif-header.R", package = pkgload::pkg_name())
