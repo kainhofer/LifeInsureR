@@ -24,9 +24,9 @@ test_that("Dread-Disease Cash Flows", {
         contractClosing = as.Date("2020-09-01"),
         calculate = "cashflows"
     )
-    expect_equal(Contract.DreadDisease$Parameters$ContractData$policyPeriod, 20)
+    expect_equal(Contract.DreadDisease$getPolicyTerm(), 20)
     expect_equal(Contract.DreadDisease$Parameters$ContractData$deferralPeriod, 0)
-    expect_equal(Contract.DreadDisease$Parameters$ContractData$premiumPeriod, 20)
+    expect_equal(Contract.DreadDisease$getPremiumTerm(), 20)
 
 
     expect_true(all(Contract.DreadDisease$Values$cashFlows %>% select(-premiums_advance, -disease_SumInsured) == 0))
@@ -63,9 +63,9 @@ test_that("Endowment + Dread-Disease Cash Flows", {
         contractClosing = as.Date("2020-09-01"),
         calculate = "cashflows"
     )
-    expect_equal(Contract.EndowDreadDisease$Parameters$ContractData$policyPeriod, 20)
+    expect_equal(Contract.EndowDreadDisease$getPolicyTerm(), 20)
     expect_equal(Contract.EndowDreadDisease$Parameters$ContractData$deferralPeriod, 0)
-    expect_equal(Contract.EndowDreadDisease$Parameters$ContractData$premiumPeriod, 20)
+    expect_equal(Contract.EndowDreadDisease$getPremiumTerm(), 20)
 
 
     expect_true(all(Contract.EndowDreadDisease$Values$cashFlows %>% select(-premiums_advance, -survival_advance, -death_SumInsured, -death_PremiumFree, -disease_SumInsured) == 0))

@@ -147,7 +147,11 @@ isRegularPremiumContract = function(params, values) { params$ContractData$premiu
 #'
 #' @export
 deathBenefit.linearDecreasing = function(len, params, values) {
-  protectionPeriod = params$ContractData$policyPeriod - params$ContractData$deferralPeriod;
+  if (is.infinite(params$ContractData$policyPeriod)) {
+    protectionPeriod = values$contract$getPolicyTerm() - params$ContractData$deferralPeriod;
+  } else {
+    protectionPeriod = params$ContractData$policyPeriod - params$ContractData$deferralPeriod;
+  }
   pad0((protectionPeriod:0) / protectionPeriod, l = len)
 }
 
@@ -197,7 +201,7 @@ premiumRefundPeriod.default = function(params, values) {
 #' @export
 deathBenefit.annuityDecreasing = function(interest) {
   function(len, params, values) {
-    protectionPeriod = params$ContractData$policyPeriod - params$ContractData$deferralPeriod;
+    protectionPeriod = values$contract$getPolicyTerm() - params$ContractData$deferralPeriod;
     vk = 1/(1 + interest);
     if (interest == 0) {
       benefit = (protectionPeriod:0) / protectionPeriod

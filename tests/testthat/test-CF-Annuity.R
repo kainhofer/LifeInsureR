@@ -1,5 +1,6 @@
 test_that("Annuity Cash Flows", {
     library(MortalityTables)
+    library(dplyr)
     mortalityTables.load("Austria_Annuities_AVOe2005R")
 
     Tarif.Annuity = InsuranceTarif$new(
@@ -20,9 +21,9 @@ test_that("Annuity Cash Flows", {
         contractClosing = as.Date("2020-09-01"),
         calculate = "cashflows"
     )
-    expect_equal(Contract.Annuity$Parameters$ContractData$policyPeriod, 55)
+    expect_equal(Contract.Annuity$getPolicyTerm(), 55)
     expect_equal(Contract.Annuity$Parameters$ContractData$deferralPeriod, 0)
-    expect_equal(Contract.Annuity$Parameters$ContractData$premiumPeriod, 1)
+    expect_equal(Contract.Annuity$getPremiumTerm(), 1)
 
 
     expect_true(all(Contract.Annuity$Values$cashFlows %>% select(-premiums_advance, -survival_advance) == 0))
@@ -30,5 +31,5 @@ test_that("Annuity Cash Flows", {
     # 1 year premium cash flow
     expect_equal(Contract.Annuity$Values$cashFlows$premiums_advance, c(1, rep(0, 55)))
     # premium payment start immediately for the whole contract period
-    expect_equal(Contract.Annuity$Values$cashFlows$survival_advance, c(rep(1, 55), 0))
+    expect_equal(Contract.Annuity$Values$cashFlows$survival_advance, rep(1, 56))
 })

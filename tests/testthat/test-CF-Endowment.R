@@ -18,9 +18,9 @@ test_that("Endowment Cash Flows", {
         contractClosing = as.Date("2020-09-01"),
         calculate = "cashflows"
     )
-    expect_equal(Contract.Endowment$Parameters$ContractData$policyPeriod, 20)
+    expect_equal(Contract.Endowment$getPolicyTerm(), 20)
     expect_equal(Contract.Endowment$Parameters$ContractData$deferralPeriod, 0)
-    expect_equal(Contract.Endowment$Parameters$ContractData$premiumPeriod, 20)
+    expect_equal(Contract.Endowment$getPremiumTerm(), 20)
 
 
     expect_true(all(Contract.Endowment$Values$cashFlows %>% select(-premiums_advance, -survival_advance, -death_SumInsured, -death_PremiumFree) == 0))

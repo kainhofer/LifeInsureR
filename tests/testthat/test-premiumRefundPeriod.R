@@ -8,7 +8,7 @@ test_that("premiumRefundPeriod", {
     Tarif.DefAnnuity = InsuranceTarif$new(
         type = "annuity",
 
-        policyPeriod = function(params, values) { 120 - params$ContractData$age},
+        policyPeriod = Inf,
         deferralPeriod = function(params, values) { 65 - params$ContractData$age},
         premiumPeriod = function(params, values) { 65 - params$ContractData$age},
         premiumRefund = 1,
@@ -21,14 +21,14 @@ test_that("premiumRefundPeriod", {
         contractClosing = as.Date("2020-09-01"),
         calculate = "cashflows"
     )
-    expect_equal(Contract.DefAnnuity$Parameters$ContractData$policyPeriod, 80)
+    expect_equal(Contract.DefAnnuity$getPolicyTerm(), 81)
     expect_equal(Contract.DefAnnuity$Parameters$ContractData$deferralPeriod, 25)
-    expect_equal(Contract.DefAnnuity$Parameters$ContractData$premiumPeriod, 25)
+    expect_equal(Contract.DefAnnuity$getPremiumTerm(), 25)
     expect_equal(Contract.DefAnnuity$Parameters$ContractData$premiumRefundPeriod, 25)
 
     # premium refund only during the frist 25 years (linearly increasing), then 0
-    expect_equal(Contract.DefAnnuity$Values$cashFlows[,"death_GrossPremium"], c(1:25, rep(0, 81-25)))
-    expect_equal(Contract.DefAnnuity$Values$cashFlows[,"death_Refund_past"], c(rep(1, 25), rep(0, 81-25)))
+    expect_equal(Contract.DefAnnuity$Values$cashFlows[,"death_GrossPremium"], c(1:25, rep(0, 82-25)))
+    expect_equal(Contract.DefAnnuity$Values$cashFlows[,"death_Refund_past"], c(rep(1, 25), rep(0, 82-25)))
 
 
 

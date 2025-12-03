@@ -22,7 +22,7 @@ XXXCOMPANYXXX.Gewinnplan1 = ProfitParticipation$new(
   getTerminalBonusRate = function(res, rates, params, values) {
     # Schlussgewinn (Vielfaches des letzten Zinsgewinns)
     # lfd. Prämie: LZ<20: 1x, LZ>=20: 2x
-    if (params$ContractData$policyPeriod < 20) {
+    if (values$contract$getPolicyTerm() < 20) {
       1
     } else {
       2

@@ -143,7 +143,7 @@ PP.benefit.ProfitPlusHalfInterestMinGuaranteeTotal(profits, rates, ...)
 
 PP.benefit.ProfitGuaranteeSupporting(profits, rates, params, values, ...)
 
-PP.benefit.TerminalBonus5YearsProRata(profits, params, ...)
+PP.benefit.TerminalBonus5YearsProRata(profits, params, values, ...)
 
 PP.benefit.TerminalBonus5Years(profits, params, ...)
 

@@ -418,7 +418,7 @@ exportContractDataTable = function(wb, sheet, contract, ccol = 1, crow = 1, styl
 
 exportBasicDataTable = function(wb, sheet, contract, ccol = 1, crow = 1, styles = c(), seprows = 5, freeze = TRUE) {
   id = contract$Parameters$ContractData$id
-  nrrow = contract$Values$int$l
+  nrrow = contract$getCFlength()
 
   blockid.row = crow
   crow = crow + 2
@@ -468,7 +468,7 @@ exportBasicDataTable = function(wb, sheet, contract, ccol = 1, crow = 1, styles 
 
 exportReserveTable = function(wb, sheet, contract, ccol = 1, crow = 1, styles = c(), seprows = 5, freeze = TRUE) {
   id = contract$Parameters$ContractData$id
-  nrrow = contract$Values$int$l
+  nrrow = contract$getCFlength()
 
   blockid.row = crow
   crow = crow + 2
@@ -511,14 +511,14 @@ exportReserveTable = function(wb, sheet, contract, ccol = 1, crow = 1, styles = 
 
 exportProfitParticipationTable = function(wb, sheet, contract, ccol = 1, crow = 1, styles = c(), seprows = 5, freeze = TRUE) {
   id = contract$Parameters$ContractData$id
-  nrrow = contract$Values$int$l
+  nrrow = contract$getCFlength()
   blockid.row = crow
   crow = crow + 2
 
   if (freeze) {
     freezePane(wb, sheet, firstActiveRow = crow + 2, firstActiveCol = ccol + 2)
   }
-  qp = contract$Values$transitionProbabilities[1:contract$Values$int$l,]; # extract the probabilities once, will be needed in
+  qp = contract$Values$transitionProbabilities[1:contract$getCFlength(),]; # extract the probabilities once, will be needed in
 
   for (s in names(contract$Values$profitScenarios)) {
     cl = ccol
@@ -590,7 +590,7 @@ exportProfitParticipationTable = function(wb, sheet, contract, ccol = 1, crow = 
 
 exportPremiumCompositionTable = function(wb, sheet, contract, ccol = 1, crow = 1, styles = c(), seprows = 5, freeze = TRUE) {
   id = contract$Parameters$ContractData$id
-  nrrow = contract$Values$int$l
+  nrrow = contract$getCFlength()
 
   blockid.row = crow
   crow = crow + 2
@@ -644,7 +644,7 @@ exportPremiumCompositionTable = function(wb, sheet, contract, ccol = 1, crow = 1
 
 exportAbsPVTable = function(wb, sheet, contract, ccol = 1, crow = 1, styles = c(), seprows = 5, freeze = TRUE) {
   id = contract$Parameters$ContractData$id
-  nrrow = contract$Values$int$l
+  nrrow = contract$getCFlength()
 
   blockid.row = crow
   crow = crow + 2
@@ -675,7 +675,7 @@ exportAbsPVTable = function(wb, sheet, contract, ccol = 1, crow = 1, styles = c(
 
 exportAbsCFTable = function(wb, sheet, contract, ccol = 1, crow = 1, styles = c(), seprows = 5, freeze = TRUE) {
   id = contract$Parameters$ContractData$id
-  nrrow = contract$Values$int$l
+  nrrow = contract$getCFlength()
 
   blockid.row = crow
   crow = crow + 2
@@ -713,7 +713,7 @@ exportPVTable = function(wb, sheet, contract, ccol = 1, crow = 1, styles = c(), 
   empty.cols = NULL;
   if (!is.null(contract$Values$presentValues)) {
     id = contract$Parameters$ContractData$id
-    nrrow = contract$Values$int$l
+    nrrow = contract$getCFlength()
 
     blockid.row = crow
     crow = crow + 2
@@ -789,7 +789,7 @@ exportCFTable = function(wb, sheet, contract, ccol = 1, crow = 1, styles = c(), 
   empty.cols = NULL;
   if (!is.null(contract$Values$cashFlows)) {
     id = contract$Parameters$ContractData$id
-    nrrow = contract$Values$int$l
+    nrrow = contract$getCFlength()
     empty.cols = c()
 
     blockid.row = crow
@@ -880,7 +880,7 @@ exportInsuranceContract.xlsx = function(contract, filename) {
   # TODO: argument checking for contract and filename
 
   ###
-  nrrows = contract$Values$int$l; # Some vectors are longer(e.g. qx), so determine the max nr or rows
+  nrrows = contract$getCFlength(); # Some vectors are longer(e.g. qx), so determine the max nr or rows
   qp = contract$Values$transitionProbabilities[1:nrrows,]; # extract the probabilities once, will be needed in every sheet
 
   ############################################### #

@@ -164,8 +164,8 @@ XXXCOMPANYXXX.AVOe1996R.AV = function(params, ...) {
 
 #' @export
 XXXCOMPANYXXX.surrender.increasing90 = function(surrenderReserve, params, values) {
-    n = params$ContractData$policyPeriod;
-    surrenderReserve * (0.9 + 0.08*pmax(((0:n) - 3) / (n - 3), 0))
+  n = values$contract$getPolicyTerm()
+  surrenderReserve * (0.9 + 0.08*pmax(((0:n) - 3) / (n - 3), 0))
 }
 
 

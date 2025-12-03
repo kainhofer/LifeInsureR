@@ -295,6 +295,8 @@ InsuranceContract = R6Class(
                 self$ContractParameters,
                 self$tarif$getParameters()
             );
+            self$Values$tarif = self$tarif
+            self$Values$contract = self
 
             ppScheme = self$Parameters$ProfitParticipation$profitParticipationScheme;
             if (!is.null(ppScheme)) {
@@ -305,7 +307,9 @@ InsuranceContract = R6Class(
             }
 
             private$consolidateContractData(tarif = tarif, ...);
+            private$updateInternalValues();
             self$calculateContract(calculate = calculate);
+            private$updateInternalValues();
 
 
             invisible(self)
@@ -656,7 +660,6 @@ InsuranceContract = R6Class(
                         history_type = history_type)
                 }
             }
-            self$Values$int = private$determineInternalValues()
             self$Values$transitionProbabilities = mergeValues(
               starting = self$Values$transitionProbabilities,
               ending = private$determineTransitionProbabilities(),
@@ -875,6 +878,8 @@ InsuranceContract = R6Class(
             self$Values$basicData[,"PremiumPeriod"] = colPrem
 
             self$Values$int$l = rows
+            self$Values$int$policyTerm = colDur
+            self$Values$int$premiumTerm = colPrem
 
             invisible(self)
         },
@@ -990,6 +995,55 @@ InsuranceContract = R6Class(
             invisible(self)
         },
 
+        #' @description Retrieve the actual length of all cashflows, derived from
+        #' the contract's parameters
+        #'
+        #' Getter method to get the actual cash flow length for benefits, premiums,
+        #' costs, etc. The returned value takes into account the policyPeriod parameter,
+        #' but also the maximum age of the underlying mortality tables and potentially
+        #' other parameters.
+        #'
+        #' The return value also includes time steps that are zero by definition, i.e.
+        #' for the premiums cash flows, the return value will also include the remaining policy
+        #' period after the premium payment phase. It merely returns the maximum length
+        #' that algorithms must / should consider.
+        #'
+        #' @return The length of the corresponding cash flow vectors/matrices. In
+        #'         many cases, it will be equal to policyPeriod, but might be
+        #'         shorter (e.g. if the mortality table ends before the contractual
+        #'         policy period) or longer in exceptional cases.
+        getCFlength = function() {
+        	self$tarif$getCFlength(self$Values)
+        },
+
+        #' @description Retrieve the actual length of the contract's maturity, factoring
+        #'              in the length of the mortality table
+        #'
+        #' Getter method to get the actual policy duration, taking into account the
+        #' policyPeriod parameter, but also the maximum age of the underlying
+        #' mortality tables and potentially other parameters.
+        #'
+        #' @return The length of the whole contract period. In many cases, it will be
+        #'         equal to policyPeriod, but might be shorter (e.g. if the mortality
+        #'         table ends before the contractual policy period) or longer in exceptional cases.
+        getPolicyTerm = function() {
+        	self$tarif$getPolicyTerm(self$Values)
+        },
+
+        #' @description Retrieve the actual length of the contract's premium payment term, factoring
+        #'              in the length of the mortality table
+        #'
+        #' Getter method to get the actual premium payment term, taking into account the
+        #' premiumPeriod and policyPeriod parameters, but also the maximum age of the
+        #' underlying mortality tables and potentially other parameters.
+        #'
+        #' @return The length of the premium payment period. In many cases, it will be
+        #'         equal to premiumPeriod or policyPeriod, but might be shorter (e.g. if the mortality
+        #'         table ends before the contractual policy period) or longer in exceptional cases.
+        getPremiumTerm = function() {
+        	self$tarif$getPremiumTerm(self$Values)
+        },
+
 
         #' @field dummy.public
         #' dummy field to allow a trailing comma after the previous field/method
@@ -1065,10 +1119,7 @@ InsuranceContract = R6Class(
             self$Parameters$ContractData$policyPeriod = valueOrFunction(
                 self$Parameters$ContractData$policyPeriod,
                 params = self$Parameters, values = self$Values);
-
-            self$Parameters$ContractData$guaranteedPeriod = valueOrFunction(
-                self$Parameters$ContractData$guaranteedPeriod,
-                params = self$Parameters, values = self$Values);
+            private$updateInternalValues();
 
             #### #
             # PREMIUM PAYMENT PERIOD (default: policyPeriod, can be given as function or numeric value)
@@ -1085,31 +1136,36 @@ InsuranceContract = R6Class(
                     self$Parameters$ContractData$premiumPeriod,
                     self$Parameters$ContractData$policyPeriod
                 );
+            private$updateInternalValues();
+
+
+
+
 
             self$Parameters$Loadings$commissionPeriod = valueOrFunction(
-                self$Parameters$Loadings$commissionPeriod,
-                params = self$Parameters, values = self$Values);
+              self$Parameters$Loadings$commissionPeriod,
+              params = self$Parameters, values = self$Values);
             self$Parameters$Loadings$commissionPeriod =
-                min(
-                    self$Parameters$Loadings$commissionPeriod,
-                    self$Parameters$ContractData$policyPeriod
-                )
+              min(
+                self$Parameters$Loadings$commissionPeriod,
+                self$Parameters$ContractData$policyPeriod
+              )
 
 
             # Evaluate deferral period, i.e. if a function is used, calculate its numeric value from the other parameters
             self$Parameters$ContractData$deferralPeriod = valueOrFunction(
-                self$Parameters$ContractData$deferralPeriod,
-                params = self$Parameters, values = self$Values);
+              self$Parameters$ContractData$deferralPeriod,
+              params = self$Parameters, values = self$Values);
             self$Parameters$ContractData$deferralPeriod =
-                min(
-                    self$Parameters$ContractData$deferralPeriod,
-                    self$Parameters$ContractData$policyPeriod
-                )
+              min(
+                self$Parameters$ContractData$deferralPeriod,
+                self$Parameters$ContractData$policyPeriod
+              )
 
             # Premium refund period (if applicable):
             self$Parameters$ContractData$premiumRefundPeriod = valueOrFunction(
-                self$Parameters$ContractData$premiumRefundPeriod,
-                params = self$Parameters, values = self$Values);
+              self$Parameters$ContractData$premiumRefundPeriod,
+              params = self$Parameters, values = self$Values);
 
             #### #
             # AGES for multiple joint lives:
@@ -1147,11 +1203,13 @@ InsuranceContract = R6Class(
                     self$Parameters$ContractData$technicalAge,
                     params = self$Parameters, values = self$Values);
             }
+            private$updateInternalValues();
 
             # Evaluate all possibly variable values (mortalityTable depending on sex, etc.)
             self$Parameters$ActuarialBases$mortalityTable = valueOrFunction(
                 self$Parameters$ActuarialBases$mortalityTable,
                 params = self$Parameters, values = self$Values)
+            private$updateInternalValues();
 
             #### #
             # COSTS PARAMETERS: can be a function => evaluate it to get the real costs
@@ -1174,6 +1232,7 @@ InsuranceContract = R6Class(
                 self$Parameters$ContractData$sumInsured = 10000
                 warning("InsuranceContract: Neither sumInsured nor premium nor initialCapital given! => Assuming default sum insured 10.000. Tariff: ", self$tarif$name)
             }
+            private$updateInternalValues();
 
             invisible(self)
         },
@@ -1182,8 +1241,9 @@ InsuranceContract = R6Class(
             self$tarif$getCostValues(params = self$Parameters)
         },
 
-        determineInternalValues = function(...) {
-            self$tarif$getInternalValues(params = self$Parameters, ...);
+        updateInternalValues = function(...) {
+          self$Values$int = self$tarif$updateInternalValues(int = self$Values$int, params = self$Parameters, ...);
+          self$Values$int
         },
 
         determineTransitionProbabilities = function(...) {

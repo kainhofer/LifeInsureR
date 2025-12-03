@@ -218,7 +218,11 @@ costsDisplayTable = function(costs) {
 #' Data structure (filled only with NULL) for insurance contract class member values.
 #' @export
 InsuranceContract.Values = list(
+	contract = NULL,
+	tarif = NULL,
+
     basicData = NULL,
+	  int = list(),
     transitionProbabilities = NULL,
 
     cashFlowsBasic = NULL,
@@ -620,7 +624,7 @@ InsuranceContract.ParameterDefaults = list(
         annuityIncrease = 1,                    # The yearly growth factor of the annuity payments, i.e. 1.05 means +5% incrase each year; a vector describes the annuity unit payments for all years
         deathBenefit = 1,                       # The yearly relative death benefit (relative to the initial sum insured); Can be fixed, e.g. 0.5 for 50% death cover, or  set to a function(len, params, values) like deathBenefit = deathBenefit.linearDecreasing
         survivalBenefit = NULL,                 # The custom survival benefit (for endowments and pure endowments). By default, a single payment of 1 at the end of the contract is assumed, unless this parameter give a different value/vector.
-        benefitParameter = NULL,                # Tariff-Specific additional parameter to define custom benefits (e.g. a minimum death benefit quota, an initial )
+        benefitParameter = NULL,                # Tariff-Specific additional parameter to define custom benefits (e.g. a minimum death benefit quota, an initial waiting period, etc.)
 
         costWaiver = 0,                         # The cost waiver (up to minCosts, 0=no cost waiver, 1=full cost waiver down to minCosts)
         attributes = list()                     # List of additional attributes with custom meaning (not standardized, but can be used by any tariff to implement custom behavior for certain contracts or slices)

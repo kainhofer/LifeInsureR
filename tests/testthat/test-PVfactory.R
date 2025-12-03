@@ -66,12 +66,12 @@ test_that("PV Factory", {
     expect_equal(as.vector(pvf$survival(arrears = cfN)), PVNarr.sv)
 
     # Check cash flow arrays
-    expect_equal(pvf$survival(advance = cf2d), array(c(PV1adv.sv, PVNadv.sv, 0), dim = c(length(cf1), 2)))
-    expect_equal(pvf$survival(arrears = cf2d), array(c(PV1arr.sv, PVNarr.sv, 0), dim = c(length(cf1), 2)))
+    expect_equal(`dimnames<-`(pvf$survival(advance = cf2d), NULL), array(c(PV1adv.sv, PVNadv.sv, 0), dim = c(length(cf1), 2)))
+    expect_equal(`dimnames<-`(pvf$survival(arrears = cf2d), NULL), array(c(PV1arr.sv, PVNarr.sv, 0), dim = c(length(cf1), 2)))
 
     # two-dimensional cashflows at each time => 3-dimensional tensor
-    expect_equal(pvf$survival(advance = cf3d), array(c(PV1adv.sv, PVNadv.sv, 0, PV1adv.sv, PVNadv.sv, 0, PVNadv.sv, 0, PV1adv.sv), dim = c(length(cf1), 2, 3)))
-    expect_equal(pvf$survival(arrears = cf3d), array(c(PV1arr.sv, PVNarr.sv, 0, PV1arr.sv, PVNarr.sv, 0, PVNarr.sv, 0, PV1arr.sv), dim = c(length(cf1), 2, 3)))
+    expect_equal(`dimnames<-`(pvf$survival(advance = cf3d), NULL), array(c(PV1adv.sv, PVNadv.sv, 0, PV1adv.sv, PVNadv.sv, 0, PVNadv.sv, 0, PV1adv.sv), dim = c(length(cf1), 2, 3)))
+    expect_equal(`dimnames<-`(pvf$survival(arrears = cf3d), NULL), array(c(PV1arr.sv, PVNarr.sv, 0, PV1arr.sv, PVNarr.sv, 0, PVNarr.sv, 0, PV1arr.sv), dim = c(length(cf1), 2, 3)))
 
 
 

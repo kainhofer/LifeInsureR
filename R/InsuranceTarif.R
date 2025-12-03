@@ -297,29 +297,96 @@ InsuranceTarif = R6Class(
       self$Parameters
     },
 
-    #' @description Get some internal parameters cached (length of data.frames,
+    #' @description Update some internal parameters cached (length of data.frames,
     #' policy periods cut at max.age, etc.)
     #'
-    #' @details This methos is not meant to be called explicitly, but rather used
+    #' @details This method is not meant to be called explicitly, but rather used
     #' by the InsuranceContract class. It returns a list of maturities and ages
     #' relevant for the contract-specific calculations
     #'
+    #' @param int current cached internal values
+    #' @param params parameters of the contract
     #' @param ... currently unused
-    getInternalValues = function(params, ...) {
-      if (getOption('LIC.debug.getInternalValues', FALSE)) {
-        browser();
-      }
+    updateInternalValues = function(int, params, ...) {
+    	if (getOption('LIC.debug.getInternalValues', FALSE)) {
+    		browser();
+    	}
       age = params$ContractData$technicalAge
-      maxAge = MortalityTables::getOmega(params$ActuarialBases$mortalityTable)
-      policyTerm = min(maxAge + 1 - age, params$ContractData$policyPeriod)
-      # Length of CF vectors / data.frames is always 1 more than the policy period, since there might be a survival payment at the end!
-      list(
-        l = policyTerm + 1, # Length of CF vectors (1 larger than policy period!)
-        # maxAge is the last age with a given death probability, so it can be included in the policy term!
-        # The policy must end AFTER that final year, not at the beginning!
-        policyTerm = policyTerm,
-        premiumTerm = min(policyTerm, params$ContractData$premiumPeriod)
-      )
+      if (!is.numeric(age)) { age = 0 }
+
+      if (is(params$ActuarialBases$mortalityTable, "mortalityTable")) {
+    	  maxAge = MortalityTables::getOmega(params$ActuarialBases$mortalityTable)
+      } else {
+        maxAge = Inf
+      }
+    	if (!is.numeric(age)) { maxAge = Inf }
+
+    	policyTerm = params$ContractData$policyPeriod
+    	if (!is.numeric(policyTerm)) { policyTerm = Inf }
+    	policyTerm = min(maxAge - age, policyTerm)
+
+    	premiumTerm = params$ContractData$premiumPeriod
+    	if (!is.numeric(premiumTerm)) { premiumTerm = Inf }
+    	premiumTerm = min(policyTerm, premiumTerm)
+
+    	int$maxAge = maxAge
+    	# Length of CF vectors / data.frames is always 1 more than the policy period, since there might be a survival payment at the end!
+      int$l = policyTerm + 1
+  		# maxAge is the last age with a given death probability, so it can be included in the policy term!
+  		# The policy must end AFTER that final year, not at the beginning!
+  		int$policyTerm = policyTerm
+  		int$premiumTerm = premiumTerm
+
+  		int
+    },
+
+    #' @description Retrieve the actual length of all cashflows, derived from
+    #' the contract's parameters
+    #'
+    #' Getter method to get the actual cash flow length for benefits, premiums,
+    #' costs, etc. The returned value takes into account the policyPeriod parameter,
+    #' but also the maximum age of the underlying mortality tables and potentially
+    #' other parameters.
+    #'
+    #' The return value also includes time steps that are zero by definition, i.e.
+    #' for the premiums cash flows, the return value will also include the remaining policy
+    #' period after the premium payment phase. It merely returns the maximum length
+    #' that algorithms must / should consider.
+    #'
+    #' @return The length of the corresponding cash flow vectors/matrices. In
+    #'         many cases, it will be equal to policyPeriod, but might be
+    #'         shorter (e.g. if the mortality table ends before the contractual
+    #'         policy period) or longer in exceptional cases.
+    getCFlength = function(values) {
+    	values$int$l
+    },
+
+    #' @description Retrieve the actual length of the contract's maturity, factoring
+    #'              in the length of the mortality table
+    #'
+    #' Getter method to get the actual policy duration, taking into account the
+    #' policyPeriod parameter, but also the maximum age of the underlying
+    #' mortality tables and potentially other parameters.
+    #'
+    #' @return The length of the whole contract period. In many cases, it will be
+    #'         equal to policyPeriod, but might be shorter (e.g. if the mortality
+    #'         table ends before the contractual policy period) or longer in exceptional cases.
+    getPolicyTerm = function(values) {
+    	values$int$policyTerm
+    },
+
+    #' @description Retrieve the actual length of the contract's premium payment term, factoring
+    #'              in the length of the mortality table
+    #'
+    #' Getter method to get the actual premium payment term, taking into account the
+    #' premiumPeriod and policyPeriod parameters, but also the maximum age of the
+    #' underlying mortality tables and potentially other parameters.
+    #'
+    #' @return The length of the premium payment period. In many cases, it will be
+    #'         equal to premiumPeriod or policyPeriod, but might be shorter (e.g. if the mortality
+    #'         table ends before the contractual policy period) or longer in exceptional cases.
+    getPremiumTerm = function(values) {
+    	values$int$premiumTerm
     },
 
 
@@ -423,7 +490,7 @@ InsuranceTarif = R6Class(
       if (getOption('LIC.debug.getPremiumCF', FALSE)) {
         browser();
       }
-      premPeriod = min(params$ContractData$premiumPeriod, params$ContractData$policyPeriod, len);
+      premPeriod = min(self$getPremiumTerm(values), self$getPolicyTerm(values), len);
       if (premPeriod <= 0) {
         return(rep(0, len))
       }
@@ -453,6 +520,7 @@ InsuranceTarif = R6Class(
       if (getOption('LIC.debug.getAnnuityCF', FALSE)) {
         browser();
       }
+      # Annuity period should not be cut by the available moratlity table (which will be applied later on)
       annuityPeriod = min(params$ContractData$policyPeriod - params$ContractData$deferralPeriod, len);
       if (is.null(params$ContractData$annuityIncrease)) {
         pad0(rep(1, annuityPeriod), len);
@@ -480,7 +548,7 @@ InsuranceTarif = R6Class(
       if (getOption('LIC.debug.getDeathCF', FALSE)) {
         browser();
       }
-      period = params$ContractData$policyPeriod - params$ContractData$deferralPeriod;
+      period = self$getPolicyTerm(values) - params$ContractData$deferralPeriod;
       if (is.null(params$ContractData$deathBenefit)) {
         pad0(rep(1, period), len)
       } else {
@@ -528,31 +596,33 @@ InsuranceTarif = R6Class(
       if (getOption('LIC.debug.getBasicCashFlows', FALSE)) {
         browser();
       }
+      policyTerm = self$getPolicyTerm(values)
       deferralPeriod = params$ContractData$deferralPeriod;
       guaranteedPeriod = params$ContractData$guaranteedPeriod;
+      cflen = self$getCFlength(values)
 
-      zeroes = pad0(0, values$int$l)
+      zeroes = pad0(0, cflen)
 
       cf = data.frame(
         guaranteed = zeroes,
         survival = zeroes,
         death = zeroes,
         disease = zeroes,
-        sumInsured = rep(1, values$int$l)
+        sumInsured = rep(1, cflen)
       );
       if (self$tariffType == "annuity") {
-        annuityPeriod = values$int$policyTerm - deferralPeriod;
-        annuityCF = self$getAnnuityCF(len = annuityPeriod, params = params, values = values)
+        # AnnuityPeriod should NOT use the policyTerm variable, which is cut to the available mortality table, but rather use the raw policy term
+        annuityCF = self$getAnnuityCF(len = cflen, params = params, values = values)
         # guaranteed payments exist only with annuities (first n years of the payment)
         cf$guaranteed = pad0(
           c(
             rep(0, deferralPeriod),
             head(annuityCF, n = guaranteedPeriod)
-          ), values$int$l);
+          ), cflen);
         cf$survival = pad0(c(
           rep(0, deferralPeriod + guaranteedPeriod),
           if (guaranteedPeriod > 0) tail(annuityCF, n = -guaranteedPeriod) else annuityCF,
-          0), values$int$l)
+          0), cflen)
 
         # start current contract block after deferral period
 #        cf$sumInsured = pad0(rep(#c(rep(0, deferralPeriod), annuityCF) # <= TODO!!!
@@ -560,30 +630,38 @@ InsuranceTarif = R6Class(
 
       } else if (self$tariffType == "terme-fix" || self$tariffType == "termfix") {
         # Begin of bock does not have any influence
-        cf$guaranteed = c(rep(0, values$int$policyTerm), 1)
+        cf$guaranteed = c(rep(0, policyTerm), 1)
 
       } else if (self$tariffType == "dread-disease") {
         # potential Payments start after deferral period
         cf$disease = c(
           rep(0, deferralPeriod),
-          rep(1, values$int$l - 1 - deferralPeriod),
+          rep(1, cflen - 1 - deferralPeriod),
           0)
       } else {
         # For endowments, use the death factor here in the basic death CF
         # to fix the relation of death to survival benefit
-        deathCF = self$getDeathCF(values$int$l - 1 - deferralPeriod, params = params, values = values)
+        deathCF = self$getDeathCF(cflen - 1 - deferralPeriod, params = params, values = values)
 
         if (self$tariffType == "endowment" || self$tariffType == "pureendowment" || self$tariffType == "endowment + dread-disease") {
-          cf$survival = pad0(self$getSurvivalCF(len = values$int$l, params = params, values = values), values$int$l)
+          cf$survival = pad0(self$getSurvivalCF(len = cflen, params = params, values = values), cflen)
         }
-        if (self$tariffType == "endowment" || self$tariffType == "wholelife" || self$tariffType == "endowment + dread-disease") {
+        if (self$tariffType == "wholelife") {
+          # life-long whole-life insurances should not terminate the CF vector with a 0, but rather a 1 (pr repeat the last entry!)
+          if (self$getPolicyTerm(values) > cflen - 1) {
+            cf$death = c(rep(0, deferralPeriod), deathCF, deathCF[length(deathCF)])
+          } else {
+            cf$death = c(rep(0, deferralPeriod), deathCF, 0)
+          }
+        }
+        if (self$tariffType == "endowment" || self$tariffType == "endowment + dread-disease") {
           cf$death = c(rep(0, deferralPeriod), deathCF, 0)
           # cf$sumInsured = c(rep(0, deferralPeriod), deathCF, 1);
         }
         if (self$tariffType == "endowment + dread-disease") {
           cf$disease = c(
             rep(0, deferralPeriod),
-            rep(1, values$int$l - 1 - deferralPeriod),
+            rep(1, cflen - 1 - deferralPeriod),
             0);
         }
       }
@@ -601,7 +679,7 @@ InsuranceTarif = R6Class(
       if (is.null(values$cashFlowsBasic)) {
         values$cashFlowsBasic = self$getBasicCashFlows(params, values);
       }
-      cflen = values$int$l
+      cflen = self$getCFlength(values)
       zeroes = pad0(0, cflen)
       ages = pad0(self$getAges(params), cflen);
       cf = data.frame(
@@ -653,7 +731,7 @@ InsuranceTarif = R6Class(
         totalpremiumcf = cf$premiums_advance + pad0(c(0, cf$premiums_arrears), cflen);
 
         # death benefit for premium refund is the sum of all premiums so far, but only during the premium refund period, afterwards it's 0:
-        cf$death_GrossPremium = pad0(pad0(Reduce("+", totalpremiumcf[0:params$ContractData$policyPeriod], accumulate = TRUE), params$ContractData$premiumRefundPeriod), cflen)
+        cf$death_GrossPremium = pad0(pad0(Reduce("+", totalpremiumcf[0:self$getPolicyTerm(values)], accumulate = TRUE), params$ContractData$premiumRefundPeriod), cflen)
         cf$death_Refund_past = cf$death_GrossPremium
         cf$death_Refund_past[(cf$death_GrossPremium > 0)] = 1;
       }
@@ -671,36 +749,39 @@ InsuranceTarif = R6Class(
       dm = dim(params$Costs);
       dmnames = dimnames(params$Costs);
 
+      cflen = self$getCFlength(values)
+      policyTerm = self$getPolicyTerm(values)
+      premiumTerm = self$getPremiumTerm(values)
       cf = array(
         0,
-        dim = list(values$int$l, dm[1], dm[2], 3),
-        dimnames = list(0:(values$int$l - 1), dmnames[[1]], dmnames[[2]], c("survival", "guaranteed", "after.death"))
+        dim = list(cflen, dm[1], dm[2], 3),
+        dimnames = list(0:(cflen - 1), dmnames[[1]], dmnames[[2]], c("survival", "guaranteed", "after.death"))
       );
       cf[1,,,"survival"] = cf[1,,,"survival"] + params$Costs[,,"once"]
-      if (values$int$premiumTerm > 0){
-        for (i in 1:values$int$premiumTerm) {
+      if (premiumTerm > 0){
+        for (i in 1:premiumTerm) {
           cf[i,,,"survival"] = cf[i,,,"survival"] + params$Costs[,,"PremiumPeriod"];
         }
       }
-      if (values$int$premiumTerm < values$int$policyTerm) {
-        for (i in (values$int$premiumTerm + 1):values$int$policyTerm) {
+      if (premiumTerm < policyTerm) {
+        for (i in (premiumTerm + 1):policyTerm) {
           cf[i,,,"survival"] = cf[i,,,"survival"] + params$Costs[,,"PremiumFree"];
         }
       }
-      for (i in (params$ContractData$deferralPeriod+1):values$int$policyTerm) {
+      for (i in (params$ContractData$deferralPeriod+1):policyTerm) {
       	cf[i,,,"survival"] = cf[i,,,"survival"] + params$Costs[,,"PaymentPeriod"];
       }
-      for (i in 1:values$int$policyTerm) {
+      for (i in 1:policyTerm) {
         cf[i,,,"survival"] = cf[i,,,"survival"] + params$Costs[,,"PolicyPeriod"];
 
         # Guaranteed cost charged (charged no matter if the person is still alive or death).
-        # Used mainly for term-fix or premium waivers upton death
+        # Used mainly for term-fix or premium waivers upon death
         cf[i,,,"guaranteed"] = params$Costs[,,"FullContract"]
         cf[i,,,"after.death"] = params$Costs[,,"AfterDeath"]
       }
 
       # Costs charged only for a specific time (i.e. acquisition costs / commissions)
-      # There are several conventions to scale alpha costs over the commision period:
+      # There are several conventions to scale alpha costs over the commission period:
       # a) alpha cost once (i.e. not distributed), not scaled
       # b) uniformly over the period (i.e. sum of k equal commisions is given as cost)
       # c) by present value (i.e. present value of k equal commission is given as cost)
@@ -777,7 +858,7 @@ InsuranceTarif = R6Class(
         death_PremiumFree = rd$round("PV Death PremiumFree", pvf$death(values$cashFlows$death_PremiumFree))
       );
 
-      rownames(pv) <- pad0(rownames(qq), values$int$l);
+      rownames(pv) <- pad0(rownames(qq), self$getCFlength(values));
       applyHook(hook = params$Hooks$adjustPresentValues, val = pv, params = params, values = values)
     },
 
@@ -790,7 +871,7 @@ InsuranceTarif = R6Class(
       if (getOption('LIC.debug.presentValueCashFlowsCosts', FALSE)) {
         browser();
       }
-      len = values$int$l;
+      len = self$getCFlength(values)
       q = self$getTransitionProbabilities(params, values);
       i = params$ActuarialBases$i
       v = 1/(1 + i)
@@ -1348,7 +1429,7 @@ InsuranceTarif = R6Class(
       if (params$ContractState$alphaRefunded) {
         alphaRefund = 0
       } else {
-        r = min(params$ContractData$policyPeriod, params$Loadings$alphaRefundPeriod);
+        r = min(self$getPolicyTerm(values), params$Loadings$alphaRefundPeriod);
         ZillmerSoFar = Reduce("+", values$absCashFlows$Zillmer, accumulate = TRUE);
         ZillmerTotal = sum(values$absCashFlows$Zillmer);
         len = length(ZillmerSoFar);
@@ -1383,7 +1464,7 @@ InsuranceTarif = R6Class(
 
       # Collect all reserves to one large matrix
       res = cbind(
-            "SumInsured"  = head0(rep(params$ContractData$sumInsured, values$int$l)),
+            "SumInsured"  = head0(rep(params$ContractData$sumInsured, self$getCFlength(values))),
             "net"         = resNet,
             "Zillmer"     = resZ,
             "adequate"    = resAdeq,
@@ -1582,15 +1663,16 @@ InsuranceTarif = R6Class(
       if (getOption('LIC.debug.getBasicDataTimeseries', FALSE)) {
         browser();
       }
+      cflen = self$getCFlength(values)
       res = cbind(
             "PremiumPayment" = values$premiumComposition[, "charged"] > 0,
             "SumInsured" = values$reserves[, "SumInsured"],
             "Premiums" = values$absCashFlows$premiums_advance + values$absCashFlows$premiums_arrears,
-            "InterestRate" = rep(params$ActuarialBases$i, values$int$l),
-            "PolicyDuration" = rep(values$int$policyTerm, values$int$l),
-            "PremiumPeriod" = rep(values$int$premiumTerm, values$int$l)
+            "InterestRate" = rep(params$ActuarialBases$i, cflen),
+            "PolicyDuration" = rep(self$getPolicyTerm(values), cflen),
+            "PremiumPeriod" = rep(self$getPremiumTerm(values), cflen)
       );
-      rownames(res) = 0:(values$int$l-1);
+      rownames(res) = 0:(cflen-1);
       res
     },
 

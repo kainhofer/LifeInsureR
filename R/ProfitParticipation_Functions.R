@@ -39,7 +39,7 @@ shiftBy = function(rate, n = 1) {
 #' Basis for profit: NONE (i.e. always returns 0)
 #' @export
 PP.base.NULL = function(rates, params, values, ...) {
-  rep(0, values$int$l)
+  rep(0, values$contract$getCFlength())
 };
 
 #' @describeIn ProfitParticipationFunctions
@@ -345,8 +345,8 @@ PP.benefit.ProfitGuaranteeSupporting = function(profits, rates, params, values, 
 #' @describeIn ProfitParticipationFunctions
 #' Calculate benefit from terminal bonus as 1/n parts of the terminal bonus reserve during the last 5 years
 #' @export
-PP.benefit.TerminalBonus5YearsProRata = function(profits, params, ...) {
-  n = params$ContractData$policyPeriod;
+PP.benefit.TerminalBonus5YearsProRata = function(profits, params, values, ...) {
+  n = values$contract$getPolicyTerm()
   sumProfits(profits, c("TBF", "terminalBonusReserve")) * (0:n)/n * ((0:n) >= max(10, n - 5))
 };
 
@@ -354,7 +354,7 @@ PP.benefit.TerminalBonus5YearsProRata = function(profits, params, ...) {
 #' Terminal bonus is only paid out during the last 5 years of the contract (but never during the first 10 years)
 #' @export
 PP.benefit.TerminalBonus5Years = function(profits, params, ...) {
-  n = params$ContractData$policyPeriod;
+  n = values$contract$getPolicyTerm()
   sumProfits(profits, c("TBF", "terminalBonusReserve")) * ((0:n) >= max(10, n - 5))
 }
 

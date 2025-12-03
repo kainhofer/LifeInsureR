@@ -8,7 +8,7 @@ test_that("Deferred Annuity Cash Flows", {
         tarif = "Life1",
         desc = "A deferred annuity (life-long payments start at age 65) with reg. premiums",
 
-        policyPeriod = function(params, values) { 120 - params$ContractData$age},
+        policyPeriod = Inf,
         deferralPeriod = function(params, values) { 65 - params$ContractData$age},
         premiumPeriod = function(params, values) { 65 - params$ContractData$age},
         premiumRefund = 1,
@@ -24,21 +24,23 @@ test_that("Deferred Annuity Cash Flows", {
         contractClosing = as.Date("2020-09-01"),
         calculate = "cashflows"
     )
-    expect_equal(Contract.DefAnnuity$Parameters$ContractData$policyPeriod, 80)
+    expect_equal(Contract.DefAnnuity$getPolicyTerm(), 81)
     expect_equal(Contract.DefAnnuity$Parameters$ContractData$deferralPeriod, 25)
-    expect_equal(Contract.DefAnnuity$Parameters$ContractData$premiumPeriod, 25)
+    expect_equal(Contract.DefAnnuity$getPremiumTerm(), 25)
 
 
-    expect_true(all(Contract.DefAnnuity$Values$cashFlows %>% dplyr::select(-premiums_advance, -survival_advance, -death_GrossPremium, -death_Refund_past) == 0))
+    expect_true(all(Contract.DefAnnuity$Values$cashFlows %>% dplyr::select(-premiums_advance, -guaranteed_advance, -survival_advance, -death_GrossPremium, -death_Refund_past) == 0))
 
     # 25 years premium cash flow
-    expect_equal(Contract.DefAnnuity$Values$cashFlows$premiums_advance, c(rep(1, 25), rep(0, 56)))
-    # premium payment start after 25 years
-    expect_equal(Contract.DefAnnuity$Values$cashFlows$survival_advance, c(rep(0, 25), rep(1, 55),0))
-    # premium payment start after 25 years
-    expect_equal(Contract.DefAnnuity$Values$cashFlows$death_GrossPremium, c(1:25, rep(0, 56)))
+    expect_equal(Contract.DefAnnuity$Values$cashFlows$premiums_advance, c(rep(1, 25), rep(0, 57)))
+    # annuity payments: start after 25 years, first 15 years are guaranteed
+    expect_equal(Contract.DefAnnuity$Values$cashFlows$guaranteed_advance, c(rep(0, 25), rep(1, 15), rep(0, 42)))
+    # non-guaranteed annuity payments start after 25+15 years
+    expect_equal(Contract.DefAnnuity$Values$cashFlows$survival_advance, c(rep(0, 40), rep(1, 42)))
+    # premium payments end after 25 years
+    expect_equal(Contract.DefAnnuity$Values$cashFlows$death_GrossPremium, c(1:25, rep(0, 57)))
     # death refund flag
-    expect_equal(Contract.DefAnnuity$Values$cashFlows$death_Refund_past, c(rep(1, 25), rep(0, 56)))
+    expect_equal(Contract.DefAnnuity$Values$cashFlows$death_Refund_past, c(rep(1, 25), rep(0, 57)))
 
     Contract.DefAnnuity.costs = InsuranceContract$new(
     	tarif = Tarif.DefAnnuity,
@@ -60,3 +62,4 @@ test_that("Deferred Annuity Cash Flows", {
     names(gamma.expected) = 0:20
     expect_equal(Contract.DefAnnuity.costs$Values$cashFlowsCosts[,"gamma", "SumInsured", "survival"], gamma.expected)
 })
+

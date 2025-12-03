@@ -33,7 +33,7 @@ costs.Bsp.Stueckkosten       = function (params, values) { min(50, 10 + 0.05*val
 
 
 surrender.Bsp = function(surrenderReserve, params, values) {
-  n = params$ContractData$policyPeriod - params$ContractData$blockStart;
+  n = values$contract$getPolicyTerm() - params$ContractData$blockStart;
   # Rückkaufsabschlag linear fallend von 10 auf 0%:
   sf = c(rep(0, params$ContractData$blockStart), 1 - 0.1 * (1 - (0:n)/n));
   surrenderReserve * sf

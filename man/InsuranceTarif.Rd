@@ -139,7 +139,10 @@ all fields.}
 \item \href{#method-InsuranceTarif-new}{\code{InsuranceTarif$new()}}
 \item \href{#method-InsuranceTarif-createModification}{\code{InsuranceTarif$createModification()}}
 \item \href{#method-InsuranceTarif-getParameters}{\code{InsuranceTarif$getParameters()}}
-\item \href{#method-InsuranceTarif-getInternalValues}{\code{InsuranceTarif$getInternalValues()}}
+\item \href{#method-InsuranceTarif-updateInternalValues}{\code{InsuranceTarif$updateInternalValues()}}
+\item \href{#method-InsuranceTarif-getCFlength}{\code{InsuranceTarif$getCFlength()}}
+\item \href{#method-InsuranceTarif-getPolicyTerm}{\code{InsuranceTarif$getPolicyTerm()}}
+\item \href{#method-InsuranceTarif-getPremiumTerm}{\code{InsuranceTarif$getPremiumTerm()}}
 \item \href{#method-InsuranceTarif-getAges}{\code{InsuranceTarif$getAges()}}
 \item \href{#method-InsuranceTarif-getTransitionProbabilities}{\code{InsuranceTarif$getTransitionProbabilities()}}
 \item \href{#method-InsuranceTarif-getCostValues}{\code{InsuranceTarif$getCostValues()}}
@@ -323,32 +326,123 @@ tarif.male$getParameters()
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-InsuranceTarif-getInternalValues"></a>}}
-\if{latex}{\out{\hypertarget{method-InsuranceTarif-getInternalValues}{}}}
-\subsection{Method \code{getInternalValues()}}{
-Get some internal parameters cached (length of data.frames,
+\if{html}{\out{<a id="method-InsuranceTarif-updateInternalValues"></a>}}
+\if{latex}{\out{\hypertarget{method-InsuranceTarif-updateInternalValues}{}}}
+\subsection{Method \code{updateInternalValues()}}{
+Update some internal parameters cached (length of data.frames,
 policy periods cut at max.age, etc.)
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{InsuranceTarif$getInternalValues(params, ...)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{InsuranceTarif$updateInternalValues(int, params, ...)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{params}}{Contract-specific, full set of parameters of the contract
-(merged parameters of the defaults, the tariff, the profit participation
-scheme and the contract)}
+\item{\code{int}}{current cached internal values}
+
+\item{\code{params}}{parameters of the contract}
 
 \item{\code{...}}{currently unused}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Details}{
-This methos is not meant to be called explicitly, but rather used
+This method is not meant to be called explicitly, but rather used
 by the InsuranceContract class. It returns a list of maturities and ages
 relevant for the contract-specific calculations
 }
 
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-InsuranceTarif-getCFlength"></a>}}
+\if{latex}{\out{\hypertarget{method-InsuranceTarif-getCFlength}{}}}
+\subsection{Method \code{getCFlength()}}{
+Retrieve the actual length of all cashflows, derived from
+the contract's parameters
+
+Getter method to get the actual cash flow length for benefits, premiums,
+costs, etc. The returned value takes into account the policyPeriod parameter,
+but also the maximum age of the underlying mortality tables and potentially
+other parameters.
+
+The return value also includes time steps that are zero by definition, i.e.
+for the premiums cash flows, the return value will also include the remaining policy
+period after the premium payment phase. It merely returns the maximum length
+that algorithms must / should consider.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{InsuranceTarif$getCFlength(values)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{values}}{Contract values calculated so far (in the \code{contract$Values}
+list) then this method is called by the contract object}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+The length of the corresponding cash flow vectors/matrices. In
+many cases, it will be equal to policyPeriod, but might be
+shorter (e.g. if the mortality table ends before the contractual
+policy period) or longer in exceptional cases.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-InsuranceTarif-getPolicyTerm"></a>}}
+\if{latex}{\out{\hypertarget{method-InsuranceTarif-getPolicyTerm}{}}}
+\subsection{Method \code{getPolicyTerm()}}{
+Retrieve the actual length of the contract's maturity, factoring
+in the length of the mortality table
+
+Getter method to get the actual policy duration, taking into account the
+policyPeriod parameter, but also the maximum age of the underlying
+mortality tables and potentially other parameters.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{InsuranceTarif$getPolicyTerm(values)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{values}}{Contract values calculated so far (in the \code{contract$Values}
+list) then this method is called by the contract object}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+The length of the whole contract period. In many cases, it will be
+equal to policyPeriod, but might be shorter (e.g. if the mortality
+table ends before the contractual policy period) or longer in exceptional cases.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-InsuranceTarif-getPremiumTerm"></a>}}
+\if{latex}{\out{\hypertarget{method-InsuranceTarif-getPremiumTerm}{}}}
+\subsection{Method \code{getPremiumTerm()}}{
+Retrieve the actual length of the contract's premium payment term, factoring
+in the length of the mortality table
+
+Getter method to get the actual premium payment term, taking into account the
+premiumPeriod and policyPeriod parameters, but also the maximum age of the
+underlying mortality tables and potentially other parameters.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{InsuranceTarif$getPremiumTerm(values)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{values}}{Contract values calculated so far (in the \code{contract$Values}
+list) then this method is called by the contract object}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+The length of the premium payment period. In many cases, it will be
+equal to premiumPeriod or policyPeriod, but might be shorter (e.g. if the mortality
+table ends before the contractual policy period) or longer in exceptional cases.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-InsuranceTarif-getAges"></a>}}

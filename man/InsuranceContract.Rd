@@ -371,6 +371,9 @@ contract state and its values before the change).}
 \item \href{#method-InsuranceContract-premiumWaiver}{\code{InsuranceContract$premiumWaiver()}}
 \item \href{#method-InsuranceContract-profitScenario}{\code{InsuranceContract$profitScenario()}}
 \item \href{#method-InsuranceContract-addProfitScenario}{\code{InsuranceContract$addProfitScenario()}}
+\item \href{#method-InsuranceContract-getCFlength}{\code{InsuranceContract$getCFlength()}}
+\item \href{#method-InsuranceContract-getPolicyTerm}{\code{InsuranceContract$getPolicyTerm()}}
+\item \href{#method-InsuranceContract-getPremiumTerm}{\code{InsuranceContract$getPremiumTerm()}}
 \item \href{#method-InsuranceContract-clone}{\code{InsuranceContract$clone()}}
 }
 }
@@ -787,6 +790,73 @@ in a profitScenario.}
 
 }
 
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-InsuranceContract-getCFlength"></a>}}
+\if{latex}{\out{\hypertarget{method-InsuranceContract-getCFlength}{}}}
+\subsection{Method \code{getCFlength()}}{
+Retrieve the actual length of all cashflows, derived from
+the contract's parameters
+
+Getter method to get the actual cash flow length for benefits, premiums,
+costs, etc. The returned value takes into account the policyPeriod parameter,
+but also the maximum age of the underlying mortality tables and potentially
+other parameters.
+
+The return value also includes time steps that are zero by definition, i.e.
+for the premiums cash flows, the return value will also include the remaining policy
+period after the premium payment phase. It merely returns the maximum length
+that algorithms must / should consider.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{InsuranceContract$getCFlength()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+The length of the corresponding cash flow vectors/matrices. In
+many cases, it will be equal to policyPeriod, but might be
+shorter (e.g. if the mortality table ends before the contractual
+policy period) or longer in exceptional cases.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-InsuranceContract-getPolicyTerm"></a>}}
+\if{latex}{\out{\hypertarget{method-InsuranceContract-getPolicyTerm}{}}}
+\subsection{Method \code{getPolicyTerm()}}{
+Retrieve the actual length of the contract's maturity, factoring
+in the length of the mortality table
+
+Getter method to get the actual policy duration, taking into account the
+policyPeriod parameter, but also the maximum age of the underlying
+mortality tables and potentially other parameters.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{InsuranceContract$getPolicyTerm()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+The length of the whole contract period. In many cases, it will be
+equal to policyPeriod, but might be shorter (e.g. if the mortality
+table ends before the contractual policy period) or longer in exceptional cases.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-InsuranceContract-getPremiumTerm"></a>}}
+\if{latex}{\out{\hypertarget{method-InsuranceContract-getPremiumTerm}{}}}
+\subsection{Method \code{getPremiumTerm()}}{
+Retrieve the actual length of the contract's premium payment term, factoring
+in the length of the mortality table
+
+Getter method to get the actual premium payment term, taking into account the
+premiumPeriod and policyPeriod parameters, but also the maximum age of the
+underlying mortality tables and potentially other parameters.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{InsuranceContract$getPremiumTerm()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+The length of the premium payment period. In many cases, it will be
+equal to premiumPeriod or policyPeriod, but might be shorter (e.g. if the mortality
+table ends before the contractual policy period) or longer in exceptional cases.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-InsuranceContract-clone"></a>}}

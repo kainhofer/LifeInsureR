@@ -266,8 +266,8 @@ ProfitParticipation = R6Class(
             # 3) Explicit function arguments (either for calendar years or contract years).
             # 4) Any missing values will be taken from the last given year
             startYear = year(params$ContractData$contractClosing);
-            policyPeriod = params$ContractData$policyPeriod;
-            years = startYear:(startYear + policyPeriod);
+            policyTerm = values$contract$getPolicyTerm();
+            years = startYear:(startYear + policyTerm);
 
             columns = c(
                 "year",
@@ -373,11 +373,11 @@ ProfitParticipation = R6Class(
             waiting      = valueOrFunction(params$ProfitParticipation$waitingPeriod, params = params, values = values);
             if (!is.numeric(waiting))
             	waiting = -1;
-            waitingFactor= c(rep(0, waiting + 1), rep(1, params$ContractData$policyPeriod - waiting));
+            waitingFactor= c(rep(0, waiting + 1), rep(1, values$contract$getPolicyTerm() - waiting));
             if (!params$ProfitParticipation$profitAttributionAtExpiration) {
             	# no profit attribution at expiration -> set  waiting vector
             	# to 0 at expiration to prevent a profit assignment at that time
-            	waitingFactor[params$ContractData$policyPeriod + 1] = 0
+            	waitingFactor[values$contract$getPolicyTerm() + 1] = 0
             }
             rates        = self$setupRates(params = params, values = values, ...)
 

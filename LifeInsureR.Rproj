@@ -5,8 +5,8 @@ SaveWorkspace: Default
 AlwaysSaveHistory: Default
 
 EnableCodeIndexing: Yes
-UseSpacesForTab: No
-NumSpacesForTab: 4
+UseSpacesForTab: Yes
+NumSpacesForTab: 2
 Encoding: UTF-8
 
 RnwWeave: knitr
@@ -20,3 +20,5 @@ PackageUseDevtools: Yes
 PackageInstallArgs: --no-multiarch --with-keep.source
 PackageCheckArgs: --as-cran
 PackageRoxygenize: rd,collate,namespace,vignette
+
+UseNativePipeOperator: Yes

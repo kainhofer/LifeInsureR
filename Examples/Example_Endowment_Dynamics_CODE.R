@@ -11,7 +11,7 @@ example.Costs = initializeCosts(
     gamma.contract = 0.001, gamma.paidUp = 0.001
 )
 example.Surrender = function(surrenderReserve, params, values) {
-    n = params$ContractData$policyPeriod
+    n = values$contract$getPolicyTerm()
     # Surrender Penalty is 10% at the beginning and decreases linearly to 0%
     surrenderReserve * (0.9 + 0.1 * (0:n)/n)
 }

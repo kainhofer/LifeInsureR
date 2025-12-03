@@ -13,7 +13,7 @@ calcVmGlgExample = function(contract, prf = 10, t = 10, t_prf = 12, ...) {
         tariff = contract
         contract = InsuranceContract$new(tariff, ...)
     }
-    has.prf = prf < contract$Parameters$ContractData$premiumPeriod;
+    has.prf = prf < contract$getPremiumTerm();
     if (!is(contract, "InsuranceContract")) {
         stop("First argument to the functions showVmGlgExamples, testVmGlgExample
              and vmGlgExample.generateTest need to be an InsuranceContract or InsuranceTarif object! ",
@@ -36,8 +36,8 @@ calcVmGlgExample = function(contract, prf = 10, t = 10, t_prf = 12, ...) {
         TarifType = as.character(contract$tarif$tariffType),
         VS = contract$Parameters$ContractData$sumInsured,
         Age = contract$Parameters$ContractData$age,
-        policyPeriod = contract$Parameters$ContractData$policyPeriod,
-        premiumPeriod = contract$Parameters$ContractData$premiumPeriod,
+        policyTerm = contract$getPolicyTerm(),
+        premiumTerm = contract$getPremiumTerm(),
         deferralPeriod = contract$Parameters$ContractData$deferralPeriod,
         guaranteedPeriod = contract$Parameters$ContractData$guaranteedPeriod,
         Interest = contract$Parameters$ActuarialBases$i,
@@ -110,7 +110,7 @@ showVmGlgExamples = function(contract, prf = 10, t = 10, t_prf = 12, file = "", 
     }
     vals = calcVmGlgExample(contract, prf = prf, t = t, t_prf = t_prf, ...);
 
-    has.prf = prf < contract$Parameters$ContractData$premiumPeriod;
+    has.prf = prf < contract$getPremiumTerm();
 
     output = c(
         sprintf("Tarif: %s", vals$TarifName),
@@ -119,8 +119,8 @@ showVmGlgExamples = function(contract, prf = 10, t = 10, t_prf = 12, file = "", 
         sprintf("VS: %.2f", vals$VS),
         sprintf("Alter: %d, LZ: %d, Pr\u00e4mienzahlung: %d, Aufschubzeit: %d, Garantiezeit: %d",
                 vals$age,
-                vals$policyPeriod,
-                vals$premiumPeriod,
+                vals$policyTerm,
+                vals$premiumTerm,
                 vals$deferralPeriod,
                 vals$guaranteedPeriod),
 
@@ -246,7 +246,7 @@ testVmGlgExample = function(contract, prf = 10, t = 10, t_prf = 12, net, Zillmer
         browser();
     }
     vals = calcVmGlgExample(contract, prf = prf, t = t, t_prf = t_prf, ...);
-    has.prf = prf < contract$Parameters$ContractData$premiumPeriod;
+    has.prf = prf < contract$getPremiumTerm();
 
     if (!missing(net)) {
         eval(bquote(expect_equal_abs(vals$net, .(net), tolerance = absTolerance)))

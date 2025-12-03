@@ -470,7 +470,7 @@ Tarif.PureEnd = InsuranceTarif$new(
   tax = 0.04,         # 4% insurance tas
 
   surrenderValueCalculation = function(surrenderReserve, params, values) {
-    n = params$ContractData$policyPeriod
+    n = values$contract$getPolicyTerm()
     # Surrender Penalty is 10% at the beginning and decreases linearly to 0%
     surrenderReserve * (0.9 + 0.1 * (0:n)/n)
   }
@@ -516,7 +516,7 @@ example.Costs = initializeCosts(
   gamma.contract = 0.001, gamma.paidUp = 0.001
 )
 example.Surrender = function(surrenderReserve, params, values) {
-    n = params$ContractData$policyPeriod
+    n = values$contract$getPolicyTerm()
     # Surrender Penalty is 10% at the beginning and decreases linearly to 0%
     surrenderReserve * (0.9 + 0.1 * (0:n)/n)
 }
@@ -583,7 +583,7 @@ Tarif.DefAnnuity = InsuranceTarif$new(
   tarif = "Life1",
   desc = "A deferred annuity (life-long payments start at age 65) with reg. premiums",
 
-  policyPeriod = function(params, values) { 120 - params$ContractData$age},
+  policyPeriod = Inf,
   deferralPeriod = function(params, values) { 65 - params$ContractData$age},
   premiumPeriod = function(params, values) { 65 - params$ContractData$age},
     
@@ -1507,7 +1507,7 @@ paid or not, but rather is the number of blocks/layers where a premium is paid.
 The individual blocks can be accessed with the `contract$blocks` list:
 ```{r contractLayers.blocks}
 for (b in ctr.dynInc$blocks) {
-  cat(paste0("Block: ", b$Parameters$ContractData$id, ", starts at t=", b$Parameters$ContractData$blockStart, ", policyPeriod=", b$Parameters$ContractData$policyPeriod, "\n"))
+  cat(paste0("Block: ", b$Parameters$ContractData$id, ", starts at t=", b$Parameters$ContractData$blockStart, ", policyPeriod=", b$getPolicyTerm(), "\n"))
 }
 ```
 
