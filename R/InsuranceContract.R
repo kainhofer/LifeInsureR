@@ -899,6 +899,11 @@ InsuranceContract = R6Class(
             if (getOption('LIC.debug.premiumWaiver', FALSE)) {
                 browser();
             }
+            if (!self$Parameters$Features$hasPremiumWaiver) {
+              # TODO: Print warning that premiumWaiver is not allowed at all
+              message("premiumWaiver called on a contract of tarif ", self$tarif$tarif, " (", self$tarif$name, "), which does not provide the premiumWaiver feature!")
+              return(invisible(self))
+            }
             if (length(self$blocks) > 0) {
                 for (b in self$blocks) {
                     b$premiumWaiver(t - b$Parameters$ContractData$blockStart, ...)

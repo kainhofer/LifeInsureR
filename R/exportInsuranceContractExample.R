@@ -67,10 +67,12 @@ exportInsuranceContractExample = function(contract, prf = 10, outdir = ".", base
     filename = paste(basename, ".xlsx", sep = "");
     exportInsuranceContract.xlsx(contract, filename);
 
-    contract.prf = contract$clone()
-    contract.prf$premiumWaiver(t = prf)
-    filename = paste(basename, "_PremiumWaiver_t", prf, ".xlsx", sep = "");
-    exportInsuranceContract.xlsx(contract.prf, filename);
+    if (contract$Parameters$Features$hasPremiumWaiver) {
+      contract.prf = contract$clone()
+      contract.prf$premiumWaiver(t = prf)
+      filename = paste(basename, "_PremiumWaiver_t", prf, ".xlsx", sep = "");
+      exportInsuranceContract.xlsx(contract.prf, filename);
+    }
 
     filename = paste(basename, "_VmGlg.txt", sep = "")
     showVmGlgExamples(contract, prf = prf, ..., file = filename)

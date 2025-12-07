@@ -548,11 +548,22 @@ ProfitParticipation = R6Class(
             deathAccrued   = self$Functions$calculateDeathBenefitAccrued(res, rates = rates, params = params, values = values);
             deathTerminalBonus = self$Functions$calculateDeathBenefitTerminal(res, rates = rates, params = params, values = values);
 
-            surrenderAccrued  = self$Functions$calculateSurrenderBenefitAccrued(res, rates = rates, params = params, values = values);
-            surrenderTerminalBonus = self$Functions$calculateSurrenderBenefitTerminal(res, rates = rates, params = params, values = values);
+            if (params$Features$hasSurrender) {
+              surrenderAccrued  = self$Functions$calculateSurrenderBenefitAccrued(res, rates = rates, params = params, values = values);
+              surrenderTerminalBonus = self$Functions$calculateSurrenderBenefitTerminal(res, rates = rates, params = params, values = values);
+            } else {
+              surrenderAccrued  = 0
+              surrenderTerminalBonus = 0
 
-            premiumWaiverAccrued  = self$Functions$calculatePremiumWaiverBenefitAccrued(res, rates = rates, params = params, values = values);
-            premiumWaiverTerminalBonus = self$Functions$calculatePremiumWaiverBenefitTerminal(res, rates = rates, params = params, values = values);
+            }
+
+            if (params$Features$hasPremiumWaiver) {
+              premiumWaiverAccrued  = self$Functions$calculatePremiumWaiverBenefitAccrued(res, rates = rates, params = params, values = values);
+              premiumWaiverTerminalBonus = self$Functions$calculatePremiumWaiverBenefitTerminal(res, rates = rates, params = params, values = values);
+            } else {
+              premiumWaiverAccrued  = 0
+              premiumWaiverTerminalBonus = 0
+            }
 
             resBenefit = cbind(
                 survival = survival,

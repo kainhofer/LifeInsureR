@@ -13,13 +13,15 @@ calcVmGlgExample = function(contract, prf = 10, t = 10, t_prf = 12, ...) {
         tariff = contract
         contract = InsuranceContract$new(tariff, ...)
     }
-    has.prf = prf < contract$getPremiumTerm();
     if (!is(contract, "InsuranceContract")) {
         stop("First argument to the functions showVmGlgExamples, testVmGlgExample
              and vmGlgExample.generateTest need to be an InsuranceContract or InsuranceTarif object! ",
              "Given object is of class: ",
              paste(class(contract), collapse = ", "));
     }
+    has.prf = (contract$Parameters$Features$hasPremiumWaiver) &&
+      (prf < contract$getPremiumTerm()) &&
+      (!contract$Parameters$ContractState$premiumWaiver);
     if (has.prf) {
         contract.prf = contract$clone();
         contract.prf$premiumWaiver(t = prf)
@@ -110,7 +112,9 @@ showVmGlgExamples = function(contract, prf = 10, t = 10, t_prf = 12, file = "", 
     }
     vals = calcVmGlgExample(contract, prf = prf, t = t, t_prf = t_prf, ...);
 
-    has.prf = prf < contract$getPremiumTerm();
+    has.prf = (contract$Parameters$Features$hasPremiumWaiver) &&
+      (prf < contract$getPremiumTerm()) &&
+      (!contract$Parameters$ContractState$premiumWaiver);
 
     output = c(
         sprintf("Tarif: %s", vals$TarifName),

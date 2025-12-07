@@ -1481,7 +1481,9 @@ InsuranceTarif = R6Class(
       # The surrender value functions can have arbitrary form, so we store a function
       # here in the tarif and call that, passing the reduction reserve as
       # starting point, but also all reserves, cash flows, premiums and present values
-      if (!params$ContractState$surrenderPenalty) {
+      if (!params$Features$hasSurrender) {
+        surrenderValue = 0
+      } else if (!params$ContractState$surrenderPenalty) {
           # No surrender penalty any more (has already been applied to the first contract change!)
           surrenderValue = resReduction;
       } else if (!is.null(params$ActuarialBases$surrenderValueCalculation)) {
@@ -1500,19 +1502,24 @@ InsuranceTarif = R6Class(
 
 
       # Calculate new sum insured after premium waiver
-      if (!is.null(params$ActuarialBases$premiumWaiverValueCalculation)) {
-        premiumfreeValue = params$ActuarialBases$premiumWaiverValueCalculation(resReduction, params, values);
-      } else if (params$Features$surrenderPenaltyOnPremiumWaiver) {
-        premiumfreeValue = surrenderValue
+      if (!params$Features$hasPremiumWaiver) {
+        premiumfreeValue = 0
+        newSI = 0
       } else {
-        premiumfreeValue = resReduction
+        if (!is.null(params$ActuarialBases$premiumWaiverValueCalculation)) {
+          premiumfreeValue = params$ActuarialBases$premiumWaiverValueCalculation(resReduction, params, values);
+        } else if (params$Features$surrenderPenaltyOnPremiumWaiver) {
+          premiumfreeValue = surrenderValue
+        } else {
+          premiumfreeValue = resReduction
+        }
+        Storno = 0; # TODO: Implement storno costs
+        premiumfreePV = (absPV[, "benefits"] * securityFactor + absPV[, "gamma_nopremiums"]); # PV of future premium free claims + costs
+        newSI = ifelse(premiumfreePV == 0, 0,
+          (premiumfreeValue - absPV[,"death_Refund_past"] * securityFactor - c(Storno)) /
+          premiumfreePV * params$ContractData$sumInsured);
+        newSI = rd$round("Premiumfree SI", newSI)
       }
-      Storno = 0; # TODO: Implement storno costs
-      premiumfreePV = (absPV[, "benefits"] * securityFactor + absPV[, "gamma_nopremiums"]); # PV of future premium free claims + costs
-      newSI = ifelse(premiumfreePV == 0, 0,
-        (premiumfreeValue - absPV[,"death_Refund_past"] * securityFactor - c(Storno)) /
-        premiumfreePV * params$ContractData$sumInsured);
-      newSI = rd$round("Premiumfree SI", newSI)
 
       cbind(res,
             "PremiumsPaid" = Reduce("+", values$absCashFlows$premiums_advance, accumulate = TRUE),
