@@ -292,7 +292,9 @@ mergeValues = function(starting, ending, t) {
   } else if (t == 0) {
     ending
   } else {
-    rbind(starting[1:t,], ending[-1:-t,])
+    # Subsetting 1:t and the remainder might drop the row numbers (time index) if t=1,
+    # so we need to prevent this!
+    rbind(starting[1:t,, drop = FALSE], ending[-1:-t,, drop = FALSE])
   }
 }
 mergeValues3D = function(starting, ending, t) {
@@ -304,7 +306,9 @@ mergeValues3D = function(starting, ending, t) {
   } else if (t == 0) {
     ending
   } else {
-    abind::abind(starting[1:t,,,], ending[-1:-t,,,], along = 1)
+    # Subsetting 1:t and the remainder might drop the row numbers (time index) if t=1,
+    # so we need to prevent this!
+    abind::abind(starting[1:t,,,, drop = FALSE], ending[-1:-t,,,, drop = FALSE], along = 1)
   }
 }
 
