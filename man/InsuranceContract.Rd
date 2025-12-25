@@ -362,6 +362,7 @@ contract state and its values before the change).}
 \subsection{Public methods}{
 \itemize{
 \item \href{#method-InsuranceContract-new}{\code{InsuranceContract$new()}}
+\item \href{#method-InsuranceContract-copy}{\code{InsuranceContract$copy()}}
 \item \href{#method-InsuranceContract-addHistorySnapshot}{\code{InsuranceContract$addHistorySnapshot()}}
 \item \href{#method-InsuranceContract-addBlock}{\code{InsuranceContract$addBlock()}}
 \item \href{#method-InsuranceContract-addDynamics}{\code{InsuranceContract$addDynamics()}}

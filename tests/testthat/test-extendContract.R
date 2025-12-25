@@ -28,20 +28,20 @@ test_that("Extend contract by $addExtension", {
 
 
     # premium-free extension
-    ContractB = ContractA$clone()$addExtension(id = "Verlaengerung1", contractPeriod = 5, premiumPeriod = 0)
+    ContractB = ContractA$copy()$addExtension(id = "Verlaengerung1", contractPeriod = 5, premiumPeriod = 0)
     expect_equal(ContractB$blocks$Verlaengerung1$Parameters$ContractData$sumInsured, 15117.03896)
 
 
     # extension with given sumInsured resulting in 0 premiums
-    ContractC = ContractA$clone()$addExtension(id = "Verlaengerung1", contractPeriod = 5, sumInsured = 15117.03896)
+    ContractC = ContractA$copy()$addExtension(id = "Verlaengerung1", contractPeriod = 5, sumInsured = 15117.03896)
     expect_equal(ContractC$blocks$Verlaengerung1$Values$premiums[["gross"]], 0, tolerance = 1e-06)
 
     # extension with increased sumInsured: real premiums are charged, reserves start from the existing reserve:
-    ContractD = ContractA$clone()$addExtension(id = "Verlaengerung1", contractPeriod = 5, sumInsured = 20000)
+    ContractD = ContractA$copy()$addExtension(id = "Verlaengerung1", contractPeriod = 5, sumInsured = 20000)
     expect_equal(ContractD$blocks$Verlaengerung1$Values$premiums[["written"]], 315.109)
     expect_equal(ContractD$blocks$Verlaengerung1$Values$reserves[["0", "contractual"]], 10000)
 
     # extension with increased sumInsured and different tariff: check whether interest rate has really changed
-    ContractE = ContractA$clone()$addExtension(id = "Verlaengerung1", contractPeriod = 5, sumInsured = 20000, tarif = Tarif.EndowmentB)
+    ContractE = ContractA$copy()$addExtension(id = "Verlaengerung1", contractPeriod = 5, sumInsured = 20000, tarif = Tarif.EndowmentB)
     expect_equal(unname(ContractE$Values$basicData[c(1,20,30,40), "InterestRate"]), c(0.03, 0.03, 0.01, 0.01))
 })

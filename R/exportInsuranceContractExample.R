@@ -68,7 +68,7 @@ exportInsuranceContractExample = function(contract, prf = 10, outdir = ".", base
     exportInsuranceContract.xlsx(contract, filename);
 
     if (contract$Parameters$Features$hasPremiumWaiver) {
-      contract.prf = contract$clone()
+      contract.prf = contract$copy()
       contract.prf$premiumWaiver(t = prf)
       filename = paste(basename, "_PremiumWaiver_t", prf, ".xlsx", sep = "");
       exportInsuranceContract.xlsx(contract.prf, filename);

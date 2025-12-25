@@ -315,9 +315,23 @@ InsuranceContract = R6Class(
             invisible(self)
         },
 
-        #' @description Add the current state of the contract to the history list
+        #' Deep-copy the contract
         #'
-        #' @details The \code{InsuranceContract$addHistorySnapshot()} function
+        #' Returns a fully independent copy of the contract, including deep copies
+        #' of all sub-contracts/blocks stored in \code{blocks}.
+        #'
+        #' @return A new object of InsuranceContract class with independently cloned
+        #'   blocks.
+        copy = function() {
+          self$clone(deep = TRUE)
+        },
+
+
+        #' @description
+        #' Add the current state of the contract to the history list
+        #'
+        #' @details
+        #' The \code{InsuranceContract$addHistorySnapshot()} function
         #' adds the current (or the explicitly given) state of the contract
         #' (parameters, calculated values, tarif, list of all contract blocks)
         #' to the history list (available in the \code{history} field of the
@@ -410,7 +424,7 @@ InsuranceContract = R6Class(
             block$Parameters$ContractData$blockStart = t
 
             if (length(self$blocks) == 0) {
-                main = self$clone()
+                main = self$copy()
                 main$parent = self
                 self$blocks[[main$Parameters$ContractData$id]] = main
                 self$Parameters$ContractData$id = "Gesamt"
@@ -1058,6 +1072,26 @@ InsuranceContract = R6Class(
     ######################### PRIVATE METHODS ##################################
     private = list(
         initParams = NULL,
+
+        # Clone the insurance contract object (deep copy)
+        #
+        # Creates a deep copy of the contract's fields. By default, all fields
+        # are copied by value, but the sub-blocks need a deep copy.
+        deep_clone = function(name, value) {
+          if (name == "blocks") {
+            # Deep-clone all R6 contract blocks
+            deep_clone_any <- function(x) {
+              if (R6::is.R6(x)) return(x$clone(deep = TRUE))
+              if (is.list(x))   return(lapply(x, deep_clone_any))
+              x
+            }
+            return(deep_clone_any(value))
+          } else {
+            # default behavior for other fields
+            value
+          }
+        },
+
 
         consolidateContractData = function(...) {
             args = list(...);

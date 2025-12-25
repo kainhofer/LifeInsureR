@@ -23,7 +23,7 @@ calcVmGlgExample = function(contract, prf = 10, t = 10, t_prf = 12, ...) {
       (prf < contract$getPremiumTerm()) &&
       (!contract$Parameters$ContractState$premiumWaiver);
     if (has.prf) {
-        contract.prf = contract$clone();
+        contract.prf = contract$copy();
         contract.prf$premiumWaiver(t = prf)
     }
 

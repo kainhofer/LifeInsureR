@@ -378,7 +378,7 @@ bottom):
 
 * explicit parameters passed to `InsuranceContract$addProfitScenario()` (applies 
   only for the added profit scenario)
-* explicit parameters passed to `InsuranceContract$new()` or `InsuranceContract$clone()`
+* explicit parameters passed to `InsuranceContract$new()` or `InsuranceContract$copy()`
 * parameters set with the `ProfitParticipation`
 * parameters set with the `InsuranceTarif`
 * Default values set in `InsuranceContract.ParameterDefaults`
@@ -843,7 +843,7 @@ Waiving premiums and recalculating the sum insured is very easy, one just calls
 the method `InsuranceContract$premiumWaiver(t = ..)` on the existing contract.
 
 ```{r Contract.PureEndPrf, results="hide"}
-contract.PureEnd.NoRefund.Prf = contract.PureEnd.NoRefund$clone()$premiumWaiver(t = 7)
+contract.PureEnd.NoRefund.Prf = contract.PureEnd.NoRefund$copy()$premiumWaiver(t = 7)
 contract.PureEnd.NoRefund.Prf$Values$reserves
 ```
 ```{r Contract.PureEndPrfOUT, echo=F}
@@ -1367,7 +1367,7 @@ premiums, reserves, profit participation, etc.) as well as the most important
 parameters and an overview of the history of the contract.
 
 ```{r ExcelExport,eval=F}
-contract.exportExample = contract.PureEnd.NoRefund$clone()$
+contract.exportExample = contract.PureEnd.NoRefund$copy()$
   addDynamics(t = 3, SumInsuredDelta = 10000)$
   addDynamics(t = 5, SumInsuredDelta = 15000)$
   addDynamics(t = 10, SumInsuredDelta = 15000)$
@@ -1591,25 +1591,25 @@ ContractA = InsuranceContract$new(
 )
 
 # premium-free extension
-ContractB = ContractA$clone()$
+ContractB = ContractA$copy()$
   addExtension(id = "Verlaengerung1", contractPeriod = 5, premiumPeriod = 0)
 # sumInsured calculated from existing reserve:
 ContractB$blocks$Verlaengerung1$Parameters$ContractData$sumInsured
 ContractB$Values$basicData
 
 # extension with given sumInsured resulting in 0 (gross) premiums
-ContractC = ContractA$clone()$
+ContractC = ContractA$copy()$
   addExtension(id = "Verlaengerung1", contractPeriod = 5, sumInsured = 10723.07973354)
 ContractC$blocks$Verlaengerung1$Values$premiums[["gross"]]
 ContractC$Values$basicData
 
 # extension with increased sumInsured: real premiums are charged, reserves start from the existing reserve:
-ContractD = ContractA$clone()$
+ContractD = ContractA$copy()$
   addExtension(id = "Verlaengerung1", contractPeriod = 5, sumInsured = 20000)
 ContractD$Values$basicData
 
 # extension with regular premiums, which are given: sumInsured is calculated from it, reserves start from the existing reserve:
-ContractD = ContractA$clone()$
+ContractD = ContractA$copy()$
   addExtension(id = "Verlaengerung1", contractPeriod = 5, premium = 597.8771)
 ContractD$Values$basicData
 ```

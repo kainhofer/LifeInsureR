@@ -37,10 +37,11 @@ contract.Endowment = InsuranceContract$new(
     sumInsured = 100000,
     contractClosing = as.Date("2020-07-01")
 )
-contract.exportExample = contract.Endowment$clone()$
+contract.exportExample = contract.Endowment$copy()$
     addDynamics(t = 3, SumInsuredDelta = 10000)$
     addDynamics(t = 5, SumInsuredDelta = 15000)$
     addDynamics(t = 10, SumInsuredDelta = 15000)$
-    addDynamics(t = 14, SumInsuredDelta = 10000)
+    addDynamics(t = 14, SumInsuredDelta = 10000)$
+  premiumWaiver(t=17)
 exportInsuranceContract.xlsx(contract.exportExample, filename = "Example_Endowment_Dynamics.xlsx")
 openxlsx::openXL("Example_Endowment_Dynamics.xlsx")
