@@ -2,19 +2,14 @@
 % Please edit documentation in R/InsuranceContract.R
 \name{InsuranceContract}
 \alias{InsuranceContract}
-\title{Base Class for Insurance Contracts}
+\title{Base Class for Insurance ContractsA}
 \description{
-Base Class for Insurance Contracts
-
-Base Class for Insurance Contracts
-}
-\details{
 R6 class that models a complete, general insurance contract.
 The corresponding tariff and the profit participation scheme, as well as
 all other relevant contract parameters (if not defined by the tariff or
 explicitly overridden by the contract) can be given in the constructor.
 }
-\section{Usage}{
+\details{
 The typical usage of this class is to simply call
 \ifelse{html}{\href{#method-new}{\code{InsuranceContract$new()}}}{\code{InsuranceContract$new()()}}.
 
@@ -27,7 +22,6 @@ Immediately upon construction, all premiums, reserves and cash flows for the
 whole contract period are calculated and can be accessed via the \code{Values}
 field of the object.
 }
-
 \section{Calculation approach: Valuation}{
 The calculation of all contract values is controlled by the function
 \ifelse{html}{\href{#method-calculateContract}{\code{InsuranceContract$calculateContract()}}}{\code{InsuranceContract$calculateContract()()}} (using methods of the \link{InsuranceTarif}
@@ -140,131 +134,6 @@ probabilities):
 \item guaranteed cash flows: 0, 0, 0, ..., 0, 1
 \item death benefit cash flows: 0, 0, 0, 0, ..., 0
 }
-
-The \code{InsuranceContract$new()} function creates a new
-insurance contract for the given tariff, using the parameters passed
-to the function (and the defaults specified in the tariff).
-
-As soon as this function is called, the contract object calculates
-all time series (cash flows, premiums, reserves, profit participation)
-for the whole contract duration.
-
-The most important parameters that are typically passed to the
-constructor are:
-\itemize{
-\item \code{age} ... Age of the insured person (used to derive mortalities / transition probabilities)
-\item \code{policyPeriod} ... Maturity of the policy (in years)
-\item \code{premiumPeriod} ... How long premiums are paid (\code{premiumPeriod = 1}
-for single-premium contracts, \code{premiumPeriod} equals
-\code{policyPeriod} for regular premium payments for the whole
-contract period, while other premium payment durations indicate
-premium payments only for shorter periods than the whole contract
-duration. Contract extensions without any premium payments are
-indicated by \code{premiumPeriod}=0). Default is equal to
-\code{policyPeriod}
-\item \code{sumInsured} ... The sum insured (i.e. survival benefit for
-endowments, death benefit for whole/term life insurances,
-annuity payments for annuities)
-\item \code{contractClosing} ... Date of the contract beginning (typically
-created using something like \code{as.Date("2020-08-01")})
-\item \code{YOB} ... Year of birth of the insured (for cohort mortality
-tables). If not given, YOB is derived from \code{age} and
-\code{contractClosing}.
-\item \code{deferralPeriod} ... Deferral period for deferred annuities
-(i.e. when annuity payments start at a future point in time).
-Default is 0.
-\item \code{premiumFrequency} ... How many premium payments per year are
-made (e.g. 1 for yearly premiums, 4 for quarterly premiumd,
-12 for monthly premium payments). Default is 1 (yearly premiums).
-}
-
-While these are the most common and most important parameters, all
-parameters can be overwritten on a per-contract basis, even those
-that are defined by the tariff. For a full list and explanation of all
-parameters, see \link{InsuranceContract.ParameterDefaults}.
-
-The \code{InsuranceContract$addHistorySnapshot()} function
-adds the current (or the explicitly given) state of the contract
-(parameters, calculated values, tarif, list of all contract blocks)
-to the history list (available in the \code{history} field of the
-contract, i.e. \code{InsuranceContract$history}).
-
-Contracts with multiple contract blocks (typically either
-contracts with dynamic increases, sum increases or protection riders)
-are constructed by instantiating the child block (e.g. a single
-dynamic increase or the rider) independently with its own (shorter)
-duration and then inserting it into the parent contract with this
-function at the given time.
-
-If no \link{InsuranceContract} object is passed as \code{block}, a copy
-of the parent is created with overriding parameters given in \code{...}.
-
-This method adds a new contract block describing a dynamic
-or sum increase (increasing the sum insured at a later time
-$t$ than contract inception). This increase is modelled by a
-separate \link{InsuranceContract} object with the sum difference
-as its own \code{sumInsured}.
-
-\if{html}{\out{<div class="sourceCode">}}\preformatted{     By default, all parameters are taken from the main contract,
-     with the maturity adjusted to match the original contract's
-     maturity.
-
-     The main contract holds all child blocks, controls their
-     valueation and aggregates all children's values to the
-     total values of the overall contract.
-}\if{html}{\out{</div>}}
-
-When a contract expires, this function adds a follow-up contract
-(with either the same or a different tariff), using the existing
-reserve as \code{additionalCapital} at inception.
-Technically, a child block using the new contract data of the extension
-is added to the original contract. The over-all contract values are then
-the sum of the original contract (providing values until expiration)
-and the extension (providing values after the extension).
-
-This method calculates all contract values (potentially
-starting from and preserving all values before a later time
-\code{valuesFrom}). This function is not meant to be called
-directly, but internally, whenever a contract is created or
-modified.
-
-\if{html}{\out{<div class="sourceCode">}}\preformatted{     There is, however, a legitimate case to call this function
-     when a contract was initially created with a value of
-     \code{calculate} other than "all", so not all values of the
-     contract were calculated. When one later needs more values
-     than were initially calculated, this function can be called.
-     However, any contract changes might need to be rolled back
-     and reapplied again afterwards. So even in this case it is
-     probably easier to create the contract object from scratch
-     again.
-}\if{html}{\out{</div>}}
-
-This function is an internal function for contracts with
-multiple child blocks (dynamic increases, sum increases, riders).
-It takes the values from all child blocks and calculates the
-overall values from all child blocks aggregated.
-
-\if{html}{\out{<div class="sourceCode">}}\preformatted{   This function should not be called manually.
-}\if{html}{\out{</div>}}
-
-This function modifies the contract at time $t$ so that
-no further premiums are paid (i.e. a paid-up contract) and the
-\code{sumInsured} is adjusted according to the existing reserves.
-
-This function calculates one profit scenario with the
-provided profit participation parameters (all parameters
-not given in the call are taken from their values of the
-contract, profit participation scheme or tariff).
-
-This function calculates one profit scenario with the
-provided profit participation parameters (all parameters
-not given in the call are taken from their values of the
-contract, profit participation scheme or tariff). The results
-are stored in a list of profit scenarios inside the contract.
-
-\if{html}{\out{<div class="sourceCode">}}\preformatted{    This function can be chained to calculate and add multiple
-    profit scenarios.
-}\if{html}{\out{</div>}}
 }
 
 \examples{
@@ -333,16 +202,73 @@ objects representing the individual parts) have a pointer to their
 parent, while the overall contract holds a list of all its child contract parts.}
 
 \item{\code{ContractParameters}}{Insurance contract parameters explicitly specified in the contract
-(i.e. parameters that are NOT taken from the tariff of the defaults).}
+(i.e. parameters that are NOT taken from the tariff of the defaults).
+The possible structure follows the \link{InsuranceContract.ParameterStructure},
+but only values explicitly set for this contract are filled, without
+any fallback values taken from the tariff, profit scheme or the global defaults.}
 
 \item{\code{Parameters}}{Full set of insurance contract parameters applying to this contract.
+The structure of this field follows \link{InsuranceContract.ParameterStructure}.
 The set of parameters is a combination of explicitly given (contract-specific)
 values, parameters determined by the tariff and default values.}
 
 \item{\code{Values}}{List of all contract values (cash flows, present values, premiums,
 reserves, premium decomposition, profit participation, etc.). These
 values will be calculated and filled when the contract is created
-and updated whenever the contract is changed.}
+and updated whenever the contract is changed.
+
+The fields of the array are:
+\itemize{
+\item \code{contract} ... A pointer to the \code{InsuranceContract} object
+\item \code{tarif} ... A pointer to the underlying \code{InsuranceTarif} object
+\item \code{basicData} ... A \code{data.frame} with colums \code{PremiumPayment}, \code{SumInsured}, \code{Premiums}, \code{InterestRate}, \code{PolicyDuration}, \code{PremiumPeriod}. Each row describes one year of the contract.
+\item \code{int} ... A list of internal contract values:
+\itemize{
+\item \code{l} ... Length of the underlying \code{data.frame}s
+\item \code{policyTerm} ... The real-life policy term of the whole contract, evaluated numerically and cut at the maximum age of the mortality table.
+\item \code{premiumTerm} ... The real-life premium term of the contract, evaluated numerically and cut at the maximum age and the policy term.
+\item \code{premiumCalculateionTime} ... The time at which the currently stored premiums are calculated from the contract cash flows.
+\item \code{maxAge} ... The maximum age available in the mortality table.
+}
+\item \code{transitionProbabilities} ... The transition probabilities (and the corresponding ages) relevant for the contract, derived from the mortality table. Columns are \code{age}, \code{qx}, \code{ix}, \code{px}.
+\item \code{cashFlowsBasic}* ... The underlying basic cash flows, from which the actual unit cash flows will be built.
+\item \code{cashFlows}* ... A \code{data.frame} containing the unit cash flows (for sum insured 1) of the contract: premiums, guaranteed, survival, death and disease cash flows (both in arrears and in advance where applicable), as well as additional capital insertions and premium refunds.
+\item \code{cashFlowsCosts}* ... A \code{array} containing all cost cash flows for the whole contract term, split by type of costs, calculation base and charging period. The corresponding dimension of the array are:
+\itemize{
+\item Time: "0", "1", ....,
+\item Type of costs: "alpha", "Zillmer", "beta", "gamma", "gamma_nopremiums", "unitcosts"
+\item Calculation base: "SumInsured", "SumPremiums", "GrossPremium", "NetPremium", "Benefits", "Constant", "Reserve"
+\item Contingency of the cost charged: "survival", "guaranteed", "after.death" (note: different cost rates depending on premium term, payout phase, etc. are already considered in the values of the cash flow vectors! This dimension only specifies whether the cost is charged at all if the insured is alive or dead)
+}
+\item \code{unitPremiumSum}* ... The premium sum (for unit premiums), i.e. this is also the number of premiums to be paid.
+\item \code{presentValues}* ... A \code{data.frame} containing the present value vectors of premiums, additional capital, guaranteed, survival, death and disease payments, as well as premium refunds and costs (aggregated!).
+\item \code{presentValuesCosts}* ... A \code{array} containing the present values of the cost cash flows given in the \code{cashFlowsCosts} array.
+\item \code{premiumCoefficients}* ... A nested \code{array} containing all coefficients for the premium calculation. The hierarchy of the nesting is:
+\itemize{
+\item Type of premium to be calculated: "gross", "Zillmer" and "net". Each of them has two children:
+\item Coefficient for: "SumInsured" and "Premium". Each of them has two children:
+\item Type of cash flows: "benefits" and "costs".
+\itemize{
+\item For "benefits", the coefficients are a vector with names as given in the \code{cashFlows} \code{data.frame}
+\item For "costs", the coefficients are an array with the same structure as \code{cashFlowsCosts} (except for the time dimension)
+}
+}
+\item \code{premiums}* ... A vector of resulting premiums: unit premiums ("unit.net", "unit.Zillmer", "unit.gross") and absolute (yearly) premiums ("net", "Zillmer", "gross", "unitcost", "written_yearly", "additional_capital") and written premiums per frequency ("written_beforetax", "tax", "written").
+\item \code{absCashFlows} ... A \code{data.frame} containing the absolute cash flows of the contract. The structure is identical to \code{cashFlows}. For wrapper contracts, the values are aggregated from all children.
+\item \code{absPresentValues} ... A \code{data.frame} containing the absolute present values of the cash flows of the contract. The structure is identical to \code{presentValues}. For wrapper contracts, the values are aggregated from all children.
+\item \code{reserves} ... A \code{data.fram} holding all reserves (columns "SumInsured", "net", "Zillmer", "adequate", "gamma", "contractual", "conversion", "alphaRefund", "reduction", "PremiumsPaid", "Surrender" and "PremiumFreeSumInsured") over the whole policy term (for wrapper contracts, aggregated values from all children)
+\item \code{reservesBalanceSheet} ... A \code{data.frame} holding all reserves for the respective balance sheet date. Columns are "date", "time" (numeric contract age in years), "net", "Zillmer", "gamma", "gross", "Balance Sheet Reserve", and "unearned Premiums"
+\item \code{profitParticipation} ... If the tariff is profit-participating, and a profit scenario was given: a list of profit scenarios, each holding a \code{data.frame} with all profit values (profit bases, rates, assigned profits, reserves, and surrender/paid-up values, including terminal bonus funds)
+\item \code{premiumComposition} ... A \code{data.frame} showing all components of the premium composition over the whole time horizon of the contract.
+\item \code{premiumCompositionSums} ... A \code{data.frame} showing the premium composition as given in \code{premiumComposition} as aggregated sums.
+\item \code{premiumCompositionPV} ... A \code{data.frame} showing the premium composition as given in \code{premiumComposition} as present values, using interest rates and mortality.
+}
+
+For wrapper contracts (e.g. InsuranceContract objects that do not describe a contract (slice) itself, but group
+together several individual contracts, e.g. a main contract with dynamic increases, riders, or a conversion to
+a completely different tariff), the fields marked with an asterisk * above will not be calculated, as they only
+make sense at the individual contract/tariff level, but not on the aggation level where multiple contract blocks
+are added up.}
 
 \item{\code{blocks}}{For contracts with multiple contract parts: List of all tariff blocks
 (independently calculated \link{InsuranceContract} objects, that are combined
@@ -420,9 +346,71 @@ values passed, while further scenarios can be added by
 begin, premium payment details, etc.) of the contract, which
 can also override parameters defined at the tariff-level.
 Possible values are all sub-fields of the
-\link{InsuranceContract.ParameterDefaults} data structure.}
+\link{InsuranceContract.ParameterDefaults} data structure.
+
+Deep-copy the contract
+
+Returns a fully independent copy of the contract, including deep copies
+of all sub-contracts/blocks stored in \code{blocks}.}
 }
 \if{html}{\out{</div>}}
+}
+\subsection{Details}{
+The \code{InsuranceContract$new()} function creates a new
+insurance contract for the given tariff, using the parameters passed
+to the function (and the defaults specified in the tariff).
+
+As soon as this function is called, the contract object calculates
+all time series (cash flows, premiums, reserves, profit participation)
+for the whole contract duration.
+
+The most important parameters that are typically passed to the
+constructor are:
+\itemize{
+\item \code{age} ... Age of the insured person (used to derive mortalities / transition probabilities)
+\item \code{policyPeriod} ... Maturity of the policy (in years)
+\item \code{premiumPeriod} ... How long premiums are paid (\code{premiumPeriod = 1}
+for single-premium contracts, \code{premiumPeriod} equals
+\code{policyPeriod} for regular premium payments for the whole
+contract period, while other premium payment durations indicate
+premium payments only for shorter periods than the whole contract
+duration. Contract extensions without any premium payments are
+indicated by \code{premiumPeriod}=0). Default is equal to
+\code{policyPeriod}
+\item \code{sumInsured} ... The sum insured (i.e. survival benefit for
+endowments, death benefit for whole/term life insurances,
+annuity payments for annuities)
+\item \code{contractClosing} ... Date of the contract beginning (typically
+created using something like \code{as.Date("2020-08-01")})
+\item \code{YOB} ... Year of birth of the insured (for cohort mortality
+tables). If not given, YOB is derived from \code{age} and
+\code{contractClosing}.
+\item \code{deferralPeriod} ... Deferral period for deferred annuities
+(i.e. when annuity payments start at a future point in time).
+Default is 0.
+\item \code{premiumFrequency} ... How many premium payments per year are
+made (e.g. 1 for yearly premiums, 4 for quarterly premiumd,
+12 for monthly premium payments). Default is 1 (yearly premiums).
+}
+
+While these are the most common and most important parameters, all
+parameters can be overwritten on a per-contract basis, even those
+that are defined by the tariff. For a full list and explanation of all
+parameters, see \link{InsuranceContract.ParameterDefaults}.
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-InsuranceContract-copy"></a>}}
+\if{latex}{\out{\hypertarget{method-InsuranceContract-copy}{}}}
+\subsection{Method \code{copy()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{InsuranceContract$copy()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+A new object of InsuranceContract class with independently cloned
+blocks.
 }
 }
 \if{html}{\out{<hr>}}
@@ -468,6 +456,14 @@ multiple insurance blocks (e.g. dynamic increases, riders, etc.)}
 }
 \if{html}{\out{</div>}}
 }
+\subsection{Details}{
+The \code{InsuranceContract$addHistorySnapshot()} function
+adds the current (or the explicitly given) state of the contract
+(parameters, calculated values, tarif, list of all contract blocks)
+to the history list (available in the \code{history} field of the
+contract, i.e. \code{InsuranceContract$history}).
+}
+
 \subsection{Examples}{
 \if{html}{\out{<div class="r example copy">}}
 \preformatted{# TODO
@@ -489,6 +485,7 @@ Add a child contract block (e.g. a dynamic increase or a rider) to an insurance 
   t = block$Values$int$blockStart,
   comment = paste0("Additional block at time t=", t),
   blockType = "Dynamics",
+  parent = self,
   ...
 )}\if{html}{\out{</div>}}
 }
@@ -514,12 +511,26 @@ time frame using this parameter}
 \item{\code{blockType}}{The type of block to be added (e.g. Dynamics, Extension,
 etc.). Can be any (short) string.}
 
+\item{\code{parent}}{The parent \code{InsuranceContract} object, if any.}
+
 \item{\code{...}}{parameters to be passed to \ifelse{html}{\href{#method-new}{\code{InsuranceContract$new()}}}{\code{InsuranceContract$new()()}} when
 \code{block} is not given and a copy of the parent should be
 created with overrides.}
 }
 \if{html}{\out{</div>}}
 }
+\subsection{Details}{
+Contracts with multiple contract blocks (typically either
+contracts with dynamic increases, sum increases or protection riders)
+are constructed by instantiating the child block (e.g. a single
+dynamic increase or the rider) independently with its own (shorter)
+duration and then inserting it into the parent contract with this
+function at the given time.
+
+If no \link{InsuranceContract} object is passed as \code{block}, a copy
+of the parent is created with overriding parameters given in \code{...}.
+}
+
 \subsection{Examples}{
 \if{html}{\out{<div class="r example copy">}}
 \preformatted{# TODO
@@ -572,6 +583,23 @@ they can be overridden per dynamic increase block.}
 }
 \if{html}{\out{</div>}}
 }
+\subsection{Details}{
+This method adds a new contract block describing a dynamic
+or sum increase (increasing the sum insured at a later time
+$t$ than contract inception). This increase is modelled by a
+separate \link{InsuranceContract} object with the sum difference
+as its own \code{sumInsured}.
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{     By default, all parameters are taken from the main contract,
+     with the maturity adjusted to match the original contract's
+     maturity.
+
+     The main contract holds all child blocks, controls their
+     valueation and aggregates all children's values to the
+     total values of the overall contract.
+}\if{html}{\out{</div>}}
+}
+
 \subsection{Examples}{
 \if{html}{\out{<div class="r example copy">}}
 \preformatted{# TODO
@@ -615,6 +643,16 @@ extension object.}
 }
 \if{html}{\out{</div>}}
 }
+\subsection{Details}{
+When a contract expires, this function adds a follow-up contract
+(with either the same or a different tariff), using the existing
+reserve as \code{additionalCapital} at inception.
+Technically, a child block using the new contract data of the extension
+is added to the original contract. The over-all contract values are then
+the sum of the original contract (providing values until expiration)
+and the extension (providing values after the extension).
+}
+
 \subsection{Examples}{
 \if{html}{\out{<div class="r example copy">}}
 \preformatted{# TODO
@@ -683,6 +721,25 @@ sum when the premium is recalculated.}
 }
 \if{html}{\out{</div>}}
 }
+\subsection{Details}{
+This method calculates all contract values (potentially
+starting from and preserving all values before a later time
+\code{valuesFrom}). This function is not meant to be called
+directly, but internally, whenever a contract is created or
+modified.
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{     There is, however, a legitimate case to call this function
+     when a contract was initially created with a value of
+     \code{calculate} other than "all", so not all values of the
+     contract were calculated. When one later needs more values
+     than were initially calculated, this function can be called.
+     However, any contract changes might need to be rolled back
+     and reapplied again afterwards. So even in this case it is
+     probably easier to create the contract object from scratch
+     again.
+}\if{html}{\out{</div>}}
+}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-InsuranceContract-consolidateBlocks"></a>}}
@@ -701,6 +758,16 @@ that time will be left unchanged.}
 }
 \if{html}{\out{</div>}}
 }
+\subsection{Details}{
+This function is an internal function for contracts with
+multiple child blocks (dynamic increases, sum increases, riders).
+It takes the values from all child blocks and calculates the
+overall values from all child blocks aggregated.
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{   This function should not be called manually.
+}\if{html}{\out{</div>}}
+}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-InsuranceContract-premiumWaiver"></a>}}
@@ -720,6 +787,12 @@ Stop premium payments and re-calculate sumInsured of the paid-up contract
 }
 \if{html}{\out{</div>}}
 }
+\subsection{Details}{
+This function modifies the contract at time $t$ so that
+no further premiums are paid (i.e. a paid-up contract) and the
+\code{sumInsured} is adjusted according to the existing reserves.
+}
+
 \subsection{Examples}{
 \if{html}{\out{<div class="r example copy">}}
 \preformatted{# TODO
@@ -747,6 +820,13 @@ in a profitScenario.}
 }
 \if{html}{\out{</div>}}
 }
+\subsection{Details}{
+This function calculates one profit scenario with the
+provided profit participation parameters (all parameters
+not given in the call are taken from their values of the
+contract, profit participation scheme or tariff).
+}
+
 \subsection{Returns}{
 a data.frame holding all profit participation values (rates,
 bases for the different profit types, profit allocations,
@@ -783,6 +863,18 @@ in a profitScenario.}
 }
 \if{html}{\out{</div>}}
 }
+\subsection{Details}{
+This function calculates one profit scenario with the
+provided profit participation parameters (all parameters
+not given in the call are taken from their values of the
+contract, profit participation scheme or tariff). The results
+are stored in a list of profit scenarios inside the contract.
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{    This function can be chained to calculate and add multiple
+    profit scenarios.
+}\if{html}{\out{</div>}}
+}
+
 \subsection{Examples}{
 \if{html}{\out{<div class="r example copy">}}
 \preformatted{# TODO

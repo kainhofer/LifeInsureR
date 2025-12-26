@@ -451,7 +451,7 @@ table ends before the contractual policy period) or longer in exceptional cases.
 Calculate the contract-relevant age(s) given a certain
 parameter data structure (contract-specific values)
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{InsuranceTarif$getAges(params)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{InsuranceTarif$getAges(params, values)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -460,6 +460,9 @@ parameter data structure (contract-specific values)
 \item{\code{params}}{Contract-specific, full set of parameters of the contract
 (merged parameters of the defaults, the tariff, the profit participation
 scheme and the contract)}
+
+\item{\code{values}}{Contract values calculated so far (in the \code{contract$Values}
+list) then this method is called by the contract object}
 }
 \if{html}{\out{</div>}}
 }

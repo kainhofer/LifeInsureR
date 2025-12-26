@@ -396,14 +396,12 @@ InsuranceTarif = R6Class(
     #' @details This method is not meant to be called explicitly, but rather used
     #' by the InsuranceContract class. It returns the relevant ages during the
     #' whole contract period
-    getAges = function(params) {
+    getAges = function(params, values) {
       if (getOption('LIC.debug.getAges', FALSE)) {
         browser();
       }
-      ages = ages(params$ActuarialBases$mortalityTable, YOB = year(params$ContractData$birthDate));
-      # Append one last age, just in case we need to pad the qx with one more entry:
-      ages = c(ages, tail(ages, 1) + 1)
       age = params$ContractData$technicalAge;
+      ages = 0:(age + self$getPolicyTerm(values) + 1);
       if (age > 0) {
         ages = ages[-age:-1];
       }
@@ -422,17 +420,12 @@ InsuranceTarif = R6Class(
         values$transitionProbabilities
       } else {
         age = params$ContractData$technicalAge;
-        ages = self$getAges(params);
-        qx = MortalityTables::deathProbabilities(params$ActuarialBases$mortalityTable, YOB = year(params$ContractData$birthDate), ageDifferences = params$ContractData$ageDifferences);
-        if (age > 0) {
-          qx    = qx[-age:-1];
-        }
+        ages = self$getAges(params, values);
+        # Let the MortalityTAbles package handle the proper extraction of the probs
+        qx = MortalityTables::deathProbabilities(params$ActuarialBases$mortalityTable, ages = ages, YOB = year(params$ContractData$birthDate), ageDifferences = params$ContractData$ageDifferences);
         qx = pad0(qx, length(ages), value = 1)
         if (!is.null(params$ActuarialBases$invalidityTable)) {
-          ix = MortalityTables::deathProbabilities(params$ActuarialBases$invalidityTable, YOB = year(params$ContractData$birthDate), ageDifferences = params$ContractData$ageDifferences);
-          if (age > 0) {
-            ix    = ix[-age:-1];
-          }
+          ix = MortalityTables::deathProbabilities(params$ActuarialBases$invalidityTable, ages = ages, YOB = year(params$ContractData$birthDate), ageDifferences = params$ContractData$ageDifferences);
         } else {
           ix = rep(0, length(qx));
         }
@@ -605,10 +598,12 @@ InsuranceTarif = R6Class(
 
       cf = data.frame(
         guaranteed = zeroes,
-        survival = zeroes,
-        death = zeroes,
-        disease = zeroes,
-        sumInsured = rep(1, cflen)
+        survival   = zeroes,
+        death      = zeroes,
+        disease    = zeroes,
+        sumInsured = rep(1, cflen),
+        row.names  = 0:(cflen-1)
+
       );
       if (self$tariffType == "annuity") {
         # AnnuityPeriod should NOT use the policyTerm variable, which is cut to the available mortality table, but rather use the raw policy term
@@ -681,7 +676,7 @@ InsuranceTarif = R6Class(
       }
       cflen = self$getCFlength(values)
       zeroes = pad0(0, cflen)
-      ages = pad0(self$getAges(params), cflen);
+      ages = pad0(self$getAges(params, values), cflen);
       cf = data.frame(
         premiums_advance   = zeroes,
         premiums_arrears   = zeroes,
@@ -755,7 +750,7 @@ InsuranceTarif = R6Class(
       cf = array(
         0,
         dim = list(cflen, dm[1], dm[2], 3),
-        dimnames = list(0:(cflen - 1), dmnames[[1]], dmnames[[2]], c("survival", "guaranteed", "after.death"))
+          dimnames = list(as.character(0:(cflen - 1)), dmnames[[1]], dmnames[[2]], c("survival", "guaranteed", "after.death"))
       );
       cf[1,,,"survival"] = cf[1,,,"survival"] + params$Costs[,,"once"]
       if (premiumTerm > 0){
@@ -1243,7 +1238,7 @@ InsuranceTarif = R6Class(
         if (pv[["premiums"]] == 0) {
           premium.unitcosts = 0
         } else {
-          premium.unitcosts = pv.unitcosts / pv[["premiums"]] + valueOrFunction(loadings$unitcosts, params = params, values = values);
+          premium.unitcosts = pv.unitcosts / pv[["premiums"]] + unitCosts;
         }
         if (!params$Features$unitcostsInGross) {
           temp = temp - premium.unitcosts;
@@ -1361,11 +1356,12 @@ InsuranceTarif = R6Class(
         pvCost["unitcosts","NetPremium",] * values$premiums[["net"]] +
         pvCost["unitcosts","Constant",]
       )
-      premium.unitcosts = ifelse(pv[["premiums"]] == 0, 0, pv.unitcosts / pv[["premiums"]] + valueOrFunction(loadings$unitcosts, params = params, values = values)) %||% 0;
+      premium.unitcosts = ifelse(pv[["premiums"]] == 0, 0, pv.unitcosts / pv[["premiums"]] + unitCosts) %||% 0;
 
 
       frequencyLoading = self$evaluateFrequencyLoading(loadings$premiumFrequencyLoading, params$ContractData$premiumFrequency, params = params, values = values) %||% 0
-      premiumBeforeTax = (values$premiums[["unit.gross"]]*(1 + noMedicalExam.relative + extraChargeGrossPremium) + noMedicalExam - sumRebate - extraRebate) * sumInsured * (1 - advanceProfitParticipation);
+      # NB: Use the actual gross premium as starting point for the written premium. This allows rounding rules applying to the gross premium to be included in the written premium.
+      premiumBeforeTax = (values$premiums[["gross"]] * (1 + noMedicalExam.relative + extraChargeGrossPremium) + noMedicalExam - sumRebate - extraRebate) * (1 - advanceProfitParticipation);
       if (!params$Features$unitcostsInGross) {
         premiumBeforeTax = premiumBeforeTax + premium.unitcosts;
       }
@@ -1472,8 +1468,9 @@ InsuranceTarif = R6Class(
             "contractual" = resContractual,
             "conversion"  = resConversion,
             "alphaRefund" = alphaRefund,
-            "reduction"   = resReduction
+            "reduction"   = resReduction,
             #, "Reserve.premiumfree"=res.premiumfree, "Reserve.gamma.premiumfree"=res.gamma.premiumfree);
+            "PremiumsPaid" = Reduce("+", values$absCashFlows$premiums_advance, accumulate = TRUE)
       );
       rownames(res) <- rownames(absPV);
       values$reserves = res;
@@ -1483,11 +1480,11 @@ InsuranceTarif = R6Class(
       # starting point, but also all reserves, cash flows, premiums and present values
       if (!params$Features$hasSurrender) {
         surrenderValue = 0
+      } else if (!is.null(params$ActuarialBases$surrenderValueCalculation)) {
+          surrenderValue = params$ActuarialBases$surrenderValueCalculation(resReduction, params, values);
       } else if (!params$ContractState$surrenderPenalty) {
           # No surrender penalty any more (has already been applied to the first contract change!)
           surrenderValue = resReduction;
-      } else if (!is.null(params$ActuarialBases$surrenderValueCalculation)) {
-          surrenderValue = params$ActuarialBases$surrenderValueCalculation(resReduction, params, values);
       } else {
           # by default, refund the full reduction reserve, except the advance profit participation, which is also included in the reserve, but not charged on the premium!
           advanceProfitParticipationUnitCosts = 0;
@@ -1499,16 +1496,17 @@ InsuranceTarif = R6Class(
           surrenderValue = resReduction * (1 - advanceProfitParticipationUnitCosts - partnerRebate);
       }
       surrenderValue = rd$round("Surrender Value", surrenderValue)
+      res = cbind(res, "Surrender" = surrenderValue)
 
 
-      # Calculate new sum insured after premium waiver
+      # Calculate new sum insured after conversion to paid-up status
       if (!params$Features$hasPremiumWaiver) {
         premiumfreeValue = 0
         newSI = 0
-      } else {
-        if (!is.null(params$ActuarialBases$premiumWaiverValueCalculation)) {
-          premiumfreeValue = params$ActuarialBases$premiumWaiverValueCalculation(resReduction, params, values);
-        } else if (params$Features$surrenderPenaltyOnPremiumWaiver) {
+      } else if (!is.null(params$ActuarialBases$paidUpSumCalculation)) {
+        newSI = params$ActuarialBases$paidUpSumCalculation(res, absPV, params, values);
+      } else  {
+        if (params$Features$surrenderPenaltyOnPremiumWaiver) {
           premiumfreeValue = surrenderValue
         } else {
           premiumfreeValue = resReduction
@@ -1518,14 +1516,11 @@ InsuranceTarif = R6Class(
         newSI = ifelse(premiumfreePV == 0, 0,
           (premiumfreeValue - absPV[,"death_Refund_past"] * securityFactor - c(Storno)) /
           premiumfreePV * params$ContractData$sumInsured);
-        newSI = rd$round("Premiumfree SI", newSI)
       }
+      newSI = rd$round("Premiumfree SI", newSI)
+      res = cbind(res, "PremiumFreeSumInsured" = newSI)
 
-      cbind(res,
-            "PremiumsPaid" = Reduce("+", values$absCashFlows$premiums_advance, accumulate = TRUE),
-            "Surrender" = surrenderValue,
-            "PremiumFreeSumInsured" = newSI
-      )
+      res
     },
 
     #' @description Calculate the (linear) interpolation factors for the balance
@@ -1866,7 +1861,7 @@ InsuranceTarif = R6Class(
         "Zillmer.amortization"          = premium.Zillmer.amortization,
         "Zillmer.savings.real"          = premium.Zillmer.actsavings
       )
-      rownames(res) <- rownames(premiums);
+      rownames(res) <- rownames(values$absCashFlows)
       res
     },
 

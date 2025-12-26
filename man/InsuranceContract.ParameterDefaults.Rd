@@ -184,10 +184,10 @@ frequency). A function with signature \code{unearnedPremiumsMethod(params, dates
 value calculation. If NULL, the full reserve will be used as
 surrender value. If given, it must be a function with signature
 \code{function(SurrenderReserve, params, values)}.}
-\item{\code{$premiumWaiverValueCalculation}}{A function describing the
-reserve used to derive the premium-free sum insured. If NULL,
-the surrender value will be used. If given, it must be a function
-with signature \code{function(SurrenderReserve, params, values)}}
+\item{\code{$paidUpSumCalculation}}{A function describing the calculation
+of the paid-up sum insured If given, it must be a function
+with signature \code{function(res, absPV, params, values)}, where
+\code{res} is a \code{data.frame} of the calculated reserves.}
 \item{\code{$premiumFrequencyOrder}}{Order of the approximation for
 payments within the year (unless an extra frequency loading is
 used => then leave this at 0)}

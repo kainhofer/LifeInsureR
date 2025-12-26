@@ -12,15 +12,16 @@ NULL
 
 
 ############ Class InsuranceContract ###########################################
-#' Base Class for Insurance Contracts
+#' @title
+#' Base Class for Insurance ContractsA
 #'
+#' @description
 #' R6 class that models a complete, general insurance contract.
 #' The corresponding tariff and the profit participation scheme, as well as
 #' all other relevant contract parameters (if not defined by the tariff or
 #' explicitly overridden by the contract) can be given in the constructor.
 #'
-#' # Usage
-#'
+#' @details
 #' The typical usage of this class is to simply call
 #' \ifelse{html}{\href{#method-new}{\code{InsuranceContract$new()}}}{\code{InsuranceContract$new()()}}.
 #'
@@ -177,9 +178,13 @@ InsuranceContract = R6Class(
         #' @field ContractParameters
         #' Insurance contract parameters explicitly specified in the contract
         #' (i.e. parameters that are NOT taken from the tariff of the defaults).
+        #' The possible structure follows the [InsuranceContract.ParameterStructure],
+        #' but only values explicitly set for this contract are filled, without
+        #' any fallback values taken from the tariff, profit scheme or the global defaults.
         ContractParameters = InsuranceContract.ParameterStructure, # Only values explicitly given for this contract, not including fallback values from the tariff
         #' @field Parameters
         #' Full set of insurance contract parameters applying to this contract.
+        #' The structure of this field follows [InsuranceContract.ParameterStructure].
         #' The set of parameters is a combination of explicitly given (contract-specific)
         #' values, parameters determined by the tariff and default values.
         Parameters = InsuranceContract.ParameterStructure,         # The whole parameter set, including values given by the tariff
@@ -189,6 +194,50 @@ InsuranceContract = R6Class(
         #' reserves, premium decomposition, profit participation, etc.). These
         #' values will be calculated and filled when the contract is created
         #' and updated whenever the contract is changed.
+        #'
+        #' The fields of the array are:
+        #' * \code{contract} ... A pointer to the \code{InsuranceContract} object
+        #' * \code{tarif} ... A pointer to the underlying \code{InsuranceTarif} object
+        #' * \code{basicData} ... A \code{data.frame} with colums \code{PremiumPayment}, \code{SumInsured}, \code{Premiums}, \code{InterestRate}, \code{PolicyDuration}, \code{PremiumPeriod}. Each row describes one year of the contract.
+        #' * \code{int} ... A list of internal contract values:
+        #'   * \code{l} ... Length of the underlying \code{data.frame}s
+        #'   * \code{policyTerm} ... The real-life policy term of the whole contract, evaluated numerically and cut at the maximum age of the mortality table.
+        #'   * \code{premiumTerm} ... The real-life premium term of the contract, evaluated numerically and cut at the maximum age and the policy term.
+        #'   * \code{premiumCalculateionTime} ... The time at which the currently stored premiums are calculated from the contract cash flows.
+        #'   * \code{maxAge} ... The maximum age available in the mortality table.
+        #' * \code{transitionProbabilities} ... The transition probabilities (and the corresponding ages) relevant for the contract, derived from the mortality table. Columns are \code{age}, \code{qx}, \code{ix}, \code{px}.
+        #' * \code{cashFlowsBasic}* ... The underlying basic cash flows, from which the actual unit cash flows will be built.
+        #' * \code{cashFlows}* ... A \code{data.frame} containing the unit cash flows (for sum insured 1) of the contract: premiums, guaranteed, survival, death and disease cash flows (both in arrears and in advance where applicable), as well as additional capital insertions and premium refunds.
+        #' * \code{cashFlowsCosts}* ... A \code{array} containing all cost cash flows for the whole contract term, split by type of costs, calculation base and charging period. The corresponding dimension of the array are:
+        #'   * Time: "0", "1", ....,
+        #'   * Type of costs: "alpha", "Zillmer", "beta", "gamma", "gamma_nopremiums", "unitcosts"
+        #'   * Calculation base: "SumInsured", "SumPremiums", "GrossPremium", "NetPremium", "Benefits", "Constant", "Reserve"
+        #'   * Contingency of the cost charged: "survival", "guaranteed", "after.death" (note: different cost rates depending on premium term, payout phase, etc. are already considered in the values of the cash flow vectors! This dimension only specifies whether the cost is charged at all if the insured is alive or dead)
+        #' * \code{unitPremiumSum}* ... The premium sum (for unit premiums), i.e. this is also the number of premiums to be paid.
+        #' * \code{presentValues}* ... A \code{data.frame} containing the present value vectors of premiums, additional capital, guaranteed, survival, death and disease payments, as well as premium refunds and costs (aggregated!).
+        #' * \code{presentValuesCosts}* ... A \code{array} containing the present values of the cost cash flows given in the \code{cashFlowsCosts} array.
+        #' * \code{premiumCoefficients}* ... A nested \code{array} containing all coefficients for the premium calculation. The hierarchy of the nesting is:
+        #'   * Type of premium to be calculated: "gross", "Zillmer" and "net". Each of them has two children:
+        #'   * Coefficient for: "SumInsured" and "Premium". Each of them has two children:
+        #'   * Type of cash flows: "benefits" and "costs".
+        #'     * For "benefits", the coefficients are a vector with names as given in the \code{cashFlows} \code{data.frame}
+        #'     * For "costs", the coefficients are an array with the same structure as \code{cashFlowsCosts} (except for the time dimension)
+        #' * \code{premiums}* ... A vector of resulting premiums: unit premiums ("unit.net", "unit.Zillmer", "unit.gross") and absolute (yearly) premiums ("net", "Zillmer", "gross", "unitcost", "written_yearly", "additional_capital") and written premiums per frequency ("written_beforetax", "tax", "written").
+        #' * \code{absCashFlows} ... A \code{data.frame} containing the absolute cash flows of the contract. The structure is identical to \code{cashFlows}. For wrapper contracts, the values are aggregated from all children.
+        #' * \code{absPresentValues} ... A \code{data.frame} containing the absolute present values of the cash flows of the contract. The structure is identical to \code{presentValues}. For wrapper contracts, the values are aggregated from all children.
+        #' * \code{reserves} ... A \code{data.fram} holding all reserves (columns "SumInsured", "net", "Zillmer", "adequate", "gamma", "contractual", "conversion", "alphaRefund", "reduction", "PremiumsPaid", "Surrender" and "PremiumFreeSumInsured") over the whole policy term (for wrapper contracts, aggregated values from all children)
+        #' * \code{reservesBalanceSheet} ... A \code{data.frame} holding all reserves for the respective balance sheet date. Columns are "date", "time" (numeric contract age in years), "net", "Zillmer", "gamma", "gross", "Balance Sheet Reserve", and "unearned Premiums"
+        #' * \code{profitParticipation} ... If the tariff is profit-participating, and a profit scenario was given: a list of profit scenarios, each holding a \code{data.frame} with all profit values (profit bases, rates, assigned profits, reserves, and surrender/paid-up values, including terminal bonus funds)
+        #' * \code{premiumComposition} ... A \code{data.frame} showing all components of the premium composition over the whole time horizon of the contract.
+        #' * \code{premiumCompositionSums} ... A \code{data.frame} showing the premium composition as given in \code{premiumComposition} as aggregated sums.
+        #' * \code{premiumCompositionPV} ... A \code{data.frame} showing the premium composition as given in \code{premiumComposition} as present values, using interest rates and mortality.
+        #'
+        #' For wrapper contracts (e.g. InsuranceContract objects that do not describe a contract (slice) itself, but group
+        #' together several individual contracts, e.g. a main contract with dynamic increases, riders, or a conversion to
+        #' a completely different tariff), the fields marked with an asterisk * above will not be calculated, as they only
+        #' make sense at the individual contract/tariff level, but not on the aggation level where multiple contract blocks
+        #' are added up.
+        #'
         Values = InsuranceContract.Values,
 
         #' @field blocks
@@ -208,9 +257,11 @@ InsuranceContract = R6Class(
 
         #### The code:
 
-        #' @description  Create a new insurance contract (for the given tariff/product) and calculate all time series
+        #' @description
+        #' Create a new insurance contract (for the given tariff/product) and calculate all time series
         #'
-        #' @details The \code{InsuranceContract$new()} function creates a new
+        #' @details
+        #' The \code{InsuranceContract$new()} function creates a new
         #' insurance contract for the given tariff, using the parameters passed
         #' to the function (and the defaults specified in the tariff).
         #'
@@ -372,9 +423,11 @@ InsuranceContract = R6Class(
             invisible(self)
         },
 
-        #' @description Add a child contract block (e.g. a dynamic increase or a rider) to an insurance contract
+        #' @description
+        #' Add a child contract block (e.g. a dynamic increase or a rider) to an insurance contract
         #'
-        #' @details Contracts with multiple contract blocks (typically either
+        #' @details
+        #' Contracts with multiple contract blocks (typically either
         #' contracts with dynamic increases, sum increases or protection riders)
         #' are constructed by instantiating the child block (e.g. a single
         #' dynamic increase or the rider) independently with its own (shorter)
@@ -397,13 +450,14 @@ InsuranceContract = R6Class(
         #' @param comment The comment to use in the history snapshot.
         #' @param blockType The type of block to be added (e.g. Dynamics, Extension,
         #'        etc.). Can be any (short) string.
+        #' @param parent The parent \code{InsuranceContract} object, if any.
         #' @param ... parameters to be passed to \ifelse{html}{\href{#method-new}{\code{InsuranceContract$new()}}}{\code{InsuranceContract$new()()}} when
         #'        \code{block} is not given and a copy of the parent should be
         #'        created with overrides.
         #'
         #' @examples
         #' # TODO
-        addBlock = function(id = NULL, block = NULL, t = block$Values$int$blockStart, comment = paste0("Additional block at time t=", t), blockType = "Dynamics", ...) {
+        addBlock = function(id = NULL, block = NULL, t = block$Values$int$blockStart, comment = paste0("Additional block at time t=", t), blockType = "Dynamics", parent = self, ...) {
             if (getOption('LIC.debug.addBlock', FALSE)) {
                 browser();
             }
@@ -412,7 +466,7 @@ InsuranceContract = R6Class(
             }
             if (missing(block) || is.null(block) || !is(block, "InsuranceContract")) {
                 # Create a block with the same tariff and parameters as the main contract, but allow overriding params with the ... arguments
-                block = InsuranceContract$new(id = id, ...)
+                block = InsuranceContract$new(id = id, parent = parent, ...)
             } else {
                 block$Parameters$ContractData$id = id
             }
@@ -556,6 +610,11 @@ InsuranceContract = R6Class(
             if (getOption('LIC.debug.addExtension', FALSE)) {
                 browser();
             }
+
+            # TODO: Check if this is a wrapper block!
+            # TODO: For wrapper blocks: terminate all existing blocks and add the new extension
+            # TODO: For non-wrapper blocks (i.e. no children): terminate only this block and add the new extension!
+
             if (missing(id) | is.null(id)) {
                 # numbering extensions: Use nr. of blocks (except main) as a
                 # simplification => numbering is withint all dynamics,
@@ -887,13 +946,15 @@ InsuranceContract = R6Class(
             self$Parameters$ContractData$policyPeriod = polPeriod;
             self$Values$reservesBalanceSheet[,"date"] = colDt;
             self$Values$reservesBalanceSheet[,"time"] = colTime;
+            rownames(self$Values$reservesBalanceSheet) = as.character(floor(colTime))
             self$Values$basicData[,"InterestRate"] = colIntR
             self$Values$basicData[,"PolicyDuration"] = colDur
             self$Values$basicData[,"PremiumPeriod"] = colPrem
 
+            # TODO: colDur und colPrem sind Vektoren!!!
             self$Values$int$l = rows
-            self$Values$int$policyTerm = colDur
-            self$Values$int$premiumTerm = colPrem
+            self$Values$int$policyTerm = max(colDur)
+            self$Values$int$premiumTerm = max(colPrem)
 
             invisible(self)
         },
