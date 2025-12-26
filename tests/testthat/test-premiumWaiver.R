@@ -20,10 +20,19 @@ test_that("SurrenderValue", {
 	)
 
 
+	# Dynamics at time 3 and 9 with subsequent premium waiver at time 10
 	Contract.EndowmentDyn = Contract.Endowment$copy()$addDynamics(t = 3, SumInsuredDelta = 1000)$addDynamics(t = 9, SumInsuredDelta = 1200)
 	Contract.EndowmentDynPaidUp = Contract.EndowmentDyn$copy()$premiumWaiver(10)
 	expect_equal(
 	  Contract.EndowmentDyn$Values$reserves[["10", "PremiumFreeSumInsured"]],
 	  Contract.EndowmentDynPaidUp$Values$reserves[["19", "SumInsured"]]
 	)
+
+	# Dynamics at time 3 and 9 with subsequent premium waiver at (prior) time 2
+	# -> Should not crash
+	# -> premium waivers should be removed and recorded as removed
+	Contract.EndowmentDyn = Contract.Endowment$copy()$addDynamics(t = 3, SumInsuredDelta = 1000)$addDynamics(t = 9, SumInsuredDelta = 1200)
+	Contract.EndowmentDynPaidUp = Contract.EndowmentDyn$copy()$premiumWaiver(2)
+	expect_equal(length(Contract.EndowmentDyn$blocks), 3)
+	expect_equal(length(Contract.EndowmentDynPaidUp$blocks), 1)
 })

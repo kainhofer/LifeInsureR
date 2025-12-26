@@ -979,26 +979,53 @@ InsuranceContract = R6Class(
               message("premiumWaiver called on a contract of tarif ", self$tarif$tarif, " (", self$tarif$name, "), which does not provide the premiumWaiver feature!")
               return(invisible(self))
             }
+
+            self$Parameters$ContractState$premiumWaiver = TRUE;
+
             if (length(self$blocks) > 0) {
-                for (b in self$blocks) {
+              # Add history snapshot to show the premium waiver in the contract history!
+              self$addHistorySnapshot(time = t, comment = sprintf("Premium waiver at time %d", t), type = "PremiumWaiver");
+
+              # If a block starts after the time t, it needs to be removed altogether! -> Plus, it must be recorded!
+              # Loop through all blocks and record all blocks to be removed in a separate vector:
+              to_drop = c()
+              nm = names(self$blocks)
+
+              # Wrapper contracts (i.e. contract objects that contain others) don't recalculate values themselves, they should trigger a recalculation of their children and aggregate values!
+                for (i in seq_along(self$blocks)) {
+                  b = self$blocks[[i]]
+                  tm = t - b$Parameters$ContractData$blockStart
+                  if (tm <= 0) {
+                    to_drop = c(to_drop, i)
+                    self$addHistorySnapshot(
+                      time = t,
+                      comment = paste0("Dropping child block ", nm[[i]], " starting at time ", b$Parameters$ContractData$blockStart, " due to prior premium waiver."),
+                      type = "RemoveBlock");
+                  } else {
+                    # Call the premiumWaiver method on the block to convert it to paid-up status:
                     b$premiumWaiver(t - b$Parameters$ContractData$blockStart, ...)
+                  }
                 }
+                if (length(to_drop) > 0) {
+                  self$blocks = self$blocks[-to_drop]
+                }
+                self$consolidateBlocks(valuesFrom = t)
             } else {
                 newSumInsured = self$Values$reserves[[toString(t), "PremiumFreeSumInsured"]];
                 self$Parameters$ContractData$sumInsured = newSumInsured;
-            }
-            self$Parameters$ContractState$premiumWaiver = TRUE;
-            if (self$Parameters$Features$surrenderPenaltyOnPremiumWaiver) {
-	            self$Parameters$ContractState$surrenderPenalty = FALSE; # Surrender penalty has already been applied, don't apply a second time
-            }
-            self$Parameters$ContractState$alphaRefunded = TRUE;     # Alpha cost (if applicable) have already been refunded partially, don't refund again
-            # TODO: Extract current amount of premium refund and feed that into the calculateContract function...
+                if (self$Parameters$Features$surrenderPenaltyOnPremiumWaiver) {
+    	            self$Parameters$ContractState$surrenderPenalty = FALSE; # Surrender penalty has already been applied, don't apply a second time
+                }
+                self$Parameters$ContractState$alphaRefunded = TRUE;     # Alpha cost (if applicable) have already been refunded partially, don't refund again
+                # TODO: Extract current amount of premium refund and feed that into the calculateContract function...
 
-            self$calculateContract(
-                valuesFrom = t,
-                premiumCalculationTime = t,
-                preservePastPV = TRUE, recalculatePremiums = TRUE, recalculatePremiumSum = FALSE,
-                history_comment = sprintf("Premium waiver at time %d", t), history_type = "PremiumWaiver")
+                self$calculateContract(
+                    valuesFrom = t,
+                    premiumCalculationTime = t,
+                    preservePastPV = TRUE, recalculatePremiums = TRUE, recalculatePremiumSum = FALSE,
+                    history_comment = sprintf("Premium waiver at time %d", t), history_type = "PremiumWaiver")
+            }
+
 
             invisible(self)
         },
