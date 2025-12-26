@@ -1480,11 +1480,11 @@ InsuranceTarif = R6Class(
       # starting point, but also all reserves, cash flows, premiums and present values
       if (!params$Features$hasSurrender) {
         surrenderValue = 0
-      } else if (!is.null(params$ActuarialBases$surrenderValueCalculation)) {
-          surrenderValue = params$ActuarialBases$surrenderValueCalculation(resReduction, params, values);
       } else if (!params$ContractState$surrenderPenalty) {
           # No surrender penalty any more (has already been applied to the first contract change!)
           surrenderValue = resReduction;
+      } else if (!is.null(params$ActuarialBases$surrenderValueCalculation)) {
+          surrenderValue = params$ActuarialBases$surrenderValueCalculation(resReduction, params, values);
       } else {
           # by default, refund the full reduction reserve, except the advance profit participation, which is also included in the reserve, but not charged on the premium!
           advanceProfitParticipationUnitCosts = 0;
@@ -1503,6 +1503,9 @@ InsuranceTarif = R6Class(
       if (!params$Features$hasPremiumWaiver) {
         premiumfreeValue = 0
         newSI = 0
+      } else if (params$ContractState$premiumWaiver) {
+        # Already paid-up, so sum insured is fixed to the current SI
+        newSI = params$ContractData$sumInsured
       } else if (!is.null(params$ActuarialBases$paidUpSumCalculation)) {
         newSI = params$ActuarialBases$paidUpSumCalculation(res, absPV, params, values);
       } else  {
