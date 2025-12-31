@@ -421,7 +421,7 @@ InsuranceTarif = R6Class(
       } else {
         age = params$ContractData$technicalAge;
         ages = self$getAges(params, values);
-        # Let the MortalityTAbles package handle the proper extraction of the probs
+        # Let the MortalityTables package handle the proper extraction of the probs
         qx = MortalityTables::deathProbabilities(params$ActuarialBases$mortalityTable, ages = ages, YOB = year(params$ContractData$birthDate), ageDifferences = params$ContractData$ageDifferences);
         qx = pad0(qx, length(ages), value = 1)
         if (!is.null(params$ActuarialBases$invalidityTable)) {
