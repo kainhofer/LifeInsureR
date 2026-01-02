@@ -7,6 +7,7 @@
 ^BEISPIEL_Contract.xlsx
 ^Examples
 .Rbuildignore$
+^data-raw$
 
 ^revdep$
 ^cran-comments\.md$

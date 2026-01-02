@@ -2385,3 +2385,44 @@ Another example are term-fixe insurances where the Zillmer premium also includes
   },
 ```
 
+
+# Debugging LifeInsureR-based Tariffs
+
+Implementing tariffs and contracts using the `InsuranceTarif` and `InsuranceContract` 
+classes as described above is very simple and straightforward. Still, there will
+be cases when the result is not as desired, and one needs to debug where the problem 
+lies. For this reason, the `InsuranceTarif` class has debug code in all its relevant
+methods triggering a `browser()` call, which allows the "user" to stop execution and inspect the internal code and
+variables. Each function in these classes provide an option named "LIC.debug.*",
+which can be set to `TRUE` via `setOption(LIC.debug.....=TRUE)`. Execution will 
+then stop at the beginning of the corresponding method, and one can inspect all
+arguments and local variables, as well as step through the code line-by-line.
+
+For example, to debug how the death probabilities are calculated for a contract,
+one would set the `LIC.debug.getTransitionProbabilities` to `TRUE` and create 
+a contract. The code execution will pase whenever the `InsuranceTarif::getTransitionProbabilities` method is called:
+
+```{r SimpleExampleRiskContract.debug, eval=FALSE, include=TRUE}
+options(LIC.debug.getTransitionProbabilities = TRUE)
+contract.L71U  = InsuranceContract$new(
+  Tarif.L71U, 
+  age = 35, 
+  contractClosing = as.Date("2020-08-18"), 
+  sumInsured = 100000);
+```
+
+As there are so many different methods and corresponding debug flags, the LifeInsureR 
+package also provides a helper function that allow turning on/off individual or all
+debug flags in the RStudio GUI (or any execution environment that provides shiny apps):
+
+
+```{r SimpleExampleRiskContract.debugGUI, eval=FALSE, include=TRUE}
+LIC_debug_configure()
+```
+![Debug configuration dialog](images/Debug_options_select_shiny.png)
+
+
+
+
+```{r, child = "debug-options.md"}
+```

@@ -48,6 +48,7 @@ Collate:
     'Templating.R'
     'contractGrid.R'
     'create_LIR_project.R'
+    'debugging.R'
     'exportInsuranceContract_xlsx.R'
     'showVmGlgExamples.R'
     'exportInsuranceContractExample.R'
@@ -63,3 +64,5 @@ VignetteBuilder: knitr
 Roxygen: list(markdown = TRUE)
 URL: https://gitlab.open-tools.net/R/LifeInsureR, https://github.com/kainhofer/LifeInsureR
 BugReports: https://gitlab.open-tools.net/R/LifeInsureR/-/issues
+Depends: 
+    R (>= 3.5)
