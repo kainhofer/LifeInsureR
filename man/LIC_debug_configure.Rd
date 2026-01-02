@@ -5,23 +5,15 @@
 \title{Configure LifeInsureR debug options interactively}
 \usage{
 LIC_debug_configure(title = "LifeInsureR debug options")
-
-LIC_debug_configure(title = "LifeInsureR debug options")
 }
 \arguments{
 \item{title}{Dialog title.}
-
-\item{selected}{Optional character vector of keys to preselect.}
 }
 \value{
-Invisibly, a named logical vector of all keys and their values after setting.
-
 Invisibly, a named logical vector of all keys and their values after setting;
 returns NULL if cancelled.
 }
 \description{
-Presents a multi-select list (portable) and sets options(LIC.debug.* = TRUE/FALSE).
-
 Uses a Shiny checkbox GUI if {shiny} is available (e.g., in RStudio),
 otherwise falls back to a text-based multi-select list.
 }
