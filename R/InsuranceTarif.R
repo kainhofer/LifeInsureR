@@ -1361,7 +1361,7 @@ InsuranceTarif = R6Class(
 
       frequencyLoading = self$evaluateFrequencyLoading(loadings$premiumFrequencyLoading, params$ContractData$premiumFrequency, params = params, values = values) %||% 0
       # NB: Use the actual gross premium as starting point for the written premium. This allows rounding rules applying to the gross premium to be included in the written premium.
-      premiumBeforeTax = (values$premiums[["gross"]] * (1 + noMedicalExam.relative + extraChargeGrossPremium) + noMedicalExam - sumRebate - extraRebate) * (1 - advanceProfitParticipation);
+      premiumBeforeTax = (values$premiums[["gross"]] * (1 + noMedicalExam.relative + extraChargeGrossPremium) + (noMedicalExam - sumRebate - extraRebate) * sumInsured) * (1 - advanceProfitParticipation);
       if (!params$Features$unitcostsInGross) {
         premiumBeforeTax = premiumBeforeTax + premium.unitcosts;
       }
