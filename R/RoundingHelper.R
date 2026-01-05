@@ -9,17 +9,30 @@ NULL
 #' to define numeric rounding rules for premiums, reserves, benefits etc. of
 #' a life insurance contract. By default, no rounding it applied.
 #'
-#' @param values Contract values calculated so far (in the \code{contract$Values}
-#'      list) then this method is called by the contract object
+#' The helper is sets up with list of named entries,
+#' specifying rounding accuracy for each particular value/use-case. The arguments
+#' are "name = value" pairs, where "name" describes the purpose of the rounding
+#' (e.g. "net premium"), while the value determines rounding accuracy. value
+#' can either be an integer (describing the number of digits to round to, e.g.
+#' with value 2, two decimal places after the comma will be rounded, e.g.
+#' 3.14159265 -> 3.14). Alternatively, a function(val) can be given, which
+#' will be applied to value(s) to be rounded. That function should be vectorizable.
 #'
-#' @param premiumCalculationTime The time when the premiums should be
-#'        (re-)calculated according to the equivalence principle. A time 0
-#'        means the initial premium calculation at contract closing, later
-#'        premium calculation times can be used to re-calculate the new
-#'        premium after a contract change (possibly including an existing reserve)
 #'
 #' @examples
-#' # TODO
+#' rounding = RoundingHelper$new(raw = 0, hundred = -2, accurate = 4)
+#' rounding$round("raw", c(1234.567891, 0.00012345, 1234))
+#' rounding$round("hundred", c(1234.567891, 0.00012345, 1234))
+#' rounding$round("accurate", c(1234.567891, 0.00012345, 1234))
+#' rounding$round("non-existing", c(1234.567891, 0.00012345, 1234))
+#'
+#' # Rounding with functions: Rounding to 5-cent steps, or rounding down to 10 cents:
+#' rnd.5ct = function(value) { round_half_up(value * 20) / 20 }
+#' rnd.down10ct = function(value) { round_half_up(value - 0.05, 1) }
+#'
+#' rounding = RoundingHelper$new("five-cent" = rnd.5ct, "down10cent" = rnd.down10ct)
+#' rounding$round("five-cent", c(1234.567891, 0.00012345, 1234.98))
+#' rounding$round("down10cent", c(1234.567891, 0.00012345, 1234.98, 1234.10))
 #' @export
 RoundingHelper = R6Class(
   "RoundingHelper",
@@ -30,7 +43,15 @@ RoundingHelper = R6Class(
     rounding  = list(),
 
     #' @description Initialize the rounding settings
-    #' @details Sets up the rounding helper by giving a list of named entries, specifying rounding accuracy for each particular value
+    #' @details Sets up the rounding helper by giving a list of named entries,
+    #' specifying rounding accuracy for each particular value. The arguments
+    #' are "name = value" pairs, where "name" describes the purpose of the rounding
+    #' (e.g. "net premium"), while the value determines rounding accuracy. value
+    #' can either be an integer (describing the number of digits to round to, e.g.
+    #' with value 2, two decimal places after the comma will be rounded, e.g.
+    #' 3.14159265 -> 3.14). Alternatively, a function(val) can be given, which
+    #' will be applied to value(s) to be rounded. That function should be vectorizable.
+    #'
     #'
     #' @param ... named entries specifying rounding accuracy
     #' @examples
@@ -39,6 +60,13 @@ RoundingHelper = R6Class(
     #' rounding$round("hundred", c(1234.567891, 0.00012345, 1234))
     #' rounding$round("accurate", c(1234.567891, 0.00012345, 1234))
     #' rounding$round("non-existing", c(1234.567891, 0.00012345, 1234))
+    #'
+    #' # Rounding with functions: Rounding to 5-cent steps, or rounding down to 10 cents:
+    #' rnd.5ct = function(value) { round_half_up(value * 20) / 20 }
+    #' rnd.down10ct = function(value) { round_half_up(value - 0.05, 1) }
+    #' rounding = RoundingHelper$new("five-cent" = rnd.5ct, "down10cent" = rnd.down10ct)
+    #' rounding$round("five-cent", c(1234.567891, 0.00012345, 1234.98))
+    #' rounding$round("down10cent", c(1234.567891, 0.00012345, 1234.98, 1234.10))
     initialize = function(...) {
       self$rounding = list(...)
     },
@@ -60,6 +88,13 @@ RoundingHelper = R6Class(
     #' rounding$round("accurate", c(1234.567891, 0.00012345, 1234))
     #' # If the given spec does not exist, no rounding it applied
     #' rounding$round("non-existing", c(1234.567891, 0.00012345, 1234))
+    #'
+    #' # Rounding to 5-cent steps, or rounding down to 10 cents:
+    #' rnd.5ct = function(value) { round(value * 20) / 20 }
+    #' rnd.down10ct = function(value) { round(value - 0.05, 1) }
+    #' rounding = RoundingHelper$new("five-cent" = rnd.5ct, "down10cent" = rnd.down10ct)
+    #' rounding$round("five-cent", c(1234.567891, 0.00012345, 1234.98))
+    #' rounding$round("down10cent", c(1234.567891, 0.00012345, 1234.98, 1234.10))
     round = function(spec, value, ...) {
       if (is.character(spec)) {
         spec = self$getRounding(spec, ...)
@@ -67,7 +102,7 @@ RoundingHelper = R6Class(
       if (is.function(spec)) {
         spec(value)
       } else if (is.numeric(spec)) {
-        round(value, digits = spec)
+        round_half_up(value, digits = spec)
       } else {
         value
       }

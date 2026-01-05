@@ -222,7 +222,7 @@ deathBenefit.annuityDecreasing = function(interest) {
 #'
 #' @export
 age.exactRounded = function(params, values) {
-  round(time_length(
+  round_half_up(time_length(
     interval(params$ContractData$birthDate, params$ContractData$contractClosing),
   "years"))
 }
@@ -1246,4 +1246,93 @@ testProfitParticipation = function(contract = NULL, tolerance = 0.01, path = "Re
 		expect_equal_abs(as.numeric(actual), as.numeric(expected), tolerance = tolerance,
 						 info = paste0("Mismatch in column '", col, "' of scenario '", scenario, "'."))
 	}
+}
+
+#' Round Numbers Using Mathematical (Half-Up) Rounding
+#'
+#' This function is a drop-in replacement for \code{\link[base]{round}} that
+#' uses **mathematical rounding (round half away from zero)** instead of
+#' IEEE-754 "round to even" (banker's rounding).
+#'
+#' Values exactly halfway between two representable numbers (i.e. fractional
+#' part of \code{0.5}) are always rounded **away from zero**.
+#'
+#' Apart from the tie-breaking rule, the behavior matches
+#' \code{\link[base]{round}}:
+#' \itemize{
+#'   \item vectorised over \code{x}
+#'   \item supports positive and negative \code{digits}
+#'   \item preserves attributes (names, dimensions)
+#'   \item propagates \code{NA}, \code{NaN}, \code{Inf}
+#' }
+#'
+#' @param x
+#'   A numeric vector, matrix, or array to be rounded.
+#'
+#' @param digits
+#'   Integer indicating the number of decimal places to round to.
+#'   Positive values round to the right of the decimal point,
+#'   negative values to the left. Defaults to \code{0}.
+#'
+#' @return
+#'   A numeric object of the same shape and attributes as \code{x},
+#'   containing the rounded values.
+#'
+#' @details
+#' Base R's \code{round()} uses IEC 60559 / IEEE-754 rounding
+#' ("round to even") for numerical stability:
+#'
+#' \preformatted{
+#' round(c(0.5, 1.5, 2.5))
+#' # 0 2 2
+#' }
+#'
+#' This function instead implements **round half away from zero**:
+#'
+#' \preformatted{
+#' round_half_up(c(0.5, 1.5, 2.5))
+#' # 1 2 3
+#' }
+#'
+#' This behavior is often required in actuarial, financial, and regulatory
+#' contexts.
+#'
+#' @seealso
+#'   \code{\link[base]{round}}, \code{\link[base]{floor}},
+#'   \code{\link[base]{ceiling}}
+#'
+#' @examples
+#' round_half_up(1:10 + 0.5)
+#' round_half_up(c(-1.5, -0.5, 0.5, 1.5))
+#' round_half_up(1.2345, digits = 3)
+#' round_half_up(149, digits = -1)
+#' @export
+round_half_up <- function(x, digits = 0) {
+  if (!is.numeric(x)) {
+    stop("'x' must be numeric")
+  }
+  if (length(digits) != 1L || is.na(digits) || !is.finite(digits)) {
+    stop("'digits' must be a finite number")
+  }
+  digits <- as.integer(digits)
+
+  attrs <- attributes(x)
+
+  ok <- is.finite(x)
+  out <- x
+
+  if (any(ok)) {
+    pow <- 10^digits
+
+    # scale-aware epsilon: proportional to magnitude
+    eps <- .Machine$double.eps * pmax(1, abs(x[ok]) * pow)
+
+    y <- abs(x[ok]) * pow + eps
+    y <- floor(y + 0.5)
+
+    out[ok] <- sign(x[ok]) * y / pow
+  }
+
+  attributes(out) <- attrs
+  out
 }
