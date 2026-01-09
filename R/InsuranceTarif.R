@@ -1398,9 +1398,10 @@ InsuranceTarif = R6Class(
 
       # Net, Zillmer and Gross reserves
       resNet = rd$round("Res net", absPV[,"benefitsAndRefund"] * securityFactor - values$premiums[["net"]] * absPV[,"premiums.unit"]);
-      BWZcorr = ifelse(absPV[t, "premiums"] == 0, 0,
-                       absPV[t, "Zillmer"] / absPV[t, "premiums"]) * absPV[,"premiums"];
-      resZ = rd$round("Res Zillmer", resNet - BWZcorr);
+      # BWZcorr = ifelse(absPV[t, "premiums"] == 0, 0,
+      #                  absPV[t, "Zillmer"] / absPV[t, "premiums"]) * absPV[,"premiums"];
+      # resZ = rd$round("Res Zillmer", resNet - BWZcorr);
+      resZ = rd$round("Res Zillmer", absPV[,"benefitsAndRefund"] * securityFactor - values$premiums[["Zillmer"]] * absPV[,"premiums.unit"]);
 
       resAdeq = absPV[,"benefitsAndRefund"] * securityFactor +
           absPV[,"alpha"] + absPV[,"beta"] + absPV[,"gamma"] -
