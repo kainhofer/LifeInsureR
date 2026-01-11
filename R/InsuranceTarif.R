@@ -642,8 +642,8 @@ InsuranceTarif = R6Class(
           cf$survival = pad0(self$getSurvivalCF(len = cflen, params = params, values = values), cflen)
         }
         if (self$tariffType == "wholelife") {
-          # life-long whole-life insurances should not terminate the CF vector with a 0, but rather a 1 (pr repeat the last entry!)
-          if (self$getPolicyTerm(values) > cflen - 1) {
+          # life-long whole-life insurances should not terminate the CF vector with a 0, but rather a 1 (or repeat the last entry!)
+          if (params$ContractData$policyPeriod > cflen - 1) {
             cf$death = c(rep(0, deferralPeriod), deathCF, deathCF[length(deathCF)])
           } else {
             cf$death = c(rep(0, deferralPeriod), deathCF, 0)
